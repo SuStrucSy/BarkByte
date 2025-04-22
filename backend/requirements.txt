@@ -1,0 +1,6 @@
+fastapi[standard]
+uvicorn
+sqlmodel
+asyncpg
+minio
+strawberry-graphql[fastapi]

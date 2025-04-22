@@ -1,0 +1,137 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    command:
+      - "--api.insecure=true"  # Enable the Traefik dashboard (not for production)
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"  # Traefik needs access to the Docker socket
+
+  # This is the configuration for our PostgreSQL database container
+  # Note the `postgres` name is important, in out Keystone app when we refer
+  # to  `host: "postgres"` that value is mapped on the network to the
+  # address of this container.
+  postgres:
+    image: postgres:17-bullseye
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fastapi-postgress
+    environment:
+      # You can set the value of environment variables
+      # in your docker-compose.yml file
+      # Our Keystone app will use these to connect
+      # to the database
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    ports:
+      # Standard port for PostgreSQL databases
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # These are the configurations for our minio S3 object storage
+  # When Docker Compose starts this container it will automatically
+  # use the Dockerfile in the frontend directory to configure it
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_storage:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server --console-address ":9001" /data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:9000/minio/health/live"
+        ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - fastapi-minio
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.routers.minio.rule=Host(`minio`)"
+      - "traefik.http.routers.minio.service=minio"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - DATABASE_URL
+      - FRONTEND_URL
+      - S3_ENDPOINT
+      - S3_PORT
+      - S3_SSL
+      - S3_BUCKET_NAME
+      - S3_REGION
+      - S3_ACCESS_KEY_ID
+      - S3_SECRET_ACCESS_KEY
+    volumes:
+      - ./backend:/backend
+    ports:
+      - "8000:80"
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - fastapi-postgress
+      - react-fastapi
+      - fastapi-minio
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fastapi.rule=Host(`localhost`)"  # Change to your domain
+      - "traefik.http.services.fastapi.loadbalancer.server.port=80"
+
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend:/frontend
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"  # Change to your domain
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    depends_on:
+      - fastapi
+    networks:
+      - react-fastapi
+
+volumes:
+  postgres_data:
+  minio_storage:
+
+
+networks:
+  react-fastapi:
+  fastapi-postgress:
+  fastapi-minio:
