@@ -1,6 +1,8 @@
 fastapi[standard]
-uvicorn
+passlib[bcrypt]
+tenacity
 sqlmodel
+alembic
 asyncpg
 minio
 strawberry-graphql[fastapi]

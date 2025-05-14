@@ -1,19 +1,14 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.9-slim
-
-RUN pip install --upgrade pip
+# First stage: build
+FROM python:3-alpine AS builder
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+COPY . .
 
 # Install the dependencies
-RUN pip install  --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip
 
-# Copy the rest of the application code into the container
-COPY . .
 
 # Expose the port that the app runs on
 EXPOSE 80
