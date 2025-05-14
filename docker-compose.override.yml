@@ -61,7 +61,6 @@ services:
       - "8000:8000"
     build:
       context: ./backend
-    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     command:
       - fastapi
       - run
@@ -75,9 +74,8 @@ services:
           ignore:
             - ./backend/.venv
             - .venv
-    # TODO: remove once coverage is done locally
-    volumes:
-      - ./backend/htmlcov:/app/htmlcov
+        - path: ./backend/pyproject.toml
+          action: rebuild
     environment:
       SMTP_HOST: "mailcatcher"
       SMTP_PORT: "1025"

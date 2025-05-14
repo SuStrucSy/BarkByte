@@ -1,36 +1,29 @@
-import os
-from fastapi import Depends, FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
-from minio import Minio
+from fastapi import FastAPI
+from fastapi.routing import APIRoute
+from starlette.middleware.cors import CORSMiddleware
 
-from backend.app.core.db import get_session
-from app.models import Song, SongCreate
+from app.api.main import api_router
+from app.core.config import settings
 
-MINIO_ACCESS_KEY = os.getenv("S3_ACCESS_KEY_ID")
-MINIO_SECRET_KEY = os.getenv("S3_SECRET_ACCESS_KEY")
 
-app = FastAPI()
+def custom_generate_unique_id(route: APIRoute) -> str:
+    return f"{route.tags[0]}-{route.name}"
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Change this to your frontend URL in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    generate_unique_id_function=custom_generate_unique_id,
 )
 
-# MinIO client
-minio_client = Minio(
-    "minio:9000",
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=False
-)
+# Set all CORS enabled origins
+if settings.all_cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.all_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-
-@app.get("/ping")
-async def pong():
-    return {"ping": "pong!"}
+app.include_router(api_router, prefix=settings.API_V1_STR)

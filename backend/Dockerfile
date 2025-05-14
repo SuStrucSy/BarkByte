@@ -1,17 +1,43 @@
-# First stage: build
-FROM python:3-alpine AS builder
+FROM python:3.10
 
-# Set the working directory in the container
-WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
-COPY . .
+WORKDIR /app/
 
-# Install the dependencies
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && rm -rf ~/.cache/pip
+# Install uv
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
+COPY --from=ghcr.io/astral-sh/uv:0.7.3 /uv /uvx /bin/
 
+# Place executables in the environment at the front of the path
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#using-the-environment
+ENV PATH="/app/.venv/bin:$PATH"
 
-# Expose the port that the app runs on
-EXPOSE 80
+# Compile bytecode
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#compiling-bytecode
+ENV UV_COMPILE_BYTECODE=1
 
-# Command to run the FastAPI application using Uvicorn
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+# uv Cache
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
+ENV UV_LINK_MODE=copy
+
+# Install dependencies
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+RUN --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --frozen --no-install-project
+
+ENV PYTHONPATH=/app
+
+COPY ./scripts /app/scripts
+
+COPY ./pyproject.toml  ./alembic.ini /app/
+
+COPY ./app /app/app
+
+# Sync the project
+# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync
+
+CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
