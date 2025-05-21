@@ -46,10 +46,8 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof LayoutImport
     }
   }
-}
 
 // Create and export the route tree
-
 interface LayoutRouteChildren {
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
@@ -76,6 +74,7 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
 }
 
+
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '' | '/'
@@ -92,6 +91,10 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
 }
+
+export interface RootRouteChildren {}
+
+const rootRouteChildren: RootRouteChildren = {}
 
 export const routeTree = rootRoute
   ._addFileChildren(rootRouteChildren)
@@ -115,6 +118,7 @@ export const routeTree = rootRoute
     "/_layout/": {
       "filePath": "_layout/index.tsx",
       "parent": "/_layout"
+      "children": []
     }
   }
 }
