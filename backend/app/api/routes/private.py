@@ -1,4 +1,5 @@
 from typing import Any
+from sqlmodel import select
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -36,3 +37,11 @@ def create_user(user_in: PrivateUserCreate, session: SessionDep) -> Any:
     session.commit()
 
     return user
+
+@router.get("/users/", response_model=list[UserPublic])
+def get_all_users(session: SessionDep) -> Any:
+    """
+    Get all users.
+    """
+    users = session.exec(select(User)).all()
+    return users
