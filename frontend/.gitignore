@@ -11,9 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
 openapi.json
-
 
 # Editor directories and files
 .vscode/*
@@ -25,7 +23,6 @@ openapi.json
 *.njsproj
 *.sln
 *.sw?
-
 /test-results/
 /playwright-report/
 /blob-report/
