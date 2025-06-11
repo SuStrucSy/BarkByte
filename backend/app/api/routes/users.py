@@ -10,6 +10,7 @@ from app.api.deps import (
     SessionDep,
     get_current_active_superuser,
 )
+
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
@@ -22,9 +23,9 @@ from app.models import (
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
+    NewAccount
 )
-from app.utils import generate_new_account_email, send_email
-
+from app.utils import verify_password_reset_token, generate_new_account_email, generate_password_reset_token, send_email, generate_signup_email
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get(
@@ -137,20 +138,64 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     return Message(message="User deleted successfully")
 
 
-@router.post("/signup", response_model=UserPublic)
+@router.post("/signup", response_model=Message)
 def register_user(session: SessionDep, user_in: UserRegister) -> Any:
     """
     Create new user without the need to be logged in.
     """
+
     user = crud.get_user_by_email(session=session, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=400,
             detail="The user with this email already exists in the system",
         )
+
     user_create = UserCreate.model_validate(user_in)
     user = crud.create_user(session=session, user_create=user_create)
-    return user
+    
+    if settings.emails_enabled and user_in.email:
+        register_user_token = generate_password_reset_token(email=user_in.email) # TODO: have to change the name
+        email_data = generate_signup_email(
+            email_to=user_in.email, email=user_in.email, token=register_user_token
+        )
+        send_email(
+            email_to=user_in.email,
+            subject=email_data.subject,
+            html_content=email_data.html_content,
+        )
+
+    return Message(message="Please check your email to validate your account.")
+
+@router.post(
+    "/verify-email/",
+    responses={
+        400: {"description": "Invalid token or inactive user"},
+        404: {"description": "The user with this email does not exist in the system."}
+    }
+)
+def verify_email(session: SessionDep, body: NewAccount) -> Message:
+    """
+    verify email and reset password.
+    """
+    email = verify_password_reset_token(token=body.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid token")
+    user = crud.get_user_by_email(session=session, email=email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this email does not exist in the system.",
+        )
+    elif user.is_active:
+        raise HTTPException(status_code=400, detail="This account is already active.")
+    
+    user.is_active = True
+    session.add(user)
+    session.commit()
+    return Message(message="User account activated successfully.")
+
+
 
 @router.get("/{user_id}", response_model=UserPublic)
 def read_user_by_id(
