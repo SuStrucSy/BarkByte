@@ -26,6 +26,7 @@
     "@tanstack/react-router": "^1.120.5",
     "@tanstack/react-router-devtools": "^1.120.6",
     "@zodios/core": "^10.9.6",
+    "@zodios/plugins": "^10.6.0",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

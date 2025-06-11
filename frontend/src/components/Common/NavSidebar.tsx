@@ -8,21 +8,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-import { useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
 
 import { NavUser } from './NavUser'
 import { ArrowUpCircleIcon } from 'lucide-react'
 import SidebarItems from './SidebarItems'
-import useAuth from '@/hooks/useAuth'
-import type { UserPublic } from '@/lib/types'
 
 const AppSidebar = () => {
-  const queryClient = useQueryClient()
-  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
-  const { logout } = useAuth()
-  const [open, setOpen] = useState(false)
-
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
@@ -44,11 +35,7 @@ const AppSidebar = () => {
         <SidebarItems />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{
-          name: "shadcn",
-          email: "m@example.com",
-          avatar: "/avatars/shadcn.jpg",
-        }}/>
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

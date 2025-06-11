@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { UserPublic, AccessToken } from '@/lib/types'
+import type { AccessToken, UserPublic } from '@/lib/types'
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
@@ -17,11 +17,13 @@ const useAuth = () => {
   const queryClient = useQueryClient()
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
-    queryFn: () => null,
+    queryFn: async () => {
+      const data = await api.get("/api/v1/users/me")
+      return data
+    },
     enabled: isLoggedIn(),
   })
 
-  console.log(user)
 
   // const signUpMutation = useMutation({
   //   mutationFn: (data: UserRegister) =>
@@ -39,9 +41,7 @@ const useAuth = () => {
   // })
 
   const login = async (data: AccessToken) => {
-    console.log(data)
     const response = await api.post("/api/v1/login/access-token", data)
-    console.log(response)
     localStorage.setItem("access_token", response.access_token)
   }
 
@@ -52,8 +52,6 @@ const useAuth = () => {
     },
     onError: (err) => {
       handleError(err)
-      console.log(typeof(err))
-      console.error(err)
     },
   })
 

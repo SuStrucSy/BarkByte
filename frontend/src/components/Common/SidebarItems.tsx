@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { Link as RouterLink } from "@tanstack/react-router"
 
-//import type { UserPublic } from "@/client"
 import { Home, Settings, Users, type LucideIcon } from 'lucide-react'
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import type { UserPublic } from '@/lib/types'
 
 const items = [
   { icon: Home, title: "Dashboard", path: "/" },
@@ -22,8 +22,7 @@ interface Item {
 
 const SidebarItems = ({ onClose }: SidebarItemsProps) => {
   const queryClient = useQueryClient()
-  //const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
-  const currentUser = null
+  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
 
   const finalItems: Item[] = currentUser?.is_superuser
     ? [...items, { icon: Users, title: "Admin", path: "/admin" }]

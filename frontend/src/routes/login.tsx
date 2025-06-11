@@ -8,10 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from "@/components/ui/button"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
-import { emailPattern, passwordRules } from "../utils"
 import type { AccessToken } from '@/lib/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { schemas } from '@/lib/api'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
@@ -41,16 +39,10 @@ function Login() {
   })
 
   const onSubmit: SubmitHandler<AccessToken> = async (data) => {
-    console.log(data)
-    console.log({form})
-    console.log(form.formState.isSubmitting)
-    //if (form.formState.isSubmitting) return
 
-    console.log("I get here before reset")
     resetError()
 
     try {
-      console.log("I get here")
       await loginMutation.mutateAsync(data)
     } catch {
       // error is handled by useAuth hook
