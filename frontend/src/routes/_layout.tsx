@@ -3,16 +3,16 @@ import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
 import Navbar from "@/components/Common/Navbar"
 import AppSidebar from "@/components/Common/NavSidebar"
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-//import { isLoggedIn } from "@/hooks/useAuth"
+import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
   component: Layout,
   beforeLoad: async () => {
-    // if (!isLoggedIn()) {
-    //   throw redirect({
-    //     to: "/login",
-    //   })
-    // }
+    if (!isLoggedIn()) {
+      throw redirect({
+        to: "/login",
+      })
+    }
   },
 })
 

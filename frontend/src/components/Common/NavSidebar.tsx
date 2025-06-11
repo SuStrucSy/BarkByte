@@ -11,16 +11,16 @@ import {
 import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
-// import type { UserPublic } from "@/client"
-// import useAuth from "@/hooks/useAuth"
 import { NavUser } from './NavUser'
 import { ArrowUpCircleIcon } from 'lucide-react'
 import SidebarItems from './SidebarItems'
+import useAuth from '@/hooks/useAuth'
+import type { UserPublic } from '@/lib/types'
 
 const AppSidebar = () => {
   const queryClient = useQueryClient()
-  //const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
-  //const { logout } = useAuth()
+  const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"])
+  const { logout } = useAuth()
   const [open, setOpen] = useState(false)
 
   return (

@@ -1,16 +1,11 @@
+import { api } from '@/lib/api'
+import type { UserPublic, AccessToken } from '@/lib/types'
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 
-import {
-  type Body_login_login_access_token as AccessToken,
-  type ApiError,
-  LoginService,
-  type UserPublic,
-  type UserRegister,
-  UsersService,
-} from "@/client"
 import { handleError } from "@/utils"
+
 
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
@@ -22,29 +17,31 @@ const useAuth = () => {
   const queryClient = useQueryClient()
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
-    queryFn: UsersService.readUserMe,
+    queryFn: () => null,
     enabled: isLoggedIn(),
   })
 
-  const signUpMutation = useMutation({
-    mutationFn: (data: UserRegister) =>
-      UsersService.registerUser({ requestBody: data }),
+  console.log(user)
 
-    onSuccess: () => {
-      navigate({ to: "/login" })
-    },
-    onError: (err: ApiError) => {
-      handleError(err)
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-    },
-  })
+  // const signUpMutation = useMutation({
+  //   mutationFn: (data: UserRegister) =>
+  //     UsersService.registerUser({ requestBody: data }),
+
+  //   onSuccess: () => {
+  //     navigate({ to: "/login" })
+  //   },
+  //   onError: (err) => {
+  //    console.error(err)
+  //   },
+  //   onSettled: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["users"] })
+  //   },
+  // })
 
   const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
-      formData: data,
-    })
+    console.log(data)
+    const response = await api.post("/api/v1/login/access-token", data)
+    console.log(response)
     localStorage.setItem("access_token", response.access_token)
   }
 
@@ -53,8 +50,10 @@ const useAuth = () => {
     onSuccess: () => {
       navigate({ to: "/" })
     },
-    onError: (err: ApiError) => {
+    onError: (err) => {
       handleError(err)
+      console.log(typeof(err))
+      console.error(err)
     },
   })
 
@@ -64,7 +63,7 @@ const useAuth = () => {
   }
 
   return {
-    signUpMutation,
+    //signUpMutation,
     loginMutation,
     logout,
     user,
