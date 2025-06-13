@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { AccessToken, UserPublic } from '@/lib/types'
+import type { AccessToken, UserPublic, UserRegister } from '@/lib/types'
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
@@ -25,20 +25,20 @@ const useAuth = () => {
   })
 
 
-  // const signUpMutation = useMutation({
-  //   mutationFn: (data: UserRegister) =>
-  //     UsersService.registerUser({ requestBody: data }),
+  const signUpMutation = useMutation({
+    mutationFn: (data: UserRegister) =>
+      api.post("/api/v1/users/signup", {...data} ),
 
-  //   onSuccess: () => {
-  //     navigate({ to: "/login" })
-  //   },
-  //   onError: (err) => {
-  //    console.error(err)
-  //   },
-  //   onSettled: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["users"] })
-  //   },
-  // })
+    onSuccess: () => {
+      navigate({ to: "/login" })
+    },
+    onError: (err) => {
+     console.error(err)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+  })
 
   const login = async (data: AccessToken) => {
     const response = await api.post("/api/v1/login/access-token", data)
@@ -61,7 +61,7 @@ const useAuth = () => {
   }
 
   return {
-    //signUpMutation,
+    signUpMutation,
     loginMutation,
     logout,
     user,

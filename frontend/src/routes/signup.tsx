@@ -8,15 +8,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from "@/components/ui/button"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
-import type { AccessToken } from '@/lib/types'
+import type { AccessToken, UserRegister } from '@/lib/types'
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
-import { loginSchema } from '@/lib/schemas';
+import { loginSchema, signupSchema } from '@/lib/schemas';
 
-export const Route = createFileRoute("/login")({
-  component: Login,
+export const Route = createFileRoute("/signup")({
+  component: SignUp,
   beforeLoad: async () => {
     if (isLoggedIn()) {
       throw redirect({
@@ -26,27 +26,26 @@ export const Route = createFileRoute("/login")({
   },
 })
 
-function Login() {
-  const { loginMutation, error, resetError } = useAuth()
-  const form = useForm<AccessToken>({
-    resolver: zodResolver(loginSchema),
+interface UserRegisterForm extends UserRegister {
+  confirm_password: string
+}
+
+function SignUp() {
+  const { signUpMutation } = useAuth()
+  const form = useForm<UserRegisterForm>({
+    resolver: zodResolver(signupSchema),
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      username: "",
+      email: "",
+      full_name:"",
       password: "",
+      confirm_password:""
     },
   })
 
-  const onSubmit: SubmitHandler<AccessToken> = async (data) => {
-
-    resetError()
-
-    try {
-      await loginMutation.mutateAsync(data)
-    } catch {
-      // error is handled by useAuth hook
-    }
+  const onSubmit: SubmitHandler<UserRegisterForm> = (data) => {
+    signUpMutation.mutate(data)
   }
 
   return (
@@ -54,33 +53,43 @@ function Login() {
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Login to your account</CardTitle>
+            <CardTitle className="text-2xl">Sign Up</CardTitle>
             <CardDescription>
-              Enter your email below to login to your account
+              Enter details below to create a new account
             </CardDescription>
             <CardAction>
               <Button variant="link" asChild>
-                <RouterLink to="/signup">
-                  Sign Up
+                <RouterLink to="/login">
+                  Log In
                 </RouterLink>
               </Button>
             </CardAction>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form id="loginForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form id="signupForm" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input placeholder="shadcn" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        This is the email that you registered with.
-                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="shadcn" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -98,18 +107,26 @@ function Login() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="confirm_password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input type='password' placeholder="shadcn" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </form>
             </Form>
           </CardContent>
           <CardFooter className="flex-col gap-2">
-            <Button type="submit" form="loginForm" className="w-full" disabled={form.formState.isSubmitting}>
+            <Button type="submit" form="signupForm" className="w-full" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
-              Login
-            </Button>
-            <Button variant="link" asChild>
-              <RouterLink to="/recover-password">
-                Forgot your password?
-              </RouterLink>
+              Sign Up
             </Button>
           </CardFooter>
         </Card>

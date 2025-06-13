@@ -12,3 +12,18 @@ export const accessTokenSchema = z.object({
   access_token: z.string(),
   token_type: z.string().optional()
 })
+
+export const signupSchema = z.object({
+  email: z.string().email().max(255, { message: "username is too long max 255 characters" }),
+  password: z.string().min(8, { message: "password should be at least 8 characters long" }).max(64, { message: "Password is too long max 64 characters" }),
+  confirm_password: z.string().min(8, { message: "password should be at least 8 characters long" }).max(64, { message: "Password is too long max 64 characters" }),
+  full_name: z.union([z.string(), z.null()]).optional(),
+}).superRefine(({ confirm_password, password }, ctx) => {
+  if (confirm_password !== password) {
+    ctx.addIssue({
+      code: "custom",
+      message: "The passwords did not match",
+      path: ['confirm_password']
+    });
+  }
+});
