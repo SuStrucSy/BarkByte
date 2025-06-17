@@ -7,7 +7,7 @@ from sqlmodel import Field, Relationship, SQLModel
 # Shared properties
 class UserBase(SQLModel):
   email: EmailStr = Field(unique=True, index=True, max_length=255)
-  is_active: bool = True
+  is_active: bool = False
   is_superuser: bool = False
   full_name: str | None = Field(default=None, max_length=255)
 
@@ -71,3 +71,6 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=64)
+
+class NewAccount(SQLModel):
+    token: str
