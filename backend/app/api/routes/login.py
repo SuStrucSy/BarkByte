@@ -69,7 +69,7 @@ def recover_password(email: str, session: SessionDep) -> Message:
     Password Recovery
     """
     user = crud.get_user_by_email(session=session, email=email)
-    
+
     if user and user.is_active:
         try:
             password_reset_token = generate_password_reset_token(email=email)

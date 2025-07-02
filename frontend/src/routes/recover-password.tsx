@@ -1,0 +1,135 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import {
+	createFileRoute,
+	Link as RouterLink,
+	redirect,
+} from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { isLoggedIn } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
+import { recoverPasswordSchema } from "@/lib/schemas";
+import { handleError } from "@/utils";
+
+interface FormData {
+	email: string;
+}
+
+export const Route = createFileRoute("/recover-password")({
+	component: RecoverPassword,
+	beforeLoad: async () => {
+		if (isLoggedIn()) {
+			throw redirect({
+				to: "/",
+			});
+		}
+	},
+});
+
+function RecoverPassword() {
+	const form = useForm<FormData>({
+		resolver: zodResolver(recoverPasswordSchema),
+		mode: "onBlur",
+		criteriaMode: "all",
+		defaultValues: {
+			email: "",
+		},
+	});
+
+	const recoverPassword = async (data: FormData) => {
+		await api.post("/api/v1/password-recovery/:email", undefined, {
+			params: { email: data.email },
+		});
+	};
+
+	const mutation = useMutation({
+		mutationFn: recoverPassword,
+		onSuccess: () => {
+			toast.success("Password recovery email sent successfully.");
+			form.reset();
+		},
+		onError: (err) => {
+			handleError(err);
+		},
+	});
+
+	const onSubmit: SubmitHandler<FormData> = async (data) => {
+		mutation.mutate(data);
+	};
+	return (
+		<div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+			<div className="w-full max-w-sm">
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-2xl">Password Recovery</CardTitle>
+						<CardDescription>
+							A password recovery email will be sent to the registered account.
+						</CardDescription>
+						<CardAction>
+							<Button variant="link" asChild>
+								<RouterLink to="/login">Log In</RouterLink>
+							</Button>
+						</CardAction>
+					</CardHeader>
+					<CardContent>
+						<Form {...form}>
+							<form
+								id="recoverPasswordForm"
+								onSubmit={form.handleSubmit(onSubmit)}
+								className="space-y-8"
+							>
+								<FormField
+									control={form.control}
+									name="email"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Email</FormLabel>
+											<FormControl>
+												<Input type="email" placeholder="shadcn" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</form>
+						</Form>
+					</CardContent>
+					<CardFooter className="flex-col gap-2">
+						<Button
+							type="submit"
+							form="recoverPasswordForm"
+							className="w-full"
+							disabled={form.formState.isSubmitting}
+						>
+							{form.formState.isSubmitting && (
+								<Loader2 className="animate-spin" />
+							)}
+							Continue
+						</Button>
+					</CardFooter>
+				</Card>
+			</div>
+		</div>
+	);
+}
