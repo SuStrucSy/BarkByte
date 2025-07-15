@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import EmailStr
+from pydantic import EmailStr, HttpUrl
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -74,3 +74,46 @@ class NewPassword(SQLModel):
 
 class NewAccount(SQLModel):
     token: str
+
+# Shared properties
+class SpecimenBase(SQLModel):
+    ref_title: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+    uploader_id: uuid.UUID = Field(foreign_key="user.id") # TODO: check it again, wrote this in a hurry, mandetory. ALSO need to make sure if the user is deleted, the specimen is NOT deleted.
+
+# Properties to receive on item creation
+class SpecimenCreate(SpecimenBase):
+    # doi: HttpUrl = Field()
+    doi: str = Field()
+    publication_year: int = Field(ge=1500, le=2500)
+    author: str = Field(min_length=1, max_length=255)
+    specimen_refrence: str = Field(min_length=1, max_length=255)
+    
+# Properties to receive on item update
+class SpecimenUpdate(SpecimenBase):
+    pass
+    
+# Database model, database table inferred from class name
+class Specimen(SpecimenBase, table=True):
+    spec_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    doi: str = Field()
+    publication_year: int = Field(ge=1500, le=2500)
+    author: str = Field(min_length=1, max_length=255)
+    specimen_refrence: str = Field(min_length=1, max_length=255)
+    is_approved: bool = Field(default=False)
+
+# Properties to return via API, id is always required
+class SpecimenPublic(SpecimenBase):
+    spec_id: uuid.UUID
+    # doi: HttpUrl = Field()
+    doi: str = Field()
+    publication_year: int = Field(ge=1500, le=2500)
+    author: str = Field(min_length=1, max_length=255)
+    specimen_refrence: str = Field(min_length=1, max_length=255)
+    is_approved: bool = Field(default=False)
+
+class SpecimensPublic(SQLModel):
+    data: list[SpecimenPublic]
+    count: int
+
+__all__ = ["User", "Specimen"]
