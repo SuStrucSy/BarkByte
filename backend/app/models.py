@@ -101,6 +101,7 @@ class Specimen(SpecimenBase, table=True):
     author: str = Field(min_length=1, max_length=255)
     specimen_refrence: str = Field(min_length=1, max_length=255)
     is_approved: bool = Field(default=False)
+    experiments: list["Experiment"] = Relationship(back_populates="specimen")
 
 # Properties to return via API, id is always required
 class SpecimenPublic(SpecimenBase):
@@ -111,9 +112,40 @@ class SpecimenPublic(SpecimenBase):
     author: str = Field(min_length=1, max_length=255)
     specimen_refrence: str = Field(min_length=1, max_length=255)
     is_approved: bool = Field(default=False)
+    experiments: list["ExperimentPublic"] = []
 
 class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
     count: int
 
-__all__ = ["User", "Specimen"]
+class ExperimentBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=1024)
+
+
+class ExperimentCreate(ExperimentBase):
+    specimen_id: uuid.UUID  # this ties the experiment to a specimen
+    uploader_id: uuid.UUID = Field(foreign_key="user.id") # TODO: check it again, wrote this in a hurry, mandetory. ALSO need to make sure if the user is deleted, the experiment is NOT deleted
+
+
+class ExperimentUpdate(ExperimentBase):
+    pass
+
+class Experiment(ExperimentBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    specimen_id: uuid.UUID = Field(foreign_key="specimen.spec_id", nullable=False)
+    specimen: "Specimen" = Relationship(back_populates="experiments")
+    uploader_id: uuid.UUID = Field(foreign_key="user.id")
+
+
+class ExperimentPublic(ExperimentBase):
+    id: uuid.UUID
+    specimen_id: uuid.UUID = Field(foreign_key="specimen.spec_id", nullable=False)
+    uploader_id: uuid.UUID = Field(foreign_key="user.id")
+
+
+class ExperimentsPublic(SQLModel):
+    data: list[ExperimentPublic]
+    count: int
+
+__all__ = ["User", "Specimen", "Experiment"]

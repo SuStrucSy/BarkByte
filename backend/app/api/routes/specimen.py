@@ -49,7 +49,7 @@ def read_specimen(session: SessionDep, current_user: CurrentUser, id: uuid.UUID)
     specimen = session.get(Specimen, id)
     if not specimen:
         raise HTTPException(status_code=404, detail="Specimen not found")
-    if not current_user.is_superuser and (specimen.owner_id != current_user.id):
+    if not current_user.is_superuser and (specimen.uploader_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return specimen
 
