@@ -9,48 +9,29 @@ from app.models import Experiment, ExperimentCreate, ExperimentPublic, Experimen
 
 router = APIRouter(prefix="/experiments", tags=["experiments"])
 
-
 @router.get("/", response_model=ExperimentsPublic)
 def read_experiments(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep, skip: int = 0, limit: int = 100
 ) -> Any:
     """
     Retrieve experiments.
     """
-
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Experiment)
-        count = session.exec(count_statement).one()
-        statement = select(Experiment).offset(skip).limit(limit)
-        experiments = session.exec(statement).all()
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Experiment)
-            # .where(Experiment.owner_id == current_user.id) # 1. We don't have owner_id, and 2. all experiment's should be public from what I understand.
-        )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Experiment)
-            # .where(Experiment.owner_id == current_user.id) # 1. We don't have owner_id, and 2. all experiment's should be public from what I understand.
-            .offset(skip)
-            .limit(limit)
-        )
-        experiments = session.exec(statement).all()
+    count_statement = select(func.count()).select_from(Experiment)
+    count = session.exec(count_statement).one()
+    statement = select(Experiment).offset(skip).limit(limit)
+    experiments = session.exec(statement).all()
 
     return ExperimentsPublic(data=experiments, count=count)
 
 
 @router.get("/{id}", response_model=ExperimentPublic)
-def read_experiment(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
+def read_experiment(session: SessionDep, id: uuid.UUID) -> Any:
     """
     Get experiment by ID.
     """
     experiment = session.get(Experiment, id)
     if not experiment:
         raise HTTPException(status_code=404, detail="Experiment not found")
-    if not current_user.is_superuser and (experiment.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     return experiment
 
 @router.post("/", response_model=ExperimentPublic)
@@ -61,7 +42,6 @@ def create_experiment(
     Create new experiment.
     """
     specimen = session.get(Specimen, experiment_in.specimen_id)
-    # specimen = session.get(Experiment, experiment_in.specimen_id)
     if not specimen:
         raise HTTPException(status_code=404, detail="Specimen not found")
     
