@@ -93,10 +93,29 @@ class SpecimenBase(SQLModel):
     fastener_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the fastener
     reinforcement_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the reinforcement
 
+    # Experiment attributes
+    e_description: str | None = Field(default=None, max_length=1024)
+    e_date: str | None = Field(default=None, min_length=1, max_length=255)  # date of the experiment
+
+    e_test_loading_type: str | None = Field(default=None, min_length=1, max_length=255)  # type of loading test
+    e_yield_point_method: str | None = Field(default=None, min_length=1, max_length=255)  # method used to determine yield point
+
+    e_stiffness: float | None = Field(default=None, ge=0)  # stiffness of the specimen
+    e_yield_displacement: float | None = Field(default=None, ge=0)  # yield displacement of the specimen
+    e_yield_force: float | None = Field(default=None, ge=0)  # yield force of the specimen
+    e_max_displacement: float | None = Field(default=None, ge=0)  # maximum displacement of the specimen
+    e_max_force: float | None = Field(default=None, ge=0)  # maximum
+    e_ultimate_displacement: float | None = Field(default=None, ge=0)  # ultimate displacement of the specimen
+    e_ultimate_force: float | None = Field(default=None, ge=0)  # ultimate
+    e_ductility: float | None = Field(default=None, ge=0)  # ductility of the specimen
+    e_measurement_unit: str | None = Field(default=None, min_length=1, max_length=255)  # unit of measurement used in the experiment
+
+    e_qualitative_failure_meaure: str | None = Field(default=None, min_length=1, max_length=255)  # qualitative failure measure
+    e_qfm_description: str | None = Field(default=None, min_length=1, max_length=1024)  # description of the qualitative failure measure
+
 # Properties to receive on item creation
 class SpecimenCreate(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
-    experiments: list["ExperimentUpdate"] = Field(..., min_items=1)
 
 # Properties to receive on item update
 class SpecimenUpdate(SpecimenBase):
@@ -107,7 +126,6 @@ class Specimen(SpecimenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
-    experiments: list["Experiment"] = Relationship(back_populates="specimen")
     is_approved: bool = Field(default=False)
 
 # Properties to return via API, id is always required
@@ -121,32 +139,4 @@ class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
     count: int
 
-class ExperimentBase(SQLModel):
-    name: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=1024)
-
-class ExperimentCreate(ExperimentBase):
-    specimen_id: uuid.UUID
-
-class ExperimentUpdate(ExperimentBase):
-    pass
-
-class Experiment(ExperimentBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    specimen_id: uuid.UUID = Field(foreign_key="specimen.id", nullable=False)
-    specimen: "Specimen" = Relationship(back_populates="experiments")
-    uploader_id: uuid.UUID = Field(foreign_key="user.id")
-    is_average_of_replicates: bool = Field(default=False, nullable=False)
-
-class ExperimentPublic(ExperimentBase):
-    id: uuid.UUID
-    specimen_id: uuid.UUID = Field(foreign_key="specimen.id", nullable=False)
-    uploader_id: uuid.UUID = Field(foreign_key="user.id")
-    is_average_of_replicates: bool = Field(default=False, nullable=False)
-
-class ExperimentsPublic(SQLModel):
-    data: list[ExperimentPublic]
-    count: int
-
-# add date for experiments somewhere in there,
-__all__ = ["User", "Specimen", "Experiment"]
+__all__ = ["User", "Specimen"]

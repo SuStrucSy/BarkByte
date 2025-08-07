@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, Experiment
+from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -42,28 +42,14 @@ def create_specimen(
     *, session: SessionDep, current_user: CurrentUser, specimen_in: SpecimenCreate
 ) -> Any:
     """
-    Create new specimen and its associated experiments.
+    Create new specimen.
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-
-    replicate_count = specimen_in.replicate_tests
-    experiment_count = len(specimen_in.experiments)
-
-    # Decide: are these individual tests, or an average?
-    if experiment_count == 1 and replicate_count > 1:
-        is_average = True
-    elif experiment_count == replicate_count:
-        is_average = False
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail="Mismatch between replicate_tests and number of experiments."
-        )
-
+    
     # Create specimen object
     specimen = Specimen(
-        **specimen_in.dict(exclude={"experiments"}),
+        **specimen_in.dict(),
         uploader_id=current_user.id
     )
 
@@ -71,20 +57,6 @@ def create_specimen(
     session.add(specimen)
     session.commit()
     session.refresh(specimen)
-
-    # Create and attach experiments, overriding specimen_id and uploader_id
-    for exp in specimen_in.experiments:
-        experiment = Experiment.model_validate({
-            **exp.dict(),
-            "specimen_id": specimen.id,
-            "uploader_id": current_user.id,
-            "is_average_of_replicates": is_average
-        })
-        session.add(experiment)
-
-    session.commit()
-    session.refresh(specimen)
-
     return specimen
 
 @router.put("/{id}", response_model=SpecimenPublic)
@@ -109,7 +81,6 @@ def update_specimen(
     session.commit()
     session.refresh(specimen)
     return specimen
-
 
 @router.delete("/{id}")
 def delete_specimen(
