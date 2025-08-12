@@ -1,7 +1,10 @@
+from __future__ import annotations
 import uuid
 
 from pydantic import EmailStr, HttpUrl
 from sqlmodel import Field, Relationship, SQLModel
+from app.enums import AssemblyType, JoineryType, FastenerType, LoadingDirection, Practice, Reinforcement, TestLoadingType, YieldPointMethod
+
 
 # Shared properties
 class UserBase(SQLModel):
@@ -65,6 +68,23 @@ class NewPassword(SQLModel):
 class NewAccount(SQLModel):
     token: str
 
+# Many-to-many relationship table for Specimen and Failure
+# Each row represents a link between a Specimen and a FailureMode
+class SpecimenFailureMode(SQLModel, table=True):
+    specimen_id: uuid.UUID = Field(foreign_key="specimen.id", primary_key=True)
+    failure_mode_id: uuid.UUID = Field(foreign_key="failuremode.id", primary_key=True)
+
+# One row per failure mode option (Tension Parallel/Perpendicular, Compression Parallel/Perpendicular, Rolling Shear, etc.)
+class FailureMode(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    label: str = Field(min_length=1, max_length=255)
+
+    specimens: list["Specimen"] = Relationship(
+        back_populates="e_qualitative_failure_meaure",
+        link_model=SpecimenFailureMode,
+    )
+
+
 # Shared properties
 class SpecimenBase(SQLModel):
     reference_title: str = Field(min_length=1, max_length=255)
@@ -76,29 +96,30 @@ class SpecimenBase(SQLModel):
     note: str | None = Field(default=None, max_length=1024)  # additional notes
     
     # todo: need to address the enum types here
-    assembly_type: str = Field(min_length=1, max_length=255)  # type of assembly
-    joinery_type: str = Field(min_length=1, max_length=255)  # type of joinery
-    fastener_type: str = Field(min_length=1, max_length=255)  # type of fastening
-    loading_direction: str = Field(min_length=1, max_length=255)  # direction of loading
-    practice: str = Field(min_length=1, max_length=255)  # practice type
-    reinforcement: str | None = Field(min_length=1, max_length=255)  # reinforcement type
+    assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
+    joinery_type: JoineryType = Field(min_length=1, max_length=255)  # type of joinery
+    fastener_type: FastenerType = Field(min_length=1, max_length=255)  # type of fastening
+    loading_direction: LoadingDirection = Field(min_length=1, max_length=255)  # direction of loading
+    practice: Practice = Field(min_length=1, max_length=255)  # practice type
+    reinforcement: Reinforcement | None = Field(min_length=1, max_length=255)  # reinforcement type
     connection_description: str = Field(min_length=1, max_length=255)  # description of connection
 
     element_dimension: str = Field(min_length=1, max_length=255)  # dimensions of the element
-    fastener_numbers: int | None = Field(default=1, ge=1)  # number of fasteners used
+    fastener_numbers: int = Field(default=1, ge=1)  # number of fasteners used
 
     wood_type: str | None = Field(min_length=1, max_length=255)  # type of wood used
     wood_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the wood
     connector_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the connector
     fastener_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the fastener
+    
+    # NOT in the screenshots? But it is in the documentation
     reinforcement_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the reinforcement
 
     # Experiment attributes
-    e_description: str | None = Field(default=None, max_length=1024)
     e_date: str | None = Field(default=None, min_length=1, max_length=255)  # date of the experiment
 
-    e_test_loading_type: str | None = Field(default=None, min_length=1, max_length=255)  # type of loading test
-    e_yield_point_method: str | None = Field(default=None, min_length=1, max_length=255)  # method used to determine yield point
+    e_test_loading_type: TestLoadingType | None = Field(default=None, min_length=1, max_length=255)  # type of loading test
+    e_yield_point_method: YieldPointMethod | None = Field(default=None, min_length=1, max_length=255)  # method used to determine yield point
 
     e_stiffness: float | None = Field(default=None, ge=0)  # stiffness of the specimen
     e_yield_displacement: float | None = Field(default=None, ge=0)  # yield displacement of the specimen
@@ -110,7 +131,7 @@ class SpecimenBase(SQLModel):
     e_ductility: float | None = Field(default=None, ge=0)  # ductility of the specimen
     e_measurement_unit: str | None = Field(default=None, min_length=1, max_length=255)  # unit of measurement used in the experiment
 
-    e_qualitative_failure_meaure: str | None = Field(default=None, min_length=1, max_length=255)  # qualitative failure measure
+    # Qualitative failure measure I think is a drop down list of failure modes
     e_qfm_description: str | None = Field(default=None, min_length=1, max_length=1024)  # description of the qualitative failure measure
 
 # Properties to receive on item creation
@@ -120,13 +141,18 @@ class SpecimenCreate(SpecimenBase):
 # Properties to receive on item update
 class SpecimenUpdate(SpecimenBase):
     pass
-    
+
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
+
+    e_qualitative_failure_meaure: list[FailureMode] = Relationship(
+        back_populates="specimens",
+        link_model=SpecimenFailureMode,
+    )
 
 # Properties to return via API, id is always required
 class SpecimenPublic(SpecimenBase):
@@ -139,4 +165,4 @@ class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
     count: int
 
-__all__ = ["User", "Specimen"]
+__all__ = ["User", "Specimen", "FailureMode", "SpecimenFailureMode"]
