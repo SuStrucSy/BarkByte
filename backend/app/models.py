@@ -147,7 +147,7 @@ class SpecimenUpdate(SpecimenBase):
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
+    doi: str = Field(unique=True)
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
 
