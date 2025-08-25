@@ -1,6 +1,6 @@
-from __future__ import annotations
 import uuid
 
+from typing import Optional
 from pydantic import EmailStr, HttpUrl
 from sqlmodel import Field, Relationship, SQLModel
 from app.enums import AssemblyType, JoineryType, FastenerType, LoadingDirection, Practice, Reinforcement, TestLoadingType, YieldPointMethod
@@ -80,7 +80,7 @@ class FailureMode(SQLModel, table=True):
     label: str = Field(min_length=1, max_length=255)
 
     specimens: list["Specimen"] = Relationship(
-        back_populates="e_qualitative_failure_meaure",
+        back_populates="e_qualitative_failure_measure",
         link_model=SpecimenFailureMode,
     )
 
@@ -137,10 +137,12 @@ class SpecimenBase(SQLModel):
 # Properties to receive on item creation
 class SpecimenCreate(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
+    e_qualitative_failure_measure: list[uuid.UUID] = []
 
 # Properties to receive on item update
 class SpecimenUpdate(SpecimenBase):
-    pass
+    e_qualitative_failure_measure: Optional[list[uuid.UUID]] = None
+
 
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
@@ -149,7 +151,7 @@ class Specimen(SpecimenBase, table=True):
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
 
-    e_qualitative_failure_meaure: list[FailureMode] = Relationship(
+    e_qualitative_failure_measure: list[FailureMode] = Relationship(
         back_populates="specimens",
         link_model=SpecimenFailureMode,
     )
@@ -160,6 +162,10 @@ class SpecimenPublic(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
+    e_qualitative_failure_measure: list[FailureMode] = Field(default_factory=list)
+
+
+
 
 class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]

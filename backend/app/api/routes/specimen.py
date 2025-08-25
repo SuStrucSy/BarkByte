@@ -2,10 +2,10 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select
+from sqlmodel import func, select, delete
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message
+from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -47,14 +47,34 @@ def create_specimen(
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
     
+    # Split out the failure mode IDs (not part of Specimen table directly)
+    data = specimen_in.dict(exclude={"e_qualitative_failure_measure"})
+    failure_mode_ids = specimen_in.e_qualitative_failure_measure or []
+
     # Create specimen object
     specimen = Specimen(
-        **specimen_in.dict(),
+        **data,
         uploader_id=current_user.id
     )
 
     # Add specimen to session so it has an ID
     session.add(specimen)
+    session.flush()
+
+    # Attach failure modes (if any)
+    if failure_mode_ids:
+        modes = session.exec(
+            select(FailureMode).where(FailureMode.id.in_(failure_mode_ids))
+        ).all()
+
+        if len(modes) != len(set(failure_mode_ids)):
+            raise HTTPException(status_code=400, detail="One or more failure mode IDs are invalid")
+
+        for mode in modes:
+            session.add(
+                SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mode.id)
+            )
+
     session.commit()
     session.refresh(specimen)
     return specimen
@@ -68,16 +88,64 @@ def update_specimen(
     specimen_in: SpecimenUpdate,
 ) -> Any:
     """
-    Update an specimen.
+    Update a specimen.
     """
     specimen = session.get(Specimen, id)
-    if not current_user.is_superuser and (specimen.uploader_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
     if not specimen:
         raise HTTPException(status_code=404, detail="Specimen not found")
-    update_dict = specimen_in.model_dump(exclude_unset=True)
+
+    if not current_user.is_superuser and (specimen.uploader_id != current_user.id):
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    # Separate normal fields from failure modes
+    update_dict = specimen_in.model_dump(exclude={"e_qualitative_failure_measure"}, exclude_unset=True)
+    failure_mode_ids = specimen_in.e_qualitative_failure_measure
+
+    # Update standard fields
     specimen.sqlmodel_update(update_dict)
     session.add(specimen)
+
+    # Attach failure modes (if any)
+    if failure_mode_ids is None:
+        return specimen  # No change to failure modes
+    elif failure_mode_ids == []:
+        updated_modes = []
+    else:
+        updated_modes = session.exec(
+            select(FailureMode).where(FailureMode.id.in_(failure_mode_ids))
+        ).all()
+
+        if len(updated_modes) != len(set(failure_mode_ids)):
+            raise HTTPException(status_code=400, detail="One or more failure mode IDs are invalid") 
+        
+
+    # Get current linked IDs 
+    current_ids = {
+        row.failure_mode_id
+        for row in session.exec(
+            select(SpecimenFailureMode).where(SpecimenFailureMode.specimen_id == specimen.id)
+        ).all()
+    }
+
+    # Compute diffs
+    new_ids = {mode.id for mode in updated_modes}
+    to_add = new_ids - current_ids
+    to_remove = current_ids - new_ids
+
+    # Remove stale links
+    if to_remove:
+        session.exec(
+            delete(SpecimenFailureMode)
+            .where(SpecimenFailureMode.specimen_id == specimen.id)
+            .where(SpecimenFailureMode.failure_mode_id.in_(to_remove))
+        )
+
+    # Add missing links
+    if to_add:
+        for mid in to_add:
+            session.add(SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mid))
+            
+
     session.commit()
     session.refresh(specimen)
     return specimen

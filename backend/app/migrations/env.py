@@ -1,6 +1,7 @@
 from logging.config import fileConfig
 
 from alembic import context
+import alembic_postgresql_enum
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
