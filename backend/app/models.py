@@ -77,12 +77,19 @@ class SpecimenFailureMode(SQLModel, table=True):
 # One row per failure mode option (Tension Parallel/Perpendicular, Compression Parallel/Perpendicular, Rolling Shear, etc.)
 class FailureMode(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    label: str = Field(min_length=1, max_length=255)
+    label: str = Field(unique=True, min_length=1, max_length=255)
 
     specimens: list["Specimen"] = Relationship(
         back_populates="e_qualitative_failure_measure",
         link_model=SpecimenFailureMode,
     )
+
+class FailureModeCreate(SQLModel):
+    label: str = Field(min_length=1, max_length=255)
+
+class FailureModes(SQLModel):
+    data: list[FailureMode]
+    count: int
 
 
 # Shared properties

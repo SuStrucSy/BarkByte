@@ -20,7 +20,7 @@ def init_db(session: Session) -> None:
 
   # This works because the models are already imported and registered from app.models
   # SQLModel.metadata.create_all(engine)
-  user = init_add_admin_user(session)
+  init_add_admin_user(session)
   init_failure_modes(session)
 
 def init_add_admin_user(session: Session) -> None:
@@ -54,10 +54,10 @@ def init_failure_modes(session: Session) -> None:
             {"label": "Shear"},
             {"label": "Rolling Shear"},
             {"label": "Longitudinal Shear"},
-            {"label": "Bending"},
-            {"label": "Other (special case): Specify below"},
+            {"label": "Bending"}
         ]
         for mode in failure_modes_data:
             failure_mode = FailureMode(**mode)
             session.add(failure_mode)
         session.commit()
+
