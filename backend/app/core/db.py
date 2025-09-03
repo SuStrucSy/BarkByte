@@ -47,13 +47,20 @@ def init_failure_modes(session: Session) -> None:
     failure_modes = session.exec(select(FailureMode)).all()
     if not failure_modes:
         failure_modes_data = [
-            {"label": "Tension Parallel"},
-            {"label": "Tension Perpendicular"},
-            {"label": "Compression Parallel"},
-            {"label": "Compression Perpendicular"},
-            {"label": "Shear"},
-            {"label": "Rolling Shear"},
-            {"label": "Longitudinal Shear"},
+            {"label": "Wood: Tension Parallel"},
+            {"label": "Wood: Tension Perpendicular"},
+            {"label": "Wood: Compression Parallel"},
+            {"label": "Wood: Compression Perpendicular"},
+            {"label": "Wood: Shear"},
+            {"label": "Wood: Rolling Shear"},
+            {"label": "Dowel: Plastic Yield"},
+            {"label": "Dowel: Failure"},
+            {"label": "Dowel: Pullout"},
+            {"label": "Connector: Local Buckling or Bending"},
+            {"label": "Connector: Shear"},
+            {"label": "Connector: Yield"},
+            {"label": "Connector: Failure"},
+            {"label": "Connector: Fuse Yield"},
             {"label": "Bending"}
         ]
         for mode in failure_modes_data:
