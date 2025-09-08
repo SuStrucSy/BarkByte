@@ -11,29 +11,27 @@ class AssemblyType(str, Enum):
     WALLFLOOR = "Wall-Floor"
     WALLWALL = "Wall-Wall"
 
+# TODO: Needs a table and routes - some are dowel based, some are not. (three columns: id, label, is_dowel_based)
 class JoineryType(str, Enum):
     HOLDOWN = "Hold-Down"
     SPLINEJOINT = "Spline Joint"
     # TODO: Add more joinery types as needed
 
+# TODO: Needs a table and routes - multiselect
 class FastenerType(str, Enum):
     NAIL = "Nail"
     SCREW = "Screw"
     BOLT = "Bolt"
     # TODO: Add more fastener types as needed
 
+# TODO: Could be multiple options
 class LoadingDirection(str, Enum):
     INPLANESHEAR = "In-Plane Shear"
     OUTPLANESHEAR = "Out-of-Plane Shear"
     INPLANETENSION = "In-Plane Tension"
     OUTPLANETENSION = "Out-of-Plane Tension"
-    # TODO: verify these are all correct
 
-class Practice(str, Enum):
-    CONVENTIONAL = "Conventional"
-    RESEARCHANDDEVELOPMENT = "Research and Development"
-    # TODO: Check if RD or R&D or RESEARCHANDDEVELOPMENT is preferred
-
+# TODO: Dowel Only!
 class Reinforcement(str, Enum):
     NONE = "None"
     STRAP = "Strap"
@@ -43,7 +41,12 @@ class Reinforcement(str, Enum):
 class TestLoadingType(str, Enum):
     CYCLIC = "Cyclic"
     MONOTONIC = "Monotonic"
+    MONOTONICANDCYCLIC = "Monotonic and Cyclic"
 
 class YieldPointMethod(str, Enum):
     CEN16 = "CEN 1/6"
     EEEP = "EEEP"
+
+class Practice(str, Enum):
+    CONVENTIONAL = "Conventional"
+    RESEARCHANDDEVELOPMENT = "Research and Development"
