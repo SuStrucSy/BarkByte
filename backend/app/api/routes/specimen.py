@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, delete
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode
+from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +51,21 @@ def create_specimen(
     data = specimen_in.dict(exclude={"e_qualitative_failure_measure"})
     failure_mode_ids = specimen_in.e_qualitative_failure_measure or []
 
+    # Validate dowel vs joinery_type.has_dowel
+    given_joinerytype_id = data.get("joinery_type_id")
+    if given_joinerytype_id is None:
+        raise HTTPException(status_code=400, detail="joinery_type id is required")
+
+    joinerytype_obj = session.exec(select(JoineryType).where(JoineryType.id == given_joinerytype_id)).one_or_none()
+    if joinerytype_obj is None:
+        raise HTTPException(status_code=400, detail="joinery_type id not found")
+
+    if bool(data.get("dowel")) != bool(joinerytype_obj.has_dowel):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Mismatch: specimen.dowel={data.get('dowel')} but joinery_type.has_dowel={joinerytype_obj.has_dowel}."
+        )
+
     # Create specimen object
     specimen = Specimen(
         **data,
@@ -76,6 +91,7 @@ def create_specimen(
             )
 
     session.commit()
+
     session.refresh(specimen)
     return specimen
 
@@ -100,6 +116,21 @@ def update_specimen(
     # Separate normal fields from failure modes
     update_dict = specimen_in.model_dump(exclude={"e_qualitative_failure_measure"}, exclude_unset=True)
     failure_mode_ids = specimen_in.e_qualitative_failure_measure
+
+    # Determine proposed values (use current if not provided)
+    proposed_dowel = update_dict.get("dowel", specimen.dowel)
+    proposed_joinerytype_id = update_dict.get("joinery_type_id")
+
+    # If either dowel or joinery_type is changing (or both are present), make sure they are consistent.
+    if ("dowel" in update_dict) or ("joinery_type_id" in update_dict):
+        joinerytype_obj = session.exec(select(JoineryType).where(JoineryType.id == proposed_joinerytype_id)).one_or_none()
+        if joinerytype_obj is None:
+            raise HTTPException(status_code=400, detail="joinery_type id not found")
+        if bool(proposed_dowel) != bool(joinerytype_obj.has_dowel):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mismatch: specimen.dowel={proposed_dowel} but joinery_type.has_dowel={joinerytype_obj.has_dowel}.",
+            )
 
     # Update standard fields
     specimen.sqlmodel_update(update_dict)

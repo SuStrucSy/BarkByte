@@ -95,6 +95,7 @@ class JoineryType(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     label: str = Field(min_length=1, max_length=255)
     has_dowel: bool = Field()
+    specimens: list["Specimen"] = Relationship(back_populates="joinery_type")
 
 class JoineryTypeCreate(SQLModel):
     label: str = Field(min_length=1, max_length=255)
@@ -117,8 +118,6 @@ class SpecimenBase(SQLModel):
     # todo: need to address the enum types here
     dowel: bool = Field()  # whether the specimen uses dowels
     assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
-
-    joinery_type: str = Field(min_length=1, max_length=255)  # type of joinery id
 
     fastener_type: FastenerType = Field(min_length=1, max_length=255)  # type of fastening
     loading_direction: LoadingDirection = Field(min_length=1, max_length=255)  # direction of loading
@@ -160,10 +159,12 @@ class SpecimenBase(SQLModel):
 class SpecimenCreate(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     e_qualitative_failure_measure: list[uuid.UUID] = []
+    joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
 
 # Properties to receive on item update
 class SpecimenUpdate(SpecimenBase):
     e_qualitative_failure_measure: Optional[list[uuid.UUID]] = None
+    joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
 
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
@@ -171,11 +172,13 @@ class Specimen(SpecimenBase, table=True):
     doi: str = Field(unique=True)
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
-
     e_qualitative_failure_measure: list[FailureMode] = Relationship(
         back_populates="specimens",
         link_model=SpecimenFailureMode,
-    )
+    )    
+    joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
+
+    joinery_type: JoineryType = Relationship(back_populates="specimens")
 
 # Properties to return via API, id is always required
 class SpecimenPublic(SpecimenBase):
@@ -183,6 +186,7 @@ class SpecimenPublic(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
+    joinery_type: JoineryType = Field()
     e_qualitative_failure_measure: list[FailureMode] = Field(default_factory=list)
 
 class SpecimensPublic(SQLModel):
