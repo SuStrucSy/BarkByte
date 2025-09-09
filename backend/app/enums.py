@@ -11,12 +11,6 @@ class AssemblyType(str, Enum):
     WALLFLOOR = "Wall-Floor"
     WALLWALL = "Wall-Wall"
 
-# TODO: Needs a table and routes - some are dowel based, some are not. (three columns: id, label, is_dowel_based)
-class JoineryType(str, Enum):
-    HOLDOWN = "Hold-Down"
-    SPLINEJOINT = "Spline Joint"
-    # TODO: Add more joinery types as needed
-
 # TODO: Needs a table and routes - multiselect
 class FastenerType(str, Enum):
     NAIL = "Nail"

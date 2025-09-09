@@ -1,9 +1,8 @@
-from sqlite3 import IntegrityError
 import uuid
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select, delete
+from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import FailureMode, FailureModes, FailureModeCreate
@@ -69,7 +68,7 @@ def update_mode(
     mode_in: FailureModeCreate
 ) -> Any:
     """
-    Update specimen.
+    Update failure mode.
     """
     mode = session.get(FailureMode, id)
     if not current_user.is_superuser:
@@ -79,15 +78,6 @@ def update_mode(
     if not mode:
         raise HTTPException(status_code=404, detail="Failure mode not found")
     
-    # Check if label already exists
-    existing = session.exec(
-        select(FailureMode).where(FailureMode.label == mode_in.label)
-    ).first()
-    
-    if existing and existing.id != id:
-        raise HTTPException(
-            status_code=400, detail=f"Failure mode with label '{mode_in.label}' already exists"
-        )
     mode.label = mode_in.label
     session.add(mode)
     session.commit()
@@ -102,7 +92,7 @@ def delete_mode(
     id: uuid.UUID
 ) -> Any:
     """
-    Delet failure mode ONLY if not in use.
+    Delete failure mode ONLY if not in use.
     """
     mode = session.get(FailureMode, id)
     if not current_user.is_superuser:

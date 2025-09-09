@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate, FailureMode
+from app.models import User, UserCreate, FailureMode, JoineryType
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -22,6 +22,7 @@ def init_db(session: Session) -> None:
   # SQLModel.metadata.create_all(engine)
   init_add_admin_user(session)
   init_failure_modes(session)
+  init_joinery_types(session)  # Uncomment to auto-create joinery types 🚨
 
 def init_add_admin_user(session: Session) -> None:
     # This function is called to create the admin user
@@ -66,5 +67,26 @@ def init_failure_modes(session: Session) -> None:
         for mode in failure_modes_data:
             failure_mode = FailureMode(**mode)
             session.add(failure_mode)
+        session.commit()
+
+def init_joinery_types(session: Session) -> None:
+    # This function is called to create the joinery types
+    # It should be called only once, when the database is initialized    
+
+    joinery_types = session.exec(select(JoineryType)).all()
+    if not joinery_types:
+        joinery_types_data = [
+            {"label": "Angle Bracket", "has_dowel": True},
+            {"label": "Butt Joint", "has_dowel": True},
+            {"label": "Half-lap Joint", "has_dowel": True},
+            {"label": "Hold-down", "has_dowel": True},
+            {"label": "Plate", "has_dowel": True},
+            {"label": "Spline Joint", "has_dowel": True},
+            {"label": "Slot Joint", "has_dowel": False},
+            {"label": "Through Tenon", "has_dowel": False},
+        ]
+        for mode in joinery_types_data:
+            joinery_type = JoineryType(**mode)
+            session.add(joinery_type)
         session.commit()
 

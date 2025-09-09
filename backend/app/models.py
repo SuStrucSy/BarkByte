@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 from pydantic import EmailStr, HttpUrl
 from sqlmodel import Field, Relationship, SQLModel
-from app.enums import AssemblyType, JoineryType, FastenerType, LoadingDirection, Practice, Reinforcement, TestLoadingType, YieldPointMethod
+from app.enums import AssemblyType, FastenerType, LoadingDirection, Practice, Reinforcement, TestLoadingType, YieldPointMethod
 
 
 # Shared properties
@@ -91,6 +91,18 @@ class FailureModes(SQLModel):
     data: list[FailureMode]
     count: int
 
+class JoineryType(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    label: str = Field(min_length=1, max_length=255)
+    has_dowel: bool = Field()
+
+class JoineryTypeCreate(SQLModel):
+    label: str = Field(min_length=1, max_length=255)
+    has_dowel: bool = Field()
+
+class JoineryTypes(SQLModel):
+    data: list[JoineryType]
+    count: int
 
 # Shared properties
 class SpecimenBase(SQLModel):
@@ -103,8 +115,11 @@ class SpecimenBase(SQLModel):
     note: str | None = Field(default=None, max_length=1024)  # additional notes
     
     # todo: need to address the enum types here
+    dowel: bool = Field()  # whether the specimen uses dowels
     assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
-    joinery_type: JoineryType = Field(min_length=1, max_length=255)  # type of joinery
+
+    joinery_type: str = Field(min_length=1, max_length=255)  # type of joinery id
+
     fastener_type: FastenerType = Field(min_length=1, max_length=255)  # type of fastening
     loading_direction: LoadingDirection = Field(min_length=1, max_length=255)  # direction of loading
     practice: Practice = Field(min_length=1, max_length=255)  # practice type
@@ -150,7 +165,6 @@ class SpecimenCreate(SpecimenBase):
 class SpecimenUpdate(SpecimenBase):
     e_qualitative_failure_measure: Optional[list[uuid.UUID]] = None
 
-
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -170,9 +184,6 @@ class SpecimenPublic(SpecimenBase):
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
     e_qualitative_failure_measure: list[FailureMode] = Field(default_factory=list)
-
-
-
 
 class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
