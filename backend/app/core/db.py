@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType
+from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -25,6 +25,7 @@ def init_db(session: Session) -> None:
     init_joinery_types(session)
     init_subjoinery_types(session)
     init_fasteners(session)
+    init_loading_directions(session) #🚨
 
 def init_add_admin_user(session: Session) -> None:
     # This function is called to create the admin user
@@ -177,4 +178,21 @@ def init_fasteners(session: Session) -> None:
         for fastener_type_data in fastener_types_data:
             fastener_type = FastenerType(**fastener_type_data)
             session.add(fastener_type)
+        session.commit()
+
+def init_loading_directions(session: Session) -> None:
+    # This function is called to create the loading directions
+    # It should be called only once, when the database is initialized
+
+    loading_directions = session.exec(select(LoadingDirection)).all()
+    if not loading_directions:
+        loading_directions_data = [
+            {"label": "In-Plane Shear"},
+            {"label": "Out-of-Plane Shear"},
+            {"label": "In-Plane Tension"},
+            {"label": "Out-of-Plane Tension"}
+        ]
+        for loading_direction_data in loading_directions_data:
+            loading_direction = LoadingDirection(**loading_direction_data)
+            session.add(loading_direction)
         session.commit()

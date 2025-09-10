@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, delete
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType
+from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -48,9 +48,11 @@ def create_specimen(
         raise HTTPException(status_code=400, detail="Not enough permissions")
     
     # Split out the failure mode IDs (not part of Specimen table directly)
-    data = specimen_in.dict(exclude={"e_qualitative_failure_measure", "fastener_type_ids"})
+    data = specimen_in.dict(exclude={"e_qualitative_failure_measure", "fastener_type_ids", "loading_direction_ids"})
     failure_mode_ids = specimen_in.e_qualitative_failure_measure or []
     fastener_type_ids = specimen_in.fastener_type_ids or []
+    loading_direction_ids = specimen_in.loading_direction_ids or []
+
 
     # Validate dowel vs joinery_type.has_dowel
     given_joinerytype_id = data.get("joinery_type_id")
@@ -126,6 +128,18 @@ def create_specimen(
         for fastener_type_obj in fastener_type_objs:
             session.add(SpecimenFastenerType(specimen_id=specimen.id, fastener_type_id=fastener_type_obj.id))
     
+
+    # Attach loading directions
+    if loading_direction_ids:
+        ldirs = session.exec(
+            select(LoadingDirection).where(LoadingDirection.id.in_(loading_direction_ids))
+        ).all()
+        if len(ldirs) != len(set(loading_direction_ids)):
+            raise HTTPException(status_code=400, detail="One or more loading direction IDs are invalid")
+        for ld in ldirs:
+            session.add(SpecimenLoadingDirection(specimen_id=specimen.id, loading_direction_id=ld.id))
+
+    
     session.commit()
 
     session.refresh(specimen)
@@ -153,6 +167,8 @@ def update_specimen(
     update_dict = specimen_in.model_dump(exclude={"e_qualitative_failure_measure", "fastener_type_ids"}, exclude_unset=True)
     failure_mode_ids = specimen_in.e_qualitative_failure_measure
     fastener_type_ids_in = specimen_in.fastener_type_ids
+    loading_direction_ids_in = specimen_in.loading_direction_ids
+
 
     # Current links
     current_fastener_type_ids = {
@@ -266,6 +282,37 @@ def update_specimen(
             )
         for fid in to_add_fastener_types:
             session.add(SpecimenFastenerType(specimen_id=specimen.id, fastener_type_id=fid))    
+
+    # Attach loading directions (if any)
+    if loading_direction_ids_in is not None:
+        # Validate existence
+        ldir_objs = []
+        if loading_direction_ids_in:
+            ldir_objs = session.exec(
+                select(LoadingDirection).where(LoadingDirection.id.in_(loading_direction_ids_in))
+            ).all()
+
+            if len(ldir_objs) != len(set(loading_direction_ids_in)):
+                raise HTTPException(status_code=400, detail="One or more loading direction IDs are invalid")
+
+        current_ld_ids = {
+            row.loading_direction_id
+            for row in session.exec(
+                select(SpecimenLoadingDirection).where(SpecimenLoadingDirection.specimen_id == specimen.id)
+            ).all()
+        }
+        new_ld_ids = {ld.id for ld in ldir_objs}
+        to_add = new_ld_ids - current_ld_ids
+        to_remove = current_ld_ids - new_ld_ids
+
+        if to_remove:
+            session.exec(
+                delete(SpecimenLoadingDirection)
+                .where(SpecimenLoadingDirection.specimen_id == specimen.id)
+                .where(SpecimenLoadingDirection.loading_direction_id.in_(to_remove))
+            )
+        for lid in to_add:
+            session.add(SpecimenLoadingDirection(specimen_id=specimen.id, loading_direction_id=lid))
 
     session.commit()
     session.refresh(specimen)

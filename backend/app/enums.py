@@ -11,14 +11,7 @@ class AssemblyType(str, Enum):
     WALLFLOOR = "Wall-Floor"
     WALLWALL = "Wall-Wall"
 
-# TODO: Could be multiple options
-class LoadingDirection(str, Enum):
-    INPLANESHEAR = "In-Plane Shear"
-    OUTPLANESHEAR = "Out-of-Plane Shear"
-    INPLANETENSION = "In-Plane Tension"
-    OUTPLANETENSION = "Out-of-Plane Tension"
-
-# TODO: Dowel Only!
+# TODO: Need to ask Aryan if this is needed 🚨
 class Reinforcement(str, Enum):
     NONE = "None"
     STRAP = "Strap"

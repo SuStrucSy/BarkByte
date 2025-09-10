@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
-from app.enums import AssemblyType, LoadingDirection, Practice, Reinforcement, TestLoadingType, YieldPointMethod
+from app.enums import AssemblyType, Practice, Reinforcement, TestLoadingType, YieldPointMethod
 
 
 # Shared properties
@@ -144,6 +144,25 @@ class FastenerTypes(SQLModel):
     data: list[FastenerType]
     count: int
 
+# Many-to-many relationship table for Specimen and Loading Direction
+# Each row represents a link between a Specimen and a Loading Direction
+class SpecimenLoadingDirection(SQLModel, table=True):
+    specimen_id: uuid.UUID = Field(foreign_key="specimen.id", primary_key=True)
+    loading_direction_id: uuid.UUID = Field(foreign_key="loadingdirection.id", primary_key=True)
+
+class LoadingDirection(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    label: str = Field(min_length=1, max_length=255)
+
+    specimens: list["Specimen"] = Relationship(
+        back_populates="loading_directions",
+        link_model=SpecimenLoadingDirection,
+    )
+
+class LoadingDirections(SQLModel):
+    data: list[LoadingDirection]
+    count: int
+
 # Shared properties
 class SpecimenBase(SQLModel):
     reference_title: str = Field(min_length=1, max_length=255)
@@ -158,7 +177,6 @@ class SpecimenBase(SQLModel):
     dowel: bool = Field()  # whether the specimen uses dowels
     assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
 
-    loading_direction: LoadingDirection = Field(min_length=1, max_length=255)  # direction of loading
     practice: Practice = Field(min_length=1, max_length=255)  # practice type
     reinforcement: Reinforcement | None = Field(min_length=1, max_length=255)  # reinforcement type
     connection_description: str = Field(min_length=1, max_length=255)  # description of connection
@@ -198,13 +216,16 @@ class SpecimenCreate(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     e_qualitative_failure_measure: list[uuid.UUID] = []
     fastener_type_ids: list[uuid.UUID] = []
+    loading_direction_ids: list[uuid.UUID] = []
     joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
     sub_joinery_type_id: uuid.UUID = Field(foreign_key="subjoinerytype.id")
+
 
 # Properties to receive on item update
 class SpecimenUpdate(SpecimenBase):
     e_qualitative_failure_measure: Optional[list[uuid.UUID]] = None
     fastener_type_ids: Optional[list[uuid.UUID]] = None
+    loading_direction_ids: Optional[list[uuid.UUID]] = None
     joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
     sub_joinery_type_id: uuid.UUID = Field(foreign_key="subjoinerytype.id")
 
@@ -223,6 +244,10 @@ class Specimen(SpecimenBase, table=True):
         back_populates="specimens",
         link_model=SpecimenFastenerType,
     )
+    loading_directions: list[LoadingDirection] = Relationship(
+        back_populates="specimens",
+        link_model=SpecimenLoadingDirection,
+    )
     joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
     sub_joinery_type_id: uuid.UUID = Field(foreign_key="subjoinerytype.id")
     
@@ -239,6 +264,7 @@ class SpecimenPublic(SpecimenBase):
     sub_joinery_type: SubJoineryType = Field()
     e_qualitative_failure_measure: list[FailureMode] = Field(default_factory=list)
     fastener_types: list[FastenerType] = Field(default_factory=list)
+    loading_directions: list[LoadingDirection] = Field(default_factory=list)
 
 class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
@@ -261,6 +287,10 @@ __all__ = [
     # Fasteners
     "FastenerType", "FastenerTypeCreate", "FastenerTypes",
     "SpecimenFastenerType",
+
+    # Loading Directions
+    "LoadingDirection", "LoadingDirections",
+    "SpecimenLoadingDirection",
 
     # Specimens
     "SpecimenBase", "SpecimenCreate", "SpecimenUpdate",
