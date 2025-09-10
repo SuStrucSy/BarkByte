@@ -11,13 +11,6 @@ class AssemblyType(str, Enum):
     WALLFLOOR = "Wall-Floor"
     WALLWALL = "Wall-Wall"
 
-# TODO: Needs a table and routes - multiselect
-class FastenerType(str, Enum):
-    NAIL = "Nail"
-    SCREW = "Screw"
-    BOLT = "Bolt"
-    # TODO: Add more fastener types as needed
-
 # TODO: Could be multiple options
 class LoadingDirection(str, Enum):
     INPLANESHEAR = "In-Plane Shear"

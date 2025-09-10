@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType
+from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -24,6 +24,7 @@ def init_db(session: Session) -> None:
     init_failure_modes(session)
     init_joinery_types(session)
     init_subjoinery_types(session)
+    init_fasteners(session)
 
 def init_add_admin_user(session: Session) -> None:
     # This function is called to create the admin user
@@ -43,8 +44,6 @@ def init_add_admin_user(session: Session) -> None:
 def init_failure_modes(session: Session) -> None:
     # This function is called to create the failure modes
     # It should be called only once, when the database is initialized
-
-    # 🚨 wait, do I need to populate SpecimenFailureMode??
 
     failure_modes = session.exec(select(FailureMode)).all()
     if not failure_modes:
@@ -160,4 +159,22 @@ def init_subjoinery_types(session: Session) -> None:
                 if not exists:
                     session.add(SubJoineryType(joinery_type_id=joinery_type.id, label=sub_joinery_type_label))
 
+        session.commit()
+
+def init_fasteners(session: Session) -> None:
+    # This function is called to create the fastener types
+    # It should be called only once, when the database is initialized
+
+    fastener_types = session.exec(select(FastenerType)).all()
+    if not fastener_types:
+        fastener_types_data = [
+            {"label": "Nail"},
+            {"label": "Screw"},
+            {"label": "Bolt"},
+            {"label": "STS(Self Tap Screw)"},
+            {"label": "Other"}
+        ]
+        for fastener_type_data in fastener_types_data:
+            fastener_type = FastenerType(**fastener_type_data)
+            session.add(fastener_type)
         session.commit()

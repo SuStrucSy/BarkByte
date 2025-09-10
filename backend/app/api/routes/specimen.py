@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, delete
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType
+from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -48,8 +48,9 @@ def create_specimen(
         raise HTTPException(status_code=400, detail="Not enough permissions")
     
     # Split out the failure mode IDs (not part of Specimen table directly)
-    data = specimen_in.dict(exclude={"e_qualitative_failure_measure"})
+    data = specimen_in.dict(exclude={"e_qualitative_failure_measure", "fastener_type_ids"})
     failure_mode_ids = specimen_in.e_qualitative_failure_measure or []
+    fastener_type_ids = specimen_in.fastener_type_ids or []
 
     # Validate dowel vs joinery_type.has_dowel
     given_joinerytype_id = data.get("joinery_type_id")
@@ -82,6 +83,13 @@ def create_specimen(
             detail_msg = "Mismatch: This specimen is marked as not having a dowel, but the selected joinery type requires dowels."
         raise HTTPException(status_code=400, detail=detail_msg)
 
+    # Validate fastener_type_ids (if any)
+    if data.get("dowel") and not fastener_type_ids:
+        raise HTTPException(status_code=400, detail="At least one fastener type is required when dowel is true.")
+    if not data.get("dowel") and fastener_type_ids:
+        raise HTTPException(status_code=400, detail="Remove fastener types when dowel is false.")
+
+
     # Create specimen object
     specimen = Specimen(
         **data,
@@ -106,6 +114,18 @@ def create_specimen(
                 SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mode.id)
             )
 
+    # Attach fastener types (if any)
+    if fastener_type_ids:
+        fastener_type_objs = session.exec(
+            select(FastenerType).where(FastenerType.id.in_(fastener_type_ids))
+        ).all()
+        
+        if len(fastener_type_objs) != len(set(fastener_type_ids)):
+            raise HTTPException(status_code=400, detail="One or more fastener type IDs are invalid")
+        
+        for fastener_type_obj in fastener_type_objs:
+            session.add(SpecimenFastenerType(specimen_id=specimen.id, fastener_type_id=fastener_type_obj.id))
+    
     session.commit()
 
     session.refresh(specimen)
@@ -130,12 +150,29 @@ def update_specimen(
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
     # Separate normal fields from failure modes
-    update_dict = specimen_in.model_dump(exclude={"e_qualitative_failure_measure"}, exclude_unset=True)
+    update_dict = specimen_in.model_dump(exclude={"e_qualitative_failure_measure", "fastener_type_ids"}, exclude_unset=True)
     failure_mode_ids = specimen_in.e_qualitative_failure_measure
+    fastener_type_ids_in = specimen_in.fastener_type_ids
 
-    # If any of dowel, joinery_type_id, sub_joinery_type_id are changing, validate the relationships
-    if ("sub_joinery_type_id" in update_dict) or ("joinery_type_id" in update_dict) or ("dowel" in update_dict):
-        
+    # Current links
+    current_fastener_type_ids = {
+        row.fastener_type_id
+        for row in session.exec(
+            select(SpecimenFastenerType).where(SpecimenFastenerType.specimen_id == specimen.id)
+        ).all()
+    }
+    if fastener_type_ids_in is not None:
+        proposed_ft_ids = current_fastener_type_ids
+    else:
+        proposed_ft_ids = set(fastener_type_ids_in)
+
+    # If any of dowel/joinery/sub-joinery/fasteners change, validate
+    if (
+        ("sub_joinery_type_id" in update_dict)
+        or ("joinery_type_id" in update_dict)
+        or ("dowel" in update_dict)
+        or (fastener_type_ids_in is not None)
+    ):        
         # Determine proposed values (use current if not provided)
         proposed_dowel = update_dict.get("dowel", specimen.dowel)
         proposed_joinerytype_id = update_dict.get("joinery_type_id", specimen.joinery_type_id)
@@ -167,49 +204,68 @@ def update_specimen(
                 detail_msg = "This specimen is marked as not having a dowel, but the selected joinery type requires dowels."
             raise HTTPException(status_code=400, detail=detail_msg)
 
+        # Enforce dowel vs fastener types
+        if proposed_dowel and not proposed_ft_ids:
+            raise HTTPException(status_code=400, detail="At least one fastener type is required when dowel is true.")
+        if (not proposed_dowel) and proposed_ft_ids:
+            raise HTTPException(status_code=400, detail="Remove fastener types when dowel is false.")
+
     # Update standard fields
     specimen.sqlmodel_update(update_dict)
     session.add(specimen)
 
     # Attach failure modes (if any)
-    if failure_mode_ids is None:
-        return specimen  # No change to failure modes
-    elif failure_mode_ids == []:
+    if failure_mode_ids is not None:
         updated_modes = []
-    else:
-        updated_modes = session.exec(
-            select(FailureMode).where(FailureMode.id.in_(failure_mode_ids))
-        ).all()
+        if failure_mode_ids:
+            updated_modes = session.exec(
+                select(FailureMode).where(FailureMode.id.in_(failure_mode_ids))
+            ).all()
+            if len(updated_modes) != len(set(failure_mode_ids)):
+                raise HTTPException(status_code=400, detail="One or more failure mode IDs are invalid")
 
-        if len(updated_modes) != len(set(failure_mode_ids)):
-            raise HTTPException(status_code=400, detail="One or more failure mode IDs are invalid") 
-        
+        current_ids = {
+            row.failure_mode_id
+            for row in session.exec(
+                select(SpecimenFailureMode).where(SpecimenFailureMode.specimen_id == specimen.id)
+            ).all()
+        }
+        new_ids = {m.id for m in updated_modes}
+        to_add = new_ids - current_ids
+        to_remove = current_ids - new_ids
 
-    # Get current linked IDs 
-    current_ids = {
-        row.failure_mode_id
-        for row in session.exec(
-            select(SpecimenFailureMode).where(SpecimenFailureMode.specimen_id == specimen.id)
-        ).all()
-    }
+        if to_remove:
+            session.exec(
+                delete(SpecimenFailureMode)
+                .where(SpecimenFailureMode.specimen_id == specimen.id)
+                .where(SpecimenFailureMode.failure_mode_id.in_(to_remove))
+            )
+        for mid in to_add:
+            session.add(SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mid))
+    
+    # Attach fastener types (if any)
+    if fastener_type_ids_in is not None:
+        # Validate existence
+        fastener_type_objs = []
+        if fastener_type_ids_in:
+            fastener_type_objs = session.exec(
+                select(FastenerType).where(FastenerType.id.in_(fastener_type_ids_in))
+            ).all()
+            if len(fastener_type_objs) != len(set(fastener_type_ids_in)):
+                raise HTTPException(status_code=400, detail="One or more fastener type IDs are invalid")
 
-    # Compute diffs
-    new_ids = {mode.id for mode in updated_modes}
-    to_add = new_ids - current_ids
-    to_remove = current_ids - new_ids
+        new_fastener_type_ids = set(fastener_type_obj.id for fastener_type_obj in fastener_type_objs)
+        to_add_fastener_types = new_fastener_type_ids - current_fastener_type_ids
+        to_remove_fastener_types = current_fastener_type_ids - new_fastener_type_ids
 
-    # Remove stale links
-    if to_remove:
-        session.exec(
-            delete(SpecimenFailureMode)
-            .where(SpecimenFailureMode.specimen_id == specimen.id)
-            .where(SpecimenFailureMode.failure_mode_id.in_(to_remove))
-        )
-
-    # Add missing links
-    for mid in to_add:
-        session.add(SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mid))
-            
+        if to_remove_fastener_types:
+            session.exec(
+                delete(SpecimenFastenerType)
+                .where(SpecimenFastenerType.specimen_id == specimen.id)
+                .where(SpecimenFastenerType.fastener_type_id.in_(to_remove_fastener_types))
+            )
+        for fid in to_add_fastener_types:
+            session.add(SpecimenFastenerType(specimen_id=specimen.id, fastener_type_id=fid))    
 
     session.commit()
     session.refresh(specimen)
