@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, delete
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType
+from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -60,11 +60,27 @@ def create_specimen(
     if joinerytype_obj is None:
         raise HTTPException(status_code=400, detail="joinery_type id not found")
 
+    # If sub_joinery_type is provided, validate it exists and belongs to the given joinery_type
+    sjtype_id = data.get("sub_joinery_type_id")
+    if sjtype_id is not None:
+        sjtype_obj = session.exec(
+            select(SubJoineryType).where(SubJoineryType.id == sjtype_id)
+        ).one_or_none()
+        if sjtype_obj is None:
+            raise HTTPException(status_code=400, detail="sub_joinery_type id not found")
+        if sjtype_obj.joinery_type_id != given_joinerytype_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Mismatch: selected sub_joinery_type does not belong to the selected joinery_type",
+            )
+
+    # Make sure the right joinery type is used if dowel is provided
     if bool(data.get("dowel")) != bool(joinerytype_obj.has_dowel):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Mismatch: specimen.dowel={data.get('dowel')} but joinery_type.has_dowel={joinerytype_obj.has_dowel}."
-        )
+        if data.get("dowel"):
+            detail_msg = "Mismatch: This specimen is marked as having a dowel, but the selected joinery type does not allow dowels."
+        else:
+            detail_msg = "Mismatch: This specimen is marked as not having a dowel, but the selected joinery type requires dowels."
+        raise HTTPException(status_code=400, detail=detail_msg)
 
     # Create specimen object
     specimen = Specimen(
@@ -117,20 +133,39 @@ def update_specimen(
     update_dict = specimen_in.model_dump(exclude={"e_qualitative_failure_measure"}, exclude_unset=True)
     failure_mode_ids = specimen_in.e_qualitative_failure_measure
 
-    # Determine proposed values (use current if not provided)
-    proposed_dowel = update_dict.get("dowel", specimen.dowel)
-    proposed_joinerytype_id = update_dict.get("joinery_type_id")
+    # If any of dowel, joinery_type_id, sub_joinery_type_id are changing, validate the relationships
+    if ("sub_joinery_type_id" in update_dict) or ("joinery_type_id" in update_dict) or ("dowel" in update_dict):
+        
+        # Determine proposed values (use current if not provided)
+        proposed_dowel = update_dict.get("dowel", specimen.dowel)
+        proposed_joinerytype_id = update_dict.get("joinery_type_id", specimen.joinery_type_id)
+        proposed_sub_id = update_dict.get("sub_joinery_type_id", getattr(specimen, "sub_joinery_type_id", None))
 
-    # If either dowel or joinery_type is changing (or both are present), make sure they are consistent.
-    if ("dowel" in update_dict) or ("joinery_type_id" in update_dict):
-        joinerytype_obj = session.exec(select(JoineryType).where(JoineryType.id == proposed_joinerytype_id)).one_or_none()
+        # Validate joinery_type exists (if we have/keep an id)
+        if proposed_joinerytype_id is None:
+            raise HTTPException(status_code=400, detail="joinery_type id is required")
+        joinerytype_obj = session.get(JoineryType, proposed_joinerytype_id)
         if joinerytype_obj is None:
             raise HTTPException(status_code=400, detail="joinery_type id not found")
+        
+        # If a sub-joinery is set/proposed, ensure it exists and belongs to the joinery_type
+        if proposed_sub_id is not None:
+            proposed_sub_obj = session.get(SubJoineryType, proposed_sub_id)
+            if proposed_sub_obj is None:
+                raise HTTPException(status_code=400, detail="sub_joinery_type id not found")
+            if proposed_sub_obj.joinery_type_id != proposed_joinerytype_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Mismatch: selected sub_joinery_type does not belong to the selected joinery_type",
+                )
+
+        # Enforce dowel rule vs joinery_type.has_dowel
         if bool(proposed_dowel) != bool(joinerytype_obj.has_dowel):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Mismatch: specimen.dowel={proposed_dowel} but joinery_type.has_dowel={joinerytype_obj.has_dowel}.",
-            )
+            if proposed_dowel:
+                detail_msg = "This specimen is marked as having a dowel, but the selected joinery type does not allow dowels."
+            else:
+                detail_msg = "This specimen is marked as not having a dowel, but the selected joinery type requires dowels."
+            raise HTTPException(status_code=400, detail=detail_msg)
 
     # Update standard fields
     specimen.sqlmodel_update(update_dict)
@@ -172,9 +207,8 @@ def update_specimen(
         )
 
     # Add missing links
-    if to_add:
-        for mid in to_add:
-            session.add(SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mid))
+    for mid in to_add:
+        session.add(SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mid))
             
 
     session.commit()

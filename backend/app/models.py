@@ -96,6 +96,7 @@ class JoineryType(SQLModel, table=True):
     label: str = Field(min_length=1, max_length=255)
     has_dowel: bool = Field()
     specimens: list["Specimen"] = Relationship(back_populates="joinery_type")
+    sub_joinery_types: list["SubJoineryType"] = Relationship(back_populates="joinery_type")
 
 class JoineryTypeCreate(SQLModel):
     label: str = Field(min_length=1, max_length=255)
@@ -103,6 +104,22 @@ class JoineryTypeCreate(SQLModel):
 
 class JoineryTypes(SQLModel):
     data: list[JoineryType]
+    count: int
+
+class SubJoineryType(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
+    label: str = Field(min_length=1, max_length=255)
+
+    specimens: list["Specimen"] = Relationship(back_populates="sub_joinery_type")
+    joinery_type: JoineryType = Relationship(back_populates="sub_joinery_types")
+
+class SubJoineryTypeCreate(SQLModel):
+    joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
+    label: str = Field(min_length=1, max_length=255)
+
+class SubJoineryTypes(SQLModel):
+    data: list[SubJoineryType]
     count: int
 
 # Shared properties
@@ -160,11 +177,14 @@ class SpecimenCreate(SpecimenBase):
     doi: str = Field() # needs to have a validator to check if it is link and not a duplicate
     e_qualitative_failure_measure: list[uuid.UUID] = []
     joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
+    sub_joinery_type_id: uuid.UUID = Field(foreign_key="subjoinerytype.id")
 
 # Properties to receive on item update
 class SpecimenUpdate(SpecimenBase):
     e_qualitative_failure_measure: Optional[list[uuid.UUID]] = None
     joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
+    sub_joinery_type_id: uuid.UUID = Field(foreign_key="subjoinerytype.id")
+
 
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
@@ -177,8 +197,10 @@ class Specimen(SpecimenBase, table=True):
         link_model=SpecimenFailureMode,
     )    
     joinery_type_id: uuid.UUID = Field(foreign_key="joinerytype.id")
-
+    sub_joinery_type_id: uuid.UUID = Field(foreign_key="subjoinerytype.id")
+    
     joinery_type: JoineryType = Relationship(back_populates="specimens")
+    sub_joinery_type: SubJoineryType = Relationship(back_populates="specimens")
 
 # Properties to return via API, id is always required
 class SpecimenPublic(SpecimenBase):
@@ -187,6 +209,7 @@ class SpecimenPublic(SpecimenBase):
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
     joinery_type: JoineryType = Field()
+    sub_joinery_type: SubJoineryType = Field()
     e_qualitative_failure_measure: list[FailureMode] = Field(default_factory=list)
 
 class SpecimensPublic(SQLModel):

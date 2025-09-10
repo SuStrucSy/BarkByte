@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate, FailureMode, JoineryType
+from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -13,16 +13,17 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 def init_db(session: Session) -> None:
-  # Tables should be created with Alembic migrations
-  # But if you don't want to use migrations, create
-  # the tables un-commenting the next lines
-  # from sqlmodel import SQLModel
+    # Tables should be created with Alembic migrations
+    # But if you don't want to use migrations, create
+    # the tables un-commenting the next lines
+    # from sqlmodel import SQLModel
 
-  # This works because the models are already imported and registered from app.models
-  # SQLModel.metadata.create_all(engine)
-  init_add_admin_user(session)
-  init_failure_modes(session)
-  init_joinery_types(session)  # Uncomment to auto-create joinery types 🚨
+    # This works because the models are already imported and registered from app.models
+    # SQLModel.metadata.create_all(engine)
+    init_add_admin_user(session)
+    init_failure_modes(session)
+    init_joinery_types(session)
+    init_subjoinery_types(session)
 
 def init_add_admin_user(session: Session) -> None:
     # This function is called to create the admin user
@@ -90,3 +91,73 @@ def init_joinery_types(session: Session) -> None:
             session.add(joinery_type)
         session.commit()
 
+def init_subjoinery_types(session: Session) -> None:
+    # This function is called to create the sub-joinery types
+    # It should be called only once, when the database is initialized    
+
+    subjoinery_types = session.exec(select(SubJoineryType)).all()
+    if not subjoinery_types:
+        sub_map = {
+            "Slot Joint": [
+                "SL:Metal Slot",
+                "SL:Wood Slot",
+            ],
+            "Through Tenon": [
+                "TT:Inclined",
+                "TT:Straight",
+            ],
+            "Spline Joint": [
+                "SP:Single-sided Spline",
+                "SP:Double-sided Spline",
+            ],
+            "Half-lap Joint": [
+                "HL:Standard Half-lap",
+                "HL:Tongue & Groove (T&G)",
+            ],
+            "Angle Bracket": [
+                "AB:Proprietary Angle Bracket",
+                "AB:Perforated Angle Bracket",
+                "AB:Elastomeric Angle Bracket",
+            ],
+            "Hold-down": [
+                "HD:Proprietary Hold-down",
+                "HD:Elastomeric Hold-down",
+                "HD:Perforated Hold-down",
+                "HD:Other",
+            ],
+            "Plate": [
+                "PL:Knife Plate",
+                "PL:Perforated Knife Plate",
+                "PL:Double Surface plate",
+                "PL:Other",
+                "PL:Perforated Double-side Plate",
+                "PL:Double-side Plate",
+            ],
+            "Butt Joint": [
+                "BJ:Standard Butt Joint",
+            ],
+        }
+        
+        for joinery_type_label, sub_joinery_type_labels in sub_map.items():
+            joinery_type = session.exec(
+                select(JoineryType).where(JoineryType.label == joinery_type_label)
+            ).one_or_none()
+
+            if not joinery_type:
+                raise RuntimeError(
+                    f"JoineryType '{joinery_type_label}' not found. "
+                    "Ensure init_joinery_types(session) ran first."
+                )
+
+            for sub_joinery_type_label in sub_joinery_type_labels:
+                # Idempotent insert: skip if it already exists for this parent
+                exists = session.exec(
+                    select(SubJoineryType).where(
+                        SubJoineryType.joinery_type_id == joinery_type.id,
+                        SubJoineryType.label == sub_joinery_type_label,
+                    )
+                ).one_or_none()
+                if not exists:
+                    session.add(SubJoineryType(joinery_type_id=joinery_type.id, label=sub_joinery_type_label))
+
+        session.commit()

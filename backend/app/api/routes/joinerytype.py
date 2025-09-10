@@ -48,7 +48,7 @@ def create_jtype(
 
     if existing:
         raise HTTPException(
-            status_code=400, detail=f"Joinery jtype with label '{jtype_in.label}' already exists"
+            status_code=400, detail=f"Joinery type with label '{jtype_in.label}' already exists"
         )
 
     data = jtype_in.dict()
@@ -79,7 +79,7 @@ def update_jtype(
         raise HTTPException(status_code=404, detail="Joinery type not found")
     
     data = jtype_in.dict()
-    jtype = JoineryType(**data)
+    jtype.sqlmodel_update(data)   # ← update existing row
     session.add(jtype)
     session.commit()
     session.refresh(jtype)
