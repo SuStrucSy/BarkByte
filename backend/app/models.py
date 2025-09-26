@@ -159,6 +159,9 @@ class LoadingDirection(SQLModel, table=True):
         link_model=SpecimenLoadingDirection,
     )
 
+class LoadingDirectionCreate(SQLModel):
+    label: str = Field(min_length=1, max_length=255)
+
 class LoadingDirections(SQLModel):
     data: list[LoadingDirection]
     count: int
@@ -290,7 +293,7 @@ __all__ = [
 
     # Loading Directions
     "LoadingDirection", "LoadingDirections",
-    "SpecimenLoadingDirection",
+    "SpecimenLoadingDirection", "LoadingDirectionCreate"
 
     # Specimens
     "SpecimenBase", "SpecimenCreate", "SpecimenUpdate",
