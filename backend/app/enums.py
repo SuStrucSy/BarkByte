@@ -10,6 +10,7 @@ from enum import Enum
 class AssemblyType(str, Enum):
     WALLFLOOR = "Wall-Floor"
     WALLWALL = "Wall-Wall"
+    WALLWALLFLOOR = "Wall-Floor & Wall-Wall" # Page 11/24, Figure 4 of "Methodology: Database Developed for CLT Shearwall Connections" suggests a third category
 
 # TODO: Need to ask Aryan if this is needed 🚨
 class Reinforcement(str, Enum):
