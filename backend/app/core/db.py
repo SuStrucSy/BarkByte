@@ -49,22 +49,23 @@ def init_failure_modes(session: Session) -> None:
     failure_modes = session.exec(select(FailureMode)).all()
     if not failure_modes:
         failure_modes_data = [
-            {"label": "Wood: Tension Parallel"},
-            {"label": "Wood: Tension Perpendicular"},
-            {"label": "Wood: Compression Parallel"},
-            {"label": "Wood: Compression Perpendicular"},
-            {"label": "Wood: Shear"},
-            {"label": "Wood: Rolling Shear"},
-            {"label": "Dowel: Plastic Yield"},
-            {"label": "Dowel: Failure"},
-            {"label": "Dowel: Pullout"},
-            {"label": "Connector: Local Buckling or Bending"},
-            {"label": "Connector: Shear"},
-            {"label": "Connector: Yield"},
-            {"label": "Connector: Failure"},
-            {"label": "Connector: Fuse Yield"},
-            {"label": "Bending"}
+            {"label": "Wood: Tension Parallel", "type": "WOOD"},
+            {"label": "Wood: Tension Perpendicular", "type": "WOOD"},
+            {"label": "Wood: Compression Parallel", "type": "WOOD"},
+            {"label": "Wood: Compression Perpendicular", "type": "WOOD"},
+            {"label": "Wood: Shear", "type": "WOOD"},
+            {"label": "Wood: Rolling Shear", "type": "WOOD"},
+            {"label": "Dowel: Plastic Yield", "type": "DOWEL"},
+            {"label": "Dowel: Failure", "type": "DOWEL"},
+            {"label": "Dowel: Pullout", "type": "DOWEL"},
+            {"label": "Connector: Local Buckling or Bending", "type": "CONNECTOR"},
+            {"label": "Connector: Shear", "type": "CONNECTOR"},
+            {"label": "Connector: Yield", "type": "CONNECTOR"},
+            {"label": "Connector: Failure", "type": "CONNECTOR"},
+            {"label": "Connector: Fuse Yield", "type": "CONNECTOR"},
+            {"label": "Bending", "type": "OTHER"},
         ]
+
         for mode in failure_modes_data:
             failure_mode = FailureMode(**mode)
             session.add(failure_mode)

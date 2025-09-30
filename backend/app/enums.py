@@ -27,7 +27,14 @@ class TestLoadingType(str, Enum):
 class YieldPointMethod(str, Enum):
     CEN16 = "CEN 1/6"
     EEEP = "EEEP"
+    FEMAP795 = "FEMA P795"
 
 class Practice(str, Enum):
     CONVENTIONAL = "Conventional"
     RESEARCHANDDEVELOPMENT = "Research and Development"
+
+class FailureModeType(str, Enum):
+    WOOD = "WOOD"
+    DOWEL = "DOWEL"
+    CONNECTOR = "CONNECTOR"
+    OTHER = "OTHER"   # e.g. "Bending"

@@ -111,6 +111,22 @@ def create_specimen(
         if len(modes) != len(set(failure_mode_ids)):
             raise HTTPException(status_code=400, detail="One or more failure mode IDs are invalid")
 
+        for m in modes:
+            # robustly normalize enum or string to an UPPER string
+            mtype = getattr(m.type, "value", m.type)
+            mtype = str(mtype).upper()
+
+            if mtype == "CONNECTOR" and not data.get("connector"):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{m.label}' requires a connector, but connector=False on this specimen."
+                )
+            if mtype == "DOWEL" and not data.get("dowel"):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{m.label}' requires a dowel, but dowel=False on this specimen."
+                )
+
         for mode in modes:
             session.add(
                 SpecimenFailureMode(specimen_id=specimen.id, failure_mode_id=mode.id)
@@ -178,9 +194,9 @@ def update_specimen(
         ).all()
     }
     if fastener_type_ids_in is not None:
-        proposed_ft_ids = current_fastener_type_ids
-    else:
         proposed_ft_ids = set(fastener_type_ids_in)
+    else:
+        proposed_ft_ids = current_fastener_type_ids
 
     # If any of dowel/joinery/sub-joinery/fasteners change, validate
     if (
@@ -226,6 +242,28 @@ def update_specimen(
         if (not proposed_dowel) and proposed_ft_ids:
             raise HTTPException(status_code=400, detail="Remove fastener types when dowel is false.")
 
+        # If only dowel/connector toggles changed (no new failure_mode_ids provided),
+        # validate current failure modes still compatible with the proposed toggles.
+        if failure_mode_ids is None and ("dowel" in update_dict or "connector" in update_dict):
+            proposed_connector = update_dict.get("connector", getattr(specimen, "connector", False))
+            # Load current failure modes
+            current_modes = session.exec(
+                select(FailureMode).join(SpecimenFailureMode).where(SpecimenFailureMode.specimen_id == specimen.id)
+            ).all()
+            for m in current_modes:
+                mtype = getattr(m.type, "value", m.type)
+                mtype = str(mtype).upper()
+                if mtype == "CONNECTOR" and not proposed_connector:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"'{m.label}' requires a connector, but connector=False under proposed update."
+                    )
+                if mtype == "DOWEL" and not proposed_dowel:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"'{m.label}' requires a dowel, but dowel=False under proposed update."
+                    )
+
     # Update standard fields
     specimen.sqlmodel_update(update_dict)
     session.add(specimen)
@@ -239,6 +277,24 @@ def update_specimen(
             ).all()
             if len(updated_modes) != len(set(failure_mode_ids)):
                 raise HTTPException(status_code=400, detail="One or more failure mode IDs are invalid")
+
+        # Validate updated failure modes vs the *proposed* toggles (fall back to current on missing)
+        proposed_dowel = update_dict.get("dowel", specimen.dowel)
+        proposed_connector = update_dict.get("connector", getattr(specimen, "connector", False))
+
+        for m in updated_modes:
+            mtype = getattr(m.type, "value", m.type)
+            mtype = str(mtype).upper()
+            if mtype == "CONNECTOR" and not proposed_connector:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{m.label}' requires a connector, but connector=False under proposed update."
+                )
+            if mtype == "DOWEL" and not proposed_dowel:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{m.label}' requires a dowel, but dowel=False under proposed update."
+                )
 
         current_ids = {
             row.failure_mode_id

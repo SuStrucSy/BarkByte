@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
-from app.enums import AssemblyType, Practice, Reinforcement, TestLoadingType, YieldPointMethod
+from app.enums import AssemblyType, Practice, Reinforcement, TestLoadingType, YieldPointMethod, FailureModeType
 
 
 # Shared properties
@@ -78,6 +78,7 @@ class SpecimenFailureMode(SQLModel, table=True):
 class FailureMode(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     label: str = Field(unique=True, min_length=1, max_length=255)
+    type: FailureModeType = Field()
 
     specimens: list["Specimen"] = Relationship(
         back_populates="e_qualitative_failure_measure",
@@ -178,6 +179,7 @@ class SpecimenBase(SQLModel):
     
     # todo: need to address the enum types here
     dowel: bool = Field()  # whether the specimen uses dowels
+    connector: bool = Field()  # whether the specimen uses connectors
     assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
 
     practice: Practice = Field(min_length=1, max_length=255)  # practice type
