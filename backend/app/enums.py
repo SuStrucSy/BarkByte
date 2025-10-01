@@ -12,13 +12,6 @@ class AssemblyType(str, Enum):
     WALLWALL = "Wall-Wall"
     WALLWALLFLOOR = "Wall-Floor & Wall-Wall" # Page 11/24, Figure 4 of "Methodology: Database Developed for CLT Shearwall Connections" suggests a third category
 
-# TODO: Need to ask Aryan if this is needed 🚨
-class Reinforcement(str, Enum):
-    NONE = "None"
-    STRAP = "Strap"
-    BLOCKING = "Blocking"
-    # TODO: Add more reinforcement types as needed
-
 class TestLoadingType(str, Enum):
     CYCLIC = "Cyclic"
     MONOTONIC = "Monotonic"

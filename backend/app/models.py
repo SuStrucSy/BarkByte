@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
-from app.enums import AssemblyType, Practice, Reinforcement, TestLoadingType, YieldPointMethod, FailureModeType
+from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod, FailureModeType
 
 
 # Shared properties
@@ -183,11 +183,11 @@ class SpecimenBase(SQLModel):
     assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
 
     practice: Practice = Field(min_length=1, max_length=255)  # practice type
-    reinforcement: Reinforcement | None = Field(min_length=1, max_length=255)  # reinforcement type
     connection_description: str = Field(min_length=1, max_length=255)  # description of connection
 
     element_dimension: str = Field(min_length=1, max_length=255)  # dimensions of the element
     fastener_numbers: int = Field(default=1, ge=1)  # number of fasteners used
+    moisture_percentage: str = Field(min_length=1, max_length=255)  # moisture content percentage (sometimes its a range, so str)
 
     wood_type: str | None = Field(min_length=1, max_length=255)  # type of wood used
     wood_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the wood
