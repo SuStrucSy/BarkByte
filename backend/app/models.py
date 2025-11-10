@@ -185,17 +185,15 @@ class SpecimenBase(SQLModel):
     practice: Practice = Field(min_length=1, max_length=255)  # practice type
     connection_description: str = Field(min_length=1, max_length=255)  # description of connection
 
-    element_dimension: str = Field(min_length=1, max_length=255)  # dimensions of the element
-    fastener_numbers: int = Field(default=1, ge=1)  # number of fasteners used
+    element_dimension: str = Field(min_length=0, max_length=500)  # dimensions of the element
+    fastener_numbers: int = Field(default=0, ge=0)  # number of fasteners used
     moisture_percentage: str = Field(min_length=1, max_length=255)  # moisture content percentage (sometimes its a range, so str)
 
     wood_type: str | None = Field(min_length=1, max_length=255)  # type of wood used
-    wood_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the wood
-    connector_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the connector
-    fastener_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the fastener
-    
-    # NOT in the screenshots? But it is in the documentation
-    reinforcement_mechanical_properties: str | None = Field(min_length=1, max_length=255)  # mechanical properties of the reinforcement
+    wood_mechanical_properties: str | None = Field(min_length=1, max_length=500)  # mechanical properties of the wood
+    connector_mechanical_properties: str | None = Field(min_length=1, max_length=500)  # mechanical properties of the connector
+    fastener_mechanical_properties: str | None = Field(min_length=1, max_length=500)  # mechanical properties of the fastener
+
 
     # Experiment attributes
     e_date: str | None = Field(default=None, min_length=1, max_length=255)  # date of the experiment
@@ -238,7 +236,7 @@ class SpecimenUpdate(SpecimenBase):
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    doi: str = Field(unique=True)
+    doi: str = Field()
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
     is_approved: bool = Field(default=False)
     e_qualitative_failure_measure: list[FailureMode] = Relationship(
