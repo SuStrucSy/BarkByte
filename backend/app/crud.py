@@ -43,6 +43,12 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
         return None
     return db_user
 
+def get_specimen_by_id(*, session: Session, id: uuid.UUID) -> Specimen | None:
+    specimen = session.get(Specimen, id)
+    if not specimen:
+        raise HTTPException(status_code=404, detail="Specimen not found")
+    return specimen
+
 def get_specimens(*, session: Session, skip: int = 0, limit: int = 100) -> SpecimensPublic:
     count_statement = select(func.count()).select_from(Specimen)
     count = session.exec(count_statement).one()
@@ -366,3 +372,13 @@ def update_specimen(*, session: Session, specimen_in: SpecimenUpdate, id: uuid.U
     session.commit()
     session.refresh(specimen)
     return specimen
+
+def delete_specimen(*, session: Session, id: uuid.UUID) -> Any:
+    specimen = session.get(Specimen, id)
+    if not specimen:
+        raise HTTPException(status_code=404, detail="Specimen not found")
+
+    session.delete(specimen)
+    session.commit()
+
+    return {"message": "Failure mode deleted successfully"}

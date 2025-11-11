@@ -30,10 +30,7 @@ def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:
     """
     Get specimen by ID.
     """
-    specimen = session.get(Specimen, id)
-    if not specimen:
-        raise HTTPException(status_code=404, detail="Specimen not found")
-    return specimen
+    return crud.get_specimen_by_id(session=session, id=id)
 
 @router.post("/", response_model=SpecimenPublic)
 def create_specimen(
@@ -70,3 +67,18 @@ def update_specimen(
     specimen = crud.update_specimen(session=session, specimen_in=specimen_in, id=id)
     
     return specimen
+
+@router.delete("/{id}", response_model=Any)
+def delete_specimen(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+) -> Any:
+    """
+    Delete a specimen.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    return crud.delete_specimen(session=session, id=id)
