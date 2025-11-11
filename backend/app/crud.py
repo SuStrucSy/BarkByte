@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlmodel import Session, select, delete, func
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimensPublic, SpecimenUpdate, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection, FastenerTypes
+from app.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimensPublic, SpecimenUpdate, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection, FastenerTypes, FastenerTypeCreate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -390,3 +390,23 @@ def get_fastener_types(*, session: Session, skip: int = 0, limit: int = 100) -> 
     fastener_types = session.exec(statement).all()
 
     return FastenerTypes(data=fastener_types, count=count)
+
+def create_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCreate) -> Any:
+    
+    # Check if label already exists
+    existing = session.exec(
+        select(FastenerType).where(FastenerType.label == fastener_type_in.label)
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400, detail=f"Fastener type with label '{fastener_type_in.label}' already exists"
+        )
+
+    data = fastener_type_in.dict()
+    fastener_type = FastenerType(**data)
+    session.add(fastener_type)
+    session.commit()
+    
+    session.refresh(fastener_type)
+    return fastener_type

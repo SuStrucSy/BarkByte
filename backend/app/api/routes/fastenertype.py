@@ -39,23 +39,7 @@ def create_fastener_type(
             status_code=403, detail="Only super users are allowed to create fastener types"
         )
     
-    # Check if label already exists
-    existing = session.exec(
-        select(FastenerType).where(FastenerType.label == fastener_type_in.label)
-    ).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=400, detail=f"Fastener type with label '{fastener_type_in.label}' already exists"
-        )
-
-    data = fastener_type_in.dict()
-    fastener_type = FastenerType(**data)
-    session.add(fastener_type)
-    session.commit()
-    
-    session.refresh(fastener_type)
-    return fastener_type
+    return crud.create_fastener_type(session=session, fastener_type_in=fastener_type_in)
 
 @router.put("/{id}", response_model=FastenerType)
 def update_fastener_type(
