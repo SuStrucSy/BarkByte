@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 from fastapi import HTTPException
-from sqlmodel import Session, select, delete
+from sqlmodel import Session, select, delete, func
 
 from app.core.security import get_password_hash, verify_password
 from app.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection
@@ -42,6 +42,13 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
+
+def get_specimens(*, session: Session, skip: int = 0, limit: int = 100) -> SpecimensPublic:
+    count_statement = select(func.count()).select_from(Specimen)
+    count = session.exec(count_statement).one()
+    statement = select(Specimen).offset(skip).limit(limit)
+    specimens = session.exec(statement).all()
+    return SpecimensPublic(data=specimens, count=count)
 
 def create_specimen(*, session: Session, specimen_in: SpecimenCreate, current_user_id: uuid.UUID) -> Any:
     # Placeholder function for creating a specimen

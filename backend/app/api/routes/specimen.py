@@ -23,12 +23,7 @@ def read_specimens(
     """
     Retrieve specimens.
     """
-    count_statement = select(func.count()).select_from(Specimen)
-    count = session.exec(count_statement).one()
-    statement = select(Specimen).offset(skip).limit(limit)
-    specimens = session.exec(statement).all()
-
-    return SpecimensPublic(data=specimens, count=count)
+    return crud.get_specimens(session=session, skip=skip, limit=limit)
 
 @router.get("/{id}", response_model=SpecimenPublic)
 def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:
