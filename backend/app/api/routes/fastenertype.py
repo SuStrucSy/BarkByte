@@ -68,14 +68,9 @@ def delete_fastener_type(
     """
     Delete fastener type ONLY if not in use.
     """
-    fastener_type = session.get(FastenerType, id)
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=403, detail="Only super users are allowed to delete fastener type"
         )
-    if not fastener_type:
-        raise HTTPException(status_code=404, detail="Fastener type not found")
-    
-    session.delete(fastener_type)
-    session.commit()
-    return {"message": "Fastener type deleted successfully"}
+
+    return crud.delete_fastener_type(session=session, id=id)

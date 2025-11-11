@@ -424,3 +424,12 @@ def update_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCrea
     session.commit()
     session.refresh(fastener_type)
     return fastener_type
+
+def delete_fastener_type(*, session: Session, id: uuid.UUID) -> Any:
+    fastener_type = session.get(FastenerType, id)
+    if not fastener_type:
+        raise HTTPException(status_code=404, detail="Fastener type not found")
+    
+    session.delete(fastener_type)
+    session.commit()
+    return {"message": "Fastener type deleted successfully"}
