@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlmodel import Session, select, delete, func
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate, Message, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection
+from app.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimensPublic, SpecimenUpdate, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection, FastenerTypes
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -382,3 +382,11 @@ def delete_specimen(*, session: Session, id: uuid.UUID) -> Any:
     session.commit()
 
     return {"message": "Failure mode deleted successfully"}
+
+def get_fastener_types(*, session: Session, skip: int = 0, limit: int = 100) -> FastenerTypes:
+    count_statement = select(func.count()).select_from(FastenerType)
+    count = session.exec(count_statement).one()
+    statement = select(FastenerType).offset(skip).limit(limit)
+    fastener_types = session.exec(statement).all()
+
+    return FastenerTypes(data=fastener_types, count=count)

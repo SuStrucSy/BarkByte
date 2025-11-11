@@ -7,6 +7,8 @@ from sqlmodel import func, select
 from app.api.deps import CurrentUser, SessionDep
 from app.models import FastenerType, FastenerTypes, FastenerTypeCreate
 
+from app import crud
+
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,14 +20,10 @@ def get_fastener_types(
     session: SessionDep, skip: int = 0, limit: int = 100
 ) -> Any:
     """
-    Retrieve fastener type.
+    Retrieve all fastener types.
     """
-    count_statement = select(func.count()).select_from(FastenerType)
-    count = session.exec(count_statement).one()
-    statement = select(FastenerType).offset(skip).limit(limit)
-    fastener_types = session.exec(statement).all()
-
-    return FastenerTypes(data=fastener_types, count=count)
+    return crud.get_fastener_types(session=session, skip=skip, limit=limit)
+    
 
 @router.post("/", response_model=FastenerType)
 def create_fastener_type(
