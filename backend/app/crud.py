@@ -410,3 +410,17 @@ def create_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCrea
     
     session.refresh(fastener_type)
     return fastener_type
+
+def update_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCreate, id: uuid.UUID) -> Any:
+    fastener_type = session.get(FastenerType, id)
+    if not fastener_type:
+        raise HTTPException(status_code=404, detail="Fastener type not found")
+    
+    # Apply only provided fields
+    data = fastener_type_in.model_dump(exclude_unset=True)
+
+    fastener_type.sqlmodel_update(data)   # update existing row
+    session.add(fastener_type)
+    session.commit()
+    session.refresh(fastener_type)
+    return fastener_type

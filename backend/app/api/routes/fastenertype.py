@@ -51,22 +51,13 @@ def update_fastener_type(
     """
     Update fastener type.
     """
-    fastener_type = session.get(FastenerType, id)
+    
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=403, detail="Only super users are allowed to update fastener type"
         )
-    if not fastener_type:
-        raise HTTPException(status_code=404, detail="Fastener type not found")
     
-    # Apply only provided fields
-    data = fastener_type_in.model_dump(exclude_unset=True)
-
-    fastener_type.sqlmodel_update(data)   # ← update existing row
-    session.add(fastener_type)
-    session.commit()
-    session.refresh(fastener_type)
-    return fastener_type
+    return crud.update_fastener_type(session=session, fastener_type_in=fastener_type_in, id=id)
 
 @router.delete("/{id}")
 def delete_fastener_type(
