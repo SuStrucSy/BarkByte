@@ -7,7 +7,7 @@ from sqlmodel import func, select
 from app.api.deps import CurrentUser, SessionDep
 from app.models.models import FastenerType, FastenerTypes, FastenerTypeCreate
 
-from app.crud import crud
+from app.crud import fastenertype as fastener_type_crud
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +22,7 @@ def get_fastener_types(
     """
     Retrieve all fastener types.
     """
-    return crud.get_fastener_types(session=session, skip=skip, limit=limit)
+    return fastener_type_crud.get_fastener_types(session=session, skip=skip, limit=limit)
     
 @router.post("/", response_model=FastenerType)
 def create_fastener_type(
@@ -38,7 +38,7 @@ def create_fastener_type(
             status_code=403, detail="Only super users are allowed to create fastener types"
         )
     
-    return crud.create_fastener_type(session=session, fastener_type_in=fastener_type_in)
+    return fastener_type_crud.create_fastener_type(session=session, fastener_type_in=fastener_type_in)
 
 @router.put("/{id}", response_model=FastenerType)
 def update_fastener_type(
@@ -56,7 +56,7 @@ def update_fastener_type(
             status_code=403, detail="Only super users are allowed to update fastener type"
         )
     
-    return crud.update_fastener_type(session=session, fastener_type_in=fastener_type_in, id=id)
+    return fastener_type_crud.update_fastener_type(session=session, fastener_type_in=fastener_type_in, id=id)
 
 @router.delete("/{id}")
 def delete_fastener_type(
@@ -72,4 +72,4 @@ def delete_fastener_type(
             status_code=403, detail="Only super users are allowed to delete fastener type"
         )
 
-    return crud.delete_fastener_type(session=session, id=id)
+    return fastener_type_crud.delete_fastener_type(session=session, id=id)

@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.models.models import User, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod, FastenerTypeCreate
 from app.core.config import settings
 from app.crud import specimen as specimen_crud
-from app.crud import crud
+from app.crud import fastenertype as fastener_type_crud
 
 from sqlmodel import Session, select
 from sqlalchemy import func
@@ -73,7 +73,7 @@ def map_fastener_labels_to_ids(session: Session, labels_string: str, fastener_nu
         if not fastener_type:    
             print(f"⚠️ Warning: fastener type not found for label '{label}'. Adding...")
             # need to add logic to create new fastener types if not found
-            fastener_type = crud.create_fastener_type(session=session, fastener_type_in=FastenerTypeCreate(label=label.strip()))
+            fastener_type = fastener_type_crud.create_fastener_type(session=session, fastener_type_in=FastenerTypeCreate(label=label.strip()))
         
         result_ids.append(fastener_type.id)
 

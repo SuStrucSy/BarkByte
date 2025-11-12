@@ -1,14 +1,14 @@
-from sqlmodel import Session, create_engine, select
-
-from app.crud import crud
-from app.core.config import settings
-from app.models.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate
-
 import csv
 import os
 import uuid
-
 import logging
+
+from app.crud import user as user_crud
+from app.core.config import settings
+from app.models.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate
+
+from sqlmodel import Session, create_engine, select
+
 
 # configure once at startup
 logging.basicConfig(
@@ -39,7 +39,7 @@ def init_db(session: Session) -> None:
     init_fasteners(session)
     init_loading_directions(session)
 
-def init_add_admin_user(session: Session) -> None:
+def init_add_admin_user(session: Session) -> User | None:
     # This function is called to create the admin user
     # It should be called only once, when the database is initialized
     user = session.exec(
@@ -52,7 +52,7 @@ def init_add_admin_user(session: Session) -> None:
             is_superuser=True,
             is_active=True,
         )
-        return crud.create_user(session=session, user_create=user_in)
+        return user_crud.create_user(session=session, user_create=user_in)
 
 def init_failure_modes(session: Session) -> None:
     # This function is called to create the failure modes
