@@ -21,7 +21,7 @@ const AppSidebar = () => {
 							asChild
 							className="data-[slot=sidebar-menu-button]:!p-1.5"
 						>
-							<a href="#">
+							<a href="/">
 								<ArrowUpCircleIcon className="h-5 w-5" />
 								<span className="text-base font-semibold">BarkByte</span>
 							</a>
