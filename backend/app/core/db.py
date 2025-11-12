@@ -1,6 +1,6 @@
 from sqlmodel import Session, create_engine, select
 
-from backend.app.crud import crud
+from app.crud import crud
 from app.core.config import settings
 from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate
 
