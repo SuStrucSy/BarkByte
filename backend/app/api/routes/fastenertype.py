@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import FastenerType, FastenerTypes, FastenerTypeCreate
+from app.models.models import FastenerType, FastenerTypes, FastenerTypeCreate
 
 from app.crud import crud
 

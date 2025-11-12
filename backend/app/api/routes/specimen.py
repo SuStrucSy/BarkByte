@@ -5,7 +5,7 @@ import uuid
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
+from app.models.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
 from app.crud import crud
 
 logging.basicConfig(level=logging.INFO)

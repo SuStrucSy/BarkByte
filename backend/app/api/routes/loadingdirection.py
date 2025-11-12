@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import SessionDep, CurrentUser
-from app.models import LoadingDirection, LoadingDirections, LoadingDirectionCreate
+from app.models.models import LoadingDirection, LoadingDirections, LoadingDirectionCreate
 
 import logging
 logging.basicConfig(level=logging.INFO)

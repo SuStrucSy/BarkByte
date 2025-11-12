@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlmodel import Session, select, delete, func
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimensPublic, SpecimenUpdate, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection, FastenerTypes, FastenerTypeCreate
+from app.models.models import User, UserCreate, UserUpdate, Specimen, SpecimenCreate, SpecimensPublic, SpecimenUpdate, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection, FastenerTypes, FastenerTypeCreate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:

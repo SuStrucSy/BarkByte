@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate, JoineryType
+from app.models.models import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate, JoineryType
 
 import logging
 logging.basicConfig(level=logging.INFO)

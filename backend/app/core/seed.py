@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from sqlalchemy import func
 from app.core.db import engine  # reuse your app's engine
 from app.core.config import settings
-from app.models import User, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod, FastenerTypeCreate
+from app.models.models import User, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod, FastenerTypeCreate
 from app.core.config import settings
 from app.crud import crud
 import uuid

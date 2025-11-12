@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, and_
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import FailureMode, FailureModes, FailureModeCreate
+from app.models.models import FailureMode, FailureModes, FailureModeCreate
 from app.enums import FailureModeType
 
 import logging
