@@ -1,8 +1,21 @@
 from sqlmodel import Session, create_engine, select
 
-from app import crud
+from backend.app.crud import crud
 from app.core.config import settings
-from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection
+from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate
+
+import csv
+import os
+import uuid
+
+import logging
+
+# configure once at startup
+logging.basicConfig(
+    level=logging.INFO,                          # minimum level to display
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -10,7 +23,6 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
 # for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
-
 
 def init_db(session: Session) -> None:
     # Tables should be created with Alembic migrations
@@ -25,7 +37,7 @@ def init_db(session: Session) -> None:
     init_joinery_types(session)
     init_subjoinery_types(session)
     init_fasteners(session)
-    init_loading_directions(session) #🚨
+    init_loading_directions(session)
 
 def init_add_admin_user(session: Session) -> None:
     # This function is called to create the admin user
@@ -65,7 +77,6 @@ def init_failure_modes(session: Session) -> None:
             {"label": "Connector: Fuse Yield", "type": "CONNECTOR"},
             {"label": "Bending", "type": "OTHER"},
         ]
-
         for mode in failure_modes_data:
             failure_mode = FailureMode(**mode)
             session.add(failure_mode)

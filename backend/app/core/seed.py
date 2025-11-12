@@ -5,9 +5,9 @@ from sqlmodel import Session, select
 from sqlalchemy import func
 from app.core.db import engine  # reuse your app's engine
 from app.core.config import settings
-from app.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod
+from app.models import User, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod, FastenerTypeCreate
 from app.core.config import settings
-from app.crud import create_specimen
+from backend.app.crud import crud
 import uuid
 import re
 
@@ -59,14 +59,21 @@ def map_fastener_labels_to_ids(session: Session, labels_string: str, fastener_nu
     for label in labels:
         normalized_label = label.strip().lower()
 
+        if normalized_label == "" or normalized_label == "n/a" or normalized_label == "na" or normalized_label == "none":
+            continue
+
         fastener_type = session.exec(
             select(FastenerType)
             .where(func.lower(FastenerType.label) == normalized_label)
         ).first()
-        if fastener_type:
-            result_ids.append(fastener_type.id)
-        else:
-            print(f"⚠️ Warning: fastener type not found for label '{label}'")
+        
+        if not fastener_type:    
+            print(f"⚠️ Warning: fastener type not found for label '{label}'. Adding...")
+            # need to add logic to create new fastener types if not found
+            fastener_type = crud.create_fastener_type(session=session, fastener_type_in=FastenerTypeCreate(label=label.strip()))
+        
+        result_ids.append(fastener_type.id)
+
     return result_ids
 
 def map_joinery_type_label_to_id(session: Session, label: str) -> tuple[uuid.UUID, bool] | None:
@@ -162,13 +169,10 @@ def have_connector(connector_mechanical_properties: str) -> bool:
 
 def map_fastener_numbers(fastener_numbers_str: str) -> int:
     if not fastener_numbers_str or not fastener_numbers_str.strip():
-        # print(fastener_numbers_str, 0)
         return 0
     try:
         return int(fastener_numbers_str.strip())
     except ValueError:
-        # print(f"⚠️ Warning: Invalid fastener numbers '{fastener_numbers_str}'")
-        # print(fastener_numbers_str, 0)
         return 0
 
 def get_admin(session: Session) -> User:
@@ -196,15 +200,12 @@ def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
 
     output = map_joinery_type_label_to_id(session, joinery_type_label)
 
-    # print("joinery_type_label: {}, output: {}".format(joinery_type_label, output))
     if output is None:
         joinery_type_from_csv = None
         dowel_from_csv = False
     else:
         joinery_type_from_csv, dowel_from_csv = output
     
-    print(int(row['Connector'].strip())==1)
-
     specimen_in = SpecimenCreate(
         reference_title=row['Ref Title'],
         author=row['Author(s)'],
@@ -214,13 +215,7 @@ def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
 
         replicate_tests=row['Replicates'],
         note=row['Note'],
-        
-        # TODO: figure out this
-        # Looking at the data, we can see that its safe to say that Connector Mechanical Properties is a good proxy for whether it's a connector or not
         connector=int(row['Connector'].strip())==1,
-        
-        # e_date="2025-10-22",  # what date? the experiment date? what is the value here?
-        
         connection_description=row['Connection Detail'],
         element_dimension=row['Elements Dimensions'],
         fastener_numbers=map_fastener_numbers(row['Fastener Numbers']),
@@ -278,16 +273,15 @@ def main():
         with open(args.csv, newline="", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
             
-
-            # Should print the a list of correct failure mode IDs for the first row
-            # row_to_specimen_create(next(reader), session)
-
-            
             for row in reader:
-                print(row["Spec ID"])
-                body = row_to_specimen_create(row, session=session)
-                # call your CRUD so the same validations apply
-                specimen = create_specimen(session=session, specimen_in=body, current_user_id=admin.id)
+                print("Importing Specimen Id: ", row["Spec ID"])
+                # This try is needed since a lot of the data is messy and will cause errors
+                try:
+                    body = row_to_specimen_create(row, session=session)
+                    specimen = crud.create_specimen(session=session, specimen_in=body, current_user_id=admin.id)
+                except Exception as e:
+                    print(f"❌ Error processing row with Spec ID {row['Spec ID']}: {e}")
+                    continue
                 created += 1
             
     print(f"Seed complete, created: {created}")

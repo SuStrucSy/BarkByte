@@ -183,7 +183,7 @@ class SpecimenBase(SQLModel):
     assembly_type: AssemblyType = Field(min_length=1, max_length=255)  # type of assembly
 
     practice: Practice = Field(min_length=1, max_length=255)  # practice type
-    connection_description: str = Field(min_length=1, max_length=255)  # description of connection
+    connection_description: str = Field(min_length=0, max_length=255)  # description of connection
 
     element_dimension: str = Field(min_length=0, max_length=500)  # dimensions of the element
     fastener_numbers: int = Field(default=0, ge=0)  # number of fasteners used
@@ -212,7 +212,7 @@ class SpecimenBase(SQLModel):
     e_measurement_unit: str | None = Field(default=None, min_length=1, max_length=255)  # unit of measurement used in the experiment
 
     # Qualitative failure measure I think is a drop down list of failure modes
-    e_qfm_description: str | None = Field(default=None, min_length=1, max_length=1024)  # description of the qualitative failure measure
+    e_qfm_description: str | None = Field(default=None, min_length=0, max_length=1024)  # description of the qualitative failure measure
 
 # Properties to receive on item creation
 class SpecimenCreate(SpecimenBase):

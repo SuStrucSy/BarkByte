@@ -1,15 +1,12 @@
-import uuid
+import logging
 from typing import Any
+import uuid
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
-
-from app import crud
-
-import logging
+from backend.app.crud import crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

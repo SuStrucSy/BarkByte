@@ -34,7 +34,6 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
     session_user = session.exec(statement).first()
     return session_user
 
-
 def authenticate(*, session: Session, email: str, password: str) -> User | None:
     db_user = get_user_by_email(session=session, email=email)
     if not db_user:
@@ -42,6 +41,7 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
+
 
 def get_specimen_by_id(*, session: Session, id: uuid.UUID) -> Specimen | None:
     specimen = session.get(Specimen, id)
@@ -383,6 +383,7 @@ def delete_specimen(*, session: Session, id: uuid.UUID) -> Any:
 
     return {"message": "Failure mode deleted successfully"}
 
+
 def get_fastener_types(*, session: Session, skip: int = 0, limit: int = 100) -> FastenerTypes:
     count_statement = select(func.count()).select_from(FastenerType)
     count = session.exec(count_statement).one()
@@ -391,7 +392,7 @@ def get_fastener_types(*, session: Session, skip: int = 0, limit: int = 100) -> 
 
     return FastenerTypes(data=fastener_types, count=count)
 
-def create_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCreate) -> Any:
+def create_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCreate) -> FastenerType:
     
     # Check if label already exists
     existing = session.exec(

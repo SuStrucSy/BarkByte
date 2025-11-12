@@ -7,7 +7,7 @@ from sqlmodel import func, select
 from app.api.deps import CurrentUser, SessionDep
 from app.models import FastenerType, FastenerTypes, FastenerTypeCreate
 
-from app import crud
+from backend.app.crud import crud
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +24,6 @@ def get_fastener_types(
     """
     return crud.get_fastener_types(session=session, skip=skip, limit=limit)
     
-
 @router.post("/", response_model=FastenerType)
 def create_fastener_type(
     session: SessionDep,
