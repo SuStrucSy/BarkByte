@@ -1,15 +1,18 @@
 # app/scripts/seed_specimens.py
 import argparse
 import csv
-from sqlmodel import Session, select
-from sqlalchemy import func
-from app.core.db import engine  # reuse your app's engine
+import uuid
+import re
+
+from app.core.db import engine
 from app.core.config import settings
 from app.models.models import User, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod, FastenerTypeCreate
 from app.core.config import settings
+from app.crud import specimen as specimen_crud
 from app.crud import crud
-import uuid
-import re
+
+from sqlmodel import Session, select
+from sqlalchemy import func
 
 def normalize_label(label: str) -> str:
     """Normalize text: lowercase, remove spaces, hyphens, and underscores."""
@@ -278,7 +281,7 @@ def main():
                 # This try is needed since a lot of the data is messy and will cause errors
                 try:
                     body = row_to_specimen_create(row, session=session)
-                    specimen = crud.create_specimen(session=session, specimen_in=body, current_user_id=admin.id)
+                    specimen = specimen_crud.create_specimen(session=session, specimen_in=body, current_user_id=admin.id)
                 except Exception as e:
                     print(f"❌ Error processing row with Spec ID {row['Spec ID']}: {e}")
                     continue
