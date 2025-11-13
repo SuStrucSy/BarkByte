@@ -19,7 +19,7 @@ def get_specimens(*, session: Session, skip: int = 0, limit: int = 100) -> Speci
     specimens = session.exec(statement).all()
     return SpecimensPublic(data=specimens, count=count)
 
-def create_specimen(*, session: Session, specimen_in: SpecimenCreate, current_user_id: uuid.UUID) -> Any:
+def create_specimen(*, session: Session, specimen_in: SpecimenCreate, current_user_id: uuid.UUID) -> Specimen:
     # Placeholder function for creating a specimen
     
     data = specimen_in.dict(exclude={"e_qualitative_failure_measure", "fastener_type_ids", "loading_direction_ids"})
@@ -133,7 +133,7 @@ def create_specimen(*, session: Session, specimen_in: SpecimenCreate, current_us
     session.refresh(specimen)
     return specimen
 
-def update_specimen(*, session: Session, specimen_in: SpecimenUpdate, id: uuid.UUID) -> Any:
+def update_specimen(*, session: Session, specimen_in: SpecimenUpdate, id: uuid.UUID) -> Specimen:
     """
     Update a specimen.
     """

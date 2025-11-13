@@ -34,7 +34,7 @@ def create_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCrea
     session.refresh(fastener_type)
     return fastener_type
 
-def update_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCreate, id: uuid.UUID) -> Any:
+def update_fastener_type(*, session: Session, fastener_type_in: FastenerTypeCreate, id: uuid.UUID) -> FastenerType:
     fastener_type = session.get(FastenerType, id)
     if not fastener_type:
         raise HTTPException(status_code=404, detail="Fastener type not found")

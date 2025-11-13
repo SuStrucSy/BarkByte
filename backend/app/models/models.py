@@ -1,10 +1,10 @@
 import uuid
-
 from typing import Optional
-from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel
+
 from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod, FailureModeType
 
+from pydantic import EmailStr
+from sqlmodel import Field, Relationship, SQLModel
 
 # Shared properties
 class UserBase(SQLModel):
@@ -87,6 +87,7 @@ class FailureMode(SQLModel, table=True):
 
 class FailureModeCreate(SQLModel):
     label: str = Field(min_length=1, max_length=255)
+    type: FailureModeType = Field()
 
 class FailureModes(SQLModel):
     data: list[FailureMode]
