@@ -2,13 +2,11 @@ from datetime import timedelta
 from typing import Annotated, Any
 import logging
 
-
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.crud import user as user_crud
-from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.api.deps import CurrentUser, SessionDep
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
