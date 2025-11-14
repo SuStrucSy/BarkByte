@@ -74,5 +74,4 @@ def delete_jtype(
             status_code=403, detail="Only super users are allowed to delete joinery types"
         )
     
-    if joinerytype_crud.delete_type(session=session, id=id):
-        return {"message": "Joinery type deleted successfully"}
+    return joinerytype_crud.delete_type(session=session, id=id)

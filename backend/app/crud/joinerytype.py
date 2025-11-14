@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, Session
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models.models import JoineryType, JoineryTypes, JoineryTypeCreate, Specimen
+from app.models.models import JoineryType, JoineryTypes, JoineryTypeCreate, Specimen, SubJoineryType, SubJoineryTypes
 
 def get_types(*, session: Session, skip: int = 0, limit: int = 100) -> JoineryType:
     count_statement = select(func.count()).select_from(JoineryType)
@@ -15,6 +15,17 @@ def get_types(*, session: Session, skip: int = 0, limit: int = 100) -> JoineryTy
     jtypes = session.exec(statement).all()
 
     return JoineryTypes(data=jtypes, count=count)
+
+def get_subjoinery_types(*, session: Session, joinery_type_id: uuid.UUID, skip: int = 0, limit: int = 100,) -> SubJoineryTypes:
+    """
+    Retrieve sub-joinery types for a specific joinery type with pagination.
+    """
+    count_statement = select(func.count()).select_from(SubJoineryType).where(SubJoineryType.joinery_type_id == joinery_type_id)
+    count = session.exec(count_statement).one()
+    statement = select(SubJoineryType).where(SubJoineryType.joinery_type_id == joinery_type_id).offset(skip).limit(limit)
+    sjtypes = session.exec(statement).all()
+
+    return SubJoineryTypes(data=sjtypes, count=count)
 
 def create_type(*, session: Session, jtype_in: JoineryTypeCreate) -> JoineryType:
     # Check if label already exists
@@ -66,4 +77,4 @@ def delete_type(*, session: Session, id: uuid.UUID) -> Any:
     
     session.delete(jtype)
     session.commit()
-    return True
+    return {"message": "Sub joinery type deleted successfully"}
