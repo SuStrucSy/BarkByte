@@ -1,10 +1,10 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.models import FastenerType, FastenerTypes, FastenerTypeCreate
 
 from app.crud import fastenertype as fastener_type_crud
@@ -24,7 +24,7 @@ def get_fastener_types(
     """
     return fastener_type_crud.get_fastener_types(session=session, skip=skip, limit=limit)
     
-@router.post("/", response_model=FastenerType)
+@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=FastenerType)
 def create_fastener_type(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -33,14 +33,10 @@ def create_fastener_type(
     """
     Create fastener type.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to create fastener types"
-        )
     
     return fastener_type_crud.create_fastener_type(session=session, fastener_type_in=fastener_type_in)
 
-@router.put("/{id}", response_model=FastenerType)
+@router.put("/{id}", dependencies=[Depends(get_current_active_superuser)], response_model=FastenerType)
 def update_fastener_type(
     session: SessionDep,
     current_user: CurrentUser,
@@ -50,15 +46,9 @@ def update_fastener_type(
     """
     Update fastener type.
     """
-    
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to update fastener type"
-        )
-    
     return fastener_type_crud.update_fastener_type(session=session, fastener_type_in=fastener_type_in, id=id)
 
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_fastener_type(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -67,9 +57,4 @@ def delete_fastener_type(
     """
     Delete fastener type ONLY if not in use.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to delete fastener type"
-        )
-
     return fastener_type_crud.delete_fastener_type(session=session, id=id)

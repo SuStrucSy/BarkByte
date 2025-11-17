@@ -2,9 +2,9 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
-from app.api.deps import SessionDep, CurrentUser
+from app.api.deps import SessionDep, CurrentUser, get_current_active_superuser
 from app.models.models import LoadingDirection, LoadingDirections, LoadingDirectionCreate
 from app.crud import loadingdirection as loadingdirection_crud
 
@@ -22,7 +22,7 @@ def get_loading_directions(
     """
     return loadingdirection_crud.get_loading_directions(session=session, skip=skip, limit=limit)
 
-@router.post("/", response_model=LoadingDirection)
+@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=LoadingDirection)
 def create_loading_direction(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -31,14 +31,10 @@ def create_loading_direction(
     """
     Create loading direction.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to create loading directions"
-        )
     
     return loadingdirection_crud.create_loading_direction(session=session, loading_direction_in=loading_direction_in)
 
-@router.put("/{id}", response_model=LoadingDirection)
+@router.put("/{id}", dependencies=[Depends(get_current_active_superuser)], response_model=LoadingDirection)
 def update_loading_direction(
     session: SessionDep,
     current_user: CurrentUser,
@@ -48,14 +44,10 @@ def update_loading_direction(
     """
     Update loading direction.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to update loading direction"
-        )
-    
+
     return loadingdirection_crud.update_loading_direction(session=session, id=id, loading_direction_in=loading_direction_in)
 
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_loading_direction(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -64,9 +56,5 @@ def delete_loading_direction(
     """
     Delete loading direction ONLY if not in use.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to delete loading directions"
-        )
-    
+
     return loadingdirection_crud.delete_loading_direction(session=session, id=id)

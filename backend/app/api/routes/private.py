@@ -1,10 +1,10 @@
 from typing import Any
-from sqlmodel import select
 
-from fastapi import APIRouter
+from sqlmodel import select
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.api.deps import SessionDep
+from app.api.deps import SessionDep, get_current_active_superuser
 from app.core.security import get_password_hash
 from app.models.models import (
     User,
@@ -21,7 +21,7 @@ class PrivateUserCreate(BaseModel):
     is_verified: bool = False
 
 
-@router.post("/users/", response_model=UserPublic)
+@router.post("/users/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic)
 def create_user(user_in: PrivateUserCreate, session: SessionDep) -> Any:
     """
     Create a new user.
@@ -38,7 +38,7 @@ def create_user(user_in: PrivateUserCreate, session: SessionDep) -> Any:
 
     return user
 
-@router.get("/users/", response_model=list[UserPublic])
+@router.get("/users/", dependencies=[Depends(get_current_active_superuser)], response_model=list[UserPublic])
 def get_all_users(session: SessionDep) -> Any:
     """
     Get all users.

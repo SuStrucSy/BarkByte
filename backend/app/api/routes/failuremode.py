@@ -2,11 +2,11 @@ import logging
 import uuid
 from typing import Any
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.models import FailureMode, FailureModes, FailureModeCreate
 from app.crud import failuremode as failuremode_crud
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import select
 
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +34,7 @@ def get_modes(
 
     return failuremode_crud.get_modes(session=session, dowel=dowel, connector=connector)
 
-@router.post("/", response_model=FailureMode)
+@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=FailureMode)
 def create_mode(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -43,16 +43,12 @@ def create_mode(
     """
     Create failure mode.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to create failure modes"
-        )
     
     return failuremode_crud.create_mode(session=session, mode_in=mode_in)
     
     
 
-@router.put("/{id}", response_model=FailureMode)
+@router.put("/{id}", dependencies=[Depends(get_current_active_superuser)], response_model=FailureMode)
 def update_mode(
     session: SessionDep,
     current_user: CurrentUser,
@@ -62,13 +58,10 @@ def update_mode(
     """
     Update failure mode.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to update failure modes"
-        )
+
     return failuremode_crud.update_mode(session=session, mode_in=mode_in, id=id)
 
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_mode(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -77,10 +70,5 @@ def delete_mode(
     """
     Delete failure mode ONLY if not in use.
     """
-    
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to delete failure modes"
-        )
     
     return failuremode_crud.delete_mode(session=session, id=id)

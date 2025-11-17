@@ -2,10 +2,10 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.models import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate, JoineryType
 from app.crud import subjoinerytype as subjoinerytype_crud
 from app.crud import joinerytype as joinerytype_crud
@@ -24,7 +24,7 @@ def get_sjtypes(
     """
     return subjoinerytype_crud.get_subjoinery_types(session=session, skip=skip, limit=limit)
 
-@router.post("/", response_model=SubJoineryType)
+@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=SubJoineryType)
 def create_sjtype(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -33,14 +33,10 @@ def create_sjtype(
     """
     Create sub joinery type.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to create sub joinery types"
-        )
     
     return subjoinerytype_crud.create_subjoinery_type(session=session, sjtype_in=sjtype_in)
 
-@router.put("/{id}", response_model=SubJoineryType)
+@router.put("/{id}", dependencies=[Depends(get_current_active_superuser)], response_model=SubJoineryType)
 def update_sjtype(
     session: SessionDep,
     current_user: CurrentUser,
@@ -50,14 +46,10 @@ def update_sjtype(
     """
     Update sub joinery type.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to update sub joinery types"
-        )
     
     return subjoinerytype_crud.update_subjoinery_type(session=session, sjtype_in=sjtype_in, id=id)
 
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_sjtype(
     session: SessionDep,
     current_user: CurrentUser, 
@@ -66,10 +58,7 @@ def delete_sjtype(
     """
     Delete sub joinery type ONLY if not in use.
     """
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Only super users are allowed to delete sub joinery types"
-        )
+
     return subjoinerytype_crud.delete_subjoinery_type(session=session, id=id)
 
 @router.get("/{joinery_type_id}/", response_model=SubJoineryTypes)
