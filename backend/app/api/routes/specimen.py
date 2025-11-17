@@ -7,7 +7,9 @@ from fastapi import APIRouter, HTTPException
 from app.api.deps import CurrentUser, SessionDep
 from app.models.specimen import Specimen
 from app.schemas.specimen import SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
+from app.schemas.pendingspecimen import PendingSpecimenPublic
 from app.crud import specimen as specimen_crud
+from app.crud import pendingspecimen as pendingspecimen_crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,21 +32,26 @@ def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:
     """
     return specimen_crud.get_specimen_by_id(session=session, id=id)
 
-@router.post("/", response_model=SpecimenPublic)
+@router.post("/", response_model=PendingSpecimenPublic)
 def create_specimen(
     *, session: SessionDep, current_user: CurrentUser, specimen_in: SpecimenCreate
 ) -> Any:
     """
-    Create new specimen.
+    Submit a new specimen for review.
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    
-    specimen = specimen_crud.create_specimen(session=session, specimen_in=specimen_in, current_user_id=current_user.id)
 
-    return specimen
+    pending = pendingspecimen_crud.create_pending_specimen(
+        session=session,
+        changed_by_user_id=current_user.id,
+        changed_data=specimen_in.model_dump(exclude_unset=True),
+        specimen_id=None,
+    )
+    return pending
 
-@router.put("/{id}", response_model=SpecimenPublic)
+
+@router.put("/{id}", response_model=PendingSpecimenPublic)
 def update_specimen(
     *,
     session: SessionDep,
@@ -53,7 +60,7 @@ def update_specimen(
     specimen_in: SpecimenUpdate,
 ) -> Any:
     """
-    Update a specimen.
+    Submit an update for an existing specimen.
     """
     specimen = session.get(Specimen, id)
     if not specimen:
@@ -62,9 +69,13 @@ def update_specimen(
     if not current_user.is_superuser and (specimen.uploader_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
-    specimen = specimen_crud.update_specimen(session=session, specimen_in=specimen_in, id=id)
-    
-    return specimen
+    pending = pendingspecimen_crud.create_pending_specimen(
+        session=session,
+        changed_by_user_id=current_user.id,
+        changed_data=specimen_in.model_dump(exclude_unset=True),
+        specimen_id=id,
+    )
+    return pending
 
 @router.delete("/{id}", response_model=Any)
 def delete_specimen(

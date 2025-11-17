@@ -31,3 +31,8 @@ class FailureModeType(str, Enum):
     DOWEL = "DOWEL"
     CONNECTOR = "CONNECTOR"
     OTHER = "OTHER"   # e.g. "Bending"
+
+class PendingStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
