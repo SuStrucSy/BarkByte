@@ -95,12 +95,16 @@ services:
   frontend:
     restart: "no"
     ports:
-      - "5173:80"
+      - "5173:5173"
     build:
       context: ./frontend
       args:
         - VITE_API_URL=http://localhost:8000
         - NODE_ENV=development
+    tty: true
+    volumes:
+      - ./frontend:/app
+    user: "node"  # Run as the 'node' user
 
 networks:
   traefik-public:
