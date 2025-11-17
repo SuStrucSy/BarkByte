@@ -1,11 +1,13 @@
 import uuid
 from typing import Any
 
-from app.models.models import FailureMode, FailureModes, FailureModeCreate, SpecimenFailureMode
-from app.enums import FailureModeType
-
 from fastapi import HTTPException
 from sqlmodel import Session, select, func
+
+from app.models.specimen_failuremode import SpecimenFailureMode
+from app.models.failuremode import FailureMode
+from app.schemas.failuremode import FailureModes, FailureModeCreate
+from app.enums import FailureModeType
 
 def get_modes(*, session: Session, skip: int = 0, limit: int = 100, dowel: bool, connector: bool) -> FailureModes:
     """

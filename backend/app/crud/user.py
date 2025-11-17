@@ -5,7 +5,8 @@ from sqlmodel import func, select, Session
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.security import get_password_hash, verify_password
-from app.models.models import User, UserCreate, UserUpdate, UsersPublic
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate, UsersPublic
 
 def authenticate(*, session: Session, email: str, password: str) -> User | None:
     db_user = get_user_by_email(session=session, email=email)

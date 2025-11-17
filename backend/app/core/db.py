@@ -1,14 +1,18 @@
-import csv
-import os
-import uuid
 import logging
-
-from app.crud import user as user_crud
-from app.core.config import settings
-from app.models.models import User, UserCreate, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate
 
 from sqlmodel import Session, create_engine, select
 
+from app.models.specimen import Specimen
+from app.crud import user as user_crud
+from app.core.config import settings
+from app.models.user import User
+from app.models.failuremode import FailureMode
+from app.models.specimen_failuremode import SpecimenFailureMode
+from app.models.joinerytype import JoineryType
+from app.models.subjoinerytype import SubJoineryType
+from app.models.fastenertype import FastenerType
+from app.models.loadingdirection import LoadingDirection
+from app.schemas.user import UserCreate
 
 # configure once at startup
 logging.basicConfig(

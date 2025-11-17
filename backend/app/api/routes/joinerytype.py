@@ -3,11 +3,11 @@ import uuid
 from typing import Any
 
 
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import func, select
+from fastapi import APIRouter, Depends
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.models.models import JoineryType, JoineryTypes, JoineryTypeCreate
+from app.models.joinerytype import JoineryType
+from app.schemas.joinerytype import JoineryTypes, JoineryTypeCreate
 from app.crud import joinerytype as joinerytype_crud
 
 logging.basicConfig(level=logging.INFO)

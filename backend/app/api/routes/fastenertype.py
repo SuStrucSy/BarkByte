@@ -1,15 +1,13 @@
+import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import func, select
+from fastapi import APIRouter, Depends
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.models.models import FastenerType, FastenerTypes, FastenerTypeCreate
-
+from app.schemas.fastenertype import FastenerType, FastenerTypeCreate, FastenerTypes
 from app.crud import fastenertype as fastener_type_crud
 
-import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

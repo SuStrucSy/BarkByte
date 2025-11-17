@@ -2,11 +2,12 @@ import logging
 from typing import Any
 import uuid
 
-from app.api.deps import CurrentUser, SessionDep
-from app.models.models import Specimen, SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
-from app.crud import specimen as specimen_crud
-
 from fastapi import APIRouter, HTTPException
+
+from app.api.deps import CurrentUser, SessionDep
+from app.models.specimen import Specimen
+from app.schemas.specimen import SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
+from app.crud import specimen as specimen_crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

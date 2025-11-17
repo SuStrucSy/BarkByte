@@ -1,10 +1,20 @@
 from typing import Any
 import uuid
 
-from app.models.models import Specimen, SpecimenCreate, SpecimensPublic, SpecimenUpdate, FailureMode, SpecimenFailureMode, JoineryType, SubJoineryType, FastenerType, SpecimenFastenerType, LoadingDirection, SpecimenLoadingDirection
-
 from fastapi import HTTPException
 from sqlmodel import Session, select, delete, func
+
+from app.models.specimen import Specimen
+from app.schemas.specimen import SpecimenCreate, SpecimensPublic, SpecimenUpdate
+from app.models.failuremode import FailureMode
+from app.models.specimen_failuremode import SpecimenFailureMode
+from app.models.joinerytype import JoineryType
+from app.models.subjoinerytype import SubJoineryType
+from app.models.fastenertype import FastenerType
+from app.models.specimen_fastenertype import SpecimenFastenerType
+from app.models.loadingdirection import LoadingDirection
+from app.models.specimen_loadingdirection import SpecimenLoadingDirection
+
 
 def get_specimen_by_id(*, session: Session, id: uuid.UUID) -> Specimen | None:
     specimen = session.get(Specimen, id)

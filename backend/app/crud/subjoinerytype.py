@@ -4,7 +4,10 @@ from typing import Any
 from fastapi import HTTPException
 from sqlmodel import func, select, Session
 
-from app.models.models import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate, JoineryType, Specimen
+from app.models.subjoinerytype import SubJoineryType
+from app.schemas.subjoinerytype import SubJoineryTypes, SubJoineryTypeCreate
+from app.models.joinerytype import JoineryType
+from app.models.specimen import Specimen
 
 def get_subjoinery_types(*, session: Session, skip: int = 0, limit: int = 100,) -> SubJoineryTypes:
     """

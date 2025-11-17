@@ -2,11 +2,11 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import func, select
+from fastapi import APIRouter, Depends
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.models.models import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate, JoineryType
+from app.schemas.subjoinerytype import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate
+from app.models.subjoinerytype import SubJoineryType
 from app.crud import subjoinerytype as subjoinerytype_crud
 from app.crud import joinerytype as joinerytype_crud
 

@@ -2,12 +2,12 @@ import logging
 import uuid
 from typing import Any
 
-from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.models.models import FailureMode, FailureModes, FailureModeCreate
-from app.crud import failuremode as failuremode_crud
+from fastapi import APIRouter, Depends
 
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import select
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.models.failuremode import FailureMode
+from app.schemas.failuremode import  FailureModes, FailureModeCreate
+from app.crud import failuremode as failuremode_crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

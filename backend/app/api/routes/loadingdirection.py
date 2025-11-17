@@ -2,10 +2,11 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 
 from app.api.deps import SessionDep, CurrentUser, get_current_active_superuser
-from app.models.models import LoadingDirection, LoadingDirections, LoadingDirectionCreate
+from app.models.loadingdirection import LoadingDirection
+from app.schemas.loadingdirection import LoadingDirections, LoadingDirectionCreate
 from app.crud import loadingdirection as loadingdirection_crud
 
 logging.basicConfig(level=logging.INFO)

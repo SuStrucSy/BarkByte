@@ -4,15 +4,23 @@ import csv
 import uuid
 import re
 
+from sqlmodel import Session, select
+from sqlalchemy import func
+
 from app.core.db import engine
 from app.core.config import settings
-from app.models.models import User, FailureMode, JoineryType, SubJoineryType, FastenerType, LoadingDirection, SpecimenCreate, AssemblyType, Practice, TestLoadingType, YieldPointMethod, FastenerTypeCreate
+from app.models.user import User
+from app.models.failuremode import FailureMode
+from app.models.joinerytype import JoineryType
+from app.models.subjoinerytype import SubJoineryType
+from app.models.fastenertype import FastenerType
+from app.models.loadingdirection import LoadingDirection
+from app.schemas.specimen import SpecimenCreate
+from app.schemas.fastenertype import FastenerTypeCreate
+from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
 from app.core.config import settings
 from app.crud import specimen as specimen_crud
 from app.crud import fastenertype as fastener_type_crud
-
-from sqlmodel import Session, select
-from sqlalchemy import func
 
 def normalize_label(label: str) -> str:
     """Normalize text: lowercase, remove spaces, hyphens, and underscores."""
@@ -95,9 +103,7 @@ def map_joinery_type_label_to_id(session: Session, label: str) -> tuple[uuid.UUI
         print(f"⚠️ Warning: joinery type not found for label '{label}'")
         return None
     
-def map_sub_joinery_type_label_to_id(session: Session, label: str) -> uuid.UUID | None:
-    result_id = None
-    
+def map_sub_joinery_type_label_to_id(session: Session, label: str) -> uuid.UUID | None:    
     normalized_label = label.strip().lower()
 
     sub_joinery_type = session.exec(
@@ -109,7 +115,7 @@ def map_sub_joinery_type_label_to_id(session: Session, label: str) -> uuid.UUID 
     if sub_joinery_type:
         return sub_joinery_type.id
     else:
-        print(f"⚠️ Warning: sub-joinery type not found for label '{label}' under parent ID '{parent_joinery_type_id}'")
+        print(f"⚠️ Warning: sub-joinery type not found for label '{label}''")
         return None
 
 def map_assembly_type(label: str) -> AssemblyType | None:

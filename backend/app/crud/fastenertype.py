@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
 
-from app.models.models import FastenerType, FastenerTypes, FastenerTypeCreate
-
 from fastapi import HTTPException
 from sqlmodel import Session, select, func
+
+from app.models.fastenertype import FastenerType
+from app.schemas.fastenertype import FastenerTypes, FastenerTypeCreate
 
 def get_fastener_types(*, session: Session, skip: int = 0, limit: int = 100) -> FastenerTypes:
     count_statement = select(func.count()).select_from(FastenerType)

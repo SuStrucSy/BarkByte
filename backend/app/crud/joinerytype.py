@@ -1,12 +1,15 @@
-import logging
 import uuid
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, Session
 
-from app.api.deps import CurrentUser, SessionDep
-from app.models.models import JoineryType, JoineryTypes, JoineryTypeCreate, Specimen, SubJoineryType, SubJoineryTypes
+from app.models.joinerytype import JoineryType
+from app.schemas.joinerytype import JoineryTypes, JoineryTypeCreate
+from app.models.joinerytype import JoineryType
+from app.schemas.joinerytype import JoineryType, JoineryTypes, JoineryTypeCreate
+from app.models.specimen import Specimen
+from app.schemas.subjoinerytype import SubJoineryType, SubJoineryTypes
 
 def get_types(*, session: Session, skip: int = 0, limit: int = 100) -> JoineryType:
     count_statement = select(func.count()).select_from(JoineryType)

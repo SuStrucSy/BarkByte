@@ -5,7 +5,9 @@ from fastapi import HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import SessionDep
-from app.models.models import LoadingDirection, LoadingDirections, LoadingDirectionCreate, SpecimenLoadingDirection
+from app.models.loadingdirection import LoadingDirection
+from app.schemas.loadingdirection import LoadingDirection, LoadingDirections, LoadingDirectionCreate
+from app.models.specimen_loadingdirection import SpecimenLoadingDirection
 
 def get_loading_directions(
     session: SessionDep, skip: int = 0, limit: int = 100
