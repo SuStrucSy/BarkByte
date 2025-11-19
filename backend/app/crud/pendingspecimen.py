@@ -122,16 +122,11 @@ def delete_pending_specimen(
 
     return pending
 
-def list_pending(session: Session) -> list[PendingSpecimen]:
-    return session.exec(
-        select(PendingSpecimen).where(PendingSpecimen.status == PendingStatus.PENDING)
-    ).all()
-
-def list_all_pending(session: Session) -> list[PendingSpecimen]:
-    return session.exec(
-        select(PendingSpecimen)
-    ).all()
-
+def list_pending(session: Session, status: PendingStatus | None = None) -> list[PendingSpecimen]:
+    stmt = select(PendingSpecimen)
+    if status is not None:
+        stmt = stmt.where(PendingSpecimen.status == status)
+    return session.exec(stmt).all()
 
 def list_approved_specific_specimen(session: Session, id: uuid.UUID) -> list[PendingSpecimen]:
     return session.exec(

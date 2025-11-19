@@ -10,6 +10,7 @@ from app.schemas.pendingspecimen import (
     PendingSpecimenReview,
     PendingSpecimenUpdate
 )
+from app.enums import PendingStatus
 
 router = APIRouter(
     prefix="/pending-specimens",
@@ -17,24 +18,16 @@ router = APIRouter(
     dependencies=[Depends(get_current_active_superuser)],
 )
 
-@router.get("/all", response_model=list[PendingSpecimenPublic])
-def list_all_pending_specimens(
-    session: SessionDep,
-) -> Any:
-    """
-    List all pending specimens.
-    """
-    pending = pending_crud.list_all_pending(session=session)
-    return pending
-
-@router.get("/pending", response_model=list[PendingSpecimenPublic])
+@router.get("/", response_model=list[PendingSpecimenPublic])
 def list_pending_specimens(
     session: SessionDep,
+    status: PendingStatus | None = None,
 ) -> Any:
     """
-    List "pending" pending specimens.
+    List pending specimens, optionally filtered by status.
+    If no status is provided, all pending specimens are returned.
     """
-    pending = pending_crud.list_pending(session=session)
+    pending = pending_crud.list_pending(session=session, status=status)
     return pending
 
 @router.get("/specimen/{specimen_id}", response_model=list[PendingSpecimenPublic])
