@@ -13,7 +13,8 @@ api_router.include_router(joinerytype.router)
 api_router.include_router(subjoinerytype.router)
 api_router.include_router(fastenertype.router)
 api_router.include_router(loadingdirection.router)
-api_router.include_router(pendingspecimen.router)
+api_router.include_router(pendingspecimen.secure_router)
+api_router.include_router(pendingspecimen.public_router)
 
 if settings.ENVIRONMENT == "local":
   api_router.include_router(private.router)

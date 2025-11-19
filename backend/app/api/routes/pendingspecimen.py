@@ -12,13 +12,18 @@ from app.schemas.pendingspecimen import (
 )
 from app.enums import PendingStatus
 
-router = APIRouter(
+secure_router = APIRouter(
     prefix="/pending-specimens",
     tags=["pending-specimens"],
     dependencies=[Depends(get_current_active_superuser)],
 )
 
-@router.get("/", response_model=list[PendingSpecimenPublic])
+public_router = APIRouter(
+    prefix="/pending-specimens",
+    tags=["pending-specimens"],
+)
+
+@secure_router.get("/", response_model=list[PendingSpecimenPublic])
 def list_pending_specimens(
     session: SessionDep,
     status: PendingStatus | None = None,
@@ -30,7 +35,7 @@ def list_pending_specimens(
     pending = pending_crud.list_pending(session=session, status=status)
     return pending
 
-@router.get("/specimen/{specimen_id}", response_model=list[PendingSpecimenPublic])
+@public_router.get("/specimen/{specimen_id}", response_model=list[PendingSpecimenPublic])
 def list_approved_specimen_trail(
     session: SessionDep,
     specimen_id: uuid.UUID
@@ -42,7 +47,7 @@ def list_approved_specimen_trail(
     return approved_list
 
 
-@router.post("/{pending_id}/approve", response_model=PendingSpecimenPublic)
+@secure_router.post("/{pending_id}/approve", response_model=PendingSpecimenPublic)
 def approve_pending_specimen(
     pending_id: uuid.UUID,
     review: PendingSpecimenReview,
@@ -61,7 +66,7 @@ def approve_pending_specimen(
     return pending
 
 
-@router.post("/{pending_id}/reject", response_model=PendingSpecimenPublic)
+@secure_router.post("/{pending_id}/reject", response_model=PendingSpecimenPublic)
 def reject_pending_specimen(
     pending_id: uuid.UUID,
     review: PendingSpecimenReview,
@@ -79,7 +84,7 @@ def reject_pending_specimen(
     )
     return pending
 
-@router.put("/{pending_id}", response_model=PendingSpecimenPublic)
+@secure_router.put("/{pending_id}", response_model=PendingSpecimenPublic)
 def update_pending_specimen(
     pending_id: uuid.UUID,
     update_in: PendingSpecimenUpdate,
@@ -97,7 +102,7 @@ def update_pending_specimen(
     )
     return pending
 
-@router.delete("/{pending_id}", response_model=PendingSpecimenPublic)
+@secure_router.delete("/{pending_id}", response_model=PendingSpecimenPublic)
 def delete_pending_specimen(
     pending_id: uuid.UUID,
     session: SessionDep,
