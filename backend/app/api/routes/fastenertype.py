@@ -2,7 +2,8 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.schemas.fastenertype import FastenerType, FastenerTypeCreate, FastenerTypes
@@ -31,6 +32,10 @@ def create_fastener_type(
     """
     Create fastener type.
     """
+    if fastener_type_crud.get_fastener_type_by_label(session=session, label=fastener_type_in.label):
+        raise HTTPException(
+            status_code=400, detail=f"Fastener type with label '{fastener_type_in.label}' already exists"
+        )
     
     return fastener_type_crud.create_fastener_type(session=session, fastener_type_in=fastener_type_in)
 
@@ -44,7 +49,12 @@ def update_fastener_type(
     """
     Update fastener type.
     """
-    return fastener_type_crud.update_fastener_type(session=session, fastener_type_in=fastener_type_in, id=id)
+    fastener_type = fastener_type_crud.get_fastener_type_by_id(session=session, id=id)
+
+    if not fastener_type:
+        raise HTTPException(status_code=404, detail="Fastener type not found")
+
+    return fastener_type_crud.update_fastener_type(session=session, fastener_type_in=fastener_type_in, fastener_type=fastener_type)
 
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_fastener_type(
@@ -55,4 +65,10 @@ def delete_fastener_type(
     """
     Delete fastener type ONLY if not in use.
     """
-    return fastener_type_crud.delete_fastener_type(session=session, id=id)
+    fastener_type = session.get(FastenerType, id)
+    
+    if not fastener_type:
+        raise HTTPException(status_code=404, detail="Fastener type not found")
+    
+
+    return fastener_type_crud.delete_fastener_type(session=session, fastener_type=fastener_type)

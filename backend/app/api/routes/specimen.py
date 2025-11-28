@@ -7,9 +7,11 @@ from fastapi import APIRouter, HTTPException
 from app.api.deps import CurrentUser, SessionDep
 from app.models.specimen import Specimen
 from app.schemas.specimen import SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
+from app.schemas.doi import DOICreate
 from app.schemas.pendingspecimen import PendingSpecimenPublic
 from app.crud import specimen as specimen_crud
 from app.crud import pendingspecimen as pendingspecimen_crud
+from app.crud import doi as doi_crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/specimens", tags=["specimens"])
 @router.get("/", response_model=SpecimensPublic)
 def read_specimens(
     session: SessionDep, skip: int = 0, limit: int = 100
-) -> Any:
+) -> SpecimensPublic:
     """
     Retrieve specimens.
     """
@@ -42,6 +44,8 @@ def create_specimen(
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
+    # do data validation here...
+    
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
         changed_by_user_id=current_user.id,

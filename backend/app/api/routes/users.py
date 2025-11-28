@@ -41,7 +41,8 @@ def update_user_me(
     Update own user.
     """
     if user_in.email:
-        user_crud.ensure_email_available(session, user_in.email, exclude_user_id=current_user.id)
+        if user_crud.is_email_taken(session=session, email=user_in.email, exclude_user_id=current_user.id):
+            raise HTTPException(status_code=409, detail="User with this email already exists")
     
     return user_crud.update_user(session=session, db_user=current_user, user_in=user_in)
 
@@ -69,9 +70,7 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Delete own user.
     """
-
-    session.delete(current_user)
-    session.commit()
+    user_crud.delete_user(session=session, user=current_user)
     return Message(message="User deleted successfully")
 
 # ------------ General Users endpoints ------------
@@ -93,15 +92,25 @@ def read_user_by_id(user_id: uuid.UUID, session: SessionDep) -> UserPublic:
     """
     Get a specific user by id.
     """
-
-    return user_crud.get_user(session=session, user_id=user_id)
+    db_user = user_crud.get_user(session=session, user_id=user_id)
+    if not db_user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this id does not exist in the system",
+        )
+    return db_user
 
 @router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic)
 def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic:
     """
     Create new user.
     """
-    user_crud.ensure_email_available(session, user_in.email)
+    if user_crud.is_email_taken(session=session, email=user_in.email):
+        raise HTTPException(
+            status_code=409,
+            detail="User with this email already exists",
+        )
+
     user = user_crud.create_user(session=session, user_create=user_in)
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
@@ -134,8 +143,13 @@ def update_user(
             status_code=404,
             detail="The user with this id does not exist in the system",
         )
+    
     if user_in.email:
-        user_crud.ensure_email_available(session, user_in.email, exclude_user_id=db_user.id)
+        if user_crud.is_email_taken(session=session, email=user_in.email, exclude_user_id=db_user.id,):
+            raise HTTPException(
+                status_code=409,
+                detail="User with this email already exists",
+            )
 
     return user_crud.update_user(session=session, db_user=db_user, user_in=user_in)
 
@@ -147,12 +161,19 @@ def delete_user(
     Delete a user.
     """
     user = user_crud.get_user(session=session, user_id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this id does not exist in the system",
+        )
+
     if user == current_user:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
     
-    return user_crud.delete_user(session=session, user_id=user_id)
+    user_crud.delete_user(session=session, user=user)
+    return Message(message="User deleted successfully")
 
 # ------------ Authentication related endpoints ------------
 
@@ -161,13 +182,17 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
     """
     Create new user without the need to be logged in.
     """
-    user_crud.ensure_email_available(session, user_in.email)
+    if user_crud.is_email_taken(session=session, email=user_in.email):
+        raise HTTPException(
+            status_code=409,
+            detail="User with this email already exists",
+        )
 
     user_create = UserCreate.model_validate(user_in)
     user_crud.create_user(session=session, user_create=user_create)
     
     if settings.emails_enabled and user_in.email:
-        register_user_token = generate_password_reset_token(email=user_in.email) # TODO: have to change the name
+        register_user_token = generate_password_reset_token(email=user_in.email)
         email_data = generate_signup_email(
             email_to=user_in.email, email=user_in.email, token=register_user_token
         )

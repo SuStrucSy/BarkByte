@@ -49,7 +49,7 @@ def login_access_token(
 
 
 @router.post("/login/test-token", response_model=UserPublic)
-def test_token(current_user: CurrentUser) -> Any:
+def test_token(current_user: CurrentUser) -> UserPublic:
     """
     Test access token
     """
@@ -79,7 +79,7 @@ def recover_password(email: str, session: SessionDep) -> Message:
                 subject=email_data.subject,
                 html_content=email_data.html_content,
             )
-        except Exception as e:
+        except Exception:
             logging.exception("Failed to send password recovery email")
 
     return Message(message="If an account exists with that email, you'll receive recovery instructions.")

@@ -15,9 +15,8 @@ from app.core.bases import SpecimenBase
 # Database model, database table inferred from class name
 class Specimen(SpecimenBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    doi: str = Field()
+    doi_id: uuid.UUID = Field(foreign_key="doi.id")
     uploader_id: uuid.UUID = Field(foreign_key="user.id")
-    is_approved: bool = Field(default=False)
     e_qualitative_failure_measure: list[FailureMode] = Relationship(
         back_populates="specimens",
         link_model=SpecimenFailureMode,
@@ -35,5 +34,6 @@ class Specimen(SpecimenBase, table=True):
     
     joinery_type: JoineryType = Relationship(back_populates="specimens")
     sub_joinery_type: SubJoineryType = Relationship(back_populates="specimens")
+    doi: "DOI" = Relationship(back_populates="specimens")
 
 

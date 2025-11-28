@@ -1,7 +1,6 @@
 import uuid
 from typing import Any
 
-from fastapi import HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import SessionDep
@@ -9,9 +8,35 @@ from app.models.loadingdirection import LoadingDirection
 from app.schemas.loadingdirection import LoadingDirection, LoadingDirections, LoadingDirectionCreate
 from app.models.specimen_loadingdirection import SpecimenLoadingDirection
 
+def normalize_label(label: str) -> str:
+    return label.strip().lower()
+
+def get_loading_direction_by_id(
+    session: SessionDep,
+    id: uuid.UUID
+) -> Any:
+    """
+    Get loading direction by ID.
+    """
+    loading_direction = session.get(LoadingDirection, id)
+    return loading_direction
+
+def get_loading_direction_by_label(
+    session: SessionDep,
+    label: str
+) -> Any:
+    """
+    Get loading direction by label.
+    """
+    label = normalize_label(label)
+    loading_direction = session.exec(
+        select(LoadingDirection).where(LoadingDirection.label == label)
+    ).first()
+    return loading_direction
+
 def get_loading_directions(
     session: SessionDep, skip: int = 0, limit: int = 100
-) -> Any:
+) -> LoadingDirections:
     """
     Retrieve loading direction.
     """
@@ -29,16 +54,10 @@ def create_loading_direction(
     """
     Create loading direction.
     """
-    
-    # Check if label already exists
-    existing = session.exec(
-        select(LoadingDirection).where(LoadingDirection.label == loading_direction_in.label)
-    ).first()
+    normalized_label = normalize_label(loading_direction_in.label)
 
-    if existing:
-        raise HTTPException(
-            status_code=400, detail=f"Loading direction with label '{loading_direction_in.label}' already exists"
-        )
+    data = loading_direction_in.model_dump()
+    data["label"] = normalized_label
 
     data = loading_direction_in.dict()
     loading_direction = LoadingDirection(**data)
@@ -50,47 +69,30 @@ def create_loading_direction(
 
 def update_loading_direction(
     session: SessionDep,
-    id: uuid.UUID, 
+    loading_direction: LoadingDirection, 
     loading_direction_in: LoadingDirectionCreate
 ) -> Any:
     """
     Update loading direction.
     """
-    loading_direction = session.get(LoadingDirection, id)
-    if not loading_direction:
-        raise HTTPException(status_code=404, detail="Loading direction not found")
-    
-    # Apply only provided fields
-    for key, value in loading_direction_in.dict(exclude_unset=True).items():
-        setattr(loading_direction, key, value)
-    
+    data = loading_direction_in.model_dump(exclude_unset=True)
+    if "label" in data:
+        data["label"] = normalize_label(data["label"])
+
+    loading_direction.sqlmodel_update(data)
     session.add(loading_direction)
     session.commit()
     session.refresh(loading_direction)
     return loading_direction
 
+
 def delete_loading_direction(
     session: SessionDep,
-    id: uuid.UUID
+    loading_direction: LoadingDirection
 ) -> Any:
     """
     Delete loading direction ONLY if not in use.
     """
-    loading_direction = session.get(LoadingDirection, id)
-    if not loading_direction:
-        raise HTTPException(status_code=404, detail="Loading direction not found")
-    
-    refs = session.exec(
-        select(func.count())
-        .select_from(SpecimenLoadingDirection)
-        .where(SpecimenLoadingDirection.loading_direction_id == id)
-    ).one()
-    if refs and refs > 0:
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete: loading direction is used by one or more specimens."
-        )
-
     session.delete(loading_direction)
     session.commit()
     return {"message": "Loading direction deleted successfully"}

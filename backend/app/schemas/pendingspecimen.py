@@ -29,6 +29,12 @@ class PendingSpecimenPublic(PendingSpecimenBase):
     comment_by_reviewer: str | None = None
     reviewed_at: datetime | None = None
 
+class PendingSpecimensPublic(SQLModel):
+    """
+    Response model for listing multiple pending specimens.
+    """
+    pending_specimens: list[PendingSpecimenPublic]
+    count: int
 
 class PendingSpecimenReview(SQLModel):
     """

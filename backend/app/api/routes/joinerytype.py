@@ -2,8 +2,7 @@ import logging
 import uuid
 from typing import Any
 
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.joinerytype import JoineryType
@@ -33,6 +32,12 @@ def create_jtype(
     """
     Create joinery type.
     """
+    # Check if label already exists
+    if joinerytype_crud.get_type_by_label(session=session, label=jtype_in.label):
+        raise HTTPException(
+            status_code=400, detail=f"Joinery type with label '{jtype_in.label}' already exists"
+        )
+
     return joinerytype_crud.create_type(session=session, jtype_in=jtype_in)
 
 
@@ -46,8 +51,12 @@ def update_jtype(
     """
     Update joinery type.
     """
+    joinery_type = joinerytype_crud.get_type_by_id(session=session, id=id)
     
-    return joinerytype_crud.update_type(session=session, jtype_in=jtype_in, id=id)
+    if not joinery_type:
+        raise HTTPException(status_code=404, detail="Joinery type not found")
+    
+    return joinerytype_crud.update_type(session=session, jtype_in=jtype_in, joinery_type=joinery_type)
 
 
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
@@ -59,5 +68,9 @@ def delete_jtype(
     """
     Delete joinery type ONLY if not in use.
     """
+    joinery_type = session.get(JoineryType, id)
+
+    if not joinery_type:
+        raise HTTPException(status_code=404, detail="Joinery type not found")
     
-    return joinerytype_crud.delete_type(session=session, id=id)
+    return joinerytype_crud.delete_type(session=session, joinery_type=joinery_type)

@@ -1,13 +1,27 @@
 import uuid
-from typing import Any
 
-from fastapi import HTTPException
 from sqlmodel import func, select, Session
 
 from app.models.subjoinerytype import SubJoineryType
 from app.schemas.subjoinerytype import SubJoineryTypes, SubJoineryTypeCreate
-from app.models.joinerytype import JoineryType
-from app.models.specimen import Specimen
+
+def normalize_label(label: str) -> str:
+    return label.strip().lower()
+
+def get_subjoinery_type_by_id(*, session: Session, id: uuid.UUID) -> SubJoineryType | None:
+    """
+    Retrieve a sub-joinery type by its ID.
+    """
+    sjtype = session.get(SubJoineryType, id)
+    return sjtype
+
+def get_subjoinery_type_by_label(*, session: Session, label: str) -> SubJoineryType | None:
+    """
+    Retrieve a sub-joinery type by its label.
+    """
+    statement = select(SubJoineryType).where(SubJoineryType.label == label)
+    sjtype = session.exec(statement).first()
+    return sjtype
 
 def get_subjoinery_types(*, session: Session, skip: int = 0, limit: int = 100,) -> SubJoineryTypes:
     """
@@ -20,18 +34,18 @@ def get_subjoinery_types(*, session: Session, skip: int = 0, limit: int = 100,) 
 
     return SubJoineryTypes(data=sjtypes, count=count)
 
-def create_subjoinery_type(*, session: Session, sjtype_in: SubJoineryTypeCreate) -> SubJoineryType:
-    # Check if label already exists
-    existing = session.exec(
-        select(SubJoineryType).where(SubJoineryType.label == sjtype_in.label, SubJoineryType.joinery_type_id == sjtype_in.joinery_type_id)
+def get_subjoinery_type_by_label_and_joinery_type(
+    *, session: Session, label: str, joinery_type_id: uuid.UUID
+) -> SubJoineryType | None:
+    return session.exec(
+        select(SubJoineryType)
+        .where(SubJoineryType.label == label)
+        .where(SubJoineryType.joinery_type_id == joinery_type_id)
     ).first()
 
-    if existing:
-        raise HTTPException(
-            status_code=400, detail=f"Sub-joinery type with label '{sjtype_in.label}' already exists for the given joinery type"
-        )
-
-    data = sjtype_in.dict()
+def create_subjoinery_type(*, session: Session, sjtype_in: SubJoineryTypeCreate) -> SubJoineryType:
+    data = sjtype_in.model_dump()
+    data["label"] = normalize_label(data["label"])
     sjtype = SubJoineryType(**data)
     session.add(sjtype)
     session.commit()
@@ -39,44 +53,23 @@ def create_subjoinery_type(*, session: Session, sjtype_in: SubJoineryTypeCreate)
     session.refresh(sjtype)
     return sjtype
 
-def update_subjoinery_type(*, session: Session, sjtype_in: SubJoineryTypeCreate, id: uuid.UUID) -> SubJoineryType:
-    sjtype = session.get(SubJoineryType, id)
-    if not sjtype:
-        raise HTTPException(status_code=404, detail="Sub joinery type not found")
-    
-    # Apply only provided fields
+def update_subjoinery_type(
+    *, session: Session, sjtype_in: SubJoineryTypeCreate, sub_joinery_type: SubJoineryType
+) -> SubJoineryType:
     data = sjtype_in.model_dump(exclude_unset=True)
-    
-    # FK can change, validate it exists
-    jt_id = data.get("joinery_type_id")
-    if jt_id is not None and session.get(JoineryType, jt_id) is None:
-        raise HTTPException(400, "joinery_type_id is invalid")
 
-    sjtype.sqlmodel_update(data)   # ← update existing row
-    session.add(sjtype)
+    # Normalize label only if the user provided it
+    if "label" in data:
+        data["label"] = normalize_label(data["label"])
+
+    sub_joinery_type.sqlmodel_update(data)
+    session.add(sub_joinery_type)
     session.commit()
-    session.refresh(sjtype)
-    
-    return sjtype
+    session.refresh(sub_joinery_type)
+    return sub_joinery_type
 
-def delete_subjoinery_type(*, session: Session, id: uuid.UUID) -> Any:
-    sjtype = session.get(SubJoineryType, id)
-
-    if not sjtype:
-        raise HTTPException(status_code=404, detail="Sub joinery type not found")
-
-    # Check for references in SpecimenFailureMode
-    refs = session.exec(
-        select(func.count())
-        .select_from(Specimen)
-        .where(Specimen.sub_joinery_type_id == id)
-    ).one()
-    if refs and refs > 0:
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete: sub joinery type is used by one or more specimens."
-        )
-
-    session.delete(sjtype)
+def delete_subjoinery_type(
+    *, session: Session, sub_joinery_type: SubJoineryType
+) -> None:
+    session.delete(sub_joinery_type)
     session.commit()
-    return {"message": "Sub joinery type deleted successfully"}

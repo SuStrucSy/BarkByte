@@ -1,7 +1,6 @@
 import uuid
 from typing import Any
 
-from fastapi import HTTPException
 from sqlmodel import Session, select, func
 
 from app.models.specimen_failuremode import SpecimenFailureMode
@@ -40,56 +39,23 @@ def get_modes(*, session: Session, skip: int = 0, limit: int = 100, dowel: bool,
     return FailureModes(data=modes, count=count)
 
 def create_mode(*, session: Session, mode_in: FailureModeCreate) -> FailureMode:
-    # Check if label already exists
-    existing = session.exec(
-        select(FailureMode).where(FailureMode.label == mode_in.label)
-    ).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=400, detail=f"Failure mode with label '{mode_in.label}' already exists"
-        )
-
     data = mode_in.dict()
     mode = FailureMode(**data)
     session.add(mode)
     session.commit()
-    
     session.refresh(mode)
     return mode
 
-def update_mode(*, session: Session, mode_in: FailureModeCreate, id: uuid.UUID) -> FailureMode:
-    mode = session.get(FailureMode, id)
-    if not mode:
-        raise HTTPException(status_code=404, detail="Failure mode not found")
-    
+def update_mode(*, session: Session, mode_in: FailureModeCreate, failure_mode: FailureMode) -> FailureMode:
     # Apply only provided fields
     data = mode_in.model_dump(exclude_unset=True)
-
-    mode.sqlmodel_update(data)   # update existing row
-    session.add(mode)
+    failure_mode.sqlmodel_update(data)   # update existing row
+    session.add(failure_mode)
     session.commit()
-    session.refresh(mode)
-    return mode
+    session.refresh(failure_mode)
+    return failure_mode
 
-def delete_mode(*, session: Session, id: uuid.UUID) -> Any:
-    
-    mode = session.get(FailureMode, id)
-    if not mode:
-        raise HTTPException(status_code=404, detail="Failure mode not found")
-    
-    # Check for references in SpecimenFailureMode
-    refs = session.exec(
-        select(func.count())
-        .select_from(SpecimenFailureMode)
-        .where(SpecimenFailureMode.failure_mode_id == id)
-    ).one()
-    if refs and refs > 0:
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete: failure mode is used by one or more specimens."
-        )
-
-    session.delete(mode)
+def delete_mode(*, session: Session, failure_mode: FailureMode) -> Any:
+    session.delete(failure_mode)
     session.commit()
     return {"message": "Failure mode deleted successfully"}

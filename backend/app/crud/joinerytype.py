@@ -1,7 +1,6 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select, Session
 
 from app.models.joinerytype import JoineryType
@@ -11,6 +10,9 @@ from app.schemas.joinerytype import JoineryType, JoineryTypes, JoineryTypeCreate
 from app.models.specimen import Specimen
 from app.schemas.subjoinerytype import SubJoineryType, SubJoineryTypes
 
+def normalize_label(label: str) -> str:
+    return label.strip().lower()
+
 def get_types(*, session: Session, skip: int = 0, limit: int = 100) -> JoineryType:
     count_statement = select(func.count()).select_from(JoineryType)
     count = session.exec(count_statement).one()
@@ -18,6 +20,16 @@ def get_types(*, session: Session, skip: int = 0, limit: int = 100) -> JoineryTy
     jtypes = session.exec(statement).all()
 
     return JoineryTypes(data=jtypes, count=count)
+
+def get_type_by_label(*, session: Session, label: str) -> JoineryType:
+    label = normalize_label(label)
+    statement = select(JoineryType).where(JoineryType.label == label)
+    joinry_type = session.exec(statement).first()
+    return joinry_type
+
+def get_type_by_id(*, session: Session, id: uuid.UUID) -> JoineryType:
+    joinry_type = session.get(JoineryType, id)
+    return joinry_type
 
 def get_subjoinery_types(*, session: Session, joinery_type_id: uuid.UUID, skip: int = 0, limit: int = 100,) -> SubJoineryTypes:
     """
@@ -31,53 +43,31 @@ def get_subjoinery_types(*, session: Session, joinery_type_id: uuid.UUID, skip: 
     return SubJoineryTypes(data=sjtypes, count=count)
 
 def create_type(*, session: Session, jtype_in: JoineryTypeCreate) -> JoineryType:
-    # Check if label already exists
-    existing = session.exec(
-        select(JoineryType).where(JoineryType.label == jtype_in.label and JoineryType.has_dowel == jtype_in.has_dowel)
-    ).first()
+    normalized_label = normalize_label(jtype_in.label)
 
-    if existing:
-        raise HTTPException(
-            status_code=400, detail=f"Joinery type with label '{jtype_in.label}' already exists"
-        )
+    data = jtype_in.model_dump()
+    data["label"] = normalized_label
 
-    data = jtype_in.dict()
     jtype = JoineryType(**data)
     session.add(jtype)
     session.commit()
-    
     session.refresh(jtype)
     return jtype
 
-def update_type(*, session: Session, jtype_in: JoineryTypeCreate, id: uuid.UUID) -> JoineryType:
-    jtype = session.get(JoineryType, id)
-    if not jtype:
-        raise HTTPException(status_code=404, detail="Joinery type not found")
+def update_type(*, session: Session, jtype_in: JoineryTypeCreate, joinery_type: JoineryType) -> JoineryType:
+
+    data = jtype_in.model_dump(exclude_unset=True)
+    if "label" in data:
+        data["label"] = normalize_label(data["label"])
     
-    data = jtype_in.dict()
-    jtype.sqlmodel_update(data)   # ← update existing row
-    session.add(jtype)
+    joinery_type.sqlmodel_update(data)
+    session.add(joinery_type)
     session.commit()
-    session.refresh(jtype)
-    return jtype
+    session.refresh(joinery_type)
+    return joinery_type
 
-def delete_type(*, session: Session, id: uuid.UUID) -> Any:
+def delete_type(*, session: Session, joinery_type: JoineryType) -> Any:
     
-    jtype = session.get(JoineryType, id)
-    if not jtype:
-        raise HTTPException(status_code=404, detail="Joinery type not found")
-    
-    refs = session.exec(
-        select(func.count())
-        .select_from(Specimen)
-        .where(Specimen.joinery_type_id == id)
-    ).one()
-    if refs and refs > 0:
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete: joinery type is used by one or more specimens."
-        )
-    
-    session.delete(jtype)
+    session.delete(joinery_type)
     session.commit()
     return {"message": "Sub joinery type deleted successfully"}

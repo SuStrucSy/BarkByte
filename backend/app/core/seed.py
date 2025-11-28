@@ -16,10 +16,12 @@ from app.models.subjoinerytype import SubJoineryType
 from app.models.fastenertype import FastenerType
 from app.models.loadingdirection import LoadingDirection
 from app.schemas.specimen import SpecimenCreate
+from app.schemas.doi import DOICreate
 from app.schemas.fastenertype import FastenerTypeCreate
 from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
 from app.core.config import settings
 from app.crud import specimen as specimen_crud
+from app.crud import doi as doi_crud
 from app.crud import fastenertype as fastener_type_crud
 
 def normalize_label(label: str) -> str:
@@ -193,6 +195,17 @@ def get_admin(session: Session) -> User:
     return user
 
 def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
+
+    doi = doi_crud.get_doi_by_link(session=session, link=row['DOI'])
+    if doi is None:
+        doi_in = DOICreate(
+            link=row['DOI'],
+            ref_title=row['Ref Title'],
+            authors=row['Author(s)'],
+            pub_year=row['Pub_year'],
+        )
+
+        doi = doi_crud.create_doi(session=session, doi_in=doi_in)
     
     failure_modes_from_csv=row['Qualitative Failure Measure'].split(';')
 
@@ -216,11 +229,9 @@ def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
         joinery_type_from_csv, dowel_from_csv = output
     
     specimen_in = SpecimenCreate(
-        reference_title=row['Ref Title'],
-        author=row['Author(s)'],
-        publication_year=row['Pub_year'],
+
         specimen_reference_id=row['Spec Ref'],
-        doi=row['DOI'],
+        doi_id=doi.id,
 
         replicate_tests=row['Replicates'],
         note=row['Note'],

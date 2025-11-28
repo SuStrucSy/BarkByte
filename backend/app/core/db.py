@@ -4,6 +4,8 @@ from sqlmodel import Session, create_engine, select
 
 from app.models.specimen import Specimen
 from app.crud import user as user_crud
+from app.crud import doi as doi_crud
+from app.crud import specimen as specimen_crud
 from app.core.config import settings
 from app.models.user import User
 from app.models.failuremode import FailureMode
@@ -12,7 +14,10 @@ from app.models.joinerytype import JoineryType
 from app.models.subjoinerytype import SubJoineryType
 from app.models.fastenertype import FastenerType
 from app.models.loadingdirection import LoadingDirection
+
 from app.schemas.user import UserCreate
+from app.schemas.specimen import SpecimenCreate
+from app.schemas.doi import DOICreate
 
 # configure once at startup
 logging.basicConfig(
@@ -36,12 +41,98 @@ def init_db(session: Session) -> None:
 
     # This works because the models are already imported and registered from app.models
     # SQLModel.metadata.create_all(engine)
-    init_add_admin_user(session)
+    admin_user = init_add_admin_user(session)
     init_failure_modes(session)
     init_joinery_types(session)
     init_subjoinery_types(session)
     init_fasteners(session)
     init_loading_directions(session)
+    init_example_specimen(session, admin_user)
+
+def init_example_specimen(session: Session, admin_user: User) -> None:
+    # This function is called to create an example specimen
+    # It should be called only once, when the database is initialized
+
+    doi_in = DOICreate(
+        link="https://doi.org/10.1234/exampledoi",
+        ref_title="Example DOI Reference Title",
+        authors="Doe, J.; Smith, A.",
+        pub_year=2024
+    )
+
+    doi = doi_crud.create_doi(session=session, doi_in=doi_in)
+
+    failure_mode_in = []
+    failure_mode_in.append(session.exec(
+        select(FailureMode).where(FailureMode.label == "Wood: Tension Parallel")
+    ).first().id)
+    failure_mode_in.append(session.exec(
+        select(FailureMode).where(FailureMode.label == "Dowel: Plastic Yield")
+    ).first().id)
+
+    fastener_type_in = []
+    fastener_type_in.append(session.exec(
+        select(FastenerType).where(FastenerType.label == "Nail")
+    ).first().id)
+    
+    loading_direction_in = []
+    loading_direction_in.append(session.exec(
+        select(LoadingDirection).where(LoadingDirection.label == "In-Plane Tension")
+    ).first().id)
+    loading_direction_in.append(session.exec(
+        select(LoadingDirection).where(LoadingDirection.label == "Out-of-Plane Tension")
+    ).first().id)
+
+    joinery_type_in = session.exec(
+        select(JoineryType).where(JoineryType.label == "Angle Bracket")
+    ).first().id
+    
+    sub_joinery_type_in = session.exec(
+        select(SubJoineryType).where(SubJoineryType.label == "AB:Proprietary Angle Bracket")
+    ).first().id
+    
+    specimen_in = SpecimenCreate(
+        specimen_reference_id="EX123",
+        replicate_tests=3,
+        note="This is an example specimen.",
+        assembly_type="Wall-Wall",
+        practice="Conventional",
+        connection_description="Example connection description.",
+        element_dimension="50x100 mm",
+        fastener_numbers=10,
+        moisture_percentage="12%",
+        wood_type="Pine",
+        wood_mechanical_properties="Standard properties",
+        connector_mechanical_properties="Standard properties",
+        fastener_mechanical_properties="Standard properties",
+        e_date="2024-01-01",
+        e_test_loading_type="Cyclic",
+        e_yield_point_method="CEN 1/6",
+        e_stiffness=1500.0,
+        e_yield_displacement=5.0,
+        e_yield_force=2000.0,
+        e_max_displacement=10.0,
+        e_max_force=3000.0,
+        e_ultimate_displacement=15.0,
+        e_ultimate_force=3500.0,
+        e_ductility=3.0,
+        e_measurement_unit="mm",
+        e_qfm_description="Qualitative failure measure description.",
+        
+        dowel=True,
+        connector=True,
+
+        doi_id=doi.id,
+        e_qualitative_failure_measure=failure_mode_in,
+        fastener_type_ids=fastener_type_in,
+        loading_direction_ids=loading_direction_in,
+        joinery_type_id=joinery_type_in,
+        sub_joinery_type_id=sub_joinery_type_in,
+    )
+
+    specimen_crud.create_specimen(session=session, specimen_in=specimen_in, current_user_id=admin_user.id)
+
+
 
 def init_add_admin_user(session: Session) -> User | None:
     # This function is called to create the admin user

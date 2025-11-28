@@ -8,9 +8,12 @@ from app.crud import pendingspecimen as pending_crud
 from app.schemas.pendingspecimen import (
     PendingSpecimenPublic,
     PendingSpecimenReview,
-    PendingSpecimenUpdate
+    PendingSpecimenUpdate,
+    PendingSpecimensPublic
 )
 from app.enums import PendingStatus
+from app.schemas.specimen import SpecimenCreate, SpecimenUpdate
+from app.crud import specimen as specimen_crud
 
 secure_router = APIRouter(
     prefix="/pending-specimens",
@@ -23,11 +26,11 @@ public_router = APIRouter(
     tags=["pending-specimens"],
 )
 
-@secure_router.get("/", response_model=list[PendingSpecimenPublic])
+@secure_router.get("/", response_model=PendingSpecimensPublic)
 def list_pending_specimens(
     session: SessionDep,
     status: PendingStatus | None = None,
-) -> Any:
+) -> PendingSpecimensPublic:
     """
     List pending specimens, optionally filtered by status.
     If no status is provided, all pending specimens are returned.
@@ -35,17 +38,16 @@ def list_pending_specimens(
     pending = pending_crud.list_pending(session=session, status=status)
     return pending
 
-@public_router.get("/specimen/{specimen_id}", response_model=list[PendingSpecimenPublic])
+@public_router.get("/specimen/{specimen_id}", response_model=PendingSpecimensPublic)
 def list_approved_specimen_trail(
     session: SessionDep,
     specimen_id: uuid.UUID
-) -> Any:
+) -> PendingSpecimensPublic:
     """
     List all pending specimens.
     """
     approved_list = pending_crud.list_approved_specific_specimen(session=session, id=specimen_id)
     return approved_list
-
 
 @secure_router.post("/{pending_id}/approve", response_model=PendingSpecimenPublic)
 def approve_pending_specimen(
@@ -53,67 +55,107 @@ def approve_pending_specimen(
     review: PendingSpecimenReview,
     session: SessionDep,
     current_user: CurrentUser,
-) -> Any:
+) -> PendingSpecimenPublic:
     """
     Approve a pending specimen and apply it to the specimen table.
     """
-    pending = pending_crud.approve_pending_specimen(
+    # Look up pending record
+    pending = pending_crud.get_pending_specimen_by_id(session=session, pending_id=pending_id)
+    if pending is None:
+        raise HTTPException(status_code=404, detail="Pending specimen not found")
+
+    # Only allow real pending records
+    if pending.status is not PendingStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Only pending records can be approved")
+
+    # If this is an update, confirm the target specimen exists
+    if pending.specimen_id is not None:
+        specimen = specimen_crud.get_specimen_by_id(session=session, id=pending.specimen_id)
+        if specimen is None:
+            raise HTTPException(status_code=404, detail="Target specimen not found")
+
+    # Perform atomic approval
+    approved = pending_crud.approve_pending_specimen(
         session=session,
-        pending_id=pending_id,
+        pending_specimen=pending,
         reviewer_id=current_user.id,
         comment=review.comment,
     )
-    return pending
-
+    return approved
 
 @secure_router.post("/{pending_id}/reject", response_model=PendingSpecimenPublic)
-def reject_pending_specimen(
+def reject_pending_specimen_route(
     pending_id: uuid.UUID,
     review: PendingSpecimenReview,
     session: SessionDep,
     current_user: CurrentUser,
-) -> Any:
+) -> PendingSpecimenPublic:
     """
-    Reject a pending specimen without changing the specimen table.
+    Reject a pending specimen without touching the specimen table.
     """
-    pending = pending_crud.reject_pending_specimen(
+    # Lookup first
+    pending_specimen = pending_crud.get_pending_specimen_by_id(session=session, pending_id=pending_id)
+    if pending_specimen is None:
+        raise HTTPException(status_code=404, detail="Pending specimen not found")
+
+    # Only pending rows can be rejected
+    if pending_specimen.status is not PendingStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Only pending entries can be rejected")
+
+    # Perform atomic reject
+    rejected = pending_crud.reject_pending_specimen(
         session=session,
-        pending_id=pending_id,
+        pending_specimen=pending_specimen,
         reviewer_id=current_user.id,
         comment=review.comment,
     )
-    return pending
+    return rejected
 
 @secure_router.put("/{pending_id}", response_model=PendingSpecimenPublic)
 def update_pending_specimen(
     pending_id: uuid.UUID,
     update_in: PendingSpecimenUpdate,
     session: SessionDep,
-) -> Any:
+) -> PendingSpecimenPublic:
     """
     Update the changed_data of an existing pending specimen
     before it is approved/rejected.
     """
-    
-    pending = pending_crud.update_pending_specimen(
+    pending_specimen = pending_crud.get_pending_specimen_by_id(
         session=session,
         pending_id=pending_id,
-        update_data=update_in.model_dump(exclude_unset=True),
     )
-    return pending
+    if not pending_specimen:
+        raise HTTPException(404, "Pending specimen not found")
+    if pending_specimen.status is not PendingStatus.PENDING:
+        raise HTTPException(400, "Status is not Pending, can't update.")
+    
+    return pending_crud.update_pending_specimen(
+        session=session,
+        pending_specimen=pending_specimen,
+        update_in=update_in,
+    )
 
 @secure_router.delete("/{pending_id}", response_model=PendingSpecimenPublic)
 def delete_pending_specimen(
     pending_id: uuid.UUID,
     session: SessionDep,
     current_user: CurrentUser,
-) -> Any:
+) -> PendingSpecimenPublic:
     """
     Delete a pending specimen (only allowed while status is PENDING).
     """
-    pending = pending_crud.delete_pending_specimen(
+    pending_specimen = pending_crud.get_pending_specimen_by_id(
         session=session,
         pending_id=pending_id,
-        user_id=current_user.id,
+    )
+    if not pending_specimen:
+        raise HTTPException(404, "Pending specimen not found")
+    if pending_specimen.changed_by_user_id != current_user.id or not current_user.is_superuser:
+        raise HTTPException(403, "Not authorized to delete this pending specimen.")
+
+    pending = pending_crud.delete_pending_specimen(
+        session=session,
+        pending_specimen=pending_specimen
     )
     return pending

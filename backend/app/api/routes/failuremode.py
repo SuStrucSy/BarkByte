@@ -2,7 +2,8 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.failuremode import FailureMode
@@ -43,7 +44,16 @@ def create_mode(
     """
     Create failure mode.
     """
-    
+    # Check if label already exists
+    failure_mode = session.exec(
+        select(FailureMode).where(FailureMode.label == mode_in.label)
+    ).first()
+
+    if failure_mode:
+        raise HTTPException(
+            status_code=400, detail=f"Failure mode with label '{mode_in.label}' already exists"
+        )
+
     return failuremode_crud.create_mode(session=session, mode_in=mode_in)
     
     
@@ -58,8 +68,12 @@ def update_mode(
     """
     Update failure mode.
     """
+    failure_mode = session.get(FailureMode, id)
+    
+    if not failure_mode:
+        raise HTTPException(status_code=404, detail="Failure mode not found")
 
-    return failuremode_crud.update_mode(session=session, mode_in=mode_in, id=id)
+    return failuremode_crud.update_mode(session=session, mode_in=mode_in, failure_mode=failure_mode)
 
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_mode(
@@ -70,5 +84,9 @@ def delete_mode(
     """
     Delete failure mode ONLY if not in use.
     """
+    failure_mode = session.get(FailureMode, id)
     
-    return failuremode_crud.delete_mode(session=session, id=id)
+    if not failure_mode:
+        raise HTTPException(status_code=404, detail="Failure mode not found")
+    
+    return failuremode_crud.delete_mode(session=session, failure_mode=failure_mode)

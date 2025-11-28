@@ -2,7 +2,6 @@ import uuid
 from typing import Any, Optional
 
 from sqlmodel import func, select, Session
-from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
@@ -30,23 +29,22 @@ def get_all_users(*, session: Session, skip: int = 0, limit: int = 100) -> Users
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
     statement = select(User).where(User.email == email)
-    session_user = session.exec(statement).first()
-    return session_user
-
-def ensure_email_available(
+    return session.exec(statement).first()
+    
+def is_email_taken(
+    *,
     session: Session,
     email: str,
     exclude_user_id: Optional[uuid.UUID] = None,
-) -> None:
-    """Raise HTTPException if email is already used by another user."""
+) -> bool:
+    """Pure helper, returns True if email is in use by someone else."""
     existing = get_user_by_email(session=session, email=email)
-    if existing and existing.id != exclude_user_id:
-        raise HTTPException(status_code=409, detail="User with this email already exists")
+    return bool(existing and existing.id != exclude_user_id)
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
-    ensure_email_available(session, user_create.email)
     user = User.model_validate(
-        user_create, update={"hashed_password": get_password_hash(user_create.password)}
+        user_create,
+        update={"hashed_password": get_password_hash(user_create.password)},
     )
     session.add(user)
     session.commit()
@@ -54,28 +52,20 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     return user
 
 def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> User:
-    if user_in.email:
-        ensure_email_available(session, user_in.email, exclude_user_id=db_user.id)
-    
     update_data = user_in.model_dump(exclude_unset=True)
-    
-    extra_data = {}
+
+    extra_data: dict[str, Any] = {}
     if "password" in update_data:
         password = update_data["password"]
         hashed_password = get_password_hash(password)
         extra_data["hashed_password"] = hashed_password
-    
+
     db_user.sqlmodel_update(update_data, update=extra_data)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
     return db_user
 
-
-def delete_user(*, session: Session, user_id: uuid.UUID) -> Any:
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+def delete_user(*, session: Session, user: User) -> None:
     session.delete(user)
     session.commit()
-    return {"message": "User deleted successfully"}

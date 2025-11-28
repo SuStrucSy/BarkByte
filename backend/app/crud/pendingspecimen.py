@@ -2,12 +2,12 @@ from datetime import datetime, timezone, timedelta
 import uuid
 from typing import Any
 
-from fastapi import HTTPException
-from sqlmodel import Session, delete, select
+from sqlmodel import Session, delete, select, func
 
 from app.enums import PendingStatus
 from app.models.pendingspecimen import PendingSpecimen
 from app.schemas.specimen import SpecimenCreate, SpecimenUpdate
+from app.schemas.pendingspecimen import PendingSpecimensPublic, PendingSpecimenUpdate
 from app.crud import specimen as specimen_crud
 
 import logging
@@ -31,6 +31,14 @@ def _to_jsonable(value: Any) -> Any:
         return {k: _to_jsonable(v) for k, v in value.items()}
     return value
 
+def get_pending_specimen_by_id(
+    session: Session,
+    *,
+    pending_id: uuid.UUID,
+) -> PendingSpecimen:
+    pending = session.get(PendingSpecimen, pending_id)
+    return pending
+
 def cleanup_old_rejected_pending_specimens(
     session: Session,
     *,
@@ -44,7 +52,7 @@ def cleanup_old_rejected_pending_specimens(
 
     stmt = delete(PendingSpecimen).where(
         PendingSpecimen.status == PendingStatus.REJECTED,
-        PendingSpecimen.reviewed_at.is_not(None),
+        PendingSpecimen.reviewed_at != None,
         PendingSpecimen.reviewed_at < cutoff,
     )
     result = session.exec(stmt)
@@ -84,126 +92,124 @@ def create_pending_specimen(
 def update_pending_specimen(
     session: Session,
     *,
-    pending_id: uuid.UUID,
-    update_data: dict[str, Any],
+    pending_specimen: PendingSpecimen,
+    update_in: PendingSpecimenUpdate,
 ) -> PendingSpecimen:
-    pending = session.get(PendingSpecimen, pending_id)
-    if not pending:
-        raise HTTPException(404, "Pending specimen not found")
+    data = update_in.model_dump(exclude_unset=True)
 
-    if pending.status is not PendingStatus.PENDING:
-        raise HTTPException(400, "Only pending records can be updated")
+    # If nothing was provided, skip everything and just return the original
+    if not data:
+        return pending_specimen
 
-    if update_data:
-        # strip fields you never want in the diff
-        for key in ("id", "uploader_id", "is_approved"):
-            update_data.pop(key, None)
+    # strip fields you never want in the diff
+    for key in ("id", "uploader_id"):
+        data.pop(key, None)
 
-        existing = pending.changed_data or {}
-        pending.changed_data = {**existing, **update_data}
+    existing = pending_specimen.changed_data or {}
+    pending_specimen.changed_data = {**existing, **data}
 
-    session.add(pending)
+    session.add(pending_specimen)
     session.commit()
-    session.refresh(pending)
-    return pending
+    session.refresh(pending_specimen)
+    return pending_specimen
 
 def delete_pending_specimen(
     session: Session,
     *,
-    pending_id: uuid.UUID,
-    user_id: uuid.UUID,
+    pending_specimen: PendingSpecimen
 ) -> PendingSpecimen:
-    pending = session.get(PendingSpecimen, pending_id)
-    if not pending:
-        raise HTTPException(404, "Pending specimen not found")
 
-    session.delete(pending)
+    session.delete(pending_specimen)
     session.commit()
 
-    return pending
+    return pending_specimen
 
-def list_pending(session: Session, status: PendingStatus | None = None) -> list[PendingSpecimen]:
+def list_pending(session: Session, status: PendingStatus | None = None) -> PendingSpecimensPublic:
     stmt = select(PendingSpecimen)
+    count_stmt = select(func.count()).select_from(PendingSpecimen)
     if status is not None:
         stmt = stmt.where(PendingSpecimen.status == status)
-    return session.exec(stmt).all()
+        count_stmt = count_stmt.where(PendingSpecimen.status == status)
+    
+    rows = session.exec(stmt).all()
+    total = session.exec(count_stmt).one()
+    return PendingSpecimensPublic(pending_specimens=rows, count=total)
 
-def list_approved_specific_specimen(session: Session, id: uuid.UUID) -> list[PendingSpecimen]:
-    return session.exec(
+def list_approved_specific_specimen(session: Session, id: uuid.UUID) -> PendingSpecimensPublic:
+    rows = session.exec(
         select(PendingSpecimen)
             .where(
                 PendingSpecimen.status == PendingStatus.APPROVED,
                 PendingSpecimen.specimen_id == id,
             )
         ).all()
+    total = len(rows)
+    return PendingSpecimensPublic(pending_specimens=rows, count=total)
 
+def approve_pending_specimen(
+    session: Session,
+    *,
+    pending_specimen: PendingSpecimen,
+    reviewer_id: uuid.UUID,
+    comment: str | None = None,
+) -> PendingSpecimen:
+    """
+    Atomic approval logic.
 
-def approve_pending_specimen(session: Session, pending_id: uuid.UUID,
-                             reviewer_id: uuid.UUID, comment: str):
-    pending = session.get(PendingSpecimen, pending_id)
-    if not pending:
-        raise HTTPException(404, "Pending specimen not found")
+    Assumes:
+    • pending_specimen exists
+    • status is PENDING
+    • if specimen_id is set, that specimen exists
+    """
+    data = pending_specimen.changed_data or {}
 
-    if pending.status is not PendingStatus.PENDING:
-        raise HTTPException(400, "Status is not Pending, can't approve.")
-
-    data = pending.changed_data  # dict from JSONB
-
-    if pending.specimen_id is None:
-        # brand new specimen → validate as SpecimenCreate
+    if pending_specimen.specimen_id is None:
+        # Brand new specimen
         create_obj = SpecimenCreate(**data)
         specimen = specimen_crud.create_specimen(
             session=session,
             specimen_in=create_obj,
-            current_user_id=pending.changed_by_user_id,
+            current_user_id=pending_specimen.changed_by_user_id,
         )
-        pending.specimen_id = specimen.id
+        pending_specimen.specimen_id = specimen.id
     else:
-        # update existing specimen → validate as SpecimenUpdate
+        # Update existing specimen
         update_obj = SpecimenUpdate(**data)
-        specimen = specimen_crud.update_specimen(
+        specimen_crud.update_specimen(
             session=session,
-            id=pending.specimen_id,
+            id=pending_specimen.specimen_id,
             specimen_in=update_obj,
         )
-        if not specimen:
-            raise HTTPException(404, "Target specimen not found")
 
-        for field, value in update_obj.model_dump(exclude_unset=True).items():
-            setattr(specimen, field, value)
-
-    pending.status = PendingStatus.APPROVED
-    pending.reviewer_id = reviewer_id
-    pending.reviewed_at = datetime.now(timezone.utc)
+    pending_specimen.status = PendingStatus.APPROVED
+    pending_specimen.reviewer_id = reviewer_id
+    pending_specimen.reviewed_at = datetime.now(timezone.utc)
     if comment:
-        pending.comment_by_reviewer = comment
+        pending_specimen.comment_by_reviewer = comment
 
-    session.add(pending)
+    session.add(pending_specimen)
     session.commit()
-    session.refresh(pending)
-    return pending
+    session.refresh(pending_specimen)
+    return pending_specimen
 
 
 def reject_pending_specimen(
     session: Session,
     *,
-    pending_id: uuid.UUID,
+    pending_specimen: PendingSpecimen,
     reviewer_id: uuid.UUID,
     comment: str | None = None,
 ) -> PendingSpecimen:
-    pending = session.get(PendingSpecimen, pending_id)
-    if not pending:
-        raise HTTPException(status_code=404, detail="Pending specimen not found")
+    """
+    Atomic reject logic. Assumes all checks were already done.
+    """
 
-    if pending.status is not PendingStatus.PENDING:
-        raise HTTPException(status_code=400, detail="Status is not pending, can't reject.")
+    pending_specimen.status = PendingStatus.REJECTED
+    pending_specimen.reviewer_id = reviewer_id
+    pending_specimen.comment_by_reviewer = comment
+    pending_specimen.reviewed_at = datetime.now(timezone.utc)
 
-    pending.status = PendingStatus.REJECTED
-    pending.reviewer_id = reviewer_id
-    pending.comment_by_reviewer = comment
-    pending.reviewed_at = datetime.now(timezone.utc)
-
-    session.add(pending)
+    session.add(pending_specimen)
     session.commit()
-    session.refresh(pending)
-    return pending
+    session.refresh(pending_specimen)
+    return pending_specimen
