@@ -130,7 +130,47 @@ def init_example_specimen(session: Session, admin_user: User) -> None:
         sub_joinery_type_id=sub_joinery_type_in,
     )
 
+    specimen_in_2 = SpecimenCreate(
+        specimen_reference_id="EX124",
+        replicate_tests=3,
+        note="This is another example specimen.",
+        assembly_type="Wall-Wall",
+        practice="Conventional",
+        connection_description="Example connection description.",
+        element_dimension="50x100 mm",
+        fastener_numbers=10,
+        moisture_percentage="12%",
+        wood_type="Pine",
+        wood_mechanical_properties="Standard properties",
+        connector_mechanical_properties="Standard properties",
+        fastener_mechanical_properties="Standard properties",
+        e_date="2024-01-01",
+        e_test_loading_type="Cyclic",
+        e_yield_point_method="CEN 1/6",
+        e_stiffness=1500.0,
+        e_yield_displacement=5.0,
+        e_yield_force=2000.0,
+        e_max_displacement=10.0,
+        e_max_force=3000.0,
+        e_ultimate_displacement=15.0,
+        e_ultimate_force=3500.0,
+        e_ductility=3.0,
+        e_measurement_unit="mm",
+        e_qfm_description="Qualitative failure measure description.",
+        
+        dowel=True,
+        connector=True,
+
+        doi_id=doi.id,
+        e_qualitative_failure_measure=failure_mode_in,
+        fastener_type_ids=fastener_type_in,
+        loading_direction_ids=loading_direction_in,
+        joinery_type_id=joinery_type_in,
+        sub_joinery_type_id=sub_joinery_type_in,
+    )
+
     specimen_crud.create_specimen(session=session, specimen_in=specimen_in, current_user_id=admin_user.id)
+    specimen_crud.create_specimen(session=session, specimen_in=specimen_in_2, current_user_id=admin_user.id)
 
 
 

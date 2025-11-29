@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.failuremode import FailureMode
@@ -84,9 +85,17 @@ def delete_mode(
     """
     Delete failure mode ONLY if not in use.
     """
-    failure_mode = session.get(FailureMode, id)
+    failure_mode = failuremode_crud.get_mode_by_id(session=session, id=id)
     
     if not failure_mode:
         raise HTTPException(status_code=404, detail="Failure mode not found")
     
-    return failuremode_crud.delete_mode(session=session, failure_mode=failure_mode)
+    if failuremode_crud.is_failure_mode_in_use(session=session, id=id):
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete failure mode: it is used by one or more specimens.",
+        )
+    
+    failuremode_crud.delete_mode(session=session, failure_mode=failure_mode)
+
+    return {"message": "Failure mode deleted successfully"}

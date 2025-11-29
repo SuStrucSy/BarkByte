@@ -1,13 +1,11 @@
 import uuid
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select, func
 
 from app.models.doi import DOI
 from app.schemas.doi import DOIsPublic
-# from app.schemas.fastenertype import FastenerTypes, FastenerTypeCreate
-
-# need to decide what determines it, link or id? link is more user friendly but id is more standard for APIs. 🚨
 
 def get_doi_by_link(*, session: Session, link: str) -> DOI | None:
     statement = select(DOI).where(DOI.link == link)
@@ -41,7 +39,9 @@ def update_doi(*, session: Session, doi_in: Any, doi: DOI) -> DOI:
     return doi
 
 def delete_doi(*, session: Session, doi: DOI) -> None:
-    # what if there are specimens linked to this DOI? cascade is off by default, but we double check if its possible.
-
     session.delete(doi)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise

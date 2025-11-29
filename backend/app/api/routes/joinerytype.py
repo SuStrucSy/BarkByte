@@ -3,6 +3,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models.joinerytype import JoineryType
@@ -68,9 +69,17 @@ def delete_jtype(
     """
     Delete joinery type ONLY if not in use.
     """
-    joinery_type = session.get(JoineryType, id)
+    joinery_type = joinerytype_crud.get_type_by_id(session=session, id=id)
 
     if not joinery_type:
         raise HTTPException(status_code=404, detail="Joinery type not found")
     
-    return joinerytype_crud.delete_type(session=session, joinery_type=joinery_type)
+    try:
+        joinerytype_crud.delete_type(session=session, joinery_type=joinery_type)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete joinery type: it is still referenced by one or more specimens."
+        )
+    
+    return {"message": "Joinery type deleted successfully."}

@@ -1,6 +1,7 @@
 import uuid
 
 from sqlmodel import func, select, Session
+from sqlalchemy.exc import IntegrityError
 
 from app.models.subjoinerytype import SubJoineryType
 from app.schemas.subjoinerytype import SubJoineryTypes, SubJoineryTypeCreate
@@ -72,4 +73,8 @@ def delete_subjoinery_type(
     *, session: Session, sub_joinery_type: SubJoineryType
 ) -> None:
     session.delete(sub_joinery_type)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise

@@ -73,6 +73,10 @@ def delete_loading_direction(
     
     if not loading_direction:
         raise HTTPException(status_code=404, detail="Loading direction not found")
+    
+    if loadingdirection_crud.is_loading_direction_in_use(session=session, loading_direction=loading_direction):
+        raise HTTPException(status_code=400, detail="Loading direction is in use and cannot be deleted")
 
+    loadingdirection_crud.delete_loading_direction(session=session, loading_direction=loading_direction)
 
-    return loadingdirection_crud.delete_loading_direction(session=session, loading_direction=loading_direction)
+    return {"message": "Loading direction deleted successfully"}

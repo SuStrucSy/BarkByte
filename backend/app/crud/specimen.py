@@ -2,6 +2,7 @@ from typing import Any
 import uuid
 
 from sqlmodel import Session, select, delete, func, SQLModel
+from sqlalchemy.exc import IntegrityError
 
 from app.models.specimen import Specimen
 from app.schemas.specimen import SpecimenCreate, SpecimensPublic, SpecimenUpdate
@@ -304,8 +305,10 @@ def update_specimen(
     session.refresh(specimen)
     return specimen
 
-def delete_specimen(*, session: Session, id: uuid.UUID) -> Any:
-    specimen = session.get(Specimen, id)
+def delete_specimen(*, session: Session, specimen: Specimen) -> Any:
     session.delete(specimen)
-    session.commit()
-    return {"message": "specimen deleted successfully"}
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise

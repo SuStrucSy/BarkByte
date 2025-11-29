@@ -3,6 +3,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.schemas.subjoinerytype import SubJoineryType, SubJoineryTypes, SubJoineryTypeCreate
@@ -105,6 +106,20 @@ def update_sjtype(
         sub_joinery_type=sub_joinery_type
     )
 
+@router.get("/{joinery_type_id}/", response_model=SubJoineryTypes)
+def get_sjtypes_for_jtype(
+    session: SessionDep, 
+    joinery_type_id: uuid.UUID,
+    skip: int = 0, 
+    limit: int = 100
+) -> Any:
+    """
+    Retrieve sub joinery types for a specific joinery type.
+    """
+    return joinerytype_crud.get_subjoinery_types(
+        session=session, joinery_type_id=joinery_type_id, skip=skip, limit=limit
+    )
+
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_sjtype(
     session: SessionDep,
@@ -119,27 +134,20 @@ def delete_sjtype(
         session=session,
         id=id,
     )
+
     if sub_joinery_type is None:
         raise HTTPException(status_code=404, detail="Sub joinery type not found")
 
     # Perform delete
-    subjoinerytype_crud.delete_subjoinery_type(
-        session=session,
-        sub_joinery_type=sub_joinery_type,
-    )
+    try:
+        subjoinerytype_crud.delete_subjoinery_type(
+            session=session,
+            sub_joinery_type=sub_joinery_type,
+        )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete sub joinery type: it is still referenced by one or more specimens."
+        )
 
     return {"message": "Sub joinery type deleted successfully"}
-
-@router.get("/{joinery_type_id}/", response_model=SubJoineryTypes)
-def get_sjtypes_for_jtype(
-    session: SessionDep, 
-    joinery_type_id: uuid.UUID,
-    skip: int = 0, 
-    limit: int = 100
-) -> Any:
-    """
-    Retrieve sub joinery types for a specific joinery type.
-    """
-    return joinerytype_crud.get_subjoinery_types(
-        session=session, joinery_type_id=joinery_type_id, skip=skip, limit=limit
-    )

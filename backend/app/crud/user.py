@@ -2,6 +2,7 @@ import uuid
 from typing import Any, Optional
 
 from sqlmodel import func, select, Session
+from sqlalchemy.exc import IntegrityError
 
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
@@ -68,4 +69,8 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> User
 
 def delete_user(*, session: Session, user: User) -> None:
     session.delete(user)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise ValueError("User cannot be deleted because they still own one or more specimens.")

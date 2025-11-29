@@ -2,6 +2,7 @@ import uuid
 from typing import Any
 
 from sqlmodel import func, select, Session
+from sqlalchemy.exc import IntegrityError
 
 from app.models.joinerytype import JoineryType
 from app.schemas.joinerytype import JoineryTypes, JoineryTypeCreate
@@ -66,8 +67,10 @@ def update_type(*, session: Session, jtype_in: JoineryTypeCreate, joinery_type: 
     session.refresh(joinery_type)
     return joinery_type
 
-def delete_type(*, session: Session, joinery_type: JoineryType) -> Any:
-    
+def delete_type(*, session: Session, joinery_type: JoineryType) -> None:
     session.delete(joinery_type)
-    session.commit()
-    return {"message": "Sub joinery type deleted successfully"}
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise

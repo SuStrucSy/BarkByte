@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.crud import user as user_crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
@@ -70,7 +70,13 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Delete own user.
     """
-    user_crud.delete_user(session=session, user=current_user)
+        
+    # ANOTHER EXAMPLE OF MAYBE CASCADE SHOULD BE ON WHERE WHEN THE ACCOUNT IS DELETED, ALL OF THEIR SPECIMENS ARE ALSO DELETED? 🚨
+
+    try:
+        user_crud.delete_user(session=session, user=current_user)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     return Message(message="User deleted successfully")
 
 # ------------ General Users endpoints ------------
@@ -160,6 +166,9 @@ def delete_user(
     """
     Delete a user.
     """
+     
+    # ANOTHER EXAMPLE OF MAYBE CASCADE SHOULD BE ON WHERE WHEN THE ACCOUNT IS DELETED, ALL OF THEIR SPECIMENS ARE ALSO DELETED? 🚨
+
     user = user_crud.get_user(session=session, user_id=user_id)
     if not user:
         raise HTTPException(
@@ -169,10 +178,22 @@ def delete_user(
 
     if user == current_user:
         raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+            status_code=403, detail="Use the /users/me endpoint to delete your own account."
         )
     
-    user_crud.delete_user(session=session, user=user)
+    if user.is_superuser:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot delete another superuser. Superusers must delete their own account.",
+        )
+    try:
+        user_crud.delete_user(session=session, user=user)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete user: it is still referenced by one or more specimens."
+        )
+    
     return Message(message="User deleted successfully")
 
 # ------------ Authentication related endpoints ------------

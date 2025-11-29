@@ -3,6 +3,7 @@ from typing import Any
 import uuid
 
 from fastapi import APIRouter, HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models.specimen import Specimen
@@ -93,5 +94,18 @@ def delete_specimen(
     """
     if not current_user.is_superuser:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
+    specimen = specimen_crud.get_specimen_by_id(session=session,id=id)
 
-    return specimen_crud.delete_specimen(session=session, id=id)
+    if specimen is None:
+        raise HTTPException(status_code=404, detail="Specimen not found")
+
+    try:
+        specimen_crud.delete_specimen(session=session, specimen=specimen)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete specimen: it is still referenced by one or more tables."
+        )
+
+    return {"message": "Specimen deleted successfully."}

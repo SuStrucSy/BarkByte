@@ -8,6 +8,17 @@ from app.models.failuremode import FailureMode
 from app.schemas.failuremode import FailureModes, FailureModeCreate
 from app.enums import FailureModeType
 
+def is_failure_mode_in_use(*, session: Session, id: uuid.UUID) -> bool:
+    refs = session.exec(
+        select(func.count())
+        .select_from(SpecimenFailureMode)
+        .where(SpecimenFailureMode.failure_mode_id == id)
+    ).one()
+    return refs > 0
+
+def get_mode_by_id(*, session: Session, id: uuid.UUID) -> FailureMode | None:
+    return session.get(FailureMode, id)
+
 def get_modes(*, session: Session, skip: int = 0, limit: int = 100, dowel: bool, connector: bool) -> FailureModes:
     """
     Retrieve failure modes.
@@ -58,4 +69,3 @@ def update_mode(*, session: Session, mode_in: FailureModeCreate, failure_mode: F
 def delete_mode(*, session: Session, failure_mode: FailureMode) -> Any:
     session.delete(failure_mode)
     session.commit()
-    return {"message": "Failure mode deleted successfully"}

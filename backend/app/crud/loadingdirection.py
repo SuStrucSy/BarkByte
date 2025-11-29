@@ -11,6 +11,19 @@ from app.models.specimen_loadingdirection import SpecimenLoadingDirection
 def normalize_label(label: str) -> str:
     return label.strip().lower()
 
+def is_loading_direction_in_use(
+    session: SessionDep,
+    loading_direction: LoadingDirection
+) -> bool:
+    """
+    Check if loading direction is in use.
+    """
+    count_statement = select(func.count()).select_from(SpecimenLoadingDirection).where(
+        SpecimenLoadingDirection.loading_direction_id == loading_direction.id
+    )
+    count = session.exec(count_statement).one()
+    return count > 0
+
 def get_loading_direction_by_id(
     session: SessionDep,
     id: uuid.UUID

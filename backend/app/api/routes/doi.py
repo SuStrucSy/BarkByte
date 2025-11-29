@@ -2,6 +2,7 @@ import logging
 import uuid
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
@@ -91,10 +92,17 @@ def delete_doi(
     """
     Delete joinery type ONLY if not in use.
     """
-    doi = get_doi_by_id(session=session, id=id)
+    doi = doi_crud.get_doi_by_id(session=session, id=id)
     
     if not doi:
         raise HTTPException(status_code=404, detail="DOI not found")
 
-    doi_crud.delete_doi(session=session, doi=doi)
+    try:
+        doi_crud.delete_doi(session=session, doi=doi)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete DOI: it is still referenced by one or more specimens."
+        )
+
     return {"message": "DOI deleted successfully."}

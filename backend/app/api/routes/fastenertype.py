@@ -65,10 +65,17 @@ def delete_fastener_type(
     """
     Delete fastener type ONLY if not in use.
     """
-    fastener_type = session.get(FastenerType, id)
+    fastener_type = fastener_type_crud.get_fastener_type_by_id(session=session, id=id)
     
     if not fastener_type:
         raise HTTPException(status_code=404, detail="Fastener type not found")
     
+    if fastener_type_crud.is_fastener_type_in_use(session=session, id=id):
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete fastener type: it is used by one or more specimens.",
+        )
+    
+    fastener_type_crud.delete_fastener_type(session=session, fastener_type=fastener_type)
 
-    return fastener_type_crud.delete_fastener_type(session=session, fastener_type=fastener_type)
+    return {"message": "Fastener type deleted successfully"}

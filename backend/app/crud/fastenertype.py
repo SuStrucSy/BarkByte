@@ -3,11 +3,20 @@ from typing import Any
 
 from sqlmodel import Session, select, func
 
+from app.models.specimen_fastenertype import SpecimenFastenerType
 from app.models.fastenertype import FastenerType
 from app.schemas.fastenertype import FastenerTypes, FastenerTypeCreate
 
 def normalize_label(label: str) -> str:
     return label.strip().lower()
+
+def is_fastener_type_in_use(*, session: Session, id: uuid.UUID) -> bool:
+    refs = session.exec(
+        select(func.count())
+        .select_from(SpecimenFastenerType)
+        .where(SpecimenFastenerType.fastener_type_id == id)
+    ).one()
+    return refs > 0
 
 def get_fastener_types(*, session: Session, skip: int = 0, limit: int = 100) -> FastenerTypes:
     count_statement = select(func.count()).select_from(FastenerType)
@@ -60,4 +69,3 @@ def update_fastener_type(
 def delete_fastener_type(*, session: Session, fastener_type: FastenerType) -> Any:
     session.delete(fastener_type)
     session.commit()
-    return {"message": "Fastener type deleted successfully"}
