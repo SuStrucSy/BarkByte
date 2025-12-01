@@ -15,6 +15,23 @@ from app.models.specimen_fastenertype import SpecimenFastenerType
 from app.models.loadingdirection import LoadingDirection
 from app.models.specimen_loadingdirection import SpecimenLoadingDirection
 
+def get_specimens_by_uploader(*, session: Session, uploader_id: uuid.UUID, skip: int = 0, limit: int = 100) -> SpecimensPublic:
+    count_stmt = (
+        select(func.count())
+        .select_from(Specimen)
+        .where(Specimen.uploader_id == uploader_id)
+    )
+    count = session.exec(count_stmt).one()
+
+    stmt = (
+        select(Specimen)
+        .where(Specimen.uploader_id == uploader_id)
+        .offset(skip)
+        .limit(limit)
+    )
+    items = session.exec(stmt).all()
+
+    return SpecimensPublic(data=items, count=count)
 
 def get_specimen_by_id(*, session: Session, id: uuid.UUID) -> Specimen | None:
     """Return specimen or None."""

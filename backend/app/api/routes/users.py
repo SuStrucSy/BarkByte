@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.crud import user as user_crud
+from app.crud import specimen as specimen_crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
@@ -65,13 +66,18 @@ def update_password_me(
     session.commit()
     return Message(message="Password updated successfully")
 
-@router.delete("/me", dependencies=[Depends(get_current_active_superuser)], response_model=Message)
+@router.delete("/me", response_model=Message)
 def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Delete own user.
     """
-        
-    # ANOTHER EXAMPLE OF MAYBE CASCADE SHOULD BE ON WHERE WHEN THE ACCOUNT IS DELETED, ALL OF THEIR SPECIMENS ARE ALSO DELETED? 🚨
+    specimens = specimen_crud.get_specimens_by_uploader(session=session, uploader_id=current_user.id, skip=0, limit=100)
+
+    if specimens:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete user: it is still referenced by one or more specimens."
+        )
 
     try:
         user_crud.delete_user(session=session, user=current_user)
@@ -166,8 +172,6 @@ def delete_user(
     """
     Delete a user.
     """
-     
-    # ANOTHER EXAMPLE OF MAYBE CASCADE SHOULD BE ON WHERE WHEN THE ACCOUNT IS DELETED, ALL OF THEIR SPECIMENS ARE ALSO DELETED? 🚨
 
     user = user_crud.get_user(session=session, user_id=user_id)
     if not user:
