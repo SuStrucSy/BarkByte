@@ -170,6 +170,30 @@ def _sync_specimen_loading_directions(session: Session, specimen_id: uuid.UUID, 
     for ld in ldirs:
         session.add(SpecimenLoadingDirection(specimen_id=specimen_id, loading_direction_id=ld.id))
 
+def validate_specimen_create(
+    *, session: Session, specimen_in: SpecimenCreate
+) -> None:
+    """
+    Run all create-time domain validations for a specimen,
+    without inserting anything.
+    Raises ValueError on invalid state.
+    """
+    data, failure_mode_ids, fastener_type_ids, loading_direction_ids = (
+        _split_specimen_payload(specimen_in, for_update=False)
+    )
+
+    _validate_joinery_and_dowel(session, data)
+    _validate_failure_modes_against_toggles(
+        session=session,
+        failure_mode_ids=failure_mode_ids,
+        connector=data.get("connector"),
+        dowel=data.get("dowel"),
+    )
+    _validate_fasteners_against_dowel(
+        fastener_type_ids=fastener_type_ids,
+        dowel=data.get("dowel"),
+    )
+
 def get_current_fastener_type_ids(session: Session, specimen_id: uuid.UUID) -> list[uuid.UUID]:
     return [
         row.fastener_type_id
@@ -207,13 +231,11 @@ def create_specimen(
     Create a specimen, raise ValueError on invalid domain state.
     """
 
+    validate_specimen_create(session=session, specimen_in=specimen_in)
+
     data, failure_mode_ids, fastener_type_ids, loading_direction_ids = (
         _split_specimen_payload(specimen_in, for_update=False)
     )
-
-    _validate_joinery_and_dowel(session, data)
-    _validate_failure_modes_against_toggles(session, failure_mode_ids, connector=data.get("connector"), dowel=data.get("dowel"))
-    _validate_fasteners_against_dowel(fastener_type_ids=fastener_type_ids, dowel=data.get("dowel"))
 
     # Create specimen object
     specimen = Specimen(**data, uploader_id=current_user_id)

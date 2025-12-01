@@ -44,8 +44,16 @@ def create_specimen(
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-
-    # do data validation here...
+    
+    # Run domain validation now, at submission time
+    try:
+        specimen_crud.validate_specimen_create(session=session, specimen_in=specimen_in)
+    except ValueError as e:
+        # surface this immediately to the client
+        raise HTTPException(
+            status_code=400,
+            detail=f"Specimen validation failed: {e}"
+        )
     
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
