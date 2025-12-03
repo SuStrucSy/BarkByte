@@ -4,12 +4,17 @@ from typing import Any
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select, func
 from pydantic import TypeAdapter
-from pydantic.networks import AnyUrl
+from pydantic.networks import HttpUrl
+import re
 
 from app.models.doi import DOI
 from app.schemas.doi import DOIsPublic
 
-url_adapter = TypeAdapter(AnyUrl)
+DOMAIN_RE = re.compile(
+    r"^(?!-)([A-Za-z0-9-]{1,63}\.)+[A-Za-z]{2,63}$"
+)
+
+url_adapter = TypeAdapter(HttpUrl)
 
 def normalize_link(link: str) -> str | None:
     # If there is no scheme, default to https so that examples like
@@ -19,11 +24,20 @@ def normalize_link(link: str) -> str | None:
 
     try:
         url = url_adapter.validate_python(link)
-    except Exception:
+    except Exception as e:
         return None
 
-    # Normalize host, lowercase and strip a leading "www."
     host = (url.host or "").lower()
+
+    # Enforce a public-style domain shape:
+    # - at least one dot
+    # - no leading/trailing dots
+    # - labels 1–63 chars, alnum or hyphen
+    # - TLD 2–63 alpha chars
+    if not DOMAIN_RE.match(host):
+        return None
+
+    # Strip a leading "www." to normalize www.example.com → example.com
     if host.startswith("www."):
         host = host[4:]
 
