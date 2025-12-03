@@ -16,11 +16,14 @@ class UserRegister(SQLModel):
   full_name: str | None = Field(default=None, max_length=255)
 
 # Properties to receive via API on update, all are optional
-class UserUpdate(UserBase):
+class UserUpdate(SQLModel):
+    is_active: bool | None = None
+    is_superuser: bool | None = None
+    full_name: str | None = None
     email: EmailStr | None = Field(default=None, max_length=255)  # type: ignore
-    password: str | None = Field(default=None, min_length=8, max_length=64)
 
 class UserUpdateMe(SQLModel):
+    is_active: bool | None = None
     full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr | None = Field(default=None, max_length=255)
 

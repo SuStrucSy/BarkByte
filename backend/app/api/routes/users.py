@@ -71,18 +71,9 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Delete own user.
     """
-    specimens = specimen_crud.get_specimens_by_uploader(session=session, uploader_id=current_user.id, skip=0, limit=100)
-
-    if specimens:
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete user: it is still referenced by one or more specimens."
-        )
-
-    try:
-        user_crud.delete_user(session=session, user=current_user)
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+    user_in = UserUpdateMe(is_activate=False)
+    user_crud.update_user(session=session, user_in=user_in, db_user=current_user)
+    
     return Message(message="User deleted successfully")
 
 # ------------ General Users endpoints ------------
