@@ -49,22 +49,21 @@ def get_doi_by_id(
     )
 
 @router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=DOIPublic)
-def create_doi(
-    session: SessionDep,
-    current_user: CurrentUser,
-    doi_in: DOICreate
-) -> DOIPublic:
+def create_doi(session: SessionDep, current_user: CurrentUser, doi_in: DOICreate) -> DOIPublic:
     """
-    Create doi.
+    Create DOI.
     """
-    
+    # Duplicate check (uses normalization internally)
     if doi_crud.get_doi_by_link(session=session, link=doi_in.link):
+        raise HTTPException(status_code=400,detail=f"DOI '{doi_in.link}' already exists.")
+
+    try:
+        return doi_crud.create_doi(session=session, doi_in=doi_in)
+    except ValueError as exc:
         raise HTTPException(
             status_code=400,
-            detail=f"DOI '{doi_in.link}' already exists.",
+            detail=str(exc),
         )
-    
-    return doi_crud.create_doi(session=session, doi_in=doi_in)
 
 @router.post("/{id}", dependencies=[Depends(get_current_active_superuser)], response_model=DOIPublic)
 def update_doi(
@@ -76,12 +75,18 @@ def update_doi(
     """
     Create doi.
     """
-    doi = get_doi_by_id(session=session, id=id)
+    doi = doi_crud.get_doi_by_id(session=session, id=id)
     
     if not doi:
         raise HTTPException(status_code=404, detail="DOI not found")
 
-    return doi_crud.update_doi(session=session, doi_in=doi_in, doi=doi)
+    try:
+        return doi_crud.update_doi(session=session, doi_in=doi_in, doi=doi)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
 
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_doi(
