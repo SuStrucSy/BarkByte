@@ -15,6 +15,9 @@ const tabsConfig = [
 ];
 
 export const Route = createFileRoute("/_layout/settings")({
+	staticData: {
+		title: "Settings",
+	},
 	component: UserSettings,
 });
 

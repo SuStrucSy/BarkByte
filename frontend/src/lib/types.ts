@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import type { z } from "zod/v4";
 import type { schemas } from "@/lib/api";
 import type { loginSchema } from "./schemas";
 

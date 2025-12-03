@@ -1,7 +1,7 @@
-import useChartDimensions from '@/hooks/useChartDimensions';
-import { useMemo } from 'react';
 import * as d3 from "d3";
-import Axis from './Axis';
+import { useMemo } from "react";
+import useChartDimensions from "@/hooks/useChartDimensions";
+import Axis from "./Axis";
 
 const chartSettings = {
 	width: 445,
@@ -37,4 +37,4 @@ const ChartWithDimensions = () => {
 	);
 };
 
-export default ChartWithDimensions
+export default ChartWithDimensions;

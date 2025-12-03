@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface LinePlotProps {
 	data: number[];
@@ -47,6 +47,6 @@ const LinePlot = ({
 			</g>
 		</svg>
 	);
-}
+};
 
-export default LinePlot
+export default LinePlot;

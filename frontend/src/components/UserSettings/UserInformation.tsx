@@ -60,83 +60,83 @@ const UserInformation = () => {
 
 	return (
 		<div className="p-4">
-				<h3 className="font-bold py-4">User Information</h3>
-				<Form {...form}>
-					<form id="editUserForm" onSubmit={form.handleSubmit(onSubmit)}>
-						<div className="grid gap-4">
-							<FormField
-								control={form.control}
-								name="full_name"
-								render={({ field }) => {
-									if (editMode) {
-										return (
-											<FormItem>
-												<FormLabel>Full name</FormLabel>
-												<FormControl>
-													<Input type="text" placeholder="shadcn" {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										);
-									}
+			<h3 className="font-bold py-4">User Information</h3>
+			<Form {...form}>
+				<form id="editUserForm" onSubmit={form.handleSubmit(onSubmit)}>
+					<div className="grid gap-4">
+						<FormField
+							control={form.control}
+							name="full_name"
+							render={({ field }) => {
+								if (editMode) {
 									return (
-										<span className="max-w-sm truncate py-2 font-size-md">
-											{currentUser?.full_name || "N/A"}
-										</span>
+										<FormItem>
+											<FormLabel>Full name</FormLabel>
+											<FormControl>
+												<Input type="text" placeholder="shadcn" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
 									);
-								}}
-							/>
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => {
-									if (editMode) {
-										return (
-											<FormItem>
-												<FormLabel>Email</FormLabel>
-												<FormControl>
-													<Input type="email" placeholder="shadcn" {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										);
-									}
-									return (
-										<span className="max-w-sm truncate py-2 font-size-md">
-											{currentUser?.email}
-										</span>
-									);
-								}}
-							/>
-						</div>
-						<div className="flex mt-4 gap-3">
-							<Button
-								onClick={toggleEditMode}
-								type={editMode ? "button" : "submit"}
-								disabled={
-									editMode
-										? !form.formState.isDirty || !form.getValues("email")
-										: false
 								}
-							>
-								{editMode && form.formState.isSubmitting && (
-									<Loader2 className="animate-spin" />
-								)}
-								{editMode ? "Save" : "Edit"}
-							</Button>
-							{editMode && (
-								<Button
-									variant="secondary"
-									onClick={onCancel}
-									disabled={form.formState.isSubmitting}
-								>
-									Cancel
-								</Button>
+								return (
+									<span className="max-w-sm truncate py-2 font-size-md">
+										{currentUser?.full_name || "N/A"}
+									</span>
+								);
+							}}
+						/>
+						<FormField
+							control={form.control}
+							name="email"
+							render={({ field }) => {
+								if (editMode) {
+									return (
+										<FormItem>
+											<FormLabel>Email</FormLabel>
+											<FormControl>
+												<Input type="email" placeholder="shadcn" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									);
+								}
+								return (
+									<span className="max-w-sm truncate py-2 font-size-md">
+										{currentUser?.email}
+									</span>
+								);
+							}}
+						/>
+					</div>
+					<div className="flex mt-4 gap-3">
+						<Button
+							onClick={toggleEditMode}
+							type={editMode ? "button" : "submit"}
+							disabled={
+								editMode
+									? !form.formState.isDirty || !form.getValues("email")
+									: false
+							}
+						>
+							{editMode && form.formState.isSubmitting && (
+								<Loader2 className="animate-spin" />
 							)}
-						</div>
-					</form>
-				</Form>
-			</div>
+							{editMode ? "Save" : "Edit"}
+						</Button>
+						{editMode && (
+							<Button
+								variant="secondary"
+								onClick={onCancel}
+								disabled={form.formState.isSubmitting}
+							>
+								Cancel
+							</Button>
+						)}
+					</div>
+				</form>
+			</Form>
+		</div>
 	);
 };
 

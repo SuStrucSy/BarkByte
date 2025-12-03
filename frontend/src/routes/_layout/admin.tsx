@@ -1,26 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { z } from "zod";
-
+import type { PaginationState, Row } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { z } from "zod/v4";
 import AddUser from "@/components/Admin/AddUser";
 import { UserActionsMenu } from "@/components/Common/UserActionsMenu";
+import { createColumns } from "@/components/Data-Table/columns";
+import { DataTable } from "@/components/Data-Table/DataTable";
 import PendingUsers from "@/components/Pending/PendingUsers";
-import { Badge } from "@/components/ui/badge";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationNext,
-	PaginationPrevious,
-} from "@/components/ui/pagination.tsx";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
 import { api } from "@/lib/api";
 import type { UserPublic } from "@/lib/types";
 
@@ -28,19 +15,25 @@ const usersSearchSchema = z.object({
 	page: z.number().catch(1),
 });
 
-const PER_PAGE = 5;
+const PER_PAGE = 10;
 
-function getUsersQueryOptions({ page }: { page: number }) {
+function getUsersQueryOptions({ pagination }: { pagination: PaginationState }) {
 	return {
 		queryFn: () =>
 			api.get("/api/v1/users/", {
-				queries: { skip: (page - 1) * PER_PAGE, limit: PER_PAGE },
+				queries: {
+					skip: pagination.pageIndex * pagination.pageSize,
+					limit: pagination.pageSize,
+				},
 			}),
-		queryKey: ["users", { page }],
+		queryKey: ["users", pagination],
 	};
 }
 
 export const Route = createFileRoute("/_layout/admin")({
+	staticData: {
+		title: "Admin",
+	},
 	component: Admin,
 	validateSearch: (search) => usersSearchSchema.parse(search),
 });
@@ -50,9 +43,18 @@ function UsersTable() {
 	const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
 	const navigate = useNavigate({ from: Route.fullPath });
 	const { page } = Route.useSearch();
+	const columns = useMemo(
+		() => createColumns<UserPublic>(currentUser),
+		[currentUser],
+	);
+
+    const [pagination, setPagination] = useState<PaginationState>({
+					pageIndex: 0,
+					pageSize: PER_PAGE,
+				});
 
 	const { data, isLoading, isPlaceholderData } = useQuery({
-		...getUsersQueryOptions({ page }),
+		...getUsersQueryOptions({ pagination }),
 		placeholderData: (prevData) => prevData,
 	});
 
@@ -68,9 +70,29 @@ function UsersTable() {
 		return <PendingUsers />;
 	}
 
+	console.log(users);
+
+	const getRowStyle = <TData extends UserPublic>(row: Row<TData>) => {
+		return !row.original.is_active
+			? { color: "gray", opacity: 0.6 } // gray out inactive user
+			: {};
+	};
+
+  console.log({count})
+  console.log({ pagination });
+
 	return (
 		<>
-			<Table>
+			<DataTable<UserPublic, any>
+				columns={columns}
+				data={data?.data}
+				isPlaceholderData={isPlaceholderData}
+				getRowStyle={getRowStyle}
+				rowCount={count}
+				pagination={pagination}
+				setPagination={setPagination}
+			/>
+			{/* <Table>
 				<TableHeader>
 					<TableRow>
 						<TableHead>Full name</TableHead>
@@ -125,7 +147,7 @@ function UsersTable() {
 						)}
 					</PaginationItem>
 				</PaginationContent>
-			</Pagination>
+			</Pagination> */}
 		</>
 	);
 }

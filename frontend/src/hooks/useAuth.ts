@@ -1,15 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {  useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
-import type {
-	AccessToken,
-	NewAccount,
-	UserPublic,
-	UserRegister,
-} from "@/lib/types";
+
 import { handleError } from "@/utils";
+import {  useUsersReadUserMe, useUsersRegisterUser, useUsersVerifyEmail } from '@/api/endpoints/users/users.gen';
+import { useLoginLoginAccessToken } from '@/api/endpoints/login/login.gen';
 
 const isLoggedIn = () => {
 	return localStorage.getItem("access_token") !== null;
@@ -19,57 +15,98 @@ const useAuth = () => {
 	const [error, setError] = useState<string | null>(null);
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const { data: user } = useQuery<UserPublic | null, Error>({
-		queryKey: ["currentUser"],
-		queryFn: async () => {
-			const data = await api.get("/api/v1/users/me");
-			return data;
-		},
-		enabled: isLoggedIn(),
-	});
+  const { data: user } = useUsersReadUserMe({
+    query: { queryKey: ["currentUser"], enabled: isLoggedIn() }
+  })
+	// const { data: user } = useQuery<UserPublic | null, Error>({
+	// 	queryKey: ["currentUser"],
+	// 	queryFn: async () => {
+	// 		const data = await api.get("/api/v1/users/me");
+	// 		return data;
+	// 	},
+	// 	enabled: isLoggedIn(),
+	// });
 
-	const signUpMutation = useMutation({
-		mutationFn: (data: UserRegister) =>
-			api.post("/api/v1/users/signup", { ...data }),
+  const signUpMutation = useUsersRegisterUser({
+    mutation: {
+      onSuccess: () => {
+        navigate({ to: "/login" });
+      },
+      onError: (err) => {
+        handleError(err);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      },
+    }
+  })
 
-		onSuccess: () => {
-			navigate({ to: "/login" });
-		},
-		onError: (err) => {
-			handleError(err);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["users"] });
-		},
-	});
+    // const signUpMutation = useMutation({
+    //   mutationFn: (data: UserRegister) =>
+    //     api.post("/api/v1/users/signup", { ...data }),
 
-	const verifyEmailMutation = useMutation({
-		mutationFn: (data: NewAccount) =>
-			api.post("/api/v1/users/verify-email/", { ...data }),
+    //   onSuccess: () => {
+    //     navigate({ to: "/login" });
+    //   },
+    //   onError: (err) => {
+    //     handleError(err);
+    //   },
+    //   onSettled: () => {
+    //     queryClient.invalidateQueries({ queryKey: ["users"] });
+    //   },
+    // });
 
-		onSuccess: () => {
-			toast.success("Email verified successfully.");
-			navigate({ to: "/login" });
-		},
-		onError: (err) => {
-			handleError(err);
-		},
-	});
+  const verifyEmailMutation = useUsersVerifyEmail({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Email verified successfully.");
+        navigate({ to: "/login" });
+      },
+      onError: (err) => {
+        handleError(err);
+      },
+    }
+  });
 
-	const login = async (data: AccessToken) => {
-		const response = await api.post("/api/v1/login/access-token", data);
-		localStorage.setItem("access_token", response.access_token);
-	};
+	// const verifyEmailMutation = useMutation({
+	// 	mutationFn: (data: NewAccount) =>
+	// 		api.post("/api/v1/users/verify-email/", { ...data }),
 
-	const loginMutation = useMutation({
-		mutationFn: login,
-		onSuccess: () => {
-			navigate({ to: "/" });
-		},
-		onError: (err) => {
-			handleError(err);
-		},
-	});
+	// 	onSuccess: () => {
+	// 		toast.success("Email verified successfully.");
+	// 		navigate({ to: "/login" });
+	// 	},
+	// 	onError: (err) => {
+	// 		handleError(err);
+	// 	},
+	// });
+
+  const loginMutation = useLoginLoginAccessToken({
+    mutation: {
+      onSuccess: (response) => {
+        if (response.data?.access_token) {
+          localStorage.setItem("access_token", response.data.access_token);
+          navigate({ to: "/" });
+        }
+      },
+      onError: (err) => handleError(err),
+    },
+  });
+
+	// const login = async (data: AccessToken) => {
+	// 	const response = await api.post("/api/v1/login/access-token", data);
+	// 	localStorage.setItem("access_token", response.access_token);
+	// };
+
+	// const loginMutation = useMutation({
+	// 	mutationFn: login,
+	// 	onSuccess: () => {
+	// 		navigate({ to: "/" });
+	// 	},
+	// 	onError: (err) => {
+	// 		handleError(err);
+	// 	},
+	// });
 
 	const logout = () => {
 		localStorage.removeItem("access_token");

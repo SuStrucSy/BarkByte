@@ -6,11 +6,10 @@ import {
 	redirect,
 	useNavigate,
 } from "@tanstack/react-router";
-import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -41,11 +40,11 @@ interface NewPasswordForm {
 }
 
 const passwordSchema = z.object({
-	token: fallback(z.string(), "").default(""),
+	token: z.string().min(1),
 });
 
 export const Route = createFileRoute("/reset-password")({
-	validateSearch: zodValidator(passwordSchema),
+	validateSearch: passwordSchema,
 	component: ResetPassword,
 	beforeLoad: async () => {
 		if (isLoggedIn()) {

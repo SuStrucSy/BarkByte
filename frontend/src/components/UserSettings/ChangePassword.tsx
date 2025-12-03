@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
@@ -13,10 +14,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { updatePasswordSchema } from "@/lib/schemas";
 import type { UpdatePassword } from "@/lib/types";
 import { handleError } from "@/utils";
-import { zodResolver } from '@hookform/resolvers/zod';
-import { updatePasswordSchema } from '@/lib/schemas';
 
 interface UpdatePasswordForm extends UpdatePassword {
 	confirm_password: string;
@@ -24,7 +24,7 @@ interface UpdatePasswordForm extends UpdatePassword {
 
 function ChangePassword() {
 	const form = useForm<UpdatePasswordForm>({
-    resolver: zodResolver(updatePasswordSchema),
+		resolver: zodResolver(updatePasswordSchema),
 		mode: "onBlur",
 		criteriaMode: "all",
 	});

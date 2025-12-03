@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { useEffect } from "react";
-import z from "zod";
+import z from "zod/v4";
 import useAuth from "@/hooks/useAuth";
 
 const verifyEmailSchema = z.object({
-	token: fallback(z.string(), "").default(""),
+	token: z.string().min(1),
 });
 
 export const Route = createFileRoute("/verify-email")({
-	validateSearch: zodValidator(verifyEmailSchema),
+	validateSearch: verifyEmailSchema,
 	component: VerifyEmail,
 });
 

@@ -10,8 +10,14 @@ WORKDIR /app
 # Update npm to the latest version
 RUN npm install -g npm@latest
 
+# Install npm-check-updates globally
+RUN npm install -g npm-check-updates
+
 # Copy package.json and package-lock.json (if available)
 COPY package.json package-lock.json ./
+
+# Run npm-check-updates to upgrade package.json versions
+RUN ncu -u
 
 # Install dependencies
 RUN npm install

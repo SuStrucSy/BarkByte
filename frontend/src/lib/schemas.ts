@@ -1,10 +1,9 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // 👀 define the schema
 
 export const loginSchema = z.object({
 	username: z
-		.string()
 		.email()
 		.max(255, { message: "username is too long max 255 characters" }),
 	password: z
@@ -21,7 +20,6 @@ export const accessTokenSchema = z.object({
 export const signupSchema = z
 	.object({
 		email: z
-			.string()
 			.email()
 			.max(255, { message: "email is too long max 255 characters" }),
 		password: z
@@ -67,7 +65,6 @@ export const resetPasswordSchema = z
 
 export const recoverPasswordSchema = z.object({
 	email: z
-		.string()
 		.email()
 		.max(255, { message: "email is too long max 255 characters" }),
 });
@@ -75,7 +72,6 @@ export const recoverPasswordSchema = z.object({
 export const addUserSchema = z
 	.object({
 		email: z
-			.string()
 			.email()
 			.max(255, { message: "email is too long max 255 characters" }),
 		password: z
@@ -100,28 +96,27 @@ export const addUserSchema = z
 		}
 	});
 
-
 export const updatePasswordSchema = z
-  .object({
-    current_password: z
-      .string()
-      .min(8, { message: "password should be at least 8 characters long" })
-      .max(64, { message: "Password is too long max 64 characters" }),
-    new_password: z
-      .string()
-      .min(8, { message: "password should be at least 8 characters long" })
-      .max(64, { message: "Password is too long max 64 characters" }),
-    confirm_password: z
-      .string()
-      .min(8, { message: "password should be at least 8 characters long" })
-      .max(64, { message: "Password is too long max 64 characters" }),
-  })
-  .superRefine(({ confirm_password, new_password }, ctx) => {
-    if (confirm_password !== new_password) {
-      ctx.addIssue({
-        code: "custom",
-        message: "The passwords did not match",
-        path: ["confirm_password"],
-      });
-    }
-  });
+	.object({
+		current_password: z
+			.string()
+			.min(8, { message: "password should be at least 8 characters long" })
+			.max(64, { message: "Password is too long max 64 characters" }),
+		new_password: z
+			.string()
+			.min(8, { message: "password should be at least 8 characters long" })
+			.max(64, { message: "Password is too long max 64 characters" }),
+		confirm_password: z
+			.string()
+			.min(8, { message: "password should be at least 8 characters long" })
+			.max(64, { message: "Password is too long max 64 characters" }),
+	})
+	.superRefine(({ confirm_password, new_password }, ctx) => {
+		if (confirm_password !== new_password) {
+			ctx.addIssue({
+				code: "custom",
+				message: "The passwords did not match",
+				path: ["confirm_password"],
+			});
+		}
+	});

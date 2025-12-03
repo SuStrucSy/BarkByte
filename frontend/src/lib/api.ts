@@ -1,463 +1,318 @@
-import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
-import { z } from "zod";
+import { z } from "zod/v4";
+
+import {initContract} from "@ts-rest/core"
+
+
+const c = initContract();
 
 const Body_login_login_access_token = z
-	.object({
-		grant_type: z.union([z.string(), z.null()]).optional(),
-		username: z.string(),
-		password: z.string(),
-		scope: z.string().optional().default(""),
-		client_id: z.union([z.string(), z.null()]).optional(),
-		client_secret: z.union([z.string(), z.null()]).optional(),
-	})
-	.passthrough();
-const Token = z
-	.object({
-		access_token: z.string(),
-		token_type: z.string().optional().default("bearer"),
-	})
-	.passthrough();
+  .looseObject({
+    grant_type: z
+      .union([
+        z
+          .string()
+          .regex(/^password$/)
+          .nullable(),
+        z.null(),
+        z.string().regex(/^password$/),
+      ])
+      .optional(),
+    username: z.string(),
+    password: z.string(),
+    scope: z.string().optional().default(""),
+    client_id: z
+      .union([z.string().nullable(), z.null(), z.string()])
+      .optional(),
+    client_secret: z
+      .union([z.string().nullable(), z.null(), z.string()])
+      .optional(),
+  });
 const ValidationError = z
-	.object({
-		loc: z.array(z.union([z.string(), z.number()])),
-		msg: z.string(),
-		type: z.string(),
-	})
-	.passthrough();
+  .looseObject({
+    loc: z.array(
+      z.union([
+        z.number().int(),
+        z.string(),
+      ]),
+    ),
+    msg: z.string(),
+    type: z.string(),
+  });
 const HTTPValidationError = z
-	.object({ detail: z.array(ValidationError) })
-	.partial()
-	.passthrough();
-const UserPublic = z
-	.object({
-		email: z.string().max(255).email(),
-		is_active: z.boolean().optional().default(false),
-		is_superuser: z.boolean().optional().default(false),
-		full_name: z.union([z.string(), z.null()]).optional(),
-		id: z.string().uuid(),
-	})
-	.passthrough();
-const Message = z.object({ message: z.string() }).passthrough();
+  .looseObject({ detail: z.array(ValidationError).optional() });
+const Message = z.looseObject({ message: z.string() });
+const NewAccount = z.looseObject({ token: z.string() });
 const NewPassword = z
-	.object({ token: z.string(), new_password: z.string().min(8).max(64) })
-	.passthrough();
-const UsersPublic = z
-	.object({ data: z.array(UserPublic), count: z.number().int() })
-	.passthrough();
-const UserCreate = z
-	.object({
-		email: z.string().max(255).email(),
-		is_active: z.boolean().optional().default(false),
-		is_superuser: z.boolean().optional().default(false),
-		full_name: z.union([z.string(), z.null()]).optional(),
-		password: z.string().min(8).max(64),
-	})
-	.passthrough();
-const UserUpdateMe = z
-	.object({
-		full_name: z.union([z.string(), z.null()]),
-		email: z.union([z.string(), z.null()]),
-	})
-	.partial()
-	.passthrough();
-const UpdatePassword = z
-	.object({
-		current_password: z.string().min(8).max(64),
-		new_password: z.string().min(8).max(64),
-	})
-	.passthrough();
-const UserRegister = z
-	.object({
-		email: z.string().max(255).email(),
-		password: z.string().min(8).max(64),
-		full_name: z.union([z.string(), z.null()]).optional(),
-	})
-	.passthrough();
-const NewAccount = z.object({ token: z.string() }).passthrough();
-const UserUpdate = z
-	.object({
-		email: z.union([z.string(), z.null()]),
-		is_active: z.boolean().default(false),
-		is_superuser: z.boolean().default(false),
-		full_name: z.union([z.string(), z.null()]),
-		password: z.union([z.string(), z.null()]),
-	})
-	.partial()
-	.passthrough();
+  .looseObject({ token: z.string(), new_password: z.string().min(8).max(64) });
 const PrivateUserCreate = z
-	.object({
-		email: z.string(),
-		password: z.string(),
-		full_name: z.string(),
-		is_verified: z.boolean().optional().default(false),
-	})
-	.passthrough();
+  .looseObject({
+    email: z.string(),
+    password: z.string(),
+    full_name: z.string(),
+    is_verified: z.boolean().optional().default(false),
+  });
+const Token = z
+  .looseObject({
+    access_token: z.string(),
+    token_type: z.string().optional().default("bearer"),
+  });
+const UpdatePassword = z
+  .looseObject({
+    current_password: z.string().min(8).max(64),
+    new_password: z.string().min(8).max(64),
+  });
+const UserCreate = z
+  .looseObject({
+    email: z.string().max(255).email(),
+    is_active: z.boolean().optional().default(false),
+    is_superuser: z.boolean().optional().default(false),
+    full_name: z
+      .union([
+        z.string().max(255).nullable(),
+        z.null(),
+        z.string().max(255),
+      ])
+      .optional(),
+    password: z.string().min(8).max(64),
+  });
+const UserPublic = z
+  .looseObject({
+    email: z.email().max(255),
+    is_active: z.boolean().optional().default(false),
+    is_superuser: z.boolean().optional().default(false),
+    full_name: z
+      .union([
+        z.string().max(255).nullable(),
+        z.null(),
+        z.string().max(255),
+      ])
+      .optional(),
+    id: z.string().uuid(),
+  });
+const UserRegister = z
+  .looseObject({
+    email: z.email().max(255),
+    password: z.string().min(8).max(64),
+    full_name: z
+      .union([
+        z.string().max(255).nullable(),
+        z.null(),
+        z.string().max(255),
+      ])
+      .optional(),
+  });
+const UserUpdate = z
+  .looseObject({
+    email: z
+      .union([
+        z.email().max(255).nullable(),
+        z.null(),
+        z.email().max(255),
+      ])
+      .optional(),
+    is_active: z.boolean().optional().default(false),
+    is_superuser: z.boolean().optional().default(false),
+    full_name: z
+      .union([
+        z.string().max(255).nullable(),
+        z.null(),
+        z.string().max(255),
+      ])
+      .optional(),
+    password: z
+      .union([
+        z.string().min(8).max(64).nullable(),
+        z.null(),
+        z.string().min(8).max(64),
+      ])
+      .optional(),
+  });
+const UserUpdateMe = z
+  .looseObject({
+    full_name: z
+      .union([
+        z.string().max(255).nullable(),
+        z.null(),
+        z.string().max(255),
+      ])
+      .optional(),
+    email: z
+      .union([
+        z.email().max(255).nullable(),
+        z.null(),
+        z.email().max(255),
+      ])
+      .optional(),
+  });
+const UsersPublic = z
+  .looseObject({ data: z.array(UserPublic), count: z.number().int() });
 
 export const schemas = {
-	Body_login_login_access_token,
-	Token,
-	ValidationError,
-	HTTPValidationError,
-	UserPublic,
-	Message,
-	NewPassword,
-	UsersPublic,
-	UserCreate,
-	UserUpdateMe,
-	UpdatePassword,
-	UserRegister,
-	NewAccount,
-	UserUpdate,
-	PrivateUserCreate,
+  Body_login_login_access_token,
+  ValidationError,
+  HTTPValidationError,
+  Message,
+  NewAccount,
+  NewPassword,
+  PrivateUserCreate,
+  Token,
+  UpdatePassword,
+  UserCreate,
+  UserPublic,
+  UserRegister,
+  UserUpdate,
+  UserUpdateMe,
+  UsersPublic,
 };
 
-const endpoints = makeApi([
-	{
-		method: "post",
-		path: "/api/v1/login/access-token",
-		description: `OAuth2 compatible token login, get an access token for future requests`,
-		requestFormat: "form-url",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: Body_login_login_access_token,
-			},
-		],
-		response: Token,
-		errors: [
-			{
-				status: 400,
-				description: `Incorrect email or password`,
-				schema: z.void(),
-			},
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "post",
-		path: "/api/v1/login/test-token",
-		description: `Test access token`,
-		requestFormat: "json",
-		response: UserPublic,
-	},
-	{
-		method: "post",
-		path: "/api/v1/password-recovery/:email",
-		description: `Password Recovery`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "email",
-				type: "Path",
-				schema: z.string(),
-			},
-		],
-		response: z.object({ message: z.string() }).passthrough(),
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "get",
-		path: "/api/v1/private/users/",
-		description: `Get all users.`,
-		requestFormat: "json",
-		response: z.array(UserPublic),
-	},
-	{
-		method: "post",
-		path: "/api/v1/private/users/",
-		description: `Create a new user.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: PrivateUserCreate,
-			},
-		],
-		response: UserPublic,
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "post",
-		path: "/api/v1/reset-password/",
-		description: `Reset password`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: NewPassword,
-			},
-		],
-		response: z.object({ message: z.string() }).passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Invalid token or inactive user`,
-				schema: z.void(),
-			},
-			{
-				status: 404,
-				description: `The user with this email does not exist in the system.`,
-				schema: z.void(),
-			},
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "get",
-		path: "/api/v1/users/",
-		description: `Retrieve users.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "skip",
-				type: "Query",
-				schema: z.number().int().optional().default(0),
-			},
-			{
-				name: "limit",
-				type: "Query",
-				schema: z.number().int().optional().default(100),
-			},
-		],
-		response: UsersPublic,
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "post",
-		path: "/api/v1/users/",
-		description: `Create new user.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: UserCreate,
-			},
-		],
-		response: UserPublic,
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "get",
-		path: "/api/v1/users/:user_id",
-		description: `Get a specific user by id.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "user_id",
-				type: "Path",
-				schema: z.string().uuid(),
-			},
-		],
-		response: UserPublic,
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "patch",
-		path: "/api/v1/users/:user_id",
-		description: `Update a user.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: UserUpdate,
-			},
-			{
-				name: "user_id",
-				type: "Path",
-				schema: z.string().uuid(),
-			},
-		],
-		response: UserPublic,
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "delete",
-		path: "/api/v1/users/:user_id",
-		description: `Delete a user.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "user_id",
-				type: "Path",
-				schema: z.string().uuid(),
-			},
-		],
-		response: z.object({ message: z.string() }).passthrough(),
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "get",
-		path: "/api/v1/users/me",
-		description: `Get current user.`,
-		requestFormat: "json",
-		response: UserPublic,
-	},
-	{
-		method: "delete",
-		path: "/api/v1/users/me",
-		description: `Delete own user.`,
-		requestFormat: "json",
-		response: z.object({ message: z.string() }).passthrough(),
-	},
-	{
-		method: "patch",
-		path: "/api/v1/users/me",
-		description: `Update own user.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: UserUpdateMe,
-			},
-		],
-		response: UserPublic,
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "patch",
-		path: "/api/v1/users/me/password",
-		description: `Update own password.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: UpdatePassword,
-			},
-		],
-		response: z.object({ message: z.string() }).passthrough(),
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "post",
-		path: "/api/v1/users/signup",
-		description: `Create new user without the need to be logged in.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: UserRegister,
-			},
-		],
-		response: z.object({ message: z.string() }).passthrough(),
-		errors: [
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "post",
-		path: "/api/v1/users/verify-email/",
-		description: `verify email and reset password.`,
-		requestFormat: "json",
-		parameters: [
-			{
-				name: "body",
-				type: "Body",
-				schema: NewAccount,
-			},
-		],
-		response: z.object({ message: z.string() }).passthrough(),
-		errors: [
-			{
-				status: 400,
-				description: `Invalid token or inactive user`,
-				schema: z.void(),
-			},
-			{
-				status: 404,
-				description: `The user with this email does not exist in the system.`,
-				schema: z.void(),
-			},
-			{
-				status: 422,
-				description: `Validation Error`,
-				schema: HTTPValidationError,
-			},
-		],
-	},
-	{
-		method: "get",
-		path: "/api/v1/utils/health-check/",
-		requestFormat: "json",
-		response: z.boolean(),
-	},
-]);
+export const contract = c.router({
+  loginLoginAccessToken: {
+    method: "POST",
+    path: "/api/v1/login/access-token",
+    summary: "Login Access Token",
+    body: Body_login_login_access_token,
+    contentType: "application/x-www-form-urlencoded",
+    responses: { 200: Token, 400: c.noBody(), 422: HTTPValidationError },
+  },
+  loginTestToken: {
+    method: "POST",
+    path: "/api/v1/login/test-token",
+    summary: "Test Token",
+    body: c.noBody(),
+    responses: { 200: UserPublic },
+  },
+  loginRecoverPassword: {
+    method: "POST",
+    path: "/api/v1/password-recovery/:email",
+    summary: "Recover Password",
+    pathParams: z.object({ email: z.string() }),
+    body: c.noBody(),
+    responses: { 200: Message, 422: HTTPValidationError },
+  },
+  loginResetPassword: {
+    method: "POST",
+    path: "/api/v1/reset-password/",
+    summary: "Reset Password",
+    body: NewPassword,
+    contentType: "application/json",
+    responses: {
+      200: Message,
+      400: c.noBody(),
+      404: c.noBody(),
+      422: HTTPValidationError,
+    },
+  },
+  usersReadUsers: {
+    method: "GET",
+    path: "/api/v1/users/",
+    summary: "Read Users",
+    query: z.object({
+      skip: z.number().int().optional().default(0),
+      limit: z.number().int().optional().default(100),
+    }),
+    responses: { 200: UsersPublic, 422: HTTPValidationError },
+  },
+  usersCreateUser: {
+    method: "POST",
+    path: "/api/v1/users/",
+    summary: "Create User",
+    body: UserCreate,
+    contentType: "application/json",
+    responses: { 200: UserPublic, 422: HTTPValidationError },
+  },
+  usersReadUserMe: {
+    method: "GET",
+    path: "/api/v1/users/me",
+    summary: "Read User Me",
+    responses: { 200: UserPublic },
+  },
+  usersDeleteUserMe: {
+    method: "DELETE",
+    path: "/api/v1/users/me",
+    summary: "Delete User Me",
+    body: c.noBody(),
+    responses: { 200: Message },
+  },
+  usersUpdateUserMe: {
+    method: "PATCH",
+    path: "/api/v1/users/me",
+    summary: "Update User Me",
+    body: UserUpdateMe,
+    contentType: "application/json",
+    responses: { 200: UserPublic, 422: HTTPValidationError },
+  },
+  usersUpdatePasswordMe: {
+    method: "PATCH",
+    path: "/api/v1/users/me/password",
+    summary: "Update Password Me",
+    body: UpdatePassword,
+    contentType: "application/json",
+    responses: { 200: Message, 422: HTTPValidationError },
+  },
+  usersRegisterUser: {
+    method: "POST",
+    path: "/api/v1/users/signup",
+    summary: "Register User",
+    body: UserRegister,
+    contentType: "application/json",
+    responses: { 200: Message, 422: HTTPValidationError },
+  },
+  usersVerifyEmail: {
+    method: "POST",
+    path: "/api/v1/users/verify-email/",
+    summary: "Verify Email",
+    body: NewAccount,
+    contentType: "application/json",
+    responses: {
+      200: Message,
+      400: c.noBody(),
+      404: c.noBody(),
+      422: HTTPValidationError,
+    },
+  },
+  usersReadUserById: {
+    method: "GET",
+    path: "/api/v1/users/:user_id",
+    summary: "Read User By Id",
+    pathParams: z.object({ user_id: z.string().uuid() }),
+    responses: { 200: UserPublic, 422: HTTPValidationError },
+  },
+  usersUpdateUser: {
+    method: "PATCH",
+    path: "/api/v1/users/:user_id",
+    summary: "Update User",
+    pathParams: z.object({ user_id: z.string().uuid() }),
+    body: UserUpdate,
+    contentType: "application/json",
+    responses: { 200: UserPublic, 422: HTTPValidationError },
+  },
+  usersDeleteUser: {
+    method: "DELETE",
+    path: "/api/v1/users/:user_id",
+    summary: "Delete User",
+    pathParams: z.object({ user_id: z.string().uuid() }),
+    body: c.noBody(),
+    responses: { 200: Message, 422: HTTPValidationError },
+  },
+  utilsHealthCheck: {
+    method: "GET",
+    path: "/api/v1/utils/health-check/",
+    summary: "Health Check",
+    responses: { 200: z.boolean() },
+  },
+  privateGetAllUsers: {
+    method: "GET",
+    path: "/api/v1/private/users/",
+    summary: "Get All Users",
+    responses: { 200: z.array(UserPublic) },
+  },
+  privateCreateUser: {
+    method: "POST",
+    path: "/api/v1/private/users/",
+    summary: "Create User",
+    body: PrivateUserCreate,
+    contentType: "application/json",
+    responses: { 200: UserPublic, 422: HTTPValidationError },
+  },
+});
 
-export const api = new Zodios(import.meta.env.VITE_API_URL, endpoints);
-
-export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
-	return new Zodios(baseUrl, endpoints, options);
-}

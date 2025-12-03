@@ -1,10 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
-import useAuth from "@/hooks/useAuth";
-
-import { handleError } from "@/utils";
 import { toast } from "sonner";
 import {
 	Dialog,
@@ -15,8 +11,10 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "../ui/button";
+import useAuth from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { handleError } from "@/utils";
+import { Button } from "../ui/button";
 import { Form } from "../ui/form";
 
 const DeleteConfirmation = () => {
