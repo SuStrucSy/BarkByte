@@ -28,6 +28,13 @@ const handleApiError = (error: Error) => {
 };
 
 const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 5 * 60 * 1000, // 5 min fresh
+			gcTime: 30 * 60 * 1000, // 30 min cached
+			refetchOnWindowFocus: false,
+		},
+	},
 	queryCache: new QueryCache({
 		onError: handleApiError,
 	}),

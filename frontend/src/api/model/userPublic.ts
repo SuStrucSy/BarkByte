@@ -7,10 +7,9 @@
 import type { UserPublicFullName } from "./userPublicFullName";
 
 export interface UserPublic {
-	/** @maxLength 255 */
 	email: string;
-	is_active?: boolean;
-	is_superuser?: boolean;
 	full_name?: UserPublicFullName;
 	id: string;
+	is_active: boolean;
+	is_superuser: boolean;
 }

@@ -13,7 +13,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
 import { updatePasswordSchema } from "@/lib/schemas";
 import type { UpdatePassword } from "@/lib/types";
 import { handleError } from "@/utils";

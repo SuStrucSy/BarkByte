@@ -4,7 +4,6 @@ import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
-import { api } from "@/lib/api";
 import type { UserPublic, UserUpdateMe } from "@/lib/types";
 import { handleError } from "@/utils";
 import { Button } from "../ui/button";
@@ -17,11 +16,12 @@ import {
 	FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const UserInformation = () => {
 	const queryClient = useQueryClient();
 	const [editMode, setEditMode] = useState(false);
-	const { user: currentUser } = useAuth();
+  const { data: currentUser } = useCurrentUser();
 	const form = useForm<UserPublic>({
 		mode: "onBlur",
 		criteriaMode: "all",

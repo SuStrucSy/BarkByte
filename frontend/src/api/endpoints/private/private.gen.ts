@@ -26,43 +26,19 @@ import type {
 	PrivateUserCreate,
 	UserPublic,
 } from "../../model";
+import type { ErrorType } from "../../mutator/custom-instance";
+import { customInstance } from "../../mutator/custom-instance";
 
 /**
  * Get all users.
  * @summary Get All Users
  */
-export type privateGetAllUsersResponse200 = {
-	data: UserPublic[];
-	status: 200;
-};
-
-export type privateGetAllUsersResponseSuccess =
-	privateGetAllUsersResponse200 & {
-		headers: Headers;
-	};
-
-export type privateGetAllUsersResponse = privateGetAllUsersResponseSuccess;
-
-export const getPrivateGetAllUsersUrl = () => {
-	return `/api/v1/private/users/`;
-};
-
-export const privateGetAllUsers = async (
-	options?: RequestInit,
-): Promise<privateGetAllUsersResponse> => {
-	const res = await fetch(getPrivateGetAllUsersUrl(), {
-		...options,
+export const privateGetAllUsers = (signal?: AbortSignal) => {
+	return customInstance<UserPublic[]>({
+		url: `/api/v1/private/users/`,
 		method: "GET",
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: privateGetAllUsersResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as privateGetAllUsersResponse;
 };
 
 export const getPrivateGetAllUsersQueryKey = () => {
@@ -71,7 +47,7 @@ export const getPrivateGetAllUsersQueryKey = () => {
 
 export const getPrivateGetAllUsersQueryOptions = <
 	TData = Awaited<ReturnType<typeof privateGetAllUsers>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(options?: {
 	query?: Partial<
 		UseQueryOptions<
@@ -80,15 +56,14 @@ export const getPrivateGetAllUsersQueryOptions = <
 			TData
 		>
 	>;
-	fetch?: RequestInit;
 }) => {
-	const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+	const { query: queryOptions } = options ?? {};
 
 	const queryKey = queryOptions?.queryKey ?? getPrivateGetAllUsersQueryKey();
 
 	const queryFn: QueryFunction<
 		Awaited<ReturnType<typeof privateGetAllUsers>>
-	> = ({ signal }) => privateGetAllUsers({ signal, ...fetchOptions });
+	> = ({ signal }) => privateGetAllUsers(signal);
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof privateGetAllUsers>>,
@@ -100,11 +75,11 @@ export const getPrivateGetAllUsersQueryOptions = <
 export type PrivateGetAllUsersQueryResult = NonNullable<
 	Awaited<ReturnType<typeof privateGetAllUsers>>
 >;
-export type PrivateGetAllUsersQueryError = unknown;
+export type PrivateGetAllUsersQueryError = ErrorType<unknown>;
 
 export function usePrivateGetAllUsers<
 	TData = Awaited<ReturnType<typeof privateGetAllUsers>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options: {
 		query: Partial<
@@ -122,7 +97,6 @@ export function usePrivateGetAllUsers<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -130,7 +104,7 @@ export function usePrivateGetAllUsers<
 };
 export function usePrivateGetAllUsers<
 	TData = Awaited<ReturnType<typeof privateGetAllUsers>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -148,7 +122,6 @@ export function usePrivateGetAllUsers<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -156,7 +129,7 @@ export function usePrivateGetAllUsers<
 };
 export function usePrivateGetAllUsers<
 	TData = Awaited<ReturnType<typeof privateGetAllUsers>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -166,7 +139,6 @@ export function usePrivateGetAllUsers<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -178,7 +150,7 @@ export function usePrivateGetAllUsers<
 
 export function usePrivateGetAllUsers<
 	TData = Awaited<ReturnType<typeof privateGetAllUsers>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -188,7 +160,6 @@ export function usePrivateGetAllUsers<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -210,54 +181,21 @@ export function usePrivateGetAllUsers<
  * Create a new user.
  * @summary Create User
  */
-export type privateCreateUserResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type privateCreateUserResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type privateCreateUserResponseSuccess = privateCreateUserResponse200 & {
-	headers: Headers;
-};
-export type privateCreateUserResponseError = privateCreateUserResponse422 & {
-	headers: Headers;
-};
-
-export type privateCreateUserResponse =
-	| privateCreateUserResponseSuccess
-	| privateCreateUserResponseError;
-
-export const getPrivateCreateUserUrl = () => {
-	return `/api/v1/private/users/`;
-};
-
-export const privateCreateUser = async (
+export const privateCreateUser = (
 	privateUserCreate: PrivateUserCreate,
-	options?: RequestInit,
-): Promise<privateCreateUserResponse> => {
-	const res = await fetch(getPrivateCreateUserUrl(), {
-		...options,
+	signal?: AbortSignal,
+) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/private/users/`,
 		method: "POST",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(privateUserCreate),
+		headers: { "Content-Type": "application/json" },
+		data: privateUserCreate,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: privateCreateUserResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as privateCreateUserResponse;
 };
 
 export const getPrivateCreateUserMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -266,7 +204,6 @@ export const getPrivateCreateUserMutationOptions = <
 		{ data: PrivateUserCreate },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof privateCreateUser>>,
 	TError,
@@ -274,13 +211,13 @@ export const getPrivateCreateUserMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["privateCreateUser"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof privateCreateUser>>,
@@ -288,7 +225,7 @@ export const getPrivateCreateUserMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return privateCreateUser(data, fetchOptions);
+		return privateCreateUser(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -298,13 +235,13 @@ export type PrivateCreateUserMutationResult = NonNullable<
 	Awaited<ReturnType<typeof privateCreateUser>>
 >;
 export type PrivateCreateUserMutationBody = PrivateUserCreate;
-export type PrivateCreateUserMutationError = HTTPValidationError;
+export type PrivateCreateUserMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Create User
  */
 export const usePrivateCreateUser = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -314,7 +251,6 @@ export const usePrivateCreateUser = <
 			{ data: PrivateUserCreate },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<

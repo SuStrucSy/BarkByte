@@ -12,10 +12,10 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import useAuth from "@/hooks/useAuth";
-import { api } from "@/lib/api";
 import { handleError } from "@/utils";
 import { Button } from "../ui/button";
 import { Form } from "../ui/form";
+import { getUsersReadUserMeQueryKey } from '@/api/endpoints/users/users.gen';
 
 const DeleteConfirmation = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +34,9 @@ const DeleteConfirmation = () => {
 			handleError(err);
 		},
 		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      queryClient.invalidateQueries({
+        queryKey: getUsersReadUserMeQueryKey() // ✅ Use generated key
+      });
 		},
 	});
 

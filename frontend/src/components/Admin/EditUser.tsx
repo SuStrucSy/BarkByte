@@ -4,8 +4,6 @@ import { UserPenIcon } from "lucide-react";
 import { useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
-import type { UserPublic, UserUpdate } from "@/lib/types";
 import { emailPattern, handleError } from "@/utils";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -28,12 +26,16 @@ import {
 	FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import type { HTTPValidationError, UserPublic, UserUpdate } from '@/api/model';
+import { getUsersReadUsersQueryKey, useUsersUpdateUser } from '@/api/endpoints/users/users.gen';
+
 
 interface EditUserProps {
 	user: UserPublic;
 }
 
 interface UserUpdateForm extends UserUpdate {
+  password?: string;
 	confirm_password?: string;
 }
 
@@ -46,31 +48,27 @@ const EditUser = ({ user }: EditUserProps) => {
 		defaultValues: user,
 	});
 
-	const mutation = useMutation({
-		mutationFn: (data: UserUpdateForm) =>
-			api.patch(
-				"/api/v1/users/:user_id",
-				{ ...data },
-				{ params: { user_id: user.id } },
-			),
-		onSuccess: () => {
-			toast.success("User updated successfully.");
-			form.reset();
-			setIsOpen(false);
-		},
-		onError: (err) => {
-			handleError(err);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["users"] });
-		},
+	const mutation = useUsersUpdateUser({
+    mutation:{
+      onSuccess: () => {
+        toast.success("User updated successfully.");
+        form.reset();
+        setIsOpen(false);
+      },
+      onError: (err: void | HTTPValidationError) => {
+        handleError(err);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: getUsersReadUsersQueryKey() });
+      },
+    }
 	});
 
 	const onSubmit: SubmitHandler<UserUpdateForm> = async (data) => {
 		if (data.password === "") {
 			data.password = undefined;
 		}
-		mutation.mutate(data);
+		mutation.mutate({data: data, userId: user.id});
 	};
 
 	return (

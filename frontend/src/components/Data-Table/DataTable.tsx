@@ -2,6 +2,7 @@ import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
+	type PaginationState,
 	type Row,
 	useReactTable,
 } from "@tanstack/react-table";
@@ -22,6 +23,11 @@ interface DataTableProps<TData, TValue> {
 	isPlaceholderData: boolean;
 	// Optional: a row styling hook you can pass in (default provided below)
 	getRowStyle?: (row: Row<TData>) => React.CSSProperties;
+	rowCount: number;
+	pagination: PaginationState;
+	setPagination: (
+		updater: PaginationState | ((state: PaginationState) => PaginationState),
+	) => void;
 }
 
 export function DataTable<TData, TValue>({

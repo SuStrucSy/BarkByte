@@ -26,10 +26,10 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
 import { addUserSchema } from "@/lib/schemas";
-import type { UserCreate } from "@/lib/types";
 import { handleError } from "@/utils";
+import { getUsersReadUsersQueryKey, useUsersCreateUser } from '@/api/endpoints/users/users.gen';
+import type { HTTPValidationError, UserCreate } from '@/api/model';
 
 interface UserCreateForm extends UserCreate {
 	confirm_password: string;
@@ -52,23 +52,25 @@ const AddUser = () => {
 		},
 	});
 
-	const mutation = useMutation({
-		mutationFn: (data: UserCreate) => api.post("/api/v1/users/", { ...data }),
-		onSuccess: () => {
-			toast.success("User created successfully.");
-			form.reset();
-			setIsOpen(false);
-		},
-		onError: (err) => {
-			handleError(err);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["users"] });
-		},
+	const mutation = useUsersCreateUser({
+    mutation:{
+      onSuccess: () => {
+        toast.success("User created successfully.");
+        form.reset();
+        setIsOpen(false);
+      },
+      onError: (err: void | HTTPValidationError) => {
+        handleError(err);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: getUsersReadUsersQueryKey() });
+      },
+    }
+
 	});
 
 	const onSubmit: SubmitHandler<UserCreateForm> = (data) => {
-		mutation.mutate(data);
+		mutation.mutateAsync({data: data});
 	};
 
 	return (

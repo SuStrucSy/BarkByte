@@ -4,11 +4,12 @@
  * BarkByte
  * OpenAPI spec version: 0.1.0
  */
-
 import type { UserUpdateMeEmail } from "./userUpdateMeEmail";
 import type { UserUpdateMeFullName } from "./userUpdateMeFullName";
+import type { UserUpdateMeIsActive } from "./userUpdateMeIsActive";
 
 export interface UserUpdateMe {
-	full_name?: UserUpdateMeFullName;
 	email?: UserUpdateMeEmail;
+	full_name?: UserUpdateMeFullName;
+	is_active?: UserUpdateMeIsActive;
 }

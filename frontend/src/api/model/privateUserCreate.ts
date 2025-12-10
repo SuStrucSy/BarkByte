@@ -7,7 +7,7 @@
 
 export interface PrivateUserCreate {
 	email: string;
-	password: string;
 	full_name: string;
 	is_verified?: boolean;
+	password: string;
 }

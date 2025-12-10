@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import { useState } from "react";
 import ChartWithDimensions from "@/components/Dashboard/ChartWithDimensions";
 import LinePlot from "@/components/Dashboard/LinePlot";
-import useAuth from "@/hooks/useAuth";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export const Route = createFileRoute("/_layout/")({
 	staticData: {
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_layout/")({
 });
 
 function Dashboard() {
-	const { user: currentUser } = useAuth();
+  const { data: currentUser } = useCurrentUser();
 	const [data, setData] = useState(() => d3.ticks(-2, 2, 200).map(Math.sin));
 
 	console.log(typeof data);

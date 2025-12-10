@@ -4,16 +4,15 @@
  * BarkByte
  * OpenAPI spec version: 0.1.0
  */
-
 import type { BodyLoginLoginAccessTokenClientId } from "./bodyLoginLoginAccessTokenClientId";
 import type { BodyLoginLoginAccessTokenClientSecret } from "./bodyLoginLoginAccessTokenClientSecret";
 import type { BodyLoginLoginAccessTokenGrantType } from "./bodyLoginLoginAccessTokenGrantType";
 
 export interface BodyLoginLoginAccessToken {
-	grant_type?: BodyLoginLoginAccessTokenGrantType;
-	username: string;
-	password: string;
-	scope?: string;
 	client_id?: BodyLoginLoginAccessTokenClientId;
 	client_secret?: BodyLoginLoginAccessTokenClientSecret;
+	grant_type?: BodyLoginLoginAccessTokenGrantType;
+	password: string;
+	scope?: string;
+	username: string;
 }

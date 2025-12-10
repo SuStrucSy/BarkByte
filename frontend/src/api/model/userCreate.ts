@@ -7,11 +7,10 @@
 import type { UserCreateFullName } from "./userCreateFullName";
 
 export interface UserCreate {
-	/** @maxLength 255 */
 	email: string;
-	is_active?: boolean;
-	is_superuser?: boolean;
 	full_name?: UserCreateFullName;
+	is_active: boolean;
+	is_superuser: boolean;
 	/**
 	 * @minLength 8
 	 * @maxLength 64

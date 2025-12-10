@@ -17,41 +17,18 @@ import type {
 	UseQueryResult,
 } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
+import type { ErrorType } from "../../mutator/custom-instance";
+import { customInstance } from "../../mutator/custom-instance";
 
 /**
  * @summary Health Check
  */
-export type utilsHealthCheckResponse200 = {
-	data: boolean;
-	status: 200;
-};
-
-export type utilsHealthCheckResponseSuccess = utilsHealthCheckResponse200 & {
-	headers: Headers;
-};
-
-export type utilsHealthCheckResponse = utilsHealthCheckResponseSuccess;
-
-export const getUtilsHealthCheckUrl = () => {
-	return `/api/v1/utils/health-check/`;
-};
-
-export const utilsHealthCheck = async (
-	options?: RequestInit,
-): Promise<utilsHealthCheckResponse> => {
-	const res = await fetch(getUtilsHealthCheckUrl(), {
-		...options,
+export const utilsHealthCheck = (signal?: AbortSignal) => {
+	return customInstance<boolean>({
+		url: `/api/v1/utils/health-check/`,
 		method: "GET",
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: utilsHealthCheckResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as utilsHealthCheckResponse;
 };
 
 export const getUtilsHealthCheckQueryKey = () => {
@@ -60,20 +37,19 @@ export const getUtilsHealthCheckQueryKey = () => {
 
 export const getUtilsHealthCheckQueryOptions = <
 	TData = Awaited<ReturnType<typeof utilsHealthCheck>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(options?: {
 	query?: Partial<
 		UseQueryOptions<Awaited<ReturnType<typeof utilsHealthCheck>>, TError, TData>
 	>;
-	fetch?: RequestInit;
 }) => {
-	const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+	const { query: queryOptions } = options ?? {};
 
 	const queryKey = queryOptions?.queryKey ?? getUtilsHealthCheckQueryKey();
 
 	const queryFn: QueryFunction<
 		Awaited<ReturnType<typeof utilsHealthCheck>>
-	> = ({ signal }) => utilsHealthCheck({ signal, ...fetchOptions });
+	> = ({ signal }) => utilsHealthCheck(signal);
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof utilsHealthCheck>>,
@@ -85,11 +61,11 @@ export const getUtilsHealthCheckQueryOptions = <
 export type UtilsHealthCheckQueryResult = NonNullable<
 	Awaited<ReturnType<typeof utilsHealthCheck>>
 >;
-export type UtilsHealthCheckQueryError = unknown;
+export type UtilsHealthCheckQueryError = ErrorType<unknown>;
 
 export function useUtilsHealthCheck<
 	TData = Awaited<ReturnType<typeof utilsHealthCheck>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options: {
 		query: Partial<
@@ -107,7 +83,6 @@ export function useUtilsHealthCheck<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -115,7 +90,7 @@ export function useUtilsHealthCheck<
 };
 export function useUtilsHealthCheck<
 	TData = Awaited<ReturnType<typeof utilsHealthCheck>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -133,7 +108,6 @@ export function useUtilsHealthCheck<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -141,7 +115,7 @@ export function useUtilsHealthCheck<
 };
 export function useUtilsHealthCheck<
 	TData = Awaited<ReturnType<typeof utilsHealthCheck>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -151,7 +125,6 @@ export function useUtilsHealthCheck<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -163,7 +136,7 @@ export function useUtilsHealthCheck<
 
 export function useUtilsHealthCheck<
 	TData = Awaited<ReturnType<typeof utilsHealthCheck>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -173,7 +146,6 @@ export function useUtilsHealthCheck<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {

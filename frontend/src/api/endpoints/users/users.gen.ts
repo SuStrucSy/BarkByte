@@ -34,65 +34,23 @@ import type {
 	UserUpdate,
 	UserUpdateMe,
 } from "../../model";
+import type { ErrorType } from "../../mutator/custom-instance";
+import { customInstance } from "../../mutator/custom-instance";
 
 /**
  * Retrieve users.
  * @summary Read Users
  */
-export type usersReadUsersResponse200 = {
-	data: UsersPublic;
-	status: 200;
-};
-
-export type usersReadUsersResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersReadUsersResponseSuccess = usersReadUsersResponse200 & {
-	headers: Headers;
-};
-export type usersReadUsersResponseError = usersReadUsersResponse422 & {
-	headers: Headers;
-};
-
-export type usersReadUsersResponse =
-	| usersReadUsersResponseSuccess
-	| usersReadUsersResponseError;
-
-export const getUsersReadUsersUrl = (params?: UsersReadUsersParams) => {
-	const normalizedParams = new URLSearchParams();
-
-	Object.entries(params || {}).forEach(([key, value]) => {
-		if (value !== undefined) {
-			normalizedParams.append(key, value === null ? "null" : value.toString());
-		}
-	});
-
-	const stringifiedParams = normalizedParams.toString();
-
-	return stringifiedParams.length > 0
-		? `/api/v1/users/?${stringifiedParams}`
-		: `/api/v1/users/`;
-};
-
-export const usersReadUsers = async (
+export const usersReadUsers = (
 	params?: UsersReadUsersParams,
-	options?: RequestInit,
-): Promise<usersReadUsersResponse> => {
-	const res = await fetch(getUsersReadUsersUrl(params), {
-		...options,
+	signal?: AbortSignal,
+) => {
+	return customInstance<UsersPublic>({
+		url: `/api/v1/users/`,
 		method: "GET",
+		params,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersReadUsersResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersReadUsersResponse;
 };
 
 export const getUsersReadUsersQueryKey = (params?: UsersReadUsersParams) => {
@@ -101,23 +59,22 @@ export const getUsersReadUsersQueryKey = (params?: UsersReadUsersParams) => {
 
 export const getUsersReadUsersQueryOptions = <
 	TData = Awaited<ReturnType<typeof usersReadUsers>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	params?: UsersReadUsersParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof usersReadUsers>>, TError, TData>
 		>;
-		fetch?: RequestInit;
 	},
 ) => {
-	const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+	const { query: queryOptions } = options ?? {};
 
 	const queryKey = queryOptions?.queryKey ?? getUsersReadUsersQueryKey(params);
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof usersReadUsers>>> = ({
 		signal,
-	}) => usersReadUsers(params, { signal, ...fetchOptions });
+	}) => usersReadUsers(params, signal);
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof usersReadUsers>>,
@@ -129,11 +86,11 @@ export const getUsersReadUsersQueryOptions = <
 export type UsersReadUsersQueryResult = NonNullable<
 	Awaited<ReturnType<typeof usersReadUsers>>
 >;
-export type UsersReadUsersQueryError = HTTPValidationError;
+export type UsersReadUsersQueryError = ErrorType<HTTPValidationError>;
 
 export function useUsersReadUsers<
 	TData = Awaited<ReturnType<typeof usersReadUsers>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	params: undefined | UsersReadUsersParams,
 	options: {
@@ -148,7 +105,6 @@ export function useUsersReadUsers<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -156,7 +112,7 @@ export function useUsersReadUsers<
 };
 export function useUsersReadUsers<
 	TData = Awaited<ReturnType<typeof usersReadUsers>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	params?: UsersReadUsersParams,
 	options?: {
@@ -171,7 +127,6 @@ export function useUsersReadUsers<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -179,14 +134,13 @@ export function useUsersReadUsers<
 };
 export function useUsersReadUsers<
 	TData = Awaited<ReturnType<typeof usersReadUsers>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	params?: UsersReadUsersParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof usersReadUsers>>, TError, TData>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -198,14 +152,13 @@ export function useUsersReadUsers<
 
 export function useUsersReadUsers<
 	TData = Awaited<ReturnType<typeof usersReadUsers>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	params?: UsersReadUsersParams,
 	options?: {
 		query?: Partial<
 			UseQueryOptions<Awaited<ReturnType<typeof usersReadUsers>>, TError, TData>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -227,54 +180,21 @@ export function useUsersReadUsers<
  * Create new user.
  * @summary Create User
  */
-export type usersCreateUserResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type usersCreateUserResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersCreateUserResponseSuccess = usersCreateUserResponse200 & {
-	headers: Headers;
-};
-export type usersCreateUserResponseError = usersCreateUserResponse422 & {
-	headers: Headers;
-};
-
-export type usersCreateUserResponse =
-	| usersCreateUserResponseSuccess
-	| usersCreateUserResponseError;
-
-export const getUsersCreateUserUrl = () => {
-	return `/api/v1/users/`;
-};
-
-export const usersCreateUser = async (
+export const usersCreateUser = (
 	userCreate: UserCreate,
-	options?: RequestInit,
-): Promise<usersCreateUserResponse> => {
-	const res = await fetch(getUsersCreateUserUrl(), {
-		...options,
+	signal?: AbortSignal,
+) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/users/`,
 		method: "POST",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(userCreate),
+		headers: { "Content-Type": "application/json" },
+		data: userCreate,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersCreateUserResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersCreateUserResponse;
 };
 
 export const getUsersCreateUserMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -283,7 +203,6 @@ export const getUsersCreateUserMutationOptions = <
 		{ data: UserCreate },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof usersCreateUser>>,
 	TError,
@@ -291,13 +210,13 @@ export const getUsersCreateUserMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["usersCreateUser"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof usersCreateUser>>,
@@ -305,7 +224,7 @@ export const getUsersCreateUserMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return usersCreateUser(data, fetchOptions);
+		return usersCreateUser(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -315,13 +234,13 @@ export type UsersCreateUserMutationResult = NonNullable<
 	Awaited<ReturnType<typeof usersCreateUser>>
 >;
 export type UsersCreateUserMutationBody = UserCreate;
-export type UsersCreateUserMutationError = HTTPValidationError;
+export type UsersCreateUserMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Create User
  */
 export const useUsersCreateUser = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -331,7 +250,6 @@ export const useUsersCreateUser = <
 			{ data: UserCreate },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -345,40 +263,90 @@ export const useUsersCreateUser = <
 	return useMutation(mutationOptions, queryClient);
 };
 /**
+ * Delete own user.
+ * @summary Delete User Me
+ */
+export const usersDeleteUserMe = () => {
+	return customInstance<Message>({ url: `/api/v1/users/me`, method: "DELETE" });
+};
+
+export const getUsersDeleteUserMeMutationOptions = <
+	TError = ErrorType<unknown>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersDeleteUserMe>>,
+		TError,
+		void,
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersDeleteUserMe>>,
+	TError,
+	void,
+	TContext
+> => {
+	const mutationKey = ["usersDeleteUserMe"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersDeleteUserMe>>,
+		void
+	> = () => {
+		return usersDeleteUserMe();
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersDeleteUserMeMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersDeleteUserMe>>
+>;
+
+export type UsersDeleteUserMeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete User Me
+ */
+export const useUsersDeleteUserMe = <
+	TError = ErrorType<unknown>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersDeleteUserMe>>,
+			TError,
+			void,
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersDeleteUserMe>>,
+	TError,
+	void,
+	TContext
+> => {
+	const mutationOptions = getUsersDeleteUserMeMutationOptions(options);
+
+	return useMutation(mutationOptions, queryClient);
+};
+/**
  * Get current user.
  * @summary Read User Me
  */
-export type usersReadUserMeResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type usersReadUserMeResponseSuccess = usersReadUserMeResponse200 & {
-	headers: Headers;
-};
-
-export type usersReadUserMeResponse = usersReadUserMeResponseSuccess;
-
-export const getUsersReadUserMeUrl = () => {
-	return `/api/v1/users/me`;
-};
-
-export const usersReadUserMe = async (
-	options?: RequestInit,
-): Promise<usersReadUserMeResponse> => {
-	const res = await fetch(getUsersReadUserMeUrl(), {
-		...options,
+export const usersReadUserMe = (signal?: AbortSignal) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/users/me`,
 		method: "GET",
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersReadUserMeResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersReadUserMeResponse;
 };
 
 export const getUsersReadUserMeQueryKey = () => {
@@ -387,20 +355,19 @@ export const getUsersReadUserMeQueryKey = () => {
 
 export const getUsersReadUserMeQueryOptions = <
 	TData = Awaited<ReturnType<typeof usersReadUserMe>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(options?: {
 	query?: Partial<
 		UseQueryOptions<Awaited<ReturnType<typeof usersReadUserMe>>, TError, TData>
 	>;
-	fetch?: RequestInit;
 }) => {
-	const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+	const { query: queryOptions } = options ?? {};
 
 	const queryKey = queryOptions?.queryKey ?? getUsersReadUserMeQueryKey();
 
 	const queryFn: QueryFunction<Awaited<ReturnType<typeof usersReadUserMe>>> = ({
 		signal,
-	}) => usersReadUserMe({ signal, ...fetchOptions });
+	}) => usersReadUserMe(signal);
 
 	return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
 		Awaited<ReturnType<typeof usersReadUserMe>>,
@@ -412,11 +379,11 @@ export const getUsersReadUserMeQueryOptions = <
 export type UsersReadUserMeQueryResult = NonNullable<
 	Awaited<ReturnType<typeof usersReadUserMe>>
 >;
-export type UsersReadUserMeQueryError = unknown;
+export type UsersReadUserMeQueryError = ErrorType<unknown>;
 
 export function useUsersReadUserMe<
 	TData = Awaited<ReturnType<typeof usersReadUserMe>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options: {
 		query: Partial<
@@ -434,7 +401,6 @@ export function useUsersReadUserMe<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -442,7 +408,7 @@ export function useUsersReadUserMe<
 };
 export function useUsersReadUserMe<
 	TData = Awaited<ReturnType<typeof usersReadUserMe>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -460,7 +426,6 @@ export function useUsersReadUserMe<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -468,7 +433,7 @@ export function useUsersReadUserMe<
 };
 export function useUsersReadUserMe<
 	TData = Awaited<ReturnType<typeof usersReadUserMe>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -478,7 +443,6 @@ export function useUsersReadUserMe<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -490,7 +454,7 @@ export function useUsersReadUserMe<
 
 export function useUsersReadUserMe<
 	TData = Awaited<ReturnType<typeof usersReadUserMe>>,
-	TError = unknown,
+	TError = ErrorType<unknown>,
 >(
 	options?: {
 		query?: Partial<
@@ -500,7 +464,6 @@ export function useUsersReadUserMe<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -519,160 +482,20 @@ export function useUsersReadUserMe<
 }
 
 /**
- * Delete own user.
- * @summary Delete User Me
- */
-export type usersDeleteUserMeResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type usersDeleteUserMeResponseSuccess = usersDeleteUserMeResponse200 & {
-	headers: Headers;
-};
-
-export type usersDeleteUserMeResponse = usersDeleteUserMeResponseSuccess;
-
-export const getUsersDeleteUserMeUrl = () => {
-	return `/api/v1/users/me`;
-};
-
-export const usersDeleteUserMe = async (
-	options?: RequestInit,
-): Promise<usersDeleteUserMeResponse> => {
-	const res = await fetch(getUsersDeleteUserMeUrl(), {
-		...options,
-		method: "DELETE",
-	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersDeleteUserMeResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersDeleteUserMeResponse;
-};
-
-export const getUsersDeleteUserMeMutationOptions = <
-	TError = unknown,
-	TContext = unknown,
->(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof usersDeleteUserMe>>,
-		TError,
-		void,
-		TContext
-	>;
-	fetch?: RequestInit;
-}): UseMutationOptions<
-	Awaited<ReturnType<typeof usersDeleteUserMe>>,
-	TError,
-	void,
-	TContext
-> => {
-	const mutationKey = ["usersDeleteUserMe"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
-		? options.mutation &&
-			"mutationKey" in options.mutation &&
-			options.mutation.mutationKey
-			? options
-			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
-
-	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof usersDeleteUserMe>>,
-		void
-	> = () => {
-		return usersDeleteUserMe(fetchOptions);
-	};
-
-	return { mutationFn, ...mutationOptions };
-};
-
-export type UsersDeleteUserMeMutationResult = NonNullable<
-	Awaited<ReturnType<typeof usersDeleteUserMe>>
->;
-
-export type UsersDeleteUserMeMutationError = unknown;
-
-/**
- * @summary Delete User Me
- */
-export const useUsersDeleteUserMe = <TError = unknown, TContext = unknown>(
-	options?: {
-		mutation?: UseMutationOptions<
-			Awaited<ReturnType<typeof usersDeleteUserMe>>,
-			TError,
-			void,
-			TContext
-		>;
-		fetch?: RequestInit;
-	},
-	queryClient?: QueryClient,
-): UseMutationResult<
-	Awaited<ReturnType<typeof usersDeleteUserMe>>,
-	TError,
-	void,
-	TContext
-> => {
-	const mutationOptions = getUsersDeleteUserMeMutationOptions(options);
-
-	return useMutation(mutationOptions, queryClient);
-};
-/**
  * Update own user.
  * @summary Update User Me
  */
-export type usersUpdateUserMeResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type usersUpdateUserMeResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersUpdateUserMeResponseSuccess = usersUpdateUserMeResponse200 & {
-	headers: Headers;
-};
-export type usersUpdateUserMeResponseError = usersUpdateUserMeResponse422 & {
-	headers: Headers;
-};
-
-export type usersUpdateUserMeResponse =
-	| usersUpdateUserMeResponseSuccess
-	| usersUpdateUserMeResponseError;
-
-export const getUsersUpdateUserMeUrl = () => {
-	return `/api/v1/users/me`;
-};
-
-export const usersUpdateUserMe = async (
-	userUpdateMe: UserUpdateMe,
-	options?: RequestInit,
-): Promise<usersUpdateUserMeResponse> => {
-	const res = await fetch(getUsersUpdateUserMeUrl(), {
-		...options,
+export const usersUpdateUserMe = (userUpdateMe: UserUpdateMe) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/users/me`,
 		method: "PATCH",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(userUpdateMe),
+		headers: { "Content-Type": "application/json" },
+		data: userUpdateMe,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersUpdateUserMeResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersUpdateUserMeResponse;
 };
 
 export const getUsersUpdateUserMeMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -681,7 +504,6 @@ export const getUsersUpdateUserMeMutationOptions = <
 		{ data: UserUpdateMe },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof usersUpdateUserMe>>,
 	TError,
@@ -689,13 +511,13 @@ export const getUsersUpdateUserMeMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["usersUpdateUserMe"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof usersUpdateUserMe>>,
@@ -703,7 +525,7 @@ export const getUsersUpdateUserMeMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return usersUpdateUserMe(data, fetchOptions);
+		return usersUpdateUserMe(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -713,13 +535,13 @@ export type UsersUpdateUserMeMutationResult = NonNullable<
 	Awaited<ReturnType<typeof usersUpdateUserMe>>
 >;
 export type UsersUpdateUserMeMutationBody = UserUpdateMe;
-export type UsersUpdateUserMeMutationError = HTTPValidationError;
+export type UsersUpdateUserMeMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Update User Me
  */
 export const useUsersUpdateUserMe = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -729,7 +551,6 @@ export const useUsersUpdateUserMe = <
 			{ data: UserUpdateMe },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -746,58 +567,17 @@ export const useUsersUpdateUserMe = <
  * Update own password.
  * @summary Update Password Me
  */
-export type usersUpdatePasswordMeResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type usersUpdatePasswordMeResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersUpdatePasswordMeResponseSuccess =
-	usersUpdatePasswordMeResponse200 & {
-		headers: Headers;
-	};
-export type usersUpdatePasswordMeResponseError =
-	usersUpdatePasswordMeResponse422 & {
-		headers: Headers;
-	};
-
-export type usersUpdatePasswordMeResponse =
-	| usersUpdatePasswordMeResponseSuccess
-	| usersUpdatePasswordMeResponseError;
-
-export const getUsersUpdatePasswordMeUrl = () => {
-	return `/api/v1/users/me/password`;
-};
-
-export const usersUpdatePasswordMe = async (
-	updatePassword: UpdatePassword,
-	options?: RequestInit,
-): Promise<usersUpdatePasswordMeResponse> => {
-	const res = await fetch(getUsersUpdatePasswordMeUrl(), {
-		...options,
+export const usersUpdatePasswordMe = (updatePassword: UpdatePassword) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/me/password`,
 		method: "PATCH",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(updatePassword),
+		headers: { "Content-Type": "application/json" },
+		data: updatePassword,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersUpdatePasswordMeResponse["data"] = body
-		? JSON.parse(body)
-		: {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersUpdatePasswordMeResponse;
 };
 
 export const getUsersUpdatePasswordMeMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -806,7 +586,6 @@ export const getUsersUpdatePasswordMeMutationOptions = <
 		{ data: UpdatePassword },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof usersUpdatePasswordMe>>,
 	TError,
@@ -814,13 +593,13 @@ export const getUsersUpdatePasswordMeMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["usersUpdatePasswordMe"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof usersUpdatePasswordMe>>,
@@ -828,7 +607,7 @@ export const getUsersUpdatePasswordMeMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return usersUpdatePasswordMe(data, fetchOptions);
+		return usersUpdatePasswordMe(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -838,13 +617,13 @@ export type UsersUpdatePasswordMeMutationResult = NonNullable<
 	Awaited<ReturnType<typeof usersUpdatePasswordMe>>
 >;
 export type UsersUpdatePasswordMeMutationBody = UpdatePassword;
-export type UsersUpdatePasswordMeMutationError = HTTPValidationError;
+export type UsersUpdatePasswordMeMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Update Password Me
  */
 export const useUsersUpdatePasswordMe = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -854,7 +633,6 @@ export const useUsersUpdatePasswordMe = <
 			{ data: UpdatePassword },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -871,54 +649,21 @@ export const useUsersUpdatePasswordMe = <
  * Create new user without the need to be logged in.
  * @summary Register User
  */
-export type usersRegisterUserResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type usersRegisterUserResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersRegisterUserResponseSuccess = usersRegisterUserResponse200 & {
-	headers: Headers;
-};
-export type usersRegisterUserResponseError = usersRegisterUserResponse422 & {
-	headers: Headers;
-};
-
-export type usersRegisterUserResponse =
-	| usersRegisterUserResponseSuccess
-	| usersRegisterUserResponseError;
-
-export const getUsersRegisterUserUrl = () => {
-	return `/api/v1/users/signup`;
-};
-
-export const usersRegisterUser = async (
+export const usersRegisterUser = (
 	userRegister: UserRegister,
-	options?: RequestInit,
-): Promise<usersRegisterUserResponse> => {
-	const res = await fetch(getUsersRegisterUserUrl(), {
-		...options,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/signup`,
 		method: "POST",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(userRegister),
+		headers: { "Content-Type": "application/json" },
+		data: userRegister,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersRegisterUserResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersRegisterUserResponse;
 };
 
 export const getUsersRegisterUserMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -927,7 +672,6 @@ export const getUsersRegisterUserMutationOptions = <
 		{ data: UserRegister },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof usersRegisterUser>>,
 	TError,
@@ -935,13 +679,13 @@ export const getUsersRegisterUserMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["usersRegisterUser"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof usersRegisterUser>>,
@@ -949,7 +693,7 @@ export const getUsersRegisterUserMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return usersRegisterUser(data, fetchOptions);
+		return usersRegisterUser(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -959,13 +703,13 @@ export type UsersRegisterUserMutationResult = NonNullable<
 	Awaited<ReturnType<typeof usersRegisterUser>>
 >;
 export type UsersRegisterUserMutationBody = UserRegister;
-export type UsersRegisterUserMutationError = HTTPValidationError;
+export type UsersRegisterUserMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Register User
  */
 export const useUsersRegisterUser = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -975,7 +719,6 @@ export const useUsersRegisterUser = <
 			{ data: UserRegister },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -992,68 +735,21 @@ export const useUsersRegisterUser = <
  * verify email and reset password.
  * @summary Verify Email
  */
-export type usersVerifyEmailResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type usersVerifyEmailResponse400 = {
-	data: void;
-	status: 400;
-};
-
-export type usersVerifyEmailResponse404 = {
-	data: void;
-	status: 404;
-};
-
-export type usersVerifyEmailResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersVerifyEmailResponseSuccess = usersVerifyEmailResponse200 & {
-	headers: Headers;
-};
-export type usersVerifyEmailResponseError = (
-	| usersVerifyEmailResponse400
-	| usersVerifyEmailResponse404
-	| usersVerifyEmailResponse422
-) & {
-	headers: Headers;
-};
-
-export type usersVerifyEmailResponse =
-	| usersVerifyEmailResponseSuccess
-	| usersVerifyEmailResponseError;
-
-export const getUsersVerifyEmailUrl = () => {
-	return `/api/v1/users/verify-email/`;
-};
-
-export const usersVerifyEmail = async (
+export const usersVerifyEmail = (
 	newAccount: NewAccount,
-	options?: RequestInit,
-): Promise<usersVerifyEmailResponse> => {
-	const res = await fetch(getUsersVerifyEmailUrl(), {
-		...options,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/verify-email/`,
 		method: "POST",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(newAccount),
+		headers: { "Content-Type": "application/json" },
+		data: newAccount,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersVerifyEmailResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersVerifyEmailResponse;
 };
 
 export const getUsersVerifyEmailMutationOptions = <
-	TError = void | HTTPValidationError,
+	TError = ErrorType<void | HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -1062,7 +758,6 @@ export const getUsersVerifyEmailMutationOptions = <
 		{ data: NewAccount },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof usersVerifyEmail>>,
 	TError,
@@ -1070,13 +765,13 @@ export const getUsersVerifyEmailMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["usersVerifyEmail"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof usersVerifyEmail>>,
@@ -1084,7 +779,7 @@ export const getUsersVerifyEmailMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return usersVerifyEmail(data, fetchOptions);
+		return usersVerifyEmail(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -1094,13 +789,14 @@ export type UsersVerifyEmailMutationResult = NonNullable<
 	Awaited<ReturnType<typeof usersVerifyEmail>>
 >;
 export type UsersVerifyEmailMutationBody = NewAccount;
-export type UsersVerifyEmailMutationError = void | HTTPValidationError;
+export type UsersVerifyEmailMutationError =
+	ErrorType<void | HTTPValidationError>;
 
 /**
  * @summary Verify Email
  */
 export const useUsersVerifyEmail = <
-	TError = void | HTTPValidationError,
+	TError = ErrorType<void | HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -1110,7 +806,6 @@ export const useUsersVerifyEmail = <
 			{ data: NewAccount },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -1124,51 +819,95 @@ export const useUsersVerifyEmail = <
 	return useMutation(mutationOptions, queryClient);
 };
 /**
+ * Delete a user.
+ * @summary Delete User
+ */
+export const usersDeleteUser = (userId: string) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/${userId}`,
+		method: "DELETE",
+	});
+};
+
+export const getUsersDeleteUserMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersDeleteUser>>,
+		TError,
+		{ userId: string },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersDeleteUser>>,
+	TError,
+	{ userId: string },
+	TContext
+> => {
+	const mutationKey = ["usersDeleteUser"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersDeleteUser>>,
+		{ userId: string }
+	> = (props) => {
+		const { userId } = props ?? {};
+
+		return usersDeleteUser(userId);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersDeleteUserMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersDeleteUser>>
+>;
+
+export type UsersDeleteUserMutationError = ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Delete User
+ */
+export const useUsersDeleteUser = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersDeleteUser>>,
+			TError,
+			{ userId: string },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersDeleteUser>>,
+	TError,
+	{ userId: string },
+	TContext
+> => {
+	const mutationOptions = getUsersDeleteUserMutationOptions(options);
+
+	return useMutation(mutationOptions, queryClient);
+};
+/**
  * Get a specific user by id.
  * @summary Read User By Id
  */
-export type usersReadUserByIdResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type usersReadUserByIdResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersReadUserByIdResponseSuccess = usersReadUserByIdResponse200 & {
-	headers: Headers;
-};
-export type usersReadUserByIdResponseError = usersReadUserByIdResponse422 & {
-	headers: Headers;
-};
-
-export type usersReadUserByIdResponse =
-	| usersReadUserByIdResponseSuccess
-	| usersReadUserByIdResponseError;
-
-export const getUsersReadUserByIdUrl = (userId: string) => {
-	return `/api/v1/users/${userId}`;
-};
-
-export const usersReadUserById = async (
-	userId: string,
-	options?: RequestInit,
-): Promise<usersReadUserByIdResponse> => {
-	const res = await fetch(getUsersReadUserByIdUrl(userId), {
-		...options,
+export const usersReadUserById = (userId: string, signal?: AbortSignal) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/users/${userId}`,
 		method: "GET",
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersReadUserByIdResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersReadUserByIdResponse;
 };
 
 export const getUsersReadUserByIdQueryKey = (userId?: string) => {
@@ -1177,7 +916,7 @@ export const getUsersReadUserByIdQueryKey = (userId?: string) => {
 
 export const getUsersReadUserByIdQueryOptions = <
 	TData = Awaited<ReturnType<typeof usersReadUserById>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	userId: string,
 	options?: {
@@ -1188,17 +927,16 @@ export const getUsersReadUserByIdQueryOptions = <
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 ) => {
-	const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+	const { query: queryOptions } = options ?? {};
 
 	const queryKey =
 		queryOptions?.queryKey ?? getUsersReadUserByIdQueryKey(userId);
 
 	const queryFn: QueryFunction<
 		Awaited<ReturnType<typeof usersReadUserById>>
-	> = ({ signal }) => usersReadUserById(userId, { signal, ...fetchOptions });
+	> = ({ signal }) => usersReadUserById(userId, signal);
 
 	return {
 		queryKey,
@@ -1215,11 +953,11 @@ export const getUsersReadUserByIdQueryOptions = <
 export type UsersReadUserByIdQueryResult = NonNullable<
 	Awaited<ReturnType<typeof usersReadUserById>>
 >;
-export type UsersReadUserByIdQueryError = HTTPValidationError;
+export type UsersReadUserByIdQueryError = ErrorType<HTTPValidationError>;
 
 export function useUsersReadUserById<
 	TData = Awaited<ReturnType<typeof usersReadUserById>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	userId: string,
 	options: {
@@ -1238,7 +976,6 @@ export function useUsersReadUserById<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & {
@@ -1246,7 +983,7 @@ export function useUsersReadUserById<
 };
 export function useUsersReadUserById<
 	TData = Awaited<ReturnType<typeof usersReadUserById>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	userId: string,
 	options?: {
@@ -1265,7 +1002,6 @@ export function useUsersReadUserById<
 				>,
 				"initialData"
 			>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -1273,7 +1009,7 @@ export function useUsersReadUserById<
 };
 export function useUsersReadUserById<
 	TData = Awaited<ReturnType<typeof usersReadUserById>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	userId: string,
 	options?: {
@@ -1284,7 +1020,6 @@ export function useUsersReadUserById<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -1296,7 +1031,7 @@ export function useUsersReadUserById<
 
 export function useUsersReadUserById<
 	TData = Awaited<ReturnType<typeof usersReadUserById>>,
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 >(
 	userId: string,
 	options?: {
@@ -1307,7 +1042,6 @@ export function useUsersReadUserById<
 				TData
 			>
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {
@@ -1329,55 +1063,17 @@ export function useUsersReadUserById<
  * Update a user.
  * @summary Update User
  */
-export type usersUpdateUserResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type usersUpdateUserResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersUpdateUserResponseSuccess = usersUpdateUserResponse200 & {
-	headers: Headers;
-};
-export type usersUpdateUserResponseError = usersUpdateUserResponse422 & {
-	headers: Headers;
-};
-
-export type usersUpdateUserResponse =
-	| usersUpdateUserResponseSuccess
-	| usersUpdateUserResponseError;
-
-export const getUsersUpdateUserUrl = (userId: string) => {
-	return `/api/v1/users/${userId}`;
-};
-
-export const usersUpdateUser = async (
-	userId: string,
-	userUpdate: UserUpdate,
-	options?: RequestInit,
-): Promise<usersUpdateUserResponse> => {
-	const res = await fetch(getUsersUpdateUserUrl(userId), {
-		...options,
+export const usersUpdateUser = (userId: string, userUpdate: UserUpdate) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/users/${userId}`,
 		method: "PATCH",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(userUpdate),
+		headers: { "Content-Type": "application/json" },
+		data: userUpdate,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersUpdateUserResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersUpdateUserResponse;
 };
 
 export const getUsersUpdateUserMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -1386,7 +1082,6 @@ export const getUsersUpdateUserMutationOptions = <
 		{ userId: string; data: UserUpdate },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof usersUpdateUser>>,
 	TError,
@@ -1394,13 +1089,13 @@ export const getUsersUpdateUserMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["usersUpdateUser"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof usersUpdateUser>>,
@@ -1408,7 +1103,7 @@ export const getUsersUpdateUserMutationOptions = <
 	> = (props) => {
 		const { userId, data } = props ?? {};
 
-		return usersUpdateUser(userId, data, fetchOptions);
+		return usersUpdateUser(userId, data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -1418,13 +1113,13 @@ export type UsersUpdateUserMutationResult = NonNullable<
 	Awaited<ReturnType<typeof usersUpdateUser>>
 >;
 export type UsersUpdateUserMutationBody = UserUpdate;
-export type UsersUpdateUserMutationError = HTTPValidationError;
+export type UsersUpdateUserMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Update User
  */
 export const useUsersUpdateUser = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -1434,7 +1129,6 @@ export const useUsersUpdateUser = <
 			{ userId: string; data: UserUpdate },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -1444,125 +1138,6 @@ export const useUsersUpdateUser = <
 	TContext
 > => {
 	const mutationOptions = getUsersUpdateUserMutationOptions(options);
-
-	return useMutation(mutationOptions, queryClient);
-};
-/**
- * Delete a user.
- * @summary Delete User
- */
-export type usersDeleteUserResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type usersDeleteUserResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type usersDeleteUserResponseSuccess = usersDeleteUserResponse200 & {
-	headers: Headers;
-};
-export type usersDeleteUserResponseError = usersDeleteUserResponse422 & {
-	headers: Headers;
-};
-
-export type usersDeleteUserResponse =
-	| usersDeleteUserResponseSuccess
-	| usersDeleteUserResponseError;
-
-export const getUsersDeleteUserUrl = (userId: string) => {
-	return `/api/v1/users/${userId}`;
-};
-
-export const usersDeleteUser = async (
-	userId: string,
-	options?: RequestInit,
-): Promise<usersDeleteUserResponse> => {
-	const res = await fetch(getUsersDeleteUserUrl(userId), {
-		...options,
-		method: "DELETE",
-	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: usersDeleteUserResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as usersDeleteUserResponse;
-};
-
-export const getUsersDeleteUserMutationOptions = <
-	TError = HTTPValidationError,
-	TContext = unknown,
->(options?: {
-	mutation?: UseMutationOptions<
-		Awaited<ReturnType<typeof usersDeleteUser>>,
-		TError,
-		{ userId: string },
-		TContext
-	>;
-	fetch?: RequestInit;
-}): UseMutationOptions<
-	Awaited<ReturnType<typeof usersDeleteUser>>,
-	TError,
-	{ userId: string },
-	TContext
-> => {
-	const mutationKey = ["usersDeleteUser"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
-		? options.mutation &&
-			"mutationKey" in options.mutation &&
-			options.mutation.mutationKey
-			? options
-			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
-
-	const mutationFn: MutationFunction<
-		Awaited<ReturnType<typeof usersDeleteUser>>,
-		{ userId: string }
-	> = (props) => {
-		const { userId } = props ?? {};
-
-		return usersDeleteUser(userId, fetchOptions);
-	};
-
-	return { mutationFn, ...mutationOptions };
-};
-
-export type UsersDeleteUserMutationResult = NonNullable<
-	Awaited<ReturnType<typeof usersDeleteUser>>
->;
-
-export type UsersDeleteUserMutationError = HTTPValidationError;
-
-/**
- * @summary Delete User
- */
-export const useUsersDeleteUser = <
-	TError = HTTPValidationError,
-	TContext = unknown,
->(
-	options?: {
-		mutation?: UseMutationOptions<
-			Awaited<ReturnType<typeof usersDeleteUser>>,
-			TError,
-			{ userId: string },
-			TContext
-		>;
-		fetch?: RequestInit;
-	},
-	queryClient?: QueryClient,
-): UseMutationResult<
-	Awaited<ReturnType<typeof usersDeleteUser>>,
-	TError,
-	{ userId: string },
-	TContext
-> => {
-	const mutationOptions = getUsersDeleteUserMutationOptions(options);
 
 	return useMutation(mutationOptions, queryClient);
 };

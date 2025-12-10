@@ -18,104 +18,43 @@ export const usersReadUsersQueryParams = zod.object({
 	limit: zod.number().default(usersReadUsersQueryLimitDefault),
 });
 
-export const usersReadUsersResponseDataItemEmailMax = 255;
-
-export const usersReadUsersResponseDataItemIsActiveDefault = false;
-export const usersReadUsersResponseDataItemIsSuperuserDefault = false;
-export const usersReadUsersResponseDataItemFullNameOneMax = 255;
-
 export const usersReadUsersResponse = zod.object({
+	count: zod.number(),
 	data: zod.array(
 		zod.object({
-			email: zod.email().max(usersReadUsersResponseDataItemEmailMax),
-			is_active: zod
-				.boolean()
-				.default(usersReadUsersResponseDataItemIsActiveDefault),
-			is_superuser: zod
-				.boolean()
-				.default(usersReadUsersResponseDataItemIsSuperuserDefault),
-			full_name: zod
-				.union([
-					zod.string().max(usersReadUsersResponseDataItemFullNameOneMax),
-					zod.null(),
-				])
-				.optional(),
+			email: zod.email(),
+			full_name: zod.union([zod.string(), zod.null()]).optional(),
 			id: zod.uuid(),
+			is_active: zod.boolean(),
+			is_superuser: zod.boolean(),
 		}),
 	),
-	count: zod.number(),
 });
 
 /**
  * Create new user.
  * @summary Create User
  */
-export const usersCreateUserBodyEmailMax = 255;
-
-export const usersCreateUserBodyIsActiveDefault = false;
-export const usersCreateUserBodyIsSuperuserDefault = false;
-export const usersCreateUserBodyFullNameOneMax = 255;
-
 export const usersCreateUserBodyPasswordMin = 8;
 export const usersCreateUserBodyPasswordMax = 64;
 
 export const usersCreateUserBody = zod.object({
-	email: zod.email().max(usersCreateUserBodyEmailMax),
-	is_active: zod.boolean().default(usersCreateUserBodyIsActiveDefault),
-	is_superuser: zod.boolean().default(usersCreateUserBodyIsSuperuserDefault),
-	full_name: zod
-		.union([zod.string().max(usersCreateUserBodyFullNameOneMax), zod.null()])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 	password: zod
 		.string()
 		.min(usersCreateUserBodyPasswordMin)
 		.max(usersCreateUserBodyPasswordMax),
 });
 
-export const usersCreateUserResponseEmailMax = 255;
-
-export const usersCreateUserResponseIsActiveDefault = false;
-export const usersCreateUserResponseIsSuperuserDefault = false;
-export const usersCreateUserResponseFullNameOneMax = 255;
-
 export const usersCreateUserResponse = zod.object({
-	email: zod.email().max(usersCreateUserResponseEmailMax),
-	is_active: zod.boolean().default(usersCreateUserResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(usersCreateUserResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(usersCreateUserResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
-});
-
-/**
- * Get current user.
- * @summary Read User Me
- */
-export const usersReadUserMeResponseEmailMax = 255;
-
-export const usersReadUserMeResponseIsActiveDefault = false;
-export const usersReadUserMeResponseIsSuperuserDefault = false;
-export const usersReadUserMeResponseFullNameOneMax = 255;
-
-export const usersReadUserMeResponse = zod.object({
-	email: zod.email().max(usersReadUserMeResponseEmailMax),
-	is_active: zod.boolean().default(usersReadUserMeResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(usersReadUserMeResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(usersReadUserMeResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
-	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });
 
 /**
@@ -127,41 +66,41 @@ export const usersDeleteUserMeResponse = zod.object({
 });
 
 /**
+ * Get current user.
+ * @summary Read User Me
+ */
+export const usersReadUserMeResponse = zod.object({
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
+	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
+});
+
+/**
  * Update own user.
  * @summary Update User Me
  */
-export const usersUpdateUserMeBodyFullNameOneMax = 255;
-
 export const usersUpdateUserMeBodyEmailOneMax = 255;
 
+export const usersUpdateUserMeBodyFullNameOneMax = 255;
+
 export const usersUpdateUserMeBody = zod.object({
-	full_name: zod
-		.union([zod.string().max(usersUpdateUserMeBodyFullNameOneMax), zod.null()])
-		.optional(),
 	email: zod
 		.union([zod.email().max(usersUpdateUserMeBodyEmailOneMax), zod.null()])
 		.optional(),
+	full_name: zod
+		.union([zod.string().max(usersUpdateUserMeBodyFullNameOneMax), zod.null()])
+		.optional(),
+	is_active: zod.union([zod.boolean(), zod.null()]).optional(),
 });
 
-export const usersUpdateUserMeResponseEmailMax = 255;
-
-export const usersUpdateUserMeResponseIsActiveDefault = false;
-export const usersUpdateUserMeResponseIsSuperuserDefault = false;
-export const usersUpdateUserMeResponseFullNameOneMax = 255;
-
 export const usersUpdateUserMeResponse = zod.object({
-	email: zod.email().max(usersUpdateUserMeResponseEmailMax),
-	is_active: zod.boolean().default(usersUpdateUserMeResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(usersUpdateUserMeResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(usersUpdateUserMeResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });
 
 /**
@@ -195,20 +134,20 @@ export const usersUpdatePasswordMeResponse = zod.object({
  */
 export const usersRegisterUserBodyEmailMax = 255;
 
+export const usersRegisterUserBodyFullNameOneMax = 255;
+
 export const usersRegisterUserBodyPasswordMin = 8;
 export const usersRegisterUserBodyPasswordMax = 64;
 
-export const usersRegisterUserBodyFullNameOneMax = 255;
-
 export const usersRegisterUserBody = zod.object({
 	email: zod.email().max(usersRegisterUserBodyEmailMax),
+	full_name: zod
+		.union([zod.string().max(usersRegisterUserBodyFullNameOneMax), zod.null()])
+		.optional(),
 	password: zod
 		.string()
 		.min(usersRegisterUserBodyPasswordMin)
 		.max(usersRegisterUserBodyPasswordMax),
-	full_name: zod
-		.union([zod.string().max(usersRegisterUserBodyFullNameOneMax), zod.null()])
-		.optional(),
 });
 
 export const usersRegisterUserResponse = zod.object({
@@ -228,6 +167,18 @@ export const usersVerifyEmailResponse = zod.object({
 });
 
 /**
+ * Delete a user.
+ * @summary Delete User
+ */
+export const usersDeleteUserParams = zod.object({
+	user_id: zod.uuid(),
+});
+
+export const usersDeleteUserResponse = zod.object({
+	message: zod.string(),
+});
+
+/**
  * Get a specific user by id.
  * @summary Read User By Id
  */
@@ -235,25 +186,12 @@ export const usersReadUserByIdParams = zod.object({
 	user_id: zod.uuid(),
 });
 
-export const usersReadUserByIdResponseEmailMax = 255;
-
-export const usersReadUserByIdResponseIsActiveDefault = false;
-export const usersReadUserByIdResponseIsSuperuserDefault = false;
-export const usersReadUserByIdResponseFullNameOneMax = 255;
-
 export const usersReadUserByIdResponse = zod.object({
-	email: zod.email().max(usersReadUserByIdResponseEmailMax),
-	is_active: zod.boolean().default(usersReadUserByIdResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(usersReadUserByIdResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(usersReadUserByIdResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });
 
 /**
@@ -266,62 +204,19 @@ export const usersUpdateUserParams = zod.object({
 
 export const usersUpdateUserBodyEmailOneMax = 255;
 
-export const usersUpdateUserBodyIsActiveDefault = false;
-export const usersUpdateUserBodyIsSuperuserDefault = false;
-export const usersUpdateUserBodyFullNameOneMax = 255;
-
-export const usersUpdateUserBodyPasswordOneMin = 8;
-export const usersUpdateUserBodyPasswordOneMax = 64;
-
 export const usersUpdateUserBody = zod.object({
 	email: zod
 		.union([zod.email().max(usersUpdateUserBodyEmailOneMax), zod.null()])
 		.optional(),
-	is_active: zod.boolean().default(usersUpdateUserBodyIsActiveDefault),
-	is_superuser: zod.boolean().default(usersUpdateUserBodyIsSuperuserDefault),
-	full_name: zod
-		.union([zod.string().max(usersUpdateUserBodyFullNameOneMax), zod.null()])
-		.optional(),
-	password: zod
-		.union([
-			zod
-				.string()
-				.min(usersUpdateUserBodyPasswordOneMin)
-				.max(usersUpdateUserBodyPasswordOneMax),
-			zod.null(),
-		])
-		.optional(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
+	is_active: zod.union([zod.boolean(), zod.null()]).optional(),
+	is_superuser: zod.union([zod.boolean(), zod.null()]).optional(),
 });
-
-export const usersUpdateUserResponseEmailMax = 255;
-
-export const usersUpdateUserResponseIsActiveDefault = false;
-export const usersUpdateUserResponseIsSuperuserDefault = false;
-export const usersUpdateUserResponseFullNameOneMax = 255;
 
 export const usersUpdateUserResponse = zod.object({
-	email: zod.email().max(usersUpdateUserResponseEmailMax),
-	is_active: zod.boolean().default(usersUpdateUserResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(usersUpdateUserResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(usersUpdateUserResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
-});
-
-/**
- * Delete a user.
- * @summary Delete User
- */
-export const usersDeleteUserParams = zod.object({
-	user_id: zod.uuid(),
-});
-
-export const usersDeleteUserResponse = zod.object({
-	message: zod.string(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });

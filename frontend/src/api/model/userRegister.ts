@@ -9,10 +9,10 @@ import type { UserRegisterFullName } from "./userRegisterFullName";
 export interface UserRegister {
 	/** @maxLength 255 */
 	email: string;
+	full_name?: UserRegisterFullName;
 	/**
 	 * @minLength 8
 	 * @maxLength 64
 	 */
 	password: string;
-	full_name?: UserRegisterFullName;
 }

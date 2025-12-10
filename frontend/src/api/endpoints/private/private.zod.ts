@@ -10,25 +10,12 @@ import * as zod from "zod";
  * Get all users.
  * @summary Get All Users
  */
-export const privateGetAllUsersResponseEmailMax = 255;
-
-export const privateGetAllUsersResponseIsActiveDefault = false;
-export const privateGetAllUsersResponseIsSuperuserDefault = false;
-export const privateGetAllUsersResponseFullNameOneMax = 255;
-
 export const privateGetAllUsersResponseItem = zod.object({
-	email: zod.email().max(privateGetAllUsersResponseEmailMax),
-	is_active: zod.boolean().default(privateGetAllUsersResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(privateGetAllUsersResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(privateGetAllUsersResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });
 export const privateGetAllUsersResponse = zod.array(
 	privateGetAllUsersResponseItem,
@@ -38,32 +25,19 @@ export const privateGetAllUsersResponse = zod.array(
  * Create a new user.
  * @summary Create User
  */
-export const privateCreateUserBodyIsVerifiedDefault = false;
+export const privateCreateUserBodyIsVerifiedDefault = "no";
 
 export const privateCreateUserBody = zod.object({
 	email: zod.string(),
-	password: zod.string(),
 	full_name: zod.string(),
 	is_verified: zod.boolean().default(privateCreateUserBodyIsVerifiedDefault),
+	password: zod.string(),
 });
 
-export const privateCreateUserResponseEmailMax = 255;
-
-export const privateCreateUserResponseIsActiveDefault = false;
-export const privateCreateUserResponseIsSuperuserDefault = false;
-export const privateCreateUserResponseFullNameOneMax = 255;
-
 export const privateCreateUserResponse = zod.object({
-	email: zod.email().max(privateCreateUserResponseEmailMax),
-	is_active: zod.boolean().default(privateCreateUserResponseIsActiveDefault),
-	is_superuser: zod
-		.boolean()
-		.default(privateCreateUserResponseIsSuperuserDefault),
-	full_name: zod
-		.union([
-			zod.string().max(privateCreateUserResponseFullNameOneMax),
-			zod.null(),
-		])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });

@@ -6,12 +6,12 @@
  */
 import type { UserUpdateEmail } from "./userUpdateEmail";
 import type { UserUpdateFullName } from "./userUpdateFullName";
-import type { UserUpdatePassword } from "./userUpdatePassword";
+import type { UserUpdateIsActive } from "./userUpdateIsActive";
+import type { UserUpdateIsSuperuser } from "./userUpdateIsSuperuser";
 
 export interface UserUpdate {
 	email?: UserUpdateEmail;
-	is_active?: boolean;
-	is_superuser?: boolean;
 	full_name?: UserUpdateFullName;
-	password?: UserUpdatePassword;
+	is_active?: UserUpdateIsActive;
+	is_superuser?: UserUpdateIsSuperuser;
 }

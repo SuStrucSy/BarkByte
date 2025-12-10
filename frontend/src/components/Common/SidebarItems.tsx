@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 
 import { Home, type LucideIcon, Settings, Users } from "lucide-react";
@@ -9,8 +8,7 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import useAuth from "@/hooks/useAuth";
-import type { UserPublic } from "@/lib/types";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const items = [
 	{ icon: Home, title: "Dashboard", path: "/" },
@@ -24,9 +22,7 @@ interface Item {
 }
 
 const SidebarItems = () => {
-	const queryClient = useQueryClient();
-	const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
-	const { user } = useAuth();
+  const { data: currentUser } = useCurrentUser();
 	const { pathname } = useLocation();
 
 	const finalItems: Item[] = currentUser?.is_superuser

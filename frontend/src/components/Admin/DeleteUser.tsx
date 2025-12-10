@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -13,37 +13,33 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { api } from "@/lib/api";
 import { Button } from "../ui/button";
 import { Form } from "../ui/form";
+import { useUsersDeleteUser } from '@/api/endpoints/users/users.gen';
 
 const DeleteUser = ({ id }: { id: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const queryClient = useQueryClient();
 	const form = useForm();
 
-	const deleteUser = async (id: string) => {
-		await api.delete("/api/v1/users/:user_id", undefined, {
-			params: { user_id: id },
-		});
-	};
+	const mutation = useUsersDeleteUser({
+    mutation:{
+      onSuccess: () => {
+        toast.success("The user was deleted successfully");
+        setIsOpen(false);
+      },
+      onError: () => {
+        toast.error("An error occurred while deleting the user");
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries();
+      },
+    }
 
-	const mutation = useMutation({
-		mutationFn: deleteUser,
-		onSuccess: () => {
-			toast.success("The user was deleted successfully");
-			setIsOpen(false);
-		},
-		onError: () => {
-			toast.error("An error occurred while deleting the user");
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries();
-		},
 	});
 
 	const onSubmit = async () => {
-		mutation.mutate(id);
+		mutation.mutate({userId: id});
 	};
 
 	return (

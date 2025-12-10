@@ -23,20 +23,12 @@ export const loginLoginAccessTokenResponse = zod.object({
  * Test access token
  * @summary Test Token
  */
-export const loginTestTokenResponseEmailMax = 255;
-
-export const loginTestTokenResponseIsActiveDefault = false;
-export const loginTestTokenResponseIsSuperuserDefault = false;
-export const loginTestTokenResponseFullNameOneMax = 255;
-
 export const loginTestTokenResponse = zod.object({
-	email: zod.email().max(loginTestTokenResponseEmailMax),
-	is_active: zod.boolean().default(loginTestTokenResponseIsActiveDefault),
-	is_superuser: zod.boolean().default(loginTestTokenResponseIsSuperuserDefault),
-	full_name: zod
-		.union([zod.string().max(loginTestTokenResponseFullNameOneMax), zod.null()])
-		.optional(),
+	email: zod.email(),
+	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
+	is_active: zod.boolean(),
+	is_superuser: zod.boolean(),
 });
 
 /**
@@ -59,11 +51,11 @@ export const loginResetPasswordBodyNewPasswordMin = 8;
 export const loginResetPasswordBodyNewPasswordMax = 64;
 
 export const loginResetPasswordBody = zod.object({
-	token: zod.string(),
 	new_password: zod
 		.string()
 		.min(loginResetPasswordBodyNewPasswordMin)
 		.max(loginResetPasswordBodyNewPasswordMax),
+	token: zod.string(),
 });
 
 export const loginResetPasswordResponse = zod.object({

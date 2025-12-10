@@ -6,10 +6,10 @@
  */
 
 export interface NewPassword {
-	token: string;
 	/**
 	 * @minLength 8
 	 * @maxLength 64
 	 */
 	new_password: string;
+	token: string;
 }

@@ -4,20 +4,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { handleError } from "@/utils";
-import {  useUsersReadUserMe, useUsersRegisterUser, useUsersVerifyEmail } from '@/api/endpoints/users/users.gen';
+import {  getUsersReadUserMeQueryKey, useUsersReadUserMe, useUsersRegisterUser, useUsersVerifyEmail } from '@/api/endpoints/users/users.gen';
 import { useLoginLoginAccessToken } from '@/api/endpoints/login/login.gen';
+import type { HTTPValidationError } from '@/api/model';
+import { useIsLoggedIn } from './useIsLoggedIn';
 
-const isLoggedIn = () => {
-	return localStorage.getItem("access_token") !== null;
-};
 
 const useAuth = () => {
 	const [error, setError] = useState<string | null>(null);
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-  const { data: user } = useUsersReadUserMe({
-    query: { queryKey: ["currentUser"], enabled: isLoggedIn() }
-  })
+
 	// const { data: user } = useQuery<UserPublic | null, Error>({
 	// 	queryKey: ["currentUser"],
 	// 	queryFn: async () => {
@@ -83,13 +80,20 @@ const useAuth = () => {
 
   const loginMutation = useLoginLoginAccessToken({
     mutation: {
-      onSuccess: (response) => {
-        if (response.data?.access_token) {
-          localStorage.setItem("access_token", response.data.access_token);
+      onSuccess: (data) => {
+        console.log({data})
+        if (data.access_token) {
+          localStorage.setItem("access_token", data.access_token);
+          queryClient.invalidateQueries({
+            queryKey: getUsersReadUserMeQueryKey() // ✅ Use generated key
+          });
           navigate({ to: "/" });
         }
       },
-      onError: (err) => handleError(err),
+      onError: (err: void | HTTPValidationError) => {
+        console.error(err)
+        handleError(err);
+      }
     },
   });
 
@@ -118,11 +122,9 @@ const useAuth = () => {
 		verifyEmailMutation,
 		loginMutation,
 		logout,
-		user,
 		error,
 		resetError: () => setError(null),
 	};
 };
 
-export { isLoggedIn };
 export default useAuth;

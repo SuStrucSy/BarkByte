@@ -21,61 +21,18 @@ import type {
 	Token,
 	UserPublic,
 } from "../../model";
+import type { ErrorType } from "../../mutator/custom-instance";
+import { customInstance } from "../../mutator/custom-instance";
 
 /**
  * OAuth2 compatible token login, get an access token for future requests
  * @summary Login Access Token
  */
-export type loginLoginAccessTokenResponse200 = {
-	data: Token;
-	status: 200;
-};
-
-export type loginLoginAccessTokenResponse400 = {
-	data: void;
-	status: 400;
-};
-
-export type loginLoginAccessTokenResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type loginLoginAccessTokenResponseSuccess =
-	loginLoginAccessTokenResponse200 & {
-		headers: Headers;
-	};
-export type loginLoginAccessTokenResponseError = (
-	| loginLoginAccessTokenResponse400
-	| loginLoginAccessTokenResponse422
-) & {
-	headers: Headers;
-};
-
-export type loginLoginAccessTokenResponse =
-	| loginLoginAccessTokenResponseSuccess
-	| loginLoginAccessTokenResponseError;
-
-export const getLoginLoginAccessTokenUrl = () => {
-	return `/api/v1/login/access-token`;
-};
-
-export const loginLoginAccessToken = async (
+export const loginLoginAccessToken = (
 	bodyLoginLoginAccessToken: BodyLoginLoginAccessToken,
-	options?: RequestInit,
-): Promise<loginLoginAccessTokenResponse> => {
+	signal?: AbortSignal,
+) => {
 	const formUrlEncoded = new URLSearchParams();
-	if (
-		bodyLoginLoginAccessToken.grant_type !== undefined &&
-		bodyLoginLoginAccessToken.grant_type !== null
-	) {
-		formUrlEncoded.append(`grant_type`, bodyLoginLoginAccessToken.grant_type);
-	}
-	formUrlEncoded.append(`username`, bodyLoginLoginAccessToken.username);
-	formUrlEncoded.append(`password`, bodyLoginLoginAccessToken.password);
-	if (bodyLoginLoginAccessToken.scope !== undefined) {
-		formUrlEncoded.append(`scope`, bodyLoginLoginAccessToken.scope);
-	}
 	if (
 		bodyLoginLoginAccessToken.client_id !== undefined &&
 		bodyLoginLoginAccessToken.client_id !== null
@@ -91,31 +48,29 @@ export const loginLoginAccessToken = async (
 			bodyLoginLoginAccessToken.client_secret,
 		);
 	}
+	if (
+		bodyLoginLoginAccessToken.grant_type !== undefined &&
+		bodyLoginLoginAccessToken.grant_type !== null
+	) {
+		formUrlEncoded.append(`grant_type`, bodyLoginLoginAccessToken.grant_type);
+	}
+	formUrlEncoded.append(`password`, bodyLoginLoginAccessToken.password);
+	if (bodyLoginLoginAccessToken.scope !== undefined) {
+		formUrlEncoded.append(`scope`, bodyLoginLoginAccessToken.scope);
+	}
+	formUrlEncoded.append(`username`, bodyLoginLoginAccessToken.username);
 
-	const res = await fetch(getLoginLoginAccessTokenUrl(), {
-		...options,
+	return customInstance<Token>({
+		url: `/api/v1/login/access-token`,
 		method: "POST",
-		headers: {
-			"Content-Type": "application/x-www-form-urlencoded",
-			...options?.headers,
-		},
-		body: formUrlEncoded,
+		headers: { "Content-Type": "application/x-www-form-urlencoded" },
+		data: formUrlEncoded,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: loginLoginAccessTokenResponse["data"] = body
-		? JSON.parse(body)
-		: {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as loginLoginAccessTokenResponse;
 };
 
 export const getLoginLoginAccessTokenMutationOptions = <
-	TError = void | HTTPValidationError,
+	TError = ErrorType<void | HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -124,7 +79,6 @@ export const getLoginLoginAccessTokenMutationOptions = <
 		{ data: BodyLoginLoginAccessToken },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof loginLoginAccessToken>>,
 	TError,
@@ -132,13 +86,13 @@ export const getLoginLoginAccessTokenMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["loginLoginAccessToken"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof loginLoginAccessToken>>,
@@ -146,7 +100,7 @@ export const getLoginLoginAccessTokenMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return loginLoginAccessToken(data, fetchOptions);
+		return loginLoginAccessToken(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -156,13 +110,14 @@ export type LoginLoginAccessTokenMutationResult = NonNullable<
 	Awaited<ReturnType<typeof loginLoginAccessToken>>
 >;
 export type LoginLoginAccessTokenMutationBody = BodyLoginLoginAccessToken;
-export type LoginLoginAccessTokenMutationError = void | HTTPValidationError;
+export type LoginLoginAccessTokenMutationError =
+	ErrorType<void | HTTPValidationError>;
 
 /**
  * @summary Login Access Token
  */
 export const useLoginLoginAccessToken = <
-	TError = void | HTTPValidationError,
+	TError = ErrorType<void | HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -172,7 +127,6 @@ export const useLoginLoginAccessToken = <
 			{ data: BodyLoginLoginAccessToken },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -189,41 +143,16 @@ export const useLoginLoginAccessToken = <
  * Test access token
  * @summary Test Token
  */
-export type loginTestTokenResponse200 = {
-	data: UserPublic;
-	status: 200;
-};
-
-export type loginTestTokenResponseSuccess = loginTestTokenResponse200 & {
-	headers: Headers;
-};
-
-export type loginTestTokenResponse = loginTestTokenResponseSuccess;
-
-export const getLoginTestTokenUrl = () => {
-	return `/api/v1/login/test-token`;
-};
-
-export const loginTestToken = async (
-	options?: RequestInit,
-): Promise<loginTestTokenResponse> => {
-	const res = await fetch(getLoginTestTokenUrl(), {
-		...options,
+export const loginTestToken = (signal?: AbortSignal) => {
+	return customInstance<UserPublic>({
+		url: `/api/v1/login/test-token`,
 		method: "POST",
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: loginTestTokenResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as loginTestTokenResponse;
 };
 
 export const getLoginTestTokenMutationOptions = <
-	TError = unknown,
+	TError = ErrorType<unknown>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -232,7 +161,6 @@ export const getLoginTestTokenMutationOptions = <
 		void,
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof loginTestToken>>,
 	TError,
@@ -240,19 +168,19 @@ export const getLoginTestTokenMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["loginTestToken"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof loginTestToken>>,
 		void
 	> = () => {
-		return loginTestToken(fetchOptions);
+		return loginTestToken();
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -262,12 +190,15 @@ export type LoginTestTokenMutationResult = NonNullable<
 	Awaited<ReturnType<typeof loginTestToken>>
 >;
 
-export type LoginTestTokenMutationError = unknown;
+export type LoginTestTokenMutationError = ErrorType<unknown>;
 
 /**
  * @summary Test Token
  */
-export const useLoginTestToken = <TError = unknown, TContext = unknown>(
+export const useLoginTestToken = <
+	TError = ErrorType<unknown>,
+	TContext = unknown,
+>(
 	options?: {
 		mutation?: UseMutationOptions<
 			Awaited<ReturnType<typeof loginTestToken>>,
@@ -275,7 +206,6 @@ export const useLoginTestToken = <TError = unknown, TContext = unknown>(
 			void,
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -292,56 +222,16 @@ export const useLoginTestToken = <TError = unknown, TContext = unknown>(
  * Password Recovery
  * @summary Recover Password
  */
-export type loginRecoverPasswordResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type loginRecoverPasswordResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type loginRecoverPasswordResponseSuccess =
-	loginRecoverPasswordResponse200 & {
-		headers: Headers;
-	};
-export type loginRecoverPasswordResponseError =
-	loginRecoverPasswordResponse422 & {
-		headers: Headers;
-	};
-
-export type loginRecoverPasswordResponse =
-	| loginRecoverPasswordResponseSuccess
-	| loginRecoverPasswordResponseError;
-
-export const getLoginRecoverPasswordUrl = (email: string) => {
-	return `/api/v1/password-recovery/${email}`;
-};
-
-export const loginRecoverPassword = async (
-	email: string,
-	options?: RequestInit,
-): Promise<loginRecoverPasswordResponse> => {
-	const res = await fetch(getLoginRecoverPasswordUrl(email), {
-		...options,
+export const loginRecoverPassword = (email: string, signal?: AbortSignal) => {
+	return customInstance<Message>({
+		url: `/api/v1/password-recovery/${email}`,
 		method: "POST",
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: loginRecoverPasswordResponse["data"] = body
-		? JSON.parse(body)
-		: {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as loginRecoverPasswordResponse;
 };
 
 export const getLoginRecoverPasswordMutationOptions = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -350,7 +240,6 @@ export const getLoginRecoverPasswordMutationOptions = <
 		{ email: string },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof loginRecoverPassword>>,
 	TError,
@@ -358,13 +247,13 @@ export const getLoginRecoverPasswordMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["loginRecoverPassword"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof loginRecoverPassword>>,
@@ -372,7 +261,7 @@ export const getLoginRecoverPasswordMutationOptions = <
 	> = (props) => {
 		const { email } = props ?? {};
 
-		return loginRecoverPassword(email, fetchOptions);
+		return loginRecoverPassword(email);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -382,13 +271,13 @@ export type LoginRecoverPasswordMutationResult = NonNullable<
 	Awaited<ReturnType<typeof loginRecoverPassword>>
 >;
 
-export type LoginRecoverPasswordMutationError = HTTPValidationError;
+export type LoginRecoverPasswordMutationError = ErrorType<HTTPValidationError>;
 
 /**
  * @summary Recover Password
  */
 export const useLoginRecoverPassword = <
-	TError = HTTPValidationError,
+	TError = ErrorType<HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -398,7 +287,6 @@ export const useLoginRecoverPassword = <
 			{ email: string },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<
@@ -415,69 +303,21 @@ export const useLoginRecoverPassword = <
  * Reset password
  * @summary Reset Password
  */
-export type loginResetPasswordResponse200 = {
-	data: Message;
-	status: 200;
-};
-
-export type loginResetPasswordResponse400 = {
-	data: void;
-	status: 400;
-};
-
-export type loginResetPasswordResponse404 = {
-	data: void;
-	status: 404;
-};
-
-export type loginResetPasswordResponse422 = {
-	data: HTTPValidationError;
-	status: 422;
-};
-
-export type loginResetPasswordResponseSuccess =
-	loginResetPasswordResponse200 & {
-		headers: Headers;
-	};
-export type loginResetPasswordResponseError = (
-	| loginResetPasswordResponse400
-	| loginResetPasswordResponse404
-	| loginResetPasswordResponse422
-) & {
-	headers: Headers;
-};
-
-export type loginResetPasswordResponse =
-	| loginResetPasswordResponseSuccess
-	| loginResetPasswordResponseError;
-
-export const getLoginResetPasswordUrl = () => {
-	return `/api/v1/reset-password/`;
-};
-
-export const loginResetPassword = async (
+export const loginResetPassword = (
 	newPassword: NewPassword,
-	options?: RequestInit,
-): Promise<loginResetPasswordResponse> => {
-	const res = await fetch(getLoginResetPasswordUrl(), {
-		...options,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/reset-password/`,
 		method: "POST",
-		headers: { "Content-Type": "application/json", ...options?.headers },
-		body: JSON.stringify(newPassword),
+		headers: { "Content-Type": "application/json" },
+		data: newPassword,
+		signal,
 	});
-
-	const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-	const data: loginResetPasswordResponse["data"] = body ? JSON.parse(body) : {};
-	return {
-		data,
-		status: res.status,
-		headers: res.headers,
-	} as loginResetPasswordResponse;
 };
 
 export const getLoginResetPasswordMutationOptions = <
-	TError = void | HTTPValidationError,
+	TError = ErrorType<void | HTTPValidationError>,
 	TContext = unknown,
 >(options?: {
 	mutation?: UseMutationOptions<
@@ -486,7 +326,6 @@ export const getLoginResetPasswordMutationOptions = <
 		{ data: NewPassword },
 		TContext
 	>;
-	fetch?: RequestInit;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof loginResetPassword>>,
 	TError,
@@ -494,13 +333,13 @@ export const getLoginResetPasswordMutationOptions = <
 	TContext
 > => {
 	const mutationKey = ["loginResetPassword"];
-	const { mutation: mutationOptions, fetch: fetchOptions } = options
+	const { mutation: mutationOptions } = options
 		? options.mutation &&
 			"mutationKey" in options.mutation &&
 			options.mutation.mutationKey
 			? options
 			: { ...options, mutation: { ...options.mutation, mutationKey } }
-		: { mutation: { mutationKey }, fetch: undefined };
+		: { mutation: { mutationKey } };
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof loginResetPassword>>,
@@ -508,7 +347,7 @@ export const getLoginResetPasswordMutationOptions = <
 	> = (props) => {
 		const { data } = props ?? {};
 
-		return loginResetPassword(data, fetchOptions);
+		return loginResetPassword(data);
 	};
 
 	return { mutationFn, ...mutationOptions };
@@ -518,13 +357,14 @@ export type LoginResetPasswordMutationResult = NonNullable<
 	Awaited<ReturnType<typeof loginResetPassword>>
 >;
 export type LoginResetPasswordMutationBody = NewPassword;
-export type LoginResetPasswordMutationError = void | HTTPValidationError;
+export type LoginResetPasswordMutationError =
+	ErrorType<void | HTTPValidationError>;
 
 /**
  * @summary Reset Password
  */
 export const useLoginResetPassword = <
-	TError = void | HTTPValidationError,
+	TError = ErrorType<void | HTTPValidationError>,
 	TContext = unknown,
 >(
 	options?: {
@@ -534,7 +374,6 @@ export const useLoginResetPassword = <
 			{ data: NewPassword },
 			TContext
 		>;
-		fetch?: RequestInit;
 	},
 	queryClient?: QueryClient,
 ): UseMutationResult<

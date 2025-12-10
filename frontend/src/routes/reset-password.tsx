@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	Link as RouterLink,
@@ -29,10 +28,9 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { isLoggedIn } from "@/hooks/useAuth";
-import { api } from "@/lib/api";
 import { resetPasswordSchema } from "@/lib/schemas";
 import { handleError } from "@/utils";
+import { useLoginResetPassword } from '@/api/endpoints/login/login.gen';
 
 interface NewPasswordForm {
 	new_password: string;
@@ -46,16 +44,25 @@ const passwordSchema = z.object({
 export const Route = createFileRoute("/reset-password")({
 	validateSearch: passwordSchema,
 	component: ResetPassword,
-	beforeLoad: async () => {
-		if (isLoggedIn()) {
-			throw redirect({
-				to: "/",
-			});
+	beforeLoad: async ({ search }) => {
+		// ✅ Direct localStorage check (SSR-safe)
+		const token =
+			typeof window !== "undefined"
+				? localStorage.getItem("access_token")
+				: null;
+
+		if (token) {
+			throw redirect({ to: "/" });
+		}
+
+		if (!search.token) {
+			throw redirect({ to: "/login" });
 		}
 	},
 });
 
 function ResetPassword() {
+  const { token } = Route.useSearch();
 	const form = useForm<NewPasswordForm>({
 		resolver: zodResolver(resetPasswordSchema),
 		mode: "onBlur",
@@ -66,32 +73,22 @@ function ResetPassword() {
 		},
 	});
 	const navigate = useNavigate();
-	const { token } = Route.useSearch();
-
-	const resetPassword = async (data: NewPasswordForm) => {
-		console.log(token);
-		if (!token) return;
-		await api.post("/api/v1/reset-password/", {
-			new_password: data.new_password,
-			token: token,
-		});
-	};
-
-	const mutation = useMutation({
-		mutationFn: resetPassword,
-		onSuccess: () => {
-			toast.success("Password updated successfully.");
-			form.reset();
-			navigate({ to: "/login" });
-		},
-		onError: (err) => {
-			handleError(err);
+	const mutation = useLoginResetPassword({
+		mutation: {
+			onSuccess: () => {
+				toast.success("Password updated successfully.");
+				form.reset();
+				navigate({ to: "/login" });
+			},
+			onError: (err) => {
+				handleError(err);
+			},
 		},
 	});
 
 	const onSubmit: SubmitHandler<NewPasswordForm> = async (data) => {
 		console.log(data);
-		mutation.mutate(data);
+		mutation.mutateAsync({ data: {new_password: data.new_password, token: token} });
 	};
 
 	return (

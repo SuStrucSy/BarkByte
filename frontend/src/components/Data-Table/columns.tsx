@@ -1,17 +1,17 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import type { UserPublic } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { UserActionsMenu } from '@/components/Common/UserActionsMenu';
+import type { UserPublic } from '@/api/model';
 
 export const createColumns = <TData,>(
 	currentUser: UserPublic | undefined,
-): ColumnDef<TData, any>[] => [
+): ColumnDef<TData, unknown>[] => [
 	{
 		accessorKey: "full_name",
 		header: "Full name",
 		cell: ({ row }) => {
 			const name = row.getValue("full_name") ?? "N/A";
-      const user = row.original as unknown as UserPublic;
+      const user = row.original as UserPublic;
 			const isYou = currentUser?.id != null && user.id === currentUser.id;
 
 			return (
@@ -35,7 +35,7 @@ export const createColumns = <TData,>(
 		header: "Role",
 		cell: ({ row }) => {
 			const is_superuser = row.getValue("is_superuser");
-			return is_superuser ? "Superuser" : "User";
+			return <Badge>{is_superuser ? "Superuser" : "User"}</Badge>;
 		},
 	},
 	{
@@ -48,8 +48,9 @@ export const createColumns = <TData,>(
 	},
 	{
 		id: "actions",
+    enableSorting: false,
 		cell: ({ row }) => {
-			const user = row.original as unknown as UserPublic;
+			const user = row.original as UserPublic;
 
 			return (
 				<UserActionsMenu user={user} disabled={currentUser?.id === user.id} />

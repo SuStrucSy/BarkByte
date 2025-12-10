@@ -7,6 +7,6 @@
 import type { UserPublic } from "./userPublic";
 
 export interface UsersPublic {
-	data: UserPublic[];
 	count: number;
+	data: UserPublic[];
 }

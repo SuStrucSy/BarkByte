@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import {
 	createFileRoute,
 	Link as RouterLink,
@@ -27,10 +26,9 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { isLoggedIn } from "@/hooks/useAuth";
-import { api } from "@/lib/api";
 import { recoverPasswordSchema } from "@/lib/schemas";
 import { handleError } from "@/utils";
+import { useLoginRecoverPassword } from '@/api/endpoints/login/login.gen';
 
 interface FormData {
 	email: string;
@@ -39,10 +37,12 @@ interface FormData {
 export const Route = createFileRoute("/recover-password")({
 	component: RecoverPassword,
 	beforeLoad: async () => {
-		if (isLoggedIn()) {
-			throw redirect({
-				to: "/",
-			});
+		const token =
+			typeof window !== "undefined"
+				? localStorage.getItem("access_token")
+				: null;
+		if (token) {
+			throw redirect({ to: "/" });
 		}
 	},
 });
@@ -57,25 +57,20 @@ function RecoverPassword() {
 		},
 	});
 
-	const recoverPassword = async (data: FormData) => {
-		await api.post("/api/v1/password-recovery/:email", undefined, {
-			params: { email: data.email },
-		});
-	};
-
-	const mutation = useMutation({
-		mutationFn: recoverPassword,
-		onSuccess: () => {
-			toast.success("Password recovery email sent successfully.");
-			form.reset();
-		},
-		onError: (err) => {
-			handleError(err);
+	const mutation = useLoginRecoverPassword({
+		mutation: {
+			onSuccess: () => {
+				toast.success("Password recovery email sent successfully.");
+				form.reset();
+			},
+			onError: (err) => {
+				handleError(err);
+			},
 		},
 	});
 
 	const onSubmit: SubmitHandler<FormData> = async (data) => {
-		mutation.mutate(data);
+		mutation.mutateAsync({email: data.email})
 	};
 	return (
 		<div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">

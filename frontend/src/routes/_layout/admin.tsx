@@ -8,27 +8,15 @@ import { UserActionsMenu } from "@/components/Common/UserActionsMenu";
 import { createColumns } from "@/components/Data-Table/columns";
 import { DataTable } from "@/components/Data-Table/DataTable";
 import PendingUsers from "@/components/Pending/PendingUsers";
-import { api } from "@/lib/api";
-import type { UserPublic } from "@/lib/types";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import type { UserPublic } from '@/api/model';
+import { useUsersReadUsers } from '@/api/endpoints/users/users.gen';
 
 const usersSearchSchema = z.object({
 	page: z.number().catch(1),
 });
 
-const PER_PAGE = 10;
-
-function getUsersQueryOptions({ pagination }: { pagination: PaginationState }) {
-	return {
-		queryFn: () =>
-			api.get("/api/v1/users/", {
-				queries: {
-					skip: pagination.pageIndex * pagination.pageSize,
-					limit: pagination.pageSize,
-				},
-			}),
-		queryKey: ["users", pagination],
-	};
-}
+const PER_PAGE = 1;
 
 export const Route = createFileRoute("/_layout/admin")({
 	staticData: {
@@ -39,8 +27,7 @@ export const Route = createFileRoute("/_layout/admin")({
 });
 
 function UsersTable() {
-	const queryClient = useQueryClient();
-	const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
+  const { data: currentUser } = useCurrentUser();
 	const navigate = useNavigate({ from: Route.fullPath });
 	const { page } = Route.useSearch();
 	const columns = useMemo(
@@ -48,29 +35,47 @@ function UsersTable() {
 		[currentUser],
 	);
 
-    const [pagination, setPagination] = useState<PaginationState>({
-					pageIndex: 0,
-					pageSize: PER_PAGE,
-				});
-
-	const { data, isLoading, isPlaceholderData } = useQuery({
-		...getUsersQueryOptions({ pagination }),
-		placeholderData: (prevData) => prevData,
-	});
-
-	const setPage = (page: number) =>
-		navigate({
-			search: (prev) => ({ ...prev, page }),
+  const [pagination, setPagination] = useState<PaginationState>({
+			pageIndex: page - 1,
+			pageSize: PER_PAGE,
 		});
 
-	const users = data?.data.slice(0, PER_PAGE) ?? [];
+  // Call the Orval-generated hook instead of useQuery
+		const { data, isLoading, isPlaceholderData } = useUsersReadUsers(
+			{
+				skip: pagination.pageIndex * pagination.pageSize,
+				limit: pagination.pageSize,
+			},
+			{
+				query: {
+					placeholderData: (prevData) => prevData,
+				},
+			},
+		);
+
+  const handlePaginationChange = (
+			updater: PaginationState | ((old: PaginationState) => PaginationState),
+		) => {
+			const newPagination =
+				typeof updater === "function" ? updater(pagination) : updater;
+
+			setPagination(newPagination);
+
+			// Update URL search params
+			navigate({
+				search: (prev) => ({
+					...prev,
+					page: newPagination.pageIndex + 1, // pageIndex 0 = page 1
+				}),
+			});
+		};
+
 	const count = data?.count ?? 0;
 
-	if (isLoading) {
+	if (isLoading && !isPlaceholderData) {
 		return <PendingUsers />;
 	}
 
-	console.log(users);
 
 	const getRowStyle = <TData extends UserPublic>(row: Row<TData>) => {
 		return !row.original.is_active
@@ -78,19 +83,16 @@ function UsersTable() {
 			: {};
 	};
 
-  console.log({count})
-  console.log({ pagination });
-
 	return (
 		<>
-			<DataTable<UserPublic, any>
+			<DataTable<UserPublic, unknown>
 				columns={columns}
-				data={data?.data}
+				data={data?.data ?? []}
 				isPlaceholderData={isPlaceholderData}
 				getRowStyle={getRowStyle}
 				rowCount={count}
 				pagination={pagination}
-				setPagination={setPagination}
+				setPagination={handlePaginationChange}
 			/>
 			{/* <Table>
 				<TableHeader>
