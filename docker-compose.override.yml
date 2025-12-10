@@ -66,6 +66,9 @@ services:
       - run
       - --reload
       - "app/main.py"
+    volumes:
+      - ./backend/app/migrations/versions:/app/app/migrations/versions
+      - ./backend/data:/app/data
     develop:
       watch:
         - path: ./backend
@@ -74,6 +77,7 @@ services:
           ignore:
             - ./backend/.venv
             - .venv
+            - ./backend/app/migrations/versions
         - path: ./backend/pyproject.toml
           action: rebuild
     environment:
