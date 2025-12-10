@@ -1,6 +1,7 @@
 from logging.config import fileConfig
 
 from alembic import context
+import alembic_postgresql_enum
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
@@ -17,8 +18,17 @@ fileConfig(config.config_file_name)
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
 
-from app.models import SQLModel  # noqa
-from app.core.config import settings # noqa
+from sqlmodel import SQLModel  # 👈 we still need this for SQLModel.metadata
+# import all models so they register themselves on SQLModel.metadata
+from app.models.user import User
+from app.models.specimen import Specimen
+from app.models.joinerytype import JoineryType
+from app.models.subjoinerytype import SubJoineryType
+from app.models.failuremode import FailureMode
+from app.models.fastenertype import FastenerType
+from app.models.loadingdirection import LoadingDirection
+from app.models.pendingspecimen import PendingSpecimen
+from app.core.config import settings
 
 target_metadata = SQLModel.metadata
 

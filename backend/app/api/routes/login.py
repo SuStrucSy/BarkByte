@@ -2,17 +2,15 @@ from datetime import timedelta
 from typing import Annotated, Any
 import logging
 
-
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app import crud
-from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.crud import user as user_crud
+from app.api.deps import CurrentUser, SessionDep
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.models import Message, NewPassword, Token, UserPublic
+from app.schemas.user import Message, NewPassword, Token, UserPublic
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
@@ -35,7 +33,7 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.authenticate(
+    user = user_crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
     if not user:
@@ -51,7 +49,7 @@ def login_access_token(
 
 
 @router.post("/login/test-token", response_model=UserPublic)
-def test_token(current_user: CurrentUser) -> Any:
+def test_token(current_user: CurrentUser) -> UserPublic:
     """
     Test access token
     """
@@ -68,8 +66,8 @@ def recover_password(email: str, session: SessionDep) -> Message:
     """
     Password Recovery
     """
-    user = crud.get_user_by_email(session=session, email=email)
-
+    user = user_crud.get_user_by_email(session=session, email=email)
+    
     if user and user.is_active:
         try:
             password_reset_token = generate_password_reset_token(email=email)
@@ -81,7 +79,7 @@ def recover_password(email: str, session: SessionDep) -> Message:
                 subject=email_data.subject,
                 html_content=email_data.html_content,
             )
-        except Exception as e:
+        except Exception:
             logging.exception("Failed to send password recovery email")
 
     return Message(message="If an account exists with that email, you'll receive recovery instructions.")
@@ -101,7 +99,7 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     email = verify_password_reset_token(token=body.token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
-    user = crud.get_user_by_email(session=session, email=email)
+    user = user_crud.get_user_by_email(session=session, email=email)
     if not user:
         raise HTTPException(
             status_code=404,
