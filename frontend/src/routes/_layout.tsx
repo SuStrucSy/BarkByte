@@ -6,15 +6,15 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_layout")({
 	component: Layout,
-	beforeLoad: async () => {
-		const token =
-			typeof window !== "undefined"
-				? localStorage.getItem("access_token")
-				: null;
-		if (!token) {
-			throw redirect({ to: "/login" });
-		}
-	},
+	// beforeLoad: async () => {
+	// 	const token =
+	// 		typeof window !== "undefined"
+	// 			? localStorage.getItem("access_token")
+	// 			: null;
+	// 	if (!token) {
+	// 		throw redirect({ to: "/login" });
+	// 	}
+	// },
 });
 
 function Layout() {

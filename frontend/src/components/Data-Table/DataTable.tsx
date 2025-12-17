@@ -2,9 +2,12 @@ import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
+	getSortedRowModel,
 	type PaginationState,
 	type Row,
+	type SortingState,
 	useReactTable,
+	type VisibilityState,
 } from "@tanstack/react-table";
 
 import {
@@ -15,10 +18,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Button } from '../ui/button';
+import { Button } from "../ui/button";
+import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
+	initialColumnVisibility?: Record<string, boolean>;
 	data: TData[];
 	isPlaceholderData: boolean;
 	// Optional: a row styling hook you can pass in (default provided below)
@@ -32,21 +37,31 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({
 	columns,
+	initialColumnVisibility,
 	data,
 	isPlaceholderData,
 	getRowStyle,
-  rowCount,
-  pagination,
-  setPagination,
+	rowCount,
+	pagination,
+	setPagination,
 }: DataTableProps<TData, TValue>) {
+	const [sorting, setSorting] = useState<SortingState>([]);
+	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+		initialColumnVisibility ?? {},
+	);
 	const table = useReactTable({
 		data,
 		columns,
 		rowCount: rowCount,
 		state: {
 			pagination,
+			sorting,
+			columnVisibility,
 		},
 		onPaginationChange: setPagination,
+		onSortingChange: setSorting,
+		onColumnVisibilityChange: setColumnVisibility,
+		getSortedRowModel: getSortedRowModel(),
 		getCoreRowModel: getCoreRowModel(),
 		manualPagination: true,
 		debugTable: true,
@@ -60,7 +75,7 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<>
-			<div className="overflow-hidden rounded-md border">
+			<div className="w-full overflow-x-auto rounded-md border">
 				<Table>
 					<TableHeader className="bg-muted/50">
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -91,10 +106,42 @@ export function DataTable<TData, TValue>({
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
+											{(() => {
+												const meta = cell.column.columnDef.meta;
+
+												// ✅ Generic rendering based on meta flags
+												if (meta?.renderAs === "joinery_label") {
+													return (
+														(cell.row.original as any).joinery_type?.label ||
+														"N/A"
+													);
+												}
+
+												if (meta?.renderAs === "array_join") {
+													const value = cell.getValue();
+													console.log({ value });
+													return Array.isArray(value)
+														? value.join(", ")
+														: value;
+												}
+
+												if (meta?.renderAs === "array_labels") {
+													const value = cell.getValue() as any[];
+													return (
+														value
+															?.map((item) => item?.label)
+															?.filter(Boolean)
+															?.join(", ") || "None"
+													);
+												}
+
+												return (
+													flexRender(
+														cell.column.columnDef.cell,
+														cell.getContext(),
+													) ?? ""
+												);
+											})()}
 										</TableCell>
 									))}
 								</TableRow>

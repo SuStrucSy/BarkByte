@@ -6,6 +6,7 @@ import DeleteAccount from "@/components/UserSettings/DeleteAccount";
 import UserInformation from "@/components/UserSettings/UserInformation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import NotLoggedIn from '@/components/Common/NotLoggedIn';
 
 const tabsConfig = [
 	{ value: "my-profile", title: "My profile", component: UserInformation },
@@ -28,7 +29,7 @@ function UserSettings() {
 		: tabsConfig;
 
 	if (!currentUser) {
-		return null;
+		return <NotLoggedIn />;
 	}
 
 	return (

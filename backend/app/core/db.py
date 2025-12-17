@@ -21,7 +21,7 @@ from app.schemas.doi import DOICreate
 
 # configure once at startup
 logging.basicConfig(
-    level=logging.INFO,                          # minimum level to display
+    level=logging.INFO,  # minimum level to display
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -32,6 +32,7 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 # make sure all SQLModel models are imported (app.models) before initializing DB
 # otherwise, SQLModel might fail to initialize relationships properly
 # for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
+
 
 def init_db(session: Session) -> None:
     # Tables should be created with Alembic migrations
@@ -47,7 +48,8 @@ def init_db(session: Session) -> None:
     init_subjoinery_types(session)
     init_fasteners(session)
     init_loading_directions(session)
-    init_example_specimen(session, admin_user)
+    # init_example_specimen(session, admin_user)
+
 
 def init_example_specimen(session: Session, admin_user: User) -> None:
     # This function is called to create an example specimen
@@ -57,40 +59,68 @@ def init_example_specimen(session: Session, admin_user: User) -> None:
         link="https://doi.org/10.1234/exampledoi",
         ref_title="Example DOI Reference Title",
         authors="Doe, J.; Smith, A.",
-        pub_year=2024
+        pub_year=2024,
     )
 
     doi = doi_crud.create_doi(session=session, doi_in=doi_in)
 
     failure_mode_in = []
-    failure_mode_in.append(session.exec(
-        select(FailureMode).where(FailureMode.label == "Wood: Tension Parallel")
-    ).first().id)
-    failure_mode_in.append(session.exec(
-        select(FailureMode).where(FailureMode.label == "Dowel: Plastic Yield")
-    ).first().id)
+    failure_mode_in.append(
+        session.exec(
+            select(FailureMode).where(FailureMode.label == "Wood: Tension Parallel")
+        )
+        .first()
+        .id
+    )
+    failure_mode_in.append(
+        session.exec(
+            select(FailureMode).where(FailureMode.label == "Dowel: Plastic Yield")
+        )
+        .first()
+        .id
+    )
 
     fastener_type_in = []
-    fastener_type_in.append(session.exec(
-        select(FastenerType).where(FastenerType.label == "Nail")
-    ).first().id)
-    
-    loading_direction_in = []
-    loading_direction_in.append(session.exec(
-        select(LoadingDirection).where(LoadingDirection.label == "In-Plane Tension")
-    ).first().id)
-    loading_direction_in.append(session.exec(
-        select(LoadingDirection).where(LoadingDirection.label == "Out-of-Plane Tension")
-    ).first().id)
+    fastener_type_in.append(
+        session.exec(select(FastenerType).where(FastenerType.label == "Nail"))
+        .first()
+        .id
+    )
 
-    joinery_type_in = session.exec(
-        select(JoineryType).where(JoineryType.label == "Angle Bracket")
-    ).first().id
-    
-    sub_joinery_type_in = session.exec(
-        select(SubJoineryType).where(SubJoineryType.label == "AB:Proprietary Angle Bracket")
-    ).first().id
-    
+    loading_direction_in = []
+    loading_direction_in.append(
+        session.exec(
+            select(LoadingDirection).where(LoadingDirection.label == "In-Plane Tension")
+        )
+        .first()
+        .id
+    )
+    loading_direction_in.append(
+        session.exec(
+            select(LoadingDirection).where(
+                LoadingDirection.label == "Out-of-Plane Tension"
+            )
+        )
+        .first()
+        .id
+    )
+
+    joinery_type_in = (
+        session.exec(select(JoineryType).where(JoineryType.label == "Angle Bracket"))
+        .first()
+        .id
+    )
+
+    sub_joinery_type_in = (
+        session.exec(
+            select(SubJoineryType).where(
+                SubJoineryType.label == "AB:Proprietary Angle Bracket"
+            )
+        )
+        .first()
+        .id
+    )
+
     specimen_in = SpecimenCreate(
         specimen_reference_id="EX123",
         replicate_tests=3,
@@ -118,10 +148,8 @@ def init_example_specimen(session: Session, admin_user: User) -> None:
         e_ductility=3.0,
         e_measurement_unit="mm",
         e_qfm_description="Qualitative failure measure description.",
-        
         dowel=True,
         connector=True,
-
         doi_id=doi.id,
         e_qualitative_failure_measure=failure_mode_in,
         fastener_type_ids=fastener_type_in,
@@ -157,10 +185,8 @@ def init_example_specimen(session: Session, admin_user: User) -> None:
         e_ductility=3.0,
         e_measurement_unit="mm",
         e_qfm_description="Qualitative failure measure description.",
-        
         dowel=True,
         connector=True,
-
         doi_id=doi.id,
         e_qualitative_failure_measure=failure_mode_in,
         fastener_type_ids=fastener_type_in,
@@ -169,9 +195,12 @@ def init_example_specimen(session: Session, admin_user: User) -> None:
         sub_joinery_type_id=sub_joinery_type_in,
     )
 
-    specimen_crud.create_specimen(session=session, specimen_in=specimen_in, current_user_id=admin_user.id)
-    specimen_crud.create_specimen(session=session, specimen_in=specimen_in_2, current_user_id=admin_user.id)
-
+    specimen_crud.create_specimen(
+        session=session, specimen_in=specimen_in, current_user_id=admin_user.id
+    )
+    specimen_crud.create_specimen(
+        session=session, specimen_in=specimen_in_2, current_user_id=admin_user.id
+    )
 
 
 def init_add_admin_user(session: Session) -> User | None:
@@ -188,6 +217,7 @@ def init_add_admin_user(session: Session) -> User | None:
             is_active=True,
         )
         return user_crud.create_user(session=session, user_create=user_in)
+
 
 def init_failure_modes(session: Session) -> None:
     # This function is called to create the failure modes
@@ -218,9 +248,10 @@ def init_failure_modes(session: Session) -> None:
             session.add(failure_mode)
         session.commit()
 
+
 def init_joinery_types(session: Session) -> None:
     # This function is called to create the joinery types
-    # It should be called only once, when the database is initialized    
+    # It should be called only once, when the database is initialized
 
     joinery_types = session.exec(select(JoineryType)).all()
     if not joinery_types:
@@ -239,9 +270,10 @@ def init_joinery_types(session: Session) -> None:
             session.add(joinery_type)
         session.commit()
 
+
 def init_subjoinery_types(session: Session) -> None:
     # This function is called to create the sub-joinery types
-    # It should be called only once, when the database is initialized    
+    # It should be called only once, when the database is initialized
 
     subjoinery_types = session.exec(select(SubJoineryType)).all()
     if not subjoinery_types:
@@ -285,7 +317,7 @@ def init_subjoinery_types(session: Session) -> None:
                 "BJ:Standard Butt Joint",
             ],
         }
-        
+
         for joinery_type_label, sub_joinery_type_labels in sub_map.items():
             joinery_type = session.exec(
                 select(JoineryType).where(JoineryType.label == joinery_type_label)
@@ -306,9 +338,15 @@ def init_subjoinery_types(session: Session) -> None:
                     )
                 ).one_or_none()
                 if not exists:
-                    session.add(SubJoineryType(joinery_type_id=joinery_type.id, label=sub_joinery_type_label))
+                    session.add(
+                        SubJoineryType(
+                            joinery_type_id=joinery_type.id,
+                            label=sub_joinery_type_label,
+                        )
+                    )
 
         session.commit()
+
 
 def init_fasteners(session: Session) -> None:
     # This function is called to create the fastener types
@@ -321,12 +359,13 @@ def init_fasteners(session: Session) -> None:
             {"label": "Screw"},
             {"label": "Bolt"},
             {"label": "STS(Self Tap Screw)"},
-            {"label": "Other"}
+            {"label": "Other"},
         ]
         for fastener_type_data in fastener_types_data:
             fastener_type = FastenerType(**fastener_type_data)
             session.add(fastener_type)
         session.commit()
+
 
 def init_loading_directions(session: Session) -> None:
     # This function is called to create the loading directions
@@ -338,7 +377,7 @@ def init_loading_directions(session: Session) -> None:
             {"label": "In-Plane Shear"},
             {"label": "Out-of-Plane Shear"},
             {"label": "In-Plane Tension"},
-            {"label": "Out-of-Plane Tension"}
+            {"label": "Out-of-Plane Tension"},
         ]
         for loading_direction_data in loading_directions_data:
             loading_direction = LoadingDirection(**loading_direction_data)

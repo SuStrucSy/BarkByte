@@ -16,6 +16,7 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutSpecimensRouteImport } from './routes/_layout/specimens'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
@@ -53,6 +54,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSpecimensRoute = LayoutSpecimensRouteImport.update({
+  id: '/specimens',
+  path: '/specimens',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof LayoutAdminRoute
   '/settings': typeof LayoutSettingsRoute
+  '/specimens': typeof LayoutSpecimensRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof LayoutAdminRoute
   '/settings': typeof LayoutSettingsRoute
+  '/specimens': typeof LayoutSpecimensRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/specimens': typeof LayoutSpecimensRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/admin'
     | '/settings'
+    | '/specimens'
     | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/admin'
     | '/settings'
+    | '/specimens'
     | '/'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/_layout/admin'
     | '/_layout/settings'
+    | '/_layout/specimens'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/specimens': {
+      id: '/_layout/specimens'
+      path: '/specimens'
+      fullPath: '/specimens'
+      preLoaderRoute: typeof LayoutSpecimensRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
@@ -210,12 +229,14 @@ declare module '@tanstack/react-router' {
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutSpecimensRoute: typeof LayoutSpecimensRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutSpecimensRoute: LayoutSpecimensRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

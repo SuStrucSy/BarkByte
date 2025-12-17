@@ -41,17 +41,17 @@ function UsersTable() {
 		});
 
   // Call the Orval-generated hook instead of useQuery
-		const { data, isLoading, isPlaceholderData } = useUsersReadUsers(
-			{
-				skip: pagination.pageIndex * pagination.pageSize,
-				limit: pagination.pageSize,
-			},
-			{
-				query: {
-					placeholderData: (prevData) => prevData,
-				},
-			},
-		);
+  const { data, isLoading, isPlaceholderData } = useUsersReadUsers(
+    {
+      skip: pagination.pageIndex * pagination.pageSize,
+      limit: pagination.pageSize,
+    },
+    {
+      query: {
+        placeholderData: (prevData) => prevData,
+      },
+    },
+  );
 
   const handlePaginationChange = (
 			updater: PaginationState | ((old: PaginationState) => PaginationState),

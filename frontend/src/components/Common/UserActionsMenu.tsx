@@ -18,7 +18,7 @@ interface UserActionsMenuProps {
 export const UserActionsMenu = ({ user, disabled }: UserActionsMenuProps) => {
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger>
+			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon" color="inherit" disabled={disabled}>
 					<EllipsisVerticalIcon className="h-4 w-4" />
 				</Button>
