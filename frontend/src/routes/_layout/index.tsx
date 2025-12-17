@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as d3 from "d3";
 import { useState } from "react";
-import ChartWithDimensions from "@/components/Dashboard/ChartWithDimensions";
-import LinePlot from "@/components/Dashboard/LinePlot";
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import {
+	Plotly3DScatterPlot,
+	type DataPoint,
+} from "@/components/Dashboard/ChartWithDimensions";
+import { useSpecimensReadSpecimens } from '@/api/endpoints/specimens/specimens.gen';
 
 export const Route = createFileRoute("/_layout/")({
 	staticData: {
@@ -13,20 +15,31 @@ export const Route = createFileRoute("/_layout/")({
 });
 
 function Dashboard() {
-  const { data: currentUser } = useCurrentUser();
-	const [data, setData] = useState(() => d3.ticks(-2, 2, 200).map(Math.sin));
+  const { data, isLoading, isPlaceholderData } = useSpecimensReadSpecimens(
+  );
+
+  if (isLoading && !isPlaceholderData) {
+
+    return null
+  }
 
 	console.log(typeof data);
 	console.log(data);
+
+  const blah: DataPoint[] = data?.data?.map(specimen => {
+    return {
+      id: specimen.id,
+      ductility: specimen.e_ductility,
+      specimen_reference_id: specimen.specimen_reference_id,
+      stiffness: specimen.e_stiffness,
+      yield_force: specimen.e_yield_force
+    }
+  })
+
 	return (
 		<div className="max-w-full">
-			<div className="pt-12 m-4">
-				<span className="text-2xl max-w-sm truncate">
-					Hi, {currentUser?.full_name || currentUser?.email} 👋🏼
-				</span>
-				<span>Welcome back, nice to see you again!</span>
-				<LinePlot data={data} />
-				<ChartWithDimensions />
+			<div className="">
+				<Plotly3DScatterPlot data={blah} />
 			</div>
 		</div>
 	);

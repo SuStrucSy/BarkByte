@@ -26,12 +26,13 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 
 	// Visible columns (sortable where appropriate)
 	specimen_reference_id: { header: "Reference ID", sortable: true },
+	doi: { header: "DOI", sortable: true, hidden: true },
 	assembly_type: { header: "Assembly Type", sortable: true },
-	connection_description: { header: "Connection Desc" },
+
 	connector: { header: "Connector" },
-	doi: { header: "DOI", sortable: true },
+
 	dowel: { header: "Dowel" },
-	element_dimension: { header: "Dimensions" },
+
 	joinery_type: {
 		header: "Joinery Type",
 		sortable: true,
@@ -42,30 +43,38 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 		sortable: true,
 		meta: { renderAs: "sub_joinery_label" },
 	},
-	loading_directions: { header: "Loading Directions" },
-	moisture_percentage: { header: "Moisture %", sortable: true },
+	loading_directions: {
+		header: "Loading Directions",
+		meta: { renderAs: "array_labels" },
+	},
 	practice: { header: "Practice", sortable: true },
+	moisture_percentage: { header: "Moisture %", sortable: true },
+
 	replicate_tests: { header: "Replicates", sortable: true },
-	e_date: { header: "Test Date", sortable: true },
-	e_yield_force: { header: "Yield Force", sortable: true },
-	e_max_force: { header: "Max Force", sortable: true },
-	e_yield_displacement: { header: "Yield Disp" },
-	e_max_displacement: { header: "Max Disp" },
-	e_ultimate_force: { header: "Ultimate Force" },
-	e_ultimate_displacement: { header: "Ultimate Disp" },
-	e_stiffness: { header: "Stiffness" },
-	e_ductility: { header: "Ductility" },
-	e_qualitative_failure_measure: { header: "Failure Mode" },
-	e_qfm_description: { header: "Failure Desc" },
+	e_date: { header: "Test Date", sortable: true, hidden: true },
+	e_yield_force: { header: "Yield Force (KN)", sortable: true, hidden: true },
+	e_max_force: { header: "Max Force (KN)", sortable: true, hidden: true },
+	e_yield_displacement: { header: "Yield Disp (mm)", hidden: true },
+	e_max_displacement: { header: "Max Disp (mm)", hidden: true },
+	e_ultimate_force: { header: "Ultimate Force (KN)", hidden: true },
+	e_ultimate_displacement: { header: "Ultimate Disp (mm)", hidden: true },
+	e_stiffness: { header: "Stiffness (KN/mm)", hidden: true },
+	e_ductility: { header: "Ductility", hidden: true },
+	e_qualitative_failure_measure: {
+		header: "Failure Mode",
+		meta: { renderAs: "array_labels" },
+	},
+	e_qfm_description: { header: "Failure Desc", hidden: true },
 	e_test_loading_type: { header: "Loading Type" },
 	e_yield_point_method: { header: "Yield Method" },
-	e_measurement_unit: { header: "Units" },
-	wood_type: { header: "Wood Type" },
+	wood_type: { header: "Wood Type", hidden: true },
 	fastener_types: {
 		header: "Fastener Types",
 		meta: { renderAs: "array_labels" },
 	},
-	fastener_numbers: { header: "Fastener Count", sortable: true },
+	fastener_numbers: { header: "Fastener Count", sortable: true, hidden: true },
+	connection_description: { header: "Connection Desc", hidden: true },
+	element_dimension: { header: "Dimensions", hidden: true },
 };
 
 export const createColumns = <

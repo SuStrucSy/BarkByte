@@ -75,14 +75,17 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<>
-			<div className="w-full overflow-x-auto rounded-md border">
-				<Table>
-					<TableHeader className="bg-muted/50">
+			<div className="w-full h-full overflow-auto rounded-md border relative">
+				<Table className="border-separate border-spacing-0">
+					<TableHeader className="sticky top-0 bg-primary/95 backdrop-blur">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
 									return (
-										<TableHead key={header.id}>
+										<TableHead
+											key={header.id}
+											className="sticky top-0 z-20 bg-primary/95 text-white px-3 py-4 text-left text-xs font-medium border-b border-primary/20 first:z-30"
+										>
 											{header.isPlaceholder
 												? null
 												: flexRender(
@@ -114,6 +117,12 @@ export function DataTable<TData, TValue>({
 													return (
 														(cell.row.original as any).joinery_type?.label ||
 														"N/A"
+													);
+												}
+												if (meta?.renderAs === "sub_joinery_label") {
+													return (
+														(cell.row.original as any).sub_joinery_type
+															?.label || "N/A"
 													);
 												}
 
@@ -159,7 +168,7 @@ export function DataTable<TData, TValue>({
 					</TableBody>
 				</Table>
 			</div>
-			<div className="flex items-center justify-end space-x-2 py-4">
+			<div className="flex items-center justify-end space-x-2 h-fit py-4">
 				<Button
 					variant="outline"
 					size="sm"

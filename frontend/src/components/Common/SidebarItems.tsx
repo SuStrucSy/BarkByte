@@ -1,6 +1,6 @@
 import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 
-import { Home, Layers, type LucideIcon, Settings, Users } from "lucide-react";
+import { ChartSpline, Home, Layers, type LucideIcon, Newspaper, Settings, Users } from "lucide-react";
 import {
 	SidebarGroup,
 	SidebarGroupLabel,
@@ -11,8 +11,10 @@ import {
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const items = [
-	{ icon: Home, title: "Dashboard", path: "/" },
-  { icon: Layers, title: "Specimens", path: "/specimens"},
+	{ icon: Home, title: "Home", path: "/" },
+	{ icon: ChartSpline, title: "Dashboard", path: "/dashbord" },
+	{ icon: Layers, title: "Specimens", path: "/specimens" },
+	{ icon: Newspaper, title: "References", path: "/dois" },
 	{ icon: Settings, title: "User Settings", path: "/settings" },
 ];
 
