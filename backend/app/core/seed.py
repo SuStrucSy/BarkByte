@@ -236,7 +236,7 @@ def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
         replicate_tests=row['Replicates'],
         note=row['Note'],
         connector=int(row['Connector'].strip())==1,
-        connection_description=row['Connection Detail'],
+        # connection_description=row['Connection Detail'],
         element_dimension=row['Elements Dimensions'],
         fastener_numbers=map_fastener_numbers(row['Fastener Numbers']),
         moisture_percentage=row['Moisture Content (%)'],

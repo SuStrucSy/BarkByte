@@ -18,7 +18,7 @@ class SpecimenBase(SQLModel):
   connector: bool
   assembly_type: AssemblyType
   practice: Practice
-  connection_description: str
+  connection_description: str | None = None
   element_dimension: str
   fastener_numbers: int
   moisture_percentage: str
