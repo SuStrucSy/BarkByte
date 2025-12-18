@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./NavUser";
 import SidebarItems from "./SidebarItems";
+import { useIsLoggedIn } from '@/hooks/useIsLoggedIn';
 
 const AppSidebar = () => {
+  const isLoggedIn = useIsLoggedIn()
 	return (
 		<Sidebar collapsible="icon">
 			<SidebarHeader>
@@ -33,7 +35,7 @@ const AppSidebar = () => {
 				<SidebarItems />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser />
+				{isLoggedIn ? <NavUser /> : null}
 			</SidebarFooter>
 		</Sidebar>
 	);

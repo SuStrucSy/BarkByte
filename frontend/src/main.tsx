@@ -13,16 +13,8 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
-import { pluginToken } from "@zodios/plugins";
 import { AxiosError } from "axios";
 import { ThemeProvider } from "@/components/theme-provider";
-import { api } from "@/lib/api";
-
-api.use(
-	pluginToken({
-		getToken: async () => localStorage.getItem("access_token") || "",
-	}),
-);
 
 const handleApiError = (error: Error) => {
 	if (error instanceof AxiosError) {
@@ -36,6 +28,13 @@ const handleApiError = (error: Error) => {
 };
 
 const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 5 * 60 * 1000, // 5 min fresh
+			gcTime: 30 * 60 * 1000, // 30 min cached
+			refetchOnWindowFocus: false,
+		},
+	},
 	queryCache: new QueryCache({
 		onError: handleApiError,
 	}),
@@ -58,7 +57,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 	<StrictMode>
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<QueryClientProvider client={queryClient}>
-				<RouterProvider router={router} />
+					<RouterProvider router={router} />
 			</QueryClientProvider>
 		</ThemeProvider>
 	</StrictMode>,

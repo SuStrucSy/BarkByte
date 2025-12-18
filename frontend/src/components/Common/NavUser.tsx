@@ -19,11 +19,10 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import useAuth from "@/hooks/useAuth";
-import type { UserPublic } from "@/lib/types";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export function NavUser() {
-	const queryClient = useQueryClient();
-	const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
+	const { data: currentUser } = useCurrentUser();
 	const { isMobile } = useSidebar();
 	const { logout } = useAuth();
 

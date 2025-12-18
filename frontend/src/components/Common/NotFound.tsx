@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
 	return (
-		<>
-			<div className="flex flex-col h-screen place-items-center p-4">
+		<div className="flex flex-col h-screen place-items-center p-4">
 				<div className="flex align-items-center z-1">
 					<div className="flex flex-col ml-4 place-items-center p-4">
 						<span className="text-6xl md:text-8xl font-bold leading-none mb-4">
@@ -23,7 +22,6 @@ const NotFound = () => {
 					</Button>
 				</div>
 			</div>
-		</>
 	);
 };
 

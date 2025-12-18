@@ -1,7 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 
-import { Home, type LucideIcon, Settings, Users } from "lucide-react";
+import { ChartSpline, Home, Layers, type LucideIcon, Newspaper, Settings, Users } from "lucide-react";
 import {
 	SidebarGroup,
 	SidebarGroupLabel,
@@ -9,11 +8,13 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import useAuth from "@/hooks/useAuth";
-import type { UserPublic } from "@/lib/types";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const items = [
-	{ icon: Home, title: "Dashboard", path: "/" },
+	{ icon: Home, title: "Home", path: "/" },
+	{ icon: ChartSpline, title: "Dashboard", path: "/dashbord" },
+	{ icon: Layers, title: "Specimens", path: "/specimens" },
+	{ icon: Newspaper, title: "References", path: "/dois" },
 	{ icon: Settings, title: "User Settings", path: "/settings" },
 ];
 
@@ -24,9 +25,7 @@ interface Item {
 }
 
 const SidebarItems = () => {
-	const queryClient = useQueryClient();
-	const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
-	const { user } = useAuth();
+  const { data: currentUser } = useCurrentUser();
 	const { pathname } = useLocation();
 
 	const finalItems: Item[] = currentUser?.is_superuser

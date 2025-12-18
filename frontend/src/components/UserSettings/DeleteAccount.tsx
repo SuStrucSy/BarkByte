@@ -1,5 +1,3 @@
-
-
 import DeleteConfirmation from "./DeleteConfirmation";
 
 const DeleteAccount = () => {
