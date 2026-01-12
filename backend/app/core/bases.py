@@ -1,6 +1,7 @@
 from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
 
 from pydantic import EmailStr
+import sqlalchemy as sa
 from sqlmodel import Field, SQLModel
 
 # Shared properties
@@ -19,7 +20,7 @@ class SpecimenBase(SQLModel):
   assembly_type: AssemblyType
   practice: Practice
   connection_description: str | None = None
-  element_dimension: str
+  element_dimension: str = Field(max_length=1000)
   fastener_numbers: int
   moisture_percentage: str
   wood_type: str | None = None
@@ -38,5 +39,4 @@ class SpecimenBase(SQLModel):
   e_ultimate_displacement: float | None = None
   e_ultimate_force: float | None = None
   e_ductility: float | None = None
-  e_measurement_unit: str | None = None
   e_qfm_description: str | None = None

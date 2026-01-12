@@ -52,7 +52,6 @@ class SpecimenUpdate(SQLModel):
     e_ultimate_displacement: float | None = None
     e_ultimate_force: float | None = None
     e_ductility: float | None = None
-    e_measurement_unit: str | None = None
     e_qfm_description: str | None = None
 
     # relationship-id fields used in create

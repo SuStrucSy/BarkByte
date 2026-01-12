@@ -47,7 +47,7 @@ def init_db(session: Session) -> None:
     init_subjoinery_types(session)
     init_fasteners(session)
     init_loading_directions(session)
-    init_example_specimen(session, admin_user)
+    # init_example_specimen(session, admin_user)
 
 def init_example_specimen(session: Session, admin_user: User) -> None:
     # This function is called to create an example specimen
@@ -171,8 +171,6 @@ def init_example_specimen(session: Session, admin_user: User) -> None:
 
     specimen_crud.create_specimen(session=session, specimen_in=specimen_in, current_user_id=admin_user.id)
     specimen_crud.create_specimen(session=session, specimen_in=specimen_in_2, current_user_id=admin_user.id)
-
-
 
 def init_add_admin_user(session: Session) -> User | None:
     # This function is called to create the admin user
@@ -321,6 +319,7 @@ def init_fasteners(session: Session) -> None:
             {"label": "Screw"},
             {"label": "Bolt"},
             {"label": "STS(Self Tap Screw)"},
+            {"label": "Adhesive"},
             {"label": "Other"}
         ]
         for fastener_type_data in fastener_types_data:

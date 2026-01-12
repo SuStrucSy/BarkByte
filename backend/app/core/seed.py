@@ -28,6 +28,43 @@ def normalize_label(label: str) -> str:
     """Normalize text: lowercase, remove spaces, hyphens, and underscores."""
     return re.sub(r"[\s\-_]+", "", label.strip().lower())
 
+def normalize_failure_label_spacing(label: str) -> str:
+    """Ensure a single space after a colon so 'Dowel:Pullout' matches 'Dowel: Pullout'."""
+    return re.sub(r":\s*", ": ", label.strip())
+
+def normalize_doi_cell(raw: str, spec_id: str) -> str | None:
+    """
+    Clean DOI/URL cells:
+    - unwrap surrounding '#...#'
+    - if duplicated back-to-back, take the first URL
+    """
+    s = (raw or "").strip()
+    if not s:
+        return None
+    # unwrap #...#
+    if s.startswith("#") and s.endswith("#") and len(s) > 2:
+        s = s[1:-1].strip()
+    # grab first URL
+    match = re.search(r"https?://[^\s,#]+(?:\s+[^\s,#]+)*", s)
+    if match:
+        url = re.sub(r"\s+", "", match.group(0))
+        if url != s:
+            print(f"⚠️ Spec ID {spec_id}: DOI cleaned from '{raw}' to '{url}'")
+        return url
+    print(f"⚠️ Spec ID {spec_id}: DOI looks invalid ('{raw}'), using raw value")
+    return s
+
+def parse_numeric_field(value: str, field_name: str, spec_id: str) -> float:
+    """
+    Parse a numeric field, default to 0 with a warning if it's not a number.
+    """
+    s = str(value).strip() if value is not None else ""
+    try:
+        return float(s)
+    except (ValueError, TypeError):
+        print(f"⚠️ Spec ID {spec_id}: '{field_name}' is non-numeric ('{value}'), defaulting to 0")
+        return 0.0
+
 def map_loading_direction_labels_to_ids(session: Session, labels: list[str]) -> list[uuid.UUID]:
     result_ids = []
     # Fetch all loading directions once for efficiency
@@ -52,6 +89,7 @@ def map_loading_direction_labels_to_ids(session: Session, labels: list[str]) -> 
 def map_failure_labels_to_ids(session: Session, labels: list[str]) -> list[uuid.UUID]:
     result_ids = []
     for label in labels:
+        label = normalize_failure_label_spacing(label)
         failure_mode = session.exec(
             select(FailureMode)
             .where(FailureMode.label.ilike(f"%{label.strip()}%"))
@@ -196,10 +234,13 @@ def get_admin(session: Session) -> User:
 
 def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
 
-    doi = doi_crud.get_doi_by_link(session=session, link=row['DOI'])
+    spec_id = row.get("Spec ID", "").strip()
+    doi_value = normalize_doi_cell(row.get('DOI'), spec_id)
+
+    doi = doi_crud.get_doi_by_link(session=session, link=doi_value)
     if doi is None:
         doi_in = DOICreate(
-            link=row['DOI'],
+            link=doi_value,
             ref_title=row['Ref Title'],
             authors=row['Author(s)'],
             pub_year=row['Pub_year'],
@@ -207,7 +248,16 @@ def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
 
         doi = doi_crud.create_doi(session=session, doi_in=doi_in)
     
-    failure_modes_from_csv=row['Qualitative Failure Measure'].split(';')
+    failure_modes_from_csv=[normalize_failure_label_spacing(fm) for fm in row['Qualitative Failure Measure'].split(';')]
+    has_connector_failure = any("connector:" in fm.lower() for fm in failure_modes_from_csv)
+    connector_raw = row.get('Connector')
+    connector_from_csv = False
+    if connector_raw is not None and str(connector_raw).strip() != "":
+        try:
+            connector_from_csv = int(str(connector_raw).strip()) == 1
+        except ValueError:
+            print(f"⚠️ Spec ID {spec_id}: 'Connector' is non-numeric ('{connector_raw}'), defaulting to 0")
+    connector_value = connector_from_csv or has_connector_failure
 
     loading_direction_labels=row['Loading Direction'].split(';')
 
@@ -235,22 +285,21 @@ def row_to_specimen_create(row: dict, session: Session) -> SpecimenCreate:
 
         replicate_tests=row['Replicates'],
         note=row['Note'],
-        connector=int(row['Connector'].strip())==1,
+        connector=connector_value,
         # connection_description=row['Connection Detail'],
         element_dimension=row['Elements Dimensions'],
         fastener_numbers=map_fastener_numbers(row['Fastener Numbers']),
         moisture_percentage=row['Moisture Content (%)'],
         wood_type=row['Wood Type (Members)'],
 
-        e_stiffness=row['Ks'],
-        e_yield_displacement=row['Δy'],
-        e_yield_force=row['Fy'],
-        e_max_displacement=row['Δmax'],
-        e_max_force=row['Fmax'],
-        e_ultimate_displacement=row['Δu'],
-        e_ultimate_force=row['Fu'],
-        e_ductility=row['µ'],
-        e_measurement_unit=row['Unit'],
+        e_stiffness=parse_numeric_field(row['Ks'], 'Ks', spec_id),
+        e_yield_displacement=parse_numeric_field(row['Δy'], 'Δy', spec_id),
+        e_yield_force=parse_numeric_field(row['Fy'], 'Fy', spec_id),
+        e_max_displacement=parse_numeric_field(row['Δmax'], 'Δmax', spec_id),
+        e_max_force=parse_numeric_field(row['Fmax'], 'Fmax', spec_id),
+        e_ultimate_displacement=parse_numeric_field(row['Δu'], 'Δu', spec_id),
+        e_ultimate_force=parse_numeric_field(row['Fu'], 'Fu', spec_id),
+        e_ductility=parse_numeric_field(row['µ'], 'µ', spec_id),
         e_qfm_description=row['QFM-Description'],
         
         wood_mechanical_properties=row['Wood Type (Members)'],
@@ -300,6 +349,7 @@ def main():
                     body = row_to_specimen_create(row, session=session)
                     specimen = specimen_crud.create_specimen(session=session, specimen_in=body, current_user_id=admin.id)
                 except Exception as e:
+                    session.rollback()
                     print(f"❌ Error processing row with Spec ID {row['Spec ID']}: {e}")
                     continue
                 created += 1

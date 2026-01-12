@@ -206,10 +206,13 @@ def validate_specimen_create(
         connector=data.get("connector"),
         dowel=data.get("dowel"),
     )
-    _validate_fasteners_against_dowel(
-        fastener_type_ids=fastener_type_ids,
-        dowel=data.get("dowel"),
-    )
+    # _validate_fasteners_against_dowel(
+    #     fastener_type_ids=fastener_type_ids,
+    #     dowel=data.get("dowel"),
+    # )
+
+    # NOTE: this is commented out to allow specimens with no fasteners (e.g., adhesive)
+    # to be created. If this is undesired, uncomment the above call.
 
 def get_current_fastener_type_ids(session: Session, specimen_id: uuid.UUID) -> list[uuid.UUID]:
     return [
