@@ -25,17 +25,19 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import useAuth, { isLoggedIn } from "@/hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { signupSchema } from "@/lib/schemas";
 import type { UserRegister } from "@/lib/types";
 
 export const Route = createFileRoute("/signup")({
 	component: SignUp,
 	beforeLoad: async () => {
-		if (isLoggedIn()) {
-			throw redirect({
-				to: "/",
-			});
+		const token =
+			typeof window !== "undefined"
+				? localStorage.getItem("access_token")
+				: null;
+		if (token) {
+			throw redirect({ to: "/" });
 		}
 	},
 });

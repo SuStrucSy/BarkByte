@@ -1,76 +1,100 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { z } from "zod";
-
+import type { PaginationState, Row } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { z } from "zod/v4";
 import AddUser from "@/components/Admin/AddUser";
 import { UserActionsMenu } from "@/components/Common/UserActionsMenu";
+import { createColumns } from "@/components/Data-Table/columns";
+import { DataTable } from "@/components/Data-Table/DataTable";
 import PendingUsers from "@/components/Pending/PendingUsers";
-import { Badge } from "@/components/ui/badge";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationNext,
-	PaginationPrevious,
-} from "@/components/ui/pagination.tsx";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { api } from "@/lib/api";
-import type { UserPublic } from "@/lib/types";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import type { UserPublic } from '@/api/model';
+import { useUsersReadUsers } from '@/api/endpoints/users/users.gen';
 
 const usersSearchSchema = z.object({
 	page: z.number().catch(1),
 });
 
-const PER_PAGE = 5;
-
-function getUsersQueryOptions({ page }: { page: number }) {
-	return {
-		queryFn: () =>
-			api.get("/api/v1/users/", {
-				queries: { skip: (page - 1) * PER_PAGE, limit: PER_PAGE },
-			}),
-		queryKey: ["users", { page }],
-	};
-}
+const PER_PAGE = 1;
 
 export const Route = createFileRoute("/_layout/admin")({
+	staticData: {
+		title: "Admin",
+	},
 	component: Admin,
 	validateSearch: (search) => usersSearchSchema.parse(search),
 });
 
 function UsersTable() {
-	const queryClient = useQueryClient();
-	const currentUser = queryClient.getQueryData<UserPublic>(["currentUser"]);
+  const { data: currentUser } = useCurrentUser();
 	const navigate = useNavigate({ from: Route.fullPath });
 	const { page } = Route.useSearch();
+	const columns = useMemo(
+		() => createColumns<UserPublic>(currentUser),
+		[currentUser],
+	);
 
-	const { data, isLoading, isPlaceholderData } = useQuery({
-		...getUsersQueryOptions({ page }),
-		placeholderData: (prevData) => prevData,
-	});
-
-	const setPage = (page: number) =>
-		navigate({
-			search: (prev) => ({ ...prev, page }),
+  const [pagination, setPagination] = useState<PaginationState>({
+			pageIndex: page - 1,
+			pageSize: PER_PAGE,
 		});
 
-	const users = data?.data.slice(0, PER_PAGE) ?? [];
+  // Call the Orval-generated hook instead of useQuery
+  const { data, isLoading, isPlaceholderData } = useUsersReadUsers(
+    {
+      skip: pagination.pageIndex * pagination.pageSize,
+      limit: pagination.pageSize,
+    },
+    {
+      query: {
+        placeholderData: (prevData) => prevData,
+      },
+    },
+  );
+
+  const handlePaginationChange = (
+			updater: PaginationState | ((old: PaginationState) => PaginationState),
+		) => {
+			const newPagination =
+				typeof updater === "function" ? updater(pagination) : updater;
+
+			setPagination(newPagination);
+
+			// Update URL search params
+			navigate({
+				search: (prev) => ({
+					...prev,
+					page: newPagination.pageIndex + 1, // pageIndex 0 = page 1
+				}),
+			});
+		};
+
 	const count = data?.count ?? 0;
 
-	if (isLoading) {
+	if (isLoading && !isPlaceholderData) {
 		return <PendingUsers />;
 	}
 
+
+	const getRowStyle = <TData extends UserPublic>(row: Row<TData>) => {
+		return !row.original.is_active
+			? { color: "gray", opacity: 0.6 } // gray out inactive user
+			: {};
+	};
+
 	return (
 		<>
-			<Table>
+			<DataTable<UserPublic, unknown>
+				columns={columns}
+				data={data?.data ?? []}
+				isPlaceholderData={isPlaceholderData}
+				getRowStyle={getRowStyle}
+				rowCount={count}
+				pagination={pagination}
+				setPagination={handlePaginationChange}
+			/>
+			{/* <Table>
 				<TableHeader>
 					<TableRow>
 						<TableHead>Full name</TableHead>
@@ -125,7 +149,7 @@ function UsersTable() {
 						)}
 					</PaginationItem>
 				</PaginationContent>
-			</Pagination>
+			</Pagination> */}
 		</>
 	);
 }

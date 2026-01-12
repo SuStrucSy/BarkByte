@@ -1,10 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
-import useAuth from "@/hooks/useAuth";
-
-import { handleError } from "@/utils";
 import { toast } from "sonner";
 import {
 	Dialog,
@@ -15,9 +11,11 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import useAuth from "@/hooks/useAuth";
+import { handleError } from "@/utils";
 import { Button } from "../ui/button";
-import { api } from "@/lib/api";
 import { Form } from "../ui/form";
+import { getUsersReadUserMeQueryKey } from '@/api/endpoints/users/users.gen';
 
 const DeleteConfirmation = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +34,9 @@ const DeleteConfirmation = () => {
 			handleError(err);
 		},
 		onSettled: () => {
-			queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      queryClient.invalidateQueries({
+        queryKey: getUsersReadUserMeQueryKey() // ✅ Use generated key
+      });
 		},
 	});
 

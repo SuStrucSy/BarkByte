@@ -26,24 +26,26 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import useAuth, { isLoggedIn } from "@/hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { loginSchema } from "@/lib/schemas";
-import type { AccessToken } from "@/lib/types";
+import type { BodyLoginLoginAccessToken } from '@/api/model';
 
 export const Route = createFileRoute("/login")({
 	component: Login,
 	beforeLoad: async () => {
-		if (isLoggedIn()) {
-			throw redirect({
-				to: "/",
-			});
+		const token =
+			typeof window !== "undefined"
+				? localStorage.getItem("access_token")
+				: null;
+		if (token) {
+			throw redirect({ to: "/" });
 		}
 	},
 });
 
 function Login() {
 	const { loginMutation, error, resetError } = useAuth();
-	const form = useForm<AccessToken>({
+	const form = useForm<BodyLoginLoginAccessToken>({
 		resolver: zodResolver(loginSchema),
 		mode: "onBlur",
 		criteriaMode: "all",
@@ -53,11 +55,13 @@ function Login() {
 		},
 	});
 
-	const onSubmit: SubmitHandler<AccessToken> = async (data) => {
+	const onSubmit: SubmitHandler<BodyLoginLoginAccessToken> = async (data) => {
 		resetError();
 
+    console.log(data)
+
 		try {
-			await loginMutation.mutateAsync(data);
+			await loginMutation.mutateAsync({data: data});
 		} catch {
 			// error is handled by useAuth hook
 		}

@@ -1,6 +1,6 @@
 import type { AxiosError } from "axios";
-import axios from "axios";
 import { toast } from "sonner";
+import type { HTTPValidationError } from './api/model';
 
 export const emailPattern = {
 	value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -45,19 +45,54 @@ export const confirmPasswordRules = (
 	return rules;
 };
 
-export const handleError = (err: Error | AxiosError) => {
-	let errorMessage = "Something went wrong.";
-	if (axios.isAxiosError(err)) {
-		const errDetail = (err.response?.data as any)?.detail;
-		errorMessage = errDetail || "Something went wrong.";
-		if (Array.isArray(errDetail) && errDetail.length > 0) {
-			errorMessage = errDetail[0].msg;
-		}
-	} else {
-		errorMessage = err.message;
-	}
+export const handleError = (err: void | HTTPValidationError) => {
+  let title = "Something went wrong.";
+  let description = "Please try again.";
 
-	toast.error(err.message, {
-		description: errorMessage,
-	});
+  // Handle AxiosError (HTTP 400, 401, etc.)
+  if (err && 'response' in err && 'status' in (err as any).response) {
+    const axiosErr = err as AxiosError;
+    const status = axiosErr.response?.status;
+
+    if (status === 400) {
+      title = "Bad Request";
+      if (axiosErr.response?.data?.detail) {
+        description = axiosErr.response.data.detail;
+      } else {
+        description = "Invalid request data. Check your credentials.";
+      }
+    } else if (status === 401) {
+      title = "Unauthorized";
+      description = "Invalid username or password.";
+    } else if (status === 422) {
+      title = "Validation Error";
+      if (axiosErr.response?.data?.detail) {
+        const detail = axiosErr.response.data.detail;
+        if (Array.isArray(detail)) {
+          description = detail.map((e: any) => e.msg).join('; ');
+        } else {
+          description = detail;
+        }
+      }
+    } else {
+      title = `Server Error (${status})`;
+      description = axiosErr.response?.data?.detail || "Server returned an error.";
+    }
+  }
+  // Existing HTTPValidationError handling
+  else if ('detail' in err) {
+    const errDetail = err.detail;
+    if (Array.isArray(errDetail) && errDetail.length > 0) {
+      title = "Validation Error";
+      description = errDetail.map((e: any) => e.msg).join('; ');
+    } else if (typeof errDetail === 'string') {
+      description = errDetail;
+    }
+  }
+  // Generic Error
+  else if (err instanceof Error) {
+    title = err.message;
+  }
+
+  toast.error(title, { description });
 };

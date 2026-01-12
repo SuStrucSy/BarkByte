@@ -140,6 +140,15 @@ services:
     networks:
       - traefik-public
       - default
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      prestart:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+        restart: true
     build:
       context: ./frontend
       args:

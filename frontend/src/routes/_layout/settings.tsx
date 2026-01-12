@@ -5,7 +5,8 @@ import ChangePassword from "@/components/UserSettings/ChangePassword";
 import DeleteAccount from "@/components/UserSettings/DeleteAccount";
 import UserInformation from "@/components/UserSettings/UserInformation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useAuth from "@/hooks/useAuth";
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import NotLoggedIn from '@/components/Common/NotLoggedIn';
 
 const tabsConfig = [
 	{ value: "my-profile", title: "My profile", component: UserInformation },
@@ -15,17 +16,20 @@ const tabsConfig = [
 ];
 
 export const Route = createFileRoute("/_layout/settings")({
+	staticData: {
+		title: "Settings",
+	},
 	component: UserSettings,
 });
 
 function UserSettings() {
-	const { user: currentUser } = useAuth();
+  const { data: currentUser } = useCurrentUser();
 	const finalTabs = currentUser?.is_superuser
 		? tabsConfig.slice(0, 3)
 		: tabsConfig;
 
 	if (!currentUser) {
-		return null;
+		return <NotLoggedIn />;
 	}
 
 	return (
