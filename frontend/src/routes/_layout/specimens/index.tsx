@@ -15,7 +15,7 @@ const specimensSearchSchema = z.object({
 
 const PER_PAGE = 10;
 
-export const Route = createFileRoute("/_layout/specimens")({
+export const Route = createFileRoute("/_layout/specimens/")({
 	staticData: {
 		title: "Specimens",
 	},
@@ -69,7 +69,7 @@ function SpecimensTable() {
 		return <PendingSpecimens />;
 	}
 
-  console.log(data?.data)
+	console.log(data?.data)
 
 	return (
 		<DataTable<SpecimenPublic, unknown>
