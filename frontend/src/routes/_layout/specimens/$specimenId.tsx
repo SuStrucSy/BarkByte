@@ -11,25 +11,9 @@ import {
   ItemActions,
   ItemContent,
   ItemDescription,
-  ItemTitle,
-  ItemFooter,
-  ItemMedia,
-  ItemHeader
+  ItemTitle
 } from "@/components/ui/item"
 import {
-	Label,
-	PolarAngleAxis,
-	PolarGrid,
-	PolarRadiusAxis,
-	Radar,
-	RadarChart,
-	RadialBar,
-	RadialBarChart,
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
 import { ExternalLinkIcon } from "lucide-react"
@@ -37,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LabelValue } from "@/components/Common/LabelValue";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
+import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	staticData: {
@@ -75,13 +60,6 @@ function SpecimenDetails() {
 	if (!data) {
 		return <div>Specimen not found.</div>;
 	}
-
-	const chartConfig = {
-		value: {
-			label: "Value",
-			color: "var(--chart-3)",
-		},
-	} satisfies ChartConfig;
 
 	// Normalization ranges for each metric
 	// These ranges are based on the databases' known 5th and 95th percentile values
@@ -286,55 +264,7 @@ function SpecimenDetails() {
 						<div className="grid gap-6">
 							<div className="grid gap-2">
 								<h3 className="text-xl font-semibold tracking-tight text-foreground">Quantitative Mechanical Measures</h3>
-								<ChartContainer
-									config={chartConfig}
-									className="mx-auto h-[280px] w-full"
-								>
-									<RadarChart data={chartData}>
-										<ChartTooltip
-											cursor={false}
-											content={
-												<ChartTooltipContent
-													formatter={(_, name, item) => {
-														const raw = (item?.payload as { rawValue?: number })
-															?.rawValue;
-														const color = item?.color ?? item?.fill;
-
-														return (
-															<div className="flex items-center gap-2">
-																<span
-																	className="h-2 w-2 rounded-sm"
-																	style={{ backgroundColor: color }}
-																/>
-																<div className="flex flex-col">
-																	<span className="text-xs text-muted-foreground">
-																		{name}
-																	</span>
-																	<span className="font-medium">
-																		{raw ?? "—"}
-																	</span>
-																</div>
-															</div>
-														);
-													}}
-												/>
-											}
-										/>
-										<PolarAngleAxis dataKey="metric" />
-										<PolarGrid />
-										<PolarRadiusAxis
-											domain={[0, 1]}
-											tick={false}
-											axisLine={false}
-										/>
-										<Radar
-											dataKey="value"
-											fill="var(--color-value)"
-											fillOpacity={0.6}
-											stroke="var(--color-value)"
-										/>
-									</RadarChart>
-								</ChartContainer>
+								<RadarMetricsChart data={chartData} />
 							</div>
 						</div>
 					</CardContent>
