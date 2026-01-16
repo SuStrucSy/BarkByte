@@ -16,37 +16,102 @@ import {
 const chartConfig = {
   value: {
     label: "Value",
+    color: "var(--chart-3)",
   },
 } satisfies ChartConfig
 
+// 5th and 95th percentile ranges per metric (raw units)
+const metricRanges: Record<string, { min: number; max: number }> = {
+  "Max Force": { min: 6.9, max: 382.3 },
+  "Max Displacement": { min: 3.7, max: 47.4 },
+  Stiffness: { min: 0.86, max: 131 },
+  "Ultimate Force": { min: 5.5, max: 336.8 },
+  "Ultimate Displacement": { min: 7.1, max: 63.8 },
+  "Yield Force": { min: 5, max: 320.5 },
+  "Yield Displacement": { min: 1.2, max: 20.2 },
+  Ductility: { min: 5.5, max: 336.8 },
+}
+
+function normalizeMetric(metric: string, rawValue: number) {
+  const range = metricRanges[metric]
+  if (!range || range.max <= range.min) return 0
+  const normalized = (rawValue - range.min) / (range.max - range.min)
+  return Math.max(0, Math.min(1, normalized))
+}
+
+type BarkByteExperimentMetrics = {
+  e_max_force?: number | null
+  e_max_displacement?: number | null
+  e_stiffness?: number | null
+  e_ultimate_force?: number | null
+  e_ultimate_displacement?: number | null
+  e_yield_force?: number | null
+  e_yield_displacement?: number | null
+  e_ductility?: number | null
+}
+
 type RadarMetricsChartProps = {
-  data: Array<{
-    metric: string
-    value: number
-    rawValue?: number
-  }>
+  data: BarkByteExperimentMetrics
   className?: string
 }
 
-export function RadarMetricsChart({
-  data,
-  className,
-}: RadarMetricsChartProps) {
+export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
+  const chartData = [
+    {
+      metric: "Max Force",
+      rawValue: Number(data.e_max_force ?? 0),
+    },
+    {
+      metric: "Max Displacement",
+      rawValue: Number(data.e_max_displacement ?? 0),
+    },
+    {
+      metric: "Stiffness",
+      rawValue: Number(data.e_stiffness ?? 0),
+    },
+    {
+      metric: "Ultimate Force",
+      rawValue: Number(data.e_ultimate_force ?? 0),
+    },
+    {
+      metric: "Ultimate Displacement",
+      rawValue: Number(data.e_ultimate_displacement ?? 0),
+    },
+    {
+      metric: "Yield Force",
+      rawValue: Number(data.e_yield_force ?? 0),
+    },
+    {
+      metric: "Yield Displacement",
+      rawValue: Number(data.e_yield_displacement ?? 0),
+    },
+    {
+      metric: "Ductility",
+      rawValue: Number(data.e_ductility ?? 0),
+    },
+  ].map((d) => ({
+    ...d,
+    value: normalizeMetric(d.metric, d.rawValue),
+  }))
+
   return (
     <ChartContainer
       config={chartConfig}
-      className={["mx-auto h-[280px] w-full", className]
-        .filter(Boolean)
-        .join(" ")}
+      className={["mx-auto h-[280px] w-full", className].filter(Boolean).join(" ")}
     >
-      <RadarChart data={data}>
+      <RadarChart data={chartData}>
         <ChartTooltip
           cursor={false}
           content={
             <ChartTooltipContent
               formatter={(_, __, item) => {
-                const raw = (item?.payload as { rawValue?: number })?.rawValue
+                const payload = item?.payload as
+                  | { metric?: string; rawValue?: number }
+                  | undefined
+
                 const color = item?.color ?? item?.fill
+                const metric = payload?.metric ?? "—"
+                const raw = payload?.rawValue
 
                 return (
                   <div className="flex items-center gap-2">
@@ -55,9 +120,7 @@ export function RadarMetricsChart({
                       style={{ backgroundColor: color }}
                     />
                     <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground">
-                        {item?.payload?.metric}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{metric}</span>
                       <span className="font-medium">{raw ?? "—"}</span>
                     </div>
                   </div>
