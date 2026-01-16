@@ -20,6 +20,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// TODO: need to get real 5th and 95th percentile values from db
 // 5th and 95th percentile ranges per metric (raw units)
 const metricRanges: Record<string, { min: number; max: number }> = {
   "Max Force": { min: 6.9, max: 382.3 },
@@ -57,38 +58,14 @@ type RadarMetricsChartProps = {
 
 export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
   const chartData = [
-    {
-      metric: "Max Force",
-      rawValue: Number(data.e_max_force ?? 0),
-    },
-    {
-      metric: "Max Displacement",
-      rawValue: Number(data.e_max_displacement ?? 0),
-    },
-    {
-      metric: "Stiffness",
-      rawValue: Number(data.e_stiffness ?? 0),
-    },
-    {
-      metric: "Ultimate Force",
-      rawValue: Number(data.e_ultimate_force ?? 0),
-    },
-    {
-      metric: "Ultimate Displacement",
-      rawValue: Number(data.e_ultimate_displacement ?? 0),
-    },
-    {
-      metric: "Yield Force",
-      rawValue: Number(data.e_yield_force ?? 0),
-    },
-    {
-      metric: "Yield Displacement",
-      rawValue: Number(data.e_yield_displacement ?? 0),
-    },
-    {
-      metric: "Ductility",
-      rawValue: Number(data.e_ductility ?? 0),
-    },
+    { metric: "Max Force", rawValue: Number(data.e_max_force ?? 0)},
+    { metric: "Max Displacement", rawValue: Number(data.e_max_displacement ?? 0)},
+    { metric: "Stiffness", rawValue: Number(data.e_stiffness ?? 0)},
+    { metric: "Ultimate Force", rawValue: Number(data.e_ultimate_force ?? 0)},
+    { metric: "Ultimate Displacement", rawValue: Number(data.e_ultimate_displacement ?? 0)},
+    { metric: "Yield Force", rawValue: Number(data.e_yield_force ?? 0)},
+    { metric: "Yield Displacement", rawValue: Number(data.e_yield_displacement ?? 0)},
+    { metric: "Ductility", rawValue: Number(data.e_ductility ?? 0)}
   ].map((d) => ({
     ...d,
     value: normalizeMetric(d.metric, d.rawValue),
