@@ -28,6 +28,7 @@ interface DataTableProps<TData, TValue> {
 	isPlaceholderData: boolean;
 	// Optional: a row styling hook you can pass in (default provided below)
 	getRowStyle?: (row: Row<TData>) => React.CSSProperties;
+	onRowClick?: (row: Row<TData>) => void;
 	rowCount: number;
 	pagination: PaginationState;
 	setPagination: (
@@ -41,6 +42,7 @@ export function DataTable<TData, TValue>({
 	data,
 	isPlaceholderData,
 	getRowStyle,
+	onRowClick,
 	rowCount,
 	pagination,
 	setPagination,
@@ -104,8 +106,10 @@ export function DataTable<TData, TValue>({
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
-									className={isPlaceholderData ? "opacity-50" : "opacity-100"}
+									className={isPlaceholderData ? "opacity-50": onRowClick ? "cursor-pointer hover:bg-muted/40": "opacity-100"
+									}
 									style={rowStyle(row)}
+									onClick={() => onRowClick?.(row)}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>

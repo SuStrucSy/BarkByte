@@ -77,6 +77,12 @@ function SpecimensTable() {
 			initialColumnVisibility={getInitialColumnVisibility()}
 			data={data?.data ?? []}
 			isPlaceholderData={isPlaceholderData}
+			onRowClick={(row) =>
+				navigate({
+					to: "/specimens/$specimenId",
+					params: { specimenId: row.original.id },
+				})
+			}
 			rowCount={count}
 			pagination={pagination}
 			setPagination={handlePaginationChange}
