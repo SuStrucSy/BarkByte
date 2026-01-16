@@ -1,5 +1,4 @@
-import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
-
+import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 
 type MoistureDialProps = {
@@ -15,7 +14,8 @@ const config = {
 } satisfies ChartConfig
 
 export function MoistureDial({ value, label = "Moisture", className }: MoistureDialProps) {
-  const data = [{ moisture: value }]
+  const v = Math.max(0, Math.min(100, value))
+  const data = [{ moisture: v }]
 
   return (
     <div className={["flex flex-col gap-1", className].filter(Boolean).join(" ")}>
@@ -23,10 +23,11 @@ export function MoistureDial({ value, label = "Moisture", className }: MoistureD
             <RadialBarChart
             data={data}
             startAngle={0}
-            endAngle={250}
+            endAngle={360}
             innerRadius={80}
             outerRadius={110}
             >
+                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
                 <PolarGrid
                 gridType="circle"
                 radialLines={false}
@@ -52,7 +53,7 @@ export function MoistureDial({ value, label = "Moisture", className }: MoistureD
                                 dominantBaseline="middle"
                             >
                                 <tspan className="fill-foreground text-3xl font-bold">
-                                {Math.round(value)}%
+                                {Math.round(v)}%
                                 </tspan>
                                 <tspan
                                 x={viewBox.cx}
