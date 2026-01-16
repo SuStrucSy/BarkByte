@@ -83,55 +83,103 @@ function SpecimenDetails() {
 							</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<div className="grid gap-2">
-									<div>
-										<span className="font-medium">Assembly Type:</span>{" "}
-										{renderValue(data.assembly_type)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Assembly Type
+										</span>
+										<span className="font-medium">
+											{renderValue(data.assembly_type)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Joinery Type:</span>{" "}
-										{renderValue(data.joinery_type?.label)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Joinery Type
+										</span>
+										<span className="font-medium">
+											{renderValue(data.joinery_type?.label)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Sub Joinery Type:</span>{" "}
-										{renderValue(data.sub_joinery_type?.label)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Sub Joinery Type
+										</span>
+										<span className="font-medium">
+											{renderValue(data.sub_joinery_type?.label)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Fastener Types:</span>{" "}
-										{renderLabels(data.fastener_types)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Fastener Types
+										</span>
+										<span className="font-medium">
+											{renderLabels(data.fastener_types)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Loading Directions:</span>{" "}
-										{renderLabels(data.loading_directions)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Loading Directions
+										</span>
+										<span className="font-medium">
+											{renderLabels(data.loading_directions)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Practice:</span>{" "}
-										{renderValue(data.practice)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Practice
+										</span>
+										<span className="font-medium">
+											{renderValue(data.practice)}
+										</span>
 									</div>
 								</div>
 								<div className="grid gap-2">
-									<div>
-										<span className="font-medium">Fastener Numbers:</span>{" "}
-										{renderValue(data.fastener_numbers)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Fastener Numbers
+										</span>
+										<span className="font-medium">
+											{renderValue(data.fastener_numbers)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Connector Present:</span>{" "}
-										{renderValue(data.connector)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Connector Present
+										</span>
+										<span className="font-medium">
+											{renderValue(data.connector)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Dowel Present:</span>{" "}
-										{renderValue(data.dowel)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Dowel Present
+										</span>
+										<span className="font-medium">
+											{renderValue(data.dowel)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Replicate Tests:</span>{" "}
-										{renderValue(data.replicate_tests)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Replicate Tests
+										</span>
+										<span className="font-medium">
+											{renderValue(data.replicate_tests)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Connection Description:</span>{" "}
-										{renderValue(data.connection_description)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Connection Description
+										</span>
+										<span className="font-medium">
+											{renderValue(data.connection_description)}
+										</span>
 									</div>
-									<div>
-										<span className="font-medium">Note:</span>{" "}
-										{renderValue(data.note)}
+									<div className="flex flex-col gap-1">
+										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+											Note
+										</span>
+										<span className="font-medium">
+											{renderValue(data.note)}
+										</span>
 									</div>
 								</div>
 							</div>
@@ -183,9 +231,13 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Geometric Properties
 							</h3>
-							<div>
-								<span className="font-medium">Element Dimension:</span>{" "}
-								{renderValue(data.element_dimension)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Element Dimension
+								</span>
+								<span className="font-medium">
+									{renderValue(data.element_dimension)}
+								</span>
 							</div>
 						</div>
 						<Separator />
@@ -193,25 +245,45 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Material Properties
 							</h3>
-							<div>
-								<span className="font-medium">Wood Type:</span>{" "}
-								{renderValue(data.wood_type)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Wood Type
+								</span>
+								<span className="font-medium">
+									{renderValue(data.wood_type)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Moisture Percentage:</span>{" "}
-								{renderValue(data.moisture_percentage)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Moisture Percentage
+								</span>
+								<span className="font-medium">
+									{renderValue(data.moisture_percentage)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Wood Mechanical Properties:</span>{" "}
-								{renderValue(data.wood_mechanical_properties)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Wood Mechanical Properties
+								</span>
+								<span className="font-medium">
+									{renderValue(data.wood_mechanical_properties)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Fastener Mechanical Properties:</span>{" "}
-								{renderValue(data.fastener_mechanical_properties)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Fastener Mechanical Properties
+								</span>
+								<span className="font-medium">
+									{renderValue(data.fastener_mechanical_properties)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Connector Mechanical Properties:</span>{" "}
-								{renderValue(data.connector_mechanical_properties)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Connector Mechanical Properties
+								</span>
+								<span className="font-medium">
+									{renderValue(data.connector_mechanical_properties)}
+								</span>
 							</div>
 						</div>
 					</CardContent>
@@ -225,25 +297,45 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Experimental Results
 							</h3>
-							<div>
-								<span className="font-medium">Experiment Date:</span>{" "}
-								{renderValue(data.e_date)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Experiment Date
+								</span>
+								<span className="font-medium">
+									{renderValue(data.e_date)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Test Loading Type:</span>{" "}
-								{renderValue(data.e_test_loading_type)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Test Loading Type
+								</span>
+								<span className="font-medium">
+									{renderValue(data.e_test_loading_type)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Measurement Unit:</span>{" "}
-								{renderValue(data.e_measurement_unit)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Measurement Unit
+								</span>
+								<span className="font-medium">
+									{renderValue(data.e_measurement_unit)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Yield Point Method:</span>{" "}
-								{renderValue(data.e_yield_point_method)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Yield Point Method
+								</span>
+								<span className="font-medium">
+									{renderValue(data.e_yield_point_method)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">Note:</span>{" "}
-								{renderValue(data.note)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Note
+								</span>
+								<span className="font-medium">
+									{renderValue(data.note)}
+								</span>
 							</div>
 						</div>
 						<Separator />
@@ -289,13 +381,21 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Qualitative Failure Measures
 							</h3>
-							<div>
-								<span className="font-medium">Failure Modes:</span>{" "}
-								{renderLabels(data.e_qualitative_failure_measure)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									Failure Modes
+								</span>
+								<span className="font-medium">
+									{renderLabels(data.e_qualitative_failure_measure)}
+								</span>
 							</div>
-							<div>
-								<span className="font-medium">QFM Description:</span>{" "}
-								{renderValue(data.e_qfm_description)}
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+									QFM Description
+								</span>
+								<span className="font-medium">
+									{renderValue(data.e_qfm_description)}
+								</span>
 							</div>
 						</div>
 					</CardContent>
