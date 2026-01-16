@@ -383,7 +383,7 @@ function SpecimenDetails() {
 					<CardHeader>
 						<CardTitle className="text-2xl">Experimental Data</CardTitle>
 					</CardHeader>
-					<CardContent className="grid gap-4">
+					<CardContent className="grid gap-6 md:grid-cols-2 md:items-start">
 						<div className="grid gap-2">
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Experimental Results
@@ -428,79 +428,83 @@ function SpecimenDetails() {
 									{renderValue(data.note)}
 								</span>
 							</div>
-						</div>
-						<Separator />
-						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Quantitative Mechanical Measures
-							</h3>
-							
-							<ChartContainer
-								config={chartConfig}
-								className="mx-auto h-[280px] w-full"
-							>
-								<RadarChart data={chartData}>
-									<ChartTooltip
-										cursor={false}
-										content={
-											<ChartTooltipContent
-												formatter={(_, name, item) => {
-													const raw = (item?.payload as { rawValue?: number })?.rawValue
-													const color = item?.color ?? item?.fill
-
-													return (
-														<div className="flex items-center gap-2">
-														<span
-															className="h-2 w-2 rounded-sm"
-															style={{ backgroundColor: color }}
-														/>
-														<div className="flex flex-col">
-															<span className="text-xs text-muted-foreground">{name}</span>
-															<span className="font-medium">{raw ?? "—"}</span>
-														</div>
-														</div>
-													)
-												}}
-											/>
-										}
-									/>
-									<PolarAngleAxis dataKey="metric" />
-									<PolarGrid />
-									<PolarRadiusAxis
-										domain={[0, 1]}
-										tick={false}
-										axisLine={false}
-									/>
-									<Radar
-										dataKey="value"
-										fill="var(--color-value)"
-										fillOpacity={0.6}
-										stroke="var(--color-value)"
-									/>
-								</RadarChart>
-							</ChartContainer>
-
-						</div>
-						<Separator />
-						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Qualitative Failure Measures
-							</h3>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Failure Modes
-								</span>
-								<span className="font-medium">
-									{renderLabels(data.e_qualitative_failure_measure)}
-								</span>
+							<Separator />
+							<div className="grid gap-2">
+								<h3 className="text-xl font-semibold tracking-tight text-foreground">
+									Qualitative Failure Measures
+								</h3>
+								<div className="flex flex-col gap-1">
+									<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+										Failure Modes
+									</span>
+									<span className="font-medium">
+										{renderLabels(data.e_qualitative_failure_measure)}
+									</span>
+								</div>
+								<div className="flex flex-col gap-1">
+									<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+										QFM Description
+									</span>
+									<span className="font-medium">
+										{renderValue(data.e_qfm_description)}
+									</span>
+								</div>
 							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									QFM Description
-								</span>
-								<span className="font-medium">
-									{renderValue(data.e_qfm_description)}
-								</span>
+						</div>
+						<div className="grid gap-6">
+							<div className="grid gap-2">
+								<h3 className="text-xl font-semibold tracking-tight text-foreground">
+									Quantitative Mechanical Measures
+								</h3>
+								<ChartContainer
+									config={chartConfig}
+									className="mx-auto h-[280px] w-full"
+								>
+									<RadarChart data={chartData}>
+										<ChartTooltip
+											cursor={false}
+											content={
+												<ChartTooltipContent
+													formatter={(_, name, item) => {
+														const raw = (item?.payload as { rawValue?: number })
+															?.rawValue;
+														const color = item?.color ?? item?.fill;
+
+														return (
+															<div className="flex items-center gap-2">
+																<span
+																	className="h-2 w-2 rounded-sm"
+																	style={{ backgroundColor: color }}
+																/>
+																<div className="flex flex-col">
+																	<span className="text-xs text-muted-foreground">
+																		{name}
+																	</span>
+																	<span className="font-medium">
+																		{raw ?? "—"}
+																	</span>
+																</div>
+															</div>
+														);
+													}}
+												/>
+											}
+										/>
+										<PolarAngleAxis dataKey="metric" />
+										<PolarGrid />
+										<PolarRadiusAxis
+											domain={[0, 1]}
+											tick={false}
+											axisLine={false}
+										/>
+										<Radar
+											dataKey="value"
+											fill="var(--color-value)"
+											fillOpacity={0.6}
+											stroke="var(--color-value)"
+										/>
+									</RadarChart>
+								</ChartContainer>
 							</div>
 						</div>
 					</CardContent>
