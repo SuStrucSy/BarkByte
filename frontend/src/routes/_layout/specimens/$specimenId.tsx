@@ -35,6 +35,7 @@ import {
 import { ExternalLinkIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { LabelValue } from "@/components/Common/LabelValue";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	staticData: {
@@ -201,104 +202,20 @@ function SpecimenDetails() {
 							</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<div className="grid gap-2">
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Assembly Type
-										</span>
-										<span className="font-medium">
-											{renderValue(data.assembly_type)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Joinery Type
-										</span>
-										<span className="font-medium">
-											{renderValue(data.joinery_type.label)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Sub Joinery Type
-										</span>
-										<span className="font-medium">
-											{renderValue(data.sub_joinery_type.label)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Fastener Types
-										</span>
-										<span className="font-medium">
-											{renderLabels(data.fastener_types)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Loading Directions
-										</span>
-										<span className="font-medium">
-											{renderLabels(data.loading_directions)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Practice
-										</span>
-										<span className="font-medium">
-											{renderValue(data.practice)}
-										</span>
-									</div>
+									<LabelValue label="Assembly Type" value={renderValue(data.assembly_type)} />
+									<LabelValue label="Joinery Type" value={renderValue(data.joinery_type.label)} />
+									<LabelValue label="Sub Joinery Type" value={renderValue(data.sub_joinery_type.label)} />
+									<LabelValue label="Fastener Types" value={renderLabels(data.fastener_types)} />
+									<LabelValue label="Loading Directions" value={renderLabels(data.loading_directions)} />
+									<LabelValue label="Practice" value={renderValue(data.practice)} />
 								</div>
 								<div className="grid gap-2">
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Fastener Numbers
-										</span>
-										<span className="font-medium">
-											{renderValue(data.fastener_numbers)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Connector Present
-										</span>
-										<span className="font-medium">
-											{renderValue(data.connector)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Dowel Present
-										</span>
-										<span className="font-medium">
-											{renderValue(data.dowel)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Replicate Tests
-										</span>
-										<span className="font-medium">
-											{renderValue(data.replicate_tests)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Connection Description
-										</span>
-										<span className="font-medium">
-											{renderValue(data.connection_description)}
-										</span>
-									</div>
-									<div className="flex flex-col gap-1">
-										<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-											Note
-										</span>
-										<span className="font-medium">
-											{renderValue(data.note)}
-										</span>
-									</div>
+									<LabelValue label="Fastener Numbers" value={renderValue(data.fastener_numbers)} />
+									<LabelValue label="Connector Present" value={renderValue(data.connector)} />
+									<LabelValue label="Dowel Present" value={renderValue(data.dowel)} />
+									<LabelValue label="Replicate Tests" value={renderValue(data.replicate_tests)} />
+									<LabelValue label="Connection Description" value={renderValue(data.connection_description)} />
+									<LabelValue label="Note" value={renderValue(data.note)} />
 								</div>
 							</div>
 						</div>
@@ -349,14 +266,7 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Geometric Properties
 							</h3>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Element Dimension
-								</span>
-								<span className="font-medium">
-									{renderValue(data.element_dimension)}
-								</span>
-							</div>
+							<LabelValue label="Element Dimension" value={renderValue(data.element_dimension)} />
 							<div className="flex flex-col gap-1">
 								<ChartContainer
 									config={moistureChartConfig}
@@ -427,38 +337,10 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Material Properties
 							</h3>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Wood Type
-								</span>
-								<span className="font-medium">
-									{renderValue(data.wood_type)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Wood Mechanical Properties
-								</span>
-								<span className="font-medium">
-									{renderValue(data.wood_mechanical_properties)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Fastener Mechanical Properties
-								</span>
-								<span className="font-medium">
-									{renderValue(data.fastener_mechanical_properties)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Connector Mechanical Properties
-								</span>
-								<span className="font-medium">
-									{renderValue(data.connector_mechanical_properties)}
-								</span>
-							</div>
+							<LabelValue label="Wood Type" value={renderValue(data.wood_type)} />
+							<LabelValue label="Wood Mechanical Properties" value={renderValue(data.wood_mechanical_properties)} />
+							<LabelValue label="Fastener Mechanical Properties" value={renderValue(data.fastener_mechanical_properties)} />
+							<LabelValue label="Connector Mechanical Properties" value={renderValue(data.connector_mechanical_properties)} />
 						</div>
 					</CardContent>
 				</Card>
@@ -471,67 +353,18 @@ function SpecimenDetails() {
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Experimental Results
 							</h3>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Experiment Date
-								</span>
-								<span className="font-medium">
-									{renderValue(data.e_date)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Test Loading Type
-								</span>
-								<span className="font-medium">
-									{renderValue(data.e_test_loading_type)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Measurement Unit
-								</span>
-								<span className="font-medium">
-									{renderValue(data.e_measurement_unit)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Yield Point Method
-								</span>
-								<span className="font-medium">
-									{renderValue(data.e_yield_point_method)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Note
-								</span>
-								<span className="font-medium">
-									{renderValue(data.note)}
-								</span>
-							</div>
+							<LabelValue label="Experiment Date" value={renderValue(data.e_date)} />
+							<LabelValue label="Test Loading Type" value={renderValue(data.e_test_loading_type)} />
+							<LabelValue label="Measurement Unit" value={renderValue(data.e_measurement_unit)} />
+							<LabelValue label="Yield Point Method" value={renderValue(data.e_yield_point_method)} />
+							<LabelValue label="Note" value={renderValue(data.note)} />
 							<Separator />
 							<div className="grid gap-2">
 								<h3 className="text-xl font-semibold tracking-tight text-foreground">
 									Qualitative Failure Measures
 								</h3>
-								<div className="flex flex-col gap-1">
-									<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-										Failure Modes
-									</span>
-									<span className="font-medium">
-										{renderLabels(data.e_qualitative_failure_measure)}
-									</span>
-								</div>
-								<div className="flex flex-col gap-1">
-									<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-										QFM Description
-									</span>
-									<span className="font-medium">
-										{renderValue(data.e_qfm_description)}
-									</span>
-								</div>
+								<LabelValue label="Failure Modes" value={renderLabels(data.e_qualitative_failure_measure)} />
+								<LabelValue label="QFM Description" value={renderValue(data.e_qfm_description)} />
 							</div>
 						</div>
 						<div className="grid gap-6">
