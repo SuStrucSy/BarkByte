@@ -1,4 +1,7 @@
+import { ExternalLinkIcon } from "lucide-react"
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -19,12 +22,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { ExternalLinkIcon } from "lucide-react"
-import { Separator } from "@/components/ui/separator";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { LabelValue } from "@/components/Common/LabelValue";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
+import { renderValue } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	staticData: {
@@ -37,15 +38,7 @@ function SpecimenDetails() {
 	const { specimenId } = Route.useParams();
 	const { data, isLoading, isError, error } =
 		useSpecimensReadSpecimen(specimenId);
-	const renderValue = (value: unknown) => {
-		if (value === null || value === undefined || value === "") {
-			return "—";
-		}
-		if (typeof value === "boolean") {
-			return value ? "Yes" : "No";
-		}
-		return String(value);
-	};
+	
 	const renderLabels = (items?: { label: string }[]) =>
 		items?.length ? items.map((item) => item.label).join(", ") : "—";
 	if (isLoading) {
