@@ -6,6 +6,17 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+  ItemFooter,
+  ItemMedia,
+  ItemHeader
+} from "@/components/ui/item"
+import { ExternalLinkIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
@@ -65,79 +76,101 @@ function SpecimenDetails() {
 					<CardHeader>
 						<CardTitle className="text-2xl">Meta Data</CardTitle>
 					</CardHeader>
-					<CardContent className="grid gap-4">
+					<CardContent className="grid gap-4 md:grid-cols-[2fr_auto_1fr] md:items-start">
+						<div className="grid gap-3">
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">
+								Specimen Information
+							</h3>
+							<div className="grid gap-4 md:grid-cols-2">
+								<div className="grid gap-2">
+									<div>
+										<span className="font-medium">Assembly Type:</span>{" "}
+										{renderValue(data.assembly_type)}
+									</div>
+									<div>
+										<span className="font-medium">Joinery Type:</span>{" "}
+										{renderValue(data.joinery_type?.label)}
+									</div>
+									<div>
+										<span className="font-medium">Sub Joinery Type:</span>{" "}
+										{renderValue(data.sub_joinery_type?.label)}
+									</div>
+									<div>
+										<span className="font-medium">Fastener Types:</span>{" "}
+										{renderLabels(data.fastener_types)}
+									</div>
+									<div>
+										<span className="font-medium">Loading Directions:</span>{" "}
+										{renderLabels(data.loading_directions)}
+									</div>
+									<div>
+										<span className="font-medium">Practice:</span>{" "}
+										{renderValue(data.practice)}
+									</div>
+								</div>
+								<div className="grid gap-2">
+									<div>
+										<span className="font-medium">Fastener Numbers:</span>{" "}
+										{renderValue(data.fastener_numbers)}
+									</div>
+									<div>
+										<span className="font-medium">Connector Present:</span>{" "}
+										{renderValue(data.connector)}
+									</div>
+									<div>
+										<span className="font-medium">Dowel Present:</span>{" "}
+										{renderValue(data.dowel)}
+									</div>
+									<div>
+										<span className="font-medium">Replicate Tests:</span>{" "}
+										{renderValue(data.replicate_tests)}
+									</div>
+									<div>
+										<span className="font-medium">Connection Description:</span>{" "}
+										{renderValue(data.connection_description)}
+									</div>
+									<div>
+										<span className="font-medium">Note:</span>{" "}
+										{renderValue(data.note)}
+									</div>
+								</div>
+							</div>
+						</div>
+						<Separator
+							orientation="vertical"
+							className="hidden md:block"
+						/>
 						<div className="grid gap-2">
 							<h3 className="text-xl font-semibold tracking-tight text-foreground">
 								Identification Information
 							</h3>
-							<div>
-								<span className="font-medium">Specimen ID:</span>{" "}
-								{renderValue(data.id)}
-							</div>
-							<div>
-								<span className="font-medium">DOI:</span>{" "}
-								{data.doi?.id ? (
-									<Link
-										to="/doi/$doiId"
-										params={{ doiId: data.doi.id }}
-										className="text-primary underline hover:opacity-80"
-									>
-										{data.doi.ref_title ?? "View DOI"}
-									</Link>
-								) : (
-									<span className="text-muted-foreground">N/A</span>
-								)}
-							</div>
-						</div>
-						<Separator />
-						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Specimen Information
-							</h3>
-							<div>
-								<span className="font-medium">Assembly Type:</span>{" "}
-								{renderValue(data.assembly_type)}
-							</div>
-							<div>
-								<span className="font-medium">Joinery Type:</span>{" "}
-								{renderValue(data.joinery_type?.label)}
-							</div>
-							<div>
-								<span className="font-medium">Sub Joinery Type:</span>{" "}
-								{renderValue(data.sub_joinery_type?.label)}
-							</div>
-							<div>
-								<span className="font-medium">Practice:</span>{" "}
-								{renderValue(data.practice)}
-							</div>
-							<div>
-								<span className="font-medium">Loading Directions:</span>{" "}
-								{renderLabels(data.loading_directions)}
-							</div>
-							<div>
-								<span className="font-medium">Connection Description:</span>{" "}
-								{renderValue(data.connection_description)}
-							</div>
-							<div>
-								<span className="font-medium">Fastener Types:</span>{" "}
-								{renderLabels(data.fastener_types)}
-							</div>
-							<div>
-								<span className="font-medium">Fastener Numbers:</span>{" "}
-								{renderValue(data.fastener_numbers)}
-							</div>
-							<div>
-								<span className="font-medium">Connector Present:</span>{" "}
-								{renderValue(data.connector)}
-							</div>
-							<div>
-								<span className="font-medium">Dowel Present:</span>{" "}
-								{renderValue(data.dowel)}
-							</div>
-							<div>
-								<span className="font-medium">Replicate Tests:</span>{" "}
-								{renderValue(data.replicate_tests)}
-							</div>
+							<Item variant="outline" asChild>
+								<div>
+									<ItemContent>
+										<ItemTitle>Specimen ID</ItemTitle>
+										<ItemDescription>{data.id}</ItemDescription>
+									</ItemContent>
+								</div>
+							</Item>
+
+							<Item variant="outline" asChild>
+								<Link
+									to="/doi/$doiId"
+									params={{ doiId: data.doi.id }}
+									target="_blank"
+									className="block"
+								>
+									<ItemContent>
+										<ItemTitle>View DOI</ItemTitle>
+										<ItemDescription>
+											{data.doi.ref_title}
+										</ItemDescription>
+									</ItemContent>
+									<ItemActions>
+										<ExternalLinkIcon className="size-4" />
+									</ItemActions>
+								</Link>
+							</Item>
 						</div>
 					</CardContent>
 				</Card>
