@@ -13,9 +13,6 @@ import {
   ItemDescription,
   ItemTitle
 } from "@/components/ui/item"
-import {
-  type ChartConfig,
-} from "@/components/ui/chart"
 import { ExternalLinkIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -61,83 +58,6 @@ function SpecimenDetails() {
 		return <div>Specimen not found.</div>;
 	}
 
-	// Normalization ranges for each metric
-	// These ranges are based on the databases' known 5th and 95th percentile values
-	const metricRanges: Record<string, { min: number; max: number }> = {
-		"Max Force": { min: 6.9, max: 382.3 },
-		"Max Displacement": { min: 3.7, max: 47.4 },
-		Stiffness: { min: 0.86, max: 131 },
-		"Ultimate Force": { min: 5.5, max: 336.8 },
-		"Ultimate Displacement": { min: 7.1, max: 63.8 },
-		"Yield Force": { min: 5, max: 320.5 },
-		"Yield Displacement": { min: 1.2, max: 20.2 },
-		Ductility: { min: 5.5, max: 336.8 },
-	};
-
-	const normalizeMetric = (metric: string, rawValue: number) => {
-		const range = metricRanges[metric];
-		if (!range || range.max <= range.min) {
-			return 0;
-		}
-		const normalized = (rawValue - range.min) / (range.max - range.min);
-		return Math.max(0, Math.min(1, normalized));
-	};
-
-	const chartData = [
-		{
-			metric: "Max Force",
-			value: normalizeMetric("Max Force", Number(data.e_max_force ?? 0)),
-			rawValue: Number(data.e_max_force ?? 0),
-		},
-		{
-			metric: "Max Displacement",
-			value: normalizeMetric(
-				"Max Displacement",
-				Number(data.e_max_displacement ?? 0),
-			),
-			rawValue: Number(data.e_max_displacement ?? 0),
-		},
-		{
-			metric: "Stiffness",
-			value: normalizeMetric("Stiffness", Number(data.e_stiffness ?? 0)),
-			rawValue: Number(data.e_stiffness ?? 0),
-		},
-		{
-			metric: "Ultimate Force",
-			value: normalizeMetric(
-				"Ultimate Force",
-				Number(data.e_ultimate_force ?? 0),
-			),
-			rawValue: Number(data.e_ultimate_force ?? 0),
-		},
-		{
-			metric: "Ultimate Displacement",
-			value: normalizeMetric(
-				"Ultimate Displacement",
-				Number(data.e_ultimate_displacement ?? 0),
-			),
-			rawValue: Number(data.e_ultimate_displacement ?? 0),
-		},
-		{
-			metric: "Yield Force",
-			value: normalizeMetric("Yield Force", Number(data.e_yield_force ?? 0)),
-			rawValue: Number(data.e_yield_force ?? 0),
-		},
-		{
-			metric: "Yield Displacement",
-			value: normalizeMetric(
-				"Yield Displacement",
-				Number(data.e_yield_displacement ?? 0),
-			),
-			rawValue: Number(data.e_yield_displacement ?? 0),
-		},
-		{
-			metric: "Ductility",
-			value: normalizeMetric("Ductility", Number(data.e_ductility ?? 0)),
-			rawValue: Number(data.e_ductility ?? 0),
-		},
-	];
-
 	const moistureValue = Number(
 		String(data.moisture_percentage ?? "").replace("%", ""),
 	);
@@ -147,8 +67,6 @@ function SpecimenDetails() {
 			moisture: Number.isFinite(moistureValue) ? moistureValue : 0,
 		},
 	];
-
-	console.log(data)
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -264,7 +182,7 @@ function SpecimenDetails() {
 						<div className="grid gap-6">
 							<div className="grid gap-2">
 								<h3 className="text-xl font-semibold tracking-tight text-foreground">Quantitative Mechanical Measures</h3>
-								<RadarMetricsChart data={chartData} />
+								<RadarMetricsChart data={data} />
 							</div>
 						</div>
 					</CardContent>
