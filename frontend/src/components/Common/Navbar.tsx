@@ -1,6 +1,7 @@
 import { useMatches } from "@tanstack/react-router";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import ModeToggle from "./ModeToggle";
 
 function Navbar() {
 	const matches = useMatches();
@@ -22,6 +23,7 @@ function Navbar() {
 					className="mx-2 data-[orientation=vertical]:h-4"
 				/>
 				<h1 className="text-base font-medium">{title}</h1>
+				<ModeToggle/>
 			</div>
 		</header>
 	);

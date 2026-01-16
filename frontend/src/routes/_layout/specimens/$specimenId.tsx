@@ -16,14 +16,22 @@ import {
   ItemMedia,
   ItemHeader
 } from "@/components/ui/item"
-import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
+import {
+	Label,
+	PolarAngleAxis,
+	PolarGrid,
+	PolarRadiusAxis,
+	Radar,
+	RadarChart,
+	RadialBar,
+	RadialBarChart,
+} from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { PolarRadiusAxis } from "recharts";
 import { ExternalLinkIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -70,6 +78,13 @@ function SpecimenDetails() {
 		value: {
 			label: "Value",
 			color: "var(--chart-3)",
+		},
+	} satisfies ChartConfig;
+
+	const moistureChartConfig = {
+		moisture: {
+			label: "Moisture",
+			color: "var(--chart-2)",
 		},
 	} satisfies ChartConfig;
 
@@ -150,6 +165,18 @@ function SpecimenDetails() {
 		},
 	];
 
+	const moistureValue = Number(
+		String(data.moisture_percentage ?? "").replace("%", ""),
+	);
+	const moistureChartData = [
+		{
+			name: "Moisture",
+			moisture: Number.isFinite(moistureValue) ? moistureValue : 0,
+		},
+	];
+
+	console.log(data)
+
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
@@ -187,7 +214,7 @@ function SpecimenDetails() {
 											Joinery Type
 										</span>
 										<span className="font-medium">
-											{renderValue(data.joinery_type?.label)}
+											{renderValue(data.joinery_type.label)}
 										</span>
 									</div>
 									<div className="flex flex-col gap-1">
@@ -195,7 +222,7 @@ function SpecimenDetails() {
 											Sub Joinery Type
 										</span>
 										<span className="font-medium">
-											{renderValue(data.sub_joinery_type?.label)}
+											{renderValue(data.sub_joinery_type.label)}
 										</span>
 									</div>
 									<div className="flex flex-col gap-1">
@@ -330,6 +357,70 @@ function SpecimenDetails() {
 									{renderValue(data.element_dimension)}
 								</span>
 							</div>
+							<div className="flex flex-col gap-1">
+								<ChartContainer
+									config={moistureChartConfig}
+									className="mx-auto h-[220px] w-full"
+								>
+									<RadialBarChart
+										data={moistureChartData}
+										startAngle={0}
+										endAngle={250}
+										innerRadius={80}
+										outerRadius={110}
+									>
+										<PolarGrid
+											gridType="circle"
+											radialLines={false}
+											stroke="none"
+											className="first:fill-muted last:fill-background"
+											polarRadius={[86, 74]}
+										/>
+										<RadialBar
+											dataKey="moisture"
+											fill="var(--color-moisture)"
+											background
+											cornerRadius={10}
+										/>
+										<PolarRadiusAxis
+											tick={false}
+											tickLine={false}
+											axisLine={false}
+										>
+											<Label
+												content={({ viewBox }) => {
+													if (
+														viewBox &&
+														"cx" in viewBox &&
+														"cy" in viewBox
+													) {
+														return (
+															<text
+																x={viewBox.cx}
+																y={viewBox.cy}
+																textAnchor="middle"
+																dominantBaseline="middle"
+															>
+																<tspan className="fill-foreground text-3xl font-bold">
+																	{moistureChartData[0]?.moisture ?? 0}%
+																</tspan>
+																<tspan
+																	x={viewBox.cx}
+																	y={(viewBox.cy || 0) + 22}
+																	className="fill-muted-foreground"
+																>
+																	Moisture
+																</tspan>
+															</text>
+														);
+													}
+													return null;
+												}}
+											/>
+										</PolarRadiusAxis>
+									</RadialBarChart>
+								</ChartContainer>
+							</div>
 						</div>
 						<Separator />
 						<div className="grid gap-2">
@@ -342,14 +433,6 @@ function SpecimenDetails() {
 								</span>
 								<span className="font-medium">
 									{renderValue(data.wood_type)}
-								</span>
-							</div>
-							<div className="flex flex-col gap-1">
-								<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-									Moisture Percentage
-								</span>
-								<span className="font-medium">
-									{renderValue(data.moisture_percentage)}
 								</span>
 							</div>
 							<div className="flex flex-col gap-1">
@@ -510,10 +593,10 @@ function SpecimenDetails() {
 					</CardContent>
 				</Card>
 			</div>
-			<Separator className="my-10" />
+			{/* <Separator className="my-10" />
 			<pre className="rounded-md bg-muted p-4 text-xs overflow-x-auto whitespace-pre-wrap break-words max-w-full">
 				{JSON.stringify(data, null, 2)}
-			</pre>
+			</pre> */}
 		</div>
 	);
 }
