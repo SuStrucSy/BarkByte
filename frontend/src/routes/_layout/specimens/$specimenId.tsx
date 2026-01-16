@@ -36,6 +36,7 @@ import { ExternalLinkIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LabelValue } from "@/components/Common/LabelValue";
+import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	staticData: {
@@ -79,13 +80,6 @@ function SpecimenDetails() {
 		value: {
 			label: "Value",
 			color: "var(--chart-3)",
-		},
-	} satisfies ChartConfig;
-
-	const moistureChartConfig = {
-		moisture: {
-			label: "Moisture",
-			color: "var(--chart-2)",
 		},
 	} satisfies ChartConfig;
 
@@ -197,9 +191,7 @@ function SpecimenDetails() {
 					</CardHeader>
 					<CardContent className="grid gap-4 md:grid-cols-[2fr_auto_1fr] md:items-start">
 						<div className="grid gap-3">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Specimen Information
-							</h3>
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">Specimen Information</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<div className="grid gap-2">
 									<LabelValue label="Assembly Type" value={renderValue(data.assembly_type)} />
@@ -219,14 +211,9 @@ function SpecimenDetails() {
 								</div>
 							</div>
 						</div>
-						<Separator
-							orientation="vertical"
-							className="hidden md:block"
-						/>
+						<Separator orientation="vertical" className="hidden md:block"/>
 						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Identification Information
-							</h3>
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">Identification Information</h3>
 							<Item variant="outline" asChild>
 								<div>
 									<ItemContent>
@@ -263,80 +250,13 @@ function SpecimenDetails() {
 					</CardHeader>
 					<CardContent className="grid gap-4 md:grid-cols-[1fr_auto_2fr] md:items-start">
 						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Geometric Properties
-							</h3>
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">Geometric Properties</h3>
 							<LabelValue label="Element Dimension" value={renderValue(data.element_dimension)} />
-							<div className="flex flex-col gap-1">
-								<ChartContainer
-									config={moistureChartConfig}
-									className="mx-auto h-[220px] w-full"
-								>
-									<RadialBarChart
-										data={moistureChartData}
-										startAngle={0}
-										endAngle={250}
-										innerRadius={80}
-										outerRadius={110}
-									>
-										<PolarGrid
-											gridType="circle"
-											radialLines={false}
-											stroke="none"
-											className="first:fill-muted last:fill-background"
-											polarRadius={[86, 74]}
-										/>
-										<RadialBar
-											dataKey="moisture"
-											fill="var(--color-moisture)"
-											background
-											cornerRadius={10}
-										/>
-										<PolarRadiusAxis
-											tick={false}
-											tickLine={false}
-											axisLine={false}
-										>
-											<Label
-												content={({ viewBox }) => {
-													if (
-														viewBox &&
-														"cx" in viewBox &&
-														"cy" in viewBox
-													) {
-														return (
-															<text
-																x={viewBox.cx}
-																y={viewBox.cy}
-																textAnchor="middle"
-																dominantBaseline="middle"
-															>
-																<tspan className="fill-foreground text-3xl font-bold">
-																	{moistureChartData[0]?.moisture ?? 0}%
-																</tspan>
-																<tspan
-																	x={viewBox.cx}
-																	y={(viewBox.cy || 0) + 22}
-																	className="fill-muted-foreground"
-																>
-																	Moisture
-																</tspan>
-															</text>
-														);
-													}
-													return null;
-												}}
-											/>
-										</PolarRadiusAxis>
-									</RadialBarChart>
-								</ChartContainer>
-							</div>
+							<MoistureDial value={moistureChartData[0].moisture} label="Moisture Percentage" className="max-w-[200px]" />
 						</div>
-						<Separator />
+						<Separator orientation="vertical" className="hidden md:block"/>
 						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Material Properties
-							</h3>
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">Material Properties</h3>
 							<LabelValue label="Wood Type" value={renderValue(data.wood_type)} />
 							<LabelValue label="Wood Mechanical Properties" value={renderValue(data.wood_mechanical_properties)} />
 							<LabelValue label="Fastener Mechanical Properties" value={renderValue(data.fastener_mechanical_properties)} />
@@ -350,28 +270,22 @@ function SpecimenDetails() {
 					</CardHeader>
 					<CardContent className="grid gap-6 md:grid-cols-2 md:items-start">
 						<div className="grid gap-2">
-							<h3 className="text-xl font-semibold tracking-tight text-foreground">
-								Experimental Results
-							</h3>
+							<h3 className="text-xl font-semibold tracking-tight text-foreground">Experimental Results</h3>
 							<LabelValue label="Experiment Date" value={renderValue(data.e_date)} />
 							<LabelValue label="Test Loading Type" value={renderValue(data.e_test_loading_type)} />
 							<LabelValue label="Measurement Unit" value={renderValue(data.e_measurement_unit)} />
 							<LabelValue label="Yield Point Method" value={renderValue(data.e_yield_point_method)} />
 							<LabelValue label="Note" value={renderValue(data.note)} />
-							<Separator />
+							
 							<div className="grid gap-2">
-								<h3 className="text-xl font-semibold tracking-tight text-foreground">
-									Qualitative Failure Measures
-								</h3>
+								<h3 className="text-xl font-semibold tracking-tight text-foreground">Qualitative Failure Measures</h3>
 								<LabelValue label="Failure Modes" value={renderLabels(data.e_qualitative_failure_measure)} />
 								<LabelValue label="QFM Description" value={renderValue(data.e_qfm_description)} />
 							</div>
 						</div>
 						<div className="grid gap-6">
 							<div className="grid gap-2">
-								<h3 className="text-xl font-semibold tracking-tight text-foreground">
-									Quantitative Mechanical Measures
-								</h3>
+								<h3 className="text-xl font-semibold tracking-tight text-foreground">Quantitative Mechanical Measures</h3>
 								<ChartContainer
 									config={chartConfig}
 									className="mx-auto h-[280px] w-full"
