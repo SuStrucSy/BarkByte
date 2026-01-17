@@ -76,8 +76,8 @@ export function DataTable<TData, TValue>({
 	const rowStyle = getRowStyle ?? defaultGetRowStyle;
 
 	return (
-		<div className="grid w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
-			<div className="h-full w-full overflow-auto rounded-md border relative">
+		<div className="grid h-full w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
+			<div className="min-h-0 w-full overflow-auto rounded-md border relative">
 				<Table className="w-full border-separate border-spacing-0">
 					<TableHeader className="sticky top-0 bg-primary/95 backdrop-blur">
 						{table.getHeaderGroups().map((headerGroup) => (
@@ -172,7 +172,7 @@ export function DataTable<TData, TValue>({
 					</TableBody>
 				</Table>
 			</div>
-			<div className="flex items-center justify-end space-x-2 h-fit py-4">
+			<div className="shrink-0 flex items-center justify-end space-x-2 py-4">
 				<Button
 					variant="outline"
 					size="sm"
