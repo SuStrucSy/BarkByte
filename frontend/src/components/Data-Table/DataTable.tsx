@@ -76,7 +76,7 @@ export function DataTable<TData, TValue>({
 	const rowStyle = getRowStyle ?? defaultGetRowStyle;
 
 	return (
-		<div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
+		<div className="grid w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
 			<div className="h-full w-full overflow-auto rounded-md border relative">
 				<Table className="w-full border-separate border-spacing-0">
 					<TableHeader className="sticky top-0 bg-primary/95 backdrop-blur">
