@@ -91,9 +91,7 @@ function SpecimensTable() {
 }
 
 function Specimens() {
-	return (
-		<div className="grid grid-cols-1 grid-rows-2 h-dvh">
-			<SpecimensTable />
-		</div>
+	return (		
+		<SpecimensTable />
 	);
 }
