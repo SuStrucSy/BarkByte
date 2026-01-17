@@ -79,14 +79,14 @@ export function DataTable<TData, TValue>({
 		<div className="grid h-full w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
 			<div className="min-h-0 w-full overflow-auto rounded-md border relative">
 				<Table className="w-full border-separate border-spacing-0">
-					<TableHeader className="sticky top-0 bg-primary/95 backdrop-blur">
+					<TableHeader className="sticky top-0 backdrop-blur">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
 									return (
 										<TableHead
 											key={header.id}
-											className="sticky top-0 z-20 bg-primary/95 text-white px-3 py-4 text-left text-xs font-medium border-b border-primary/20 first:z-30"
+											className="sticky top-0 z-20 px-3 py-4 text-left text-xs font-medium border-b first:z-30"
 										>
 											{header.isPlaceholder
 												? null
