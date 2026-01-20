@@ -19,8 +19,15 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-// TODO: need to get real 5th and 95th percentile values from db
-// 5th and 95th percentile ranges per metric (raw units)
+/*
+Maybe TODO: need to get real 5th and 95th percentile values from db
+
+5th and 95th percentile average ranges per metric (raw units)
+note: using min–max (5th–95th) normalization assumes a roughly linear distribution, and the data is clearly right-skewed (many small values, few large ones). That’s why almost everything collapses near zero on the radar and the radar looks ugly.
+
+
+
+*/
 const metricRanges: Record<string, { min: number; max: number }> = {
   "Max Force": { min: 6.9, max: 382.3 },
   "Max Displacement": { min: 3.7, max: 47.4 },
@@ -48,7 +55,17 @@ const metricUnits: Record<string, string> = {
 function normalizeMetric(metric: string, rawValue: number) {
   const range = metricRanges[metric]
   if (!range || range.max <= range.min) return 0
-  const normalized = (rawValue - range.min) / (range.max - range.min)
+
+  // Clamp to avoid log(0) or negatives
+  const safeValue = Math.max(rawValue, range.min)
+  const safeMin = Math.max(range.min, 1e-6)
+  const safeMax = Math.max(range.max, safeMin + 1e-6)
+
+  const logValue = Math.log(safeValue)
+  const logMin = Math.log(safeMin)
+  const logMax = Math.log(safeMax)
+
+  const normalized = (logValue - logMin) / (logMax - logMin)
   return Math.max(0, Math.min(1, normalized))
 }
 
@@ -95,9 +112,11 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
             <ChartTooltipContent
               hideLabel
               formatter={(_, __, item) => (
-                <div className="text-muted-foreground flex min-w-[180px] items-center text-xs">
-                  {item.payload.metric}
-                  <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
+                <div className="grid min-w-[220px] grid-cols-[1fr_minmax(80px,max-content)] items-center gap-2 text-xs">
+                  <span className="truncate text-muted-foreground">
+                    {item.payload.metric}
+                  </span>
+                  <div className="flex items-baseline justify-end gap-0.5 font-mono font-medium tabular-nums text-foreground">
                     {item.payload.rawValue}
                     <span className="text-muted-foreground font-normal">
                       {metricUnits[item.payload.metric] ?? ""}
