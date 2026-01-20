@@ -32,6 +32,19 @@ const metricRanges: Record<string, { min: number; max: number }> = {
   Ductility: { min: 5.5, max: 336.8 },
 }
 
+const metricUnits: Record<string, string> = {
+  "Max Force": "kN",
+  "Ultimate Force": "kN",
+  "Yield Force": "kN",
+
+  "Max Displacement": "mm",
+  "Ultimate Displacement": "mm",
+  "Yield Displacement": "mm",
+
+  Stiffness: "kN/mm",
+  Ductility: "",
+}
+
 function normalizeMetric(metric: string, rawValue: number) {
   const range = metricRanges[metric]
   if (!range || range.max <= range.min) return 0
@@ -80,28 +93,18 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
           cursor={false}
           content={
             <ChartTooltipContent
-              formatter={(_, __, item) => {
-                const payload = item?.payload as
-                  | { metric?: string; rawValue?: number }
-                  | undefined
-
-                const color = item?.color ?? item?.fill
-                const metric = payload?.metric ?? "—"
-                const raw = payload?.rawValue
-
-                return (
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-2 w-2 rounded-sm"
-                      style={{ backgroundColor: color }}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground">{metric}</span>
-                      <span className="font-medium">{raw ?? "—"}</span>
-                    </div>
+              hideLabel
+              formatter={(_, __, item) => (
+                <div className="text-muted-foreground flex min-w-[180px] items-center text-xs">
+                  {item.payload.metric}
+                  <div className="text-foreground ml-auto flex items-baseline gap-0.5 font-mono font-medium tabular-nums">
+                    {item.payload.rawValue}
+                    <span className="text-muted-foreground font-normal">
+                      {metricUnits[item.payload.metric] ?? ""}
+                    </span>
                   </div>
-                )
-              }}
+                </div>
+              )}
             />
           }
         />
