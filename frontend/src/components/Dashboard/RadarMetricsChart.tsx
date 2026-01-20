@@ -4,6 +4,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
+  ResponsiveContainer
 } from "recharts"
 
 import {
@@ -100,40 +101,50 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
   return (
     <ChartContainer
       config={chartConfig}
-      className={["mx-auto h-[280px] w-full", className].filter(Boolean).join(" ")}
+      className={["w-full min-w-0 aspect-square max-w-[520px] mx-auto", className]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <RadarChart data={chartData}>
-        <ChartTooltip
-          cursor={false}
-          content={
-            <ChartTooltipContent
-              hideLabel
-              formatter={(_, __, item) => (
-                <div className="grid min-w-[220px] grid-cols-[1fr_minmax(80px,max-content)] items-center gap-2 text-xs">
-                  <span className="truncate text-muted-foreground">
-                    {item.payload.metric}
-                  </span>
-                  <div className="flex items-baseline justify-end gap-0.5 font-mono font-medium tabular-nums text-foreground">
-                    {item.payload.rawValue}
-                    <span className="text-muted-foreground font-normal">
-                      {metricUnits[item.payload.metric] ?? ""}
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <RadarChart data={chartData} outerRadius="100%" margin={{ top: 16, right: 48, bottom: 16, left: 48 }}>
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                hideLabel
+                formatter={(_, __, item) => (
+                  <div className="grid min-w-[220px] grid-cols-[1fr_minmax(80px,max-content)] items-center gap-2 text-xs">
+                    <span className="truncate text-muted-foreground">
+                      {item.payload.metric}
                     </span>
+                    <div className="flex items-baseline justify-end gap-0.5 font-mono font-medium tabular-nums text-foreground">
+                      {item.payload.rawValue}
+                      <span className="text-muted-foreground font-normal">
+                        {metricUnits[item.payload.metric] ?? ""}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
-            />
-          }
-        />
-        <PolarAngleAxis dataKey="metric" />
-        <PolarGrid />
-        <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
-        <Radar
-          dataKey="value"
-          fill="var(--color-value)"
-          fillOpacity={0.6}
-          stroke="var(--color-value)"
-        />
-      </RadarChart>
+                )}
+              />
+            }
+          />
+          <PolarAngleAxis 
+            dataKey="metric"
+            tick={{ fontSize: 12, dy: 6 }}
+            tickFormatter={(value: string) =>
+              value.length > 14 ? `${value.slice(0, 12)}…` : value
+            }
+          />
+          <PolarGrid />
+          <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
+          <Radar
+            dataKey="value"
+            fill="var(--color-value)"
+            fillOpacity={0.6}
+            stroke="var(--color-value)"
+          />
+        </RadarChart>
+      </ResponsiveContainer>
     </ChartContainer>
   )
 }

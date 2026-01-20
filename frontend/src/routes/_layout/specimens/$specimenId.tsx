@@ -177,7 +177,7 @@ function SpecimenDetails() {
 							<CardHeader>
 								<CardTitle className="text-2xl">Experimental Data</CardTitle>
 							</CardHeader>
-							<CardContent className="grid gap-6 md:grid-cols-2 md:items-start">
+							<CardContent className="grid gap-6 lg:grid-cols-2 lg:items-start">
 								<div className="grid gap-2">
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">Experimental Results</h3>
 									<LabelValue property="e_date" data={data} />
@@ -192,8 +192,8 @@ function SpecimenDetails() {
 										<LabelValue property="e_qfm_description" data={data} />
 									</div>
 								</div>
-								<div className="grid gap-6">
-									<div className="grid gap-2">
+								<div className="grid w-full justify-self-stretch gap-6">
+									<div className="grid gap-2 min-w-0 overflow-hidden">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">Quantitative Mechanical Measures</h3>
 										<RadarMetricsChart data={data} />
 									</div>
