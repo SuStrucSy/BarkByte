@@ -5,12 +5,15 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
-export function renderValue(value: unknown) {
+export function renderValue(value: any): string {
 	if (value === null || value === undefined || value === "") {
 		return "—";
 	}
 	if (typeof value === "boolean") {
 		return value ? "Yes" : "No";
 	}
-	return String(value);
+	if (typeof value === "string") {
+		return value
+	}
+	return value?.label || "—"
 }

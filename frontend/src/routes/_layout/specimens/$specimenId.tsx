@@ -34,6 +34,7 @@ export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	component: SpecimenDetails,
 });
 
+
 function SpecimenDetails() {
 	const { specimenId } = Route.useParams();
 	const { data, isLoading, isError, error } =
@@ -67,6 +68,8 @@ function SpecimenDetails() {
 		},
 	];
 
+	console.log("Specimen data:", data);
+
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
@@ -96,20 +99,20 @@ function SpecimenDetails() {
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">Specimen Information</h3>
 									<div className="grid gap-4 md:grid-cols-2">
 										<div className="grid gap-2">
-											<LabelValue label="Assembly Type" value={renderValue(data.assembly_type)} />
-											<LabelValue label="Joinery Type" value={renderValue(data.joinery_type.label)} />
-											<LabelValue label="Sub Joinery Type" value={renderValue(data.sub_joinery_type.label)} />
-											<LabelValue label="Fastener Types" value={renderLabels(data.fastener_types)} />
-											<LabelValue label="Loading Directions" value={renderLabels(data.loading_directions)} />
-											<LabelValue label="Practice" value={renderValue(data.practice)} />
+											<LabelValue property="assembly_type" data={data} />
+											<LabelValue property="joinery_type" data={data} />
+											<LabelValue property="sub_joinery_type" data={data} />
+											<LabelValue property="fastener_types" data={data} />
+											<LabelValue property="loading_directions" data={data} />
+											<LabelValue property="practice" data={data} />
 										</div>
 										<div className="grid gap-2">
-											<LabelValue label="Fastener Numbers" value={renderValue(data.fastener_numbers)} />
-											<LabelValue label="Connector Present" value={renderValue(data.connector)} />
-											<LabelValue label="Dowel Present" value={renderValue(data.dowel)} />
-											<LabelValue label="Replicate Tests" value={renderValue(data.replicate_tests)} />
-											<LabelValue label="Connection Description" value={renderValue(data.connection_description)} />
-											<LabelValue label="Note" value={renderValue(data.note)} />
+											<LabelValue property="fastener_numbers" data={data} />
+											<LabelValue property="connector" data={data} />
+											<LabelValue property="dowel" data={data} />
+											<LabelValue property="replicate_tests" data={data} />
+											<LabelValue property="connection_description" data={data} />
+											<LabelValue property="note" data={data} />
 										</div>
 									</div>
 								</div>
@@ -155,16 +158,16 @@ function SpecimenDetails() {
 							<CardContent className="grid gap-4 md:grid-cols-[1fr_auto_2fr] md:items-start">
 								<div className="grid gap-2">
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">Geometric Properties</h3>
-									<LabelValue label="Element Dimension" value={renderValue(data.element_dimension)} />
+									<LabelValue property="element_dimension" data={data} />
 									<MoistureDial value={moistureChartData[0].moisture} label="Moisture Percentage" className="max-w-[200px]" />
 								</div>
 								<Separator orientation="vertical" className="hidden md:block"/>
 								<div className="grid gap-2">
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">Material Properties</h3>
-									<LabelValue label="Wood Type" value={renderValue(data.wood_type)} />
-									<LabelValue label="Wood Mechanical Properties" value={renderValue(data.wood_mechanical_properties)} />
-									<LabelValue label="Fastener Mechanical Properties" value={renderValue(data.fastener_mechanical_properties)} />
-									<LabelValue label="Connector Mechanical Properties" value={renderValue(data.connector_mechanical_properties)} />
+									<LabelValue property="wood_type" data={data} />
+									<LabelValue property="wood_mechanical_properties" data={data} />
+									<LabelValue property="fastener_mechanical_properties" data={data} />
+									<LabelValue property="connector_mechanical_properties" data={data} />
 								</div>
 							</CardContent>
 						</Card>
@@ -177,16 +180,16 @@ function SpecimenDetails() {
 							<CardContent className="grid gap-6 md:grid-cols-2 md:items-start">
 								<div className="grid gap-2">
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">Experimental Results</h3>
-									<LabelValue label="Experiment Date" value={renderValue(data.e_date)} />
-									<LabelValue label="Test Loading Type" value={renderValue(data.e_test_loading_type)} />
-									<LabelValue label="Measurement Unit" value={renderValue(data.e_measurement_unit)} />
-									<LabelValue label="Yield Point Method" value={renderValue(data.e_yield_point_method)} />
-									<LabelValue label="Note" value={renderValue(data.note)} />
+									<LabelValue property="e_date" data={data} />
+									<LabelValue property="e_test_loading_type" data={data} />
+									<LabelValue property="e_measurement_unit" data={data} />
+									<LabelValue property="e_yield_point_method" data={data} />
+									<LabelValue property="note" data={data} />
 									
 									<div className="grid gap-2">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">Qualitative Failure Measures</h3>
-										<LabelValue label="Failure Modes" value={renderLabels(data.e_qualitative_failure_measure)} />
-										<LabelValue label="QFM Description" value={renderValue(data.e_qfm_description)} />
+										{/*<LabelValue label="Failure Modes" value={renderLabels(data.e_qualitative_failure_measure)} />*/}
+										<LabelValue property="e_qfm_description" data={data} />
 									</div>
 								</div>
 								<div className="grid gap-6">
