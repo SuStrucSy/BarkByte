@@ -23,10 +23,7 @@ const chartConfig = {
 Maybe TODO: need to get real 5th and 95th percentile values from db
 
 5th and 95th percentile average ranges per metric (raw units)
-note: using min–max (5th–95th) normalization assumes a roughly linear distribution, and the data is clearly right-skewed (many small values, few large ones). That’s why almost everything collapses near zero on the radar and the radar looks ugly.
-
-
-
+note: using min–max (5th–95th) normalization assumes a roughly linear distribution, and the data is clearly right-skewed (many small values, few large ones). That’s why almost everything collapses near zero on the radar and the radar looks ugly. So I'm using a log scale to spread out the lower values more so that the radar looks better.
 */
 const metricRanges: Record<string, { min: number; max: number }> = {
   "Max Force": { min: 6.9, max: 382.3 },
