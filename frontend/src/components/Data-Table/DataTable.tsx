@@ -132,7 +132,6 @@ export function DataTable<TData, TValue>({
 
 												if (meta?.renderAs === "array_join") {
 													const value = cell.getValue();
-													console.log({ value });
 													return Array.isArray(value)
 														? value.join(", ")
 														: value;

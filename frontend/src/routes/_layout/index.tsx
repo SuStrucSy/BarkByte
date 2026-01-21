@@ -23,9 +23,6 @@ function Dashboard() {
     return null
   }
 
-	console.log(typeof data);
-	console.log(data);
-
   const blah: DataPoint[] = data?.data?.map(specimen => {
     return {
       id: specimen.id,

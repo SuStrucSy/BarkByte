@@ -58,8 +58,6 @@ function Login() {
 	const onSubmit: SubmitHandler<BodyLoginLoginAccessToken> = async (data) => {
 		resetError();
 
-    console.log(data)
-
 		try {
 			await loginMutation.mutateAsync({data: data});
 		} catch {

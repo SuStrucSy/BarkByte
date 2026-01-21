@@ -68,9 +68,7 @@ function SpecimensTable() {
 	if (isLoading && !isPlaceholderData) {
 		return <PendingSpecimens />;
 	}
-
-	console.log(data?.data)
-
+	
 	return (
 		<DataTable<SpecimenPublic, unknown>
 			columns={columns}

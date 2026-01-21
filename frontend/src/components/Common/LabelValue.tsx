@@ -34,15 +34,11 @@ function renderYesNoValue(value: string) {
 }
 
 function getLabel(property: keyof SpecimenPublic): string {
-  console.log(manual_labels[property]);
   return manual_labels[property] || humanizeLabel(property);
 }
 
 // export function LabelValue({ label, value }: LabelValueProps) {
 export function LabelValue({property, data}: LabelValueProps) {
-  
-
-  console.log(property);
   
   const label = getLabel(property);
   const value = renderYesNoValue(renderValue(data[property]));

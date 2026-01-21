@@ -61,7 +61,6 @@ function SignUp() {
 	});
 
 	const onSubmit: SubmitHandler<UserRegisterForm> = (data) => {
-		console.log(data);
 		signUpMutation.mutate(data);
 	};
 
