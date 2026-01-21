@@ -41,13 +41,22 @@ const metricUnits: Record<string, string> = {
   "Max Force": "kN",
   "Ultimate Force": "kN",
   "Yield Force": "kN",
-
   "Max Displacement": "mm",
   "Ultimate Displacement": "mm",
   "Yield Displacement": "mm",
-
   Stiffness: "kN/mm",
   Ductility: "",
+}
+
+const tickSymbols: Record<string, string> = {
+  Stiffness: "Ks",
+  "Yield Displacement": "Δy",
+  "Yield Force": "Fy",
+  "Max Displacement": "Δmax",
+  "Max Force": "Fmax",
+  "Ultimate Displacement": "Δu",
+  "Ultimate Force": "Fu",
+  Ductility: "μ",
 }
 
 function normalizeMetric(metric: string, rawValue: number) {
@@ -106,7 +115,7 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
         .join(" ")}
     >
       <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-        <RadarChart data={chartData} outerRadius="100%" margin={{ top: 16, right: 48, bottom: 16, left: 48 }}>
+        <RadarChart data={chartData} outerRadius="100%" margin={{ top: 22, right: 22, bottom: 22, left: 22 }}>
           <ChartTooltip
             cursor={false}
             content={
@@ -128,12 +137,10 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
               />
             }
           />
-          <PolarAngleAxis 
+          <PolarAngleAxis
             dataKey="metric"
             tick={{ fontSize: 12, dy: 6 }}
-            tickFormatter={(value: string) =>
-              value.length > 14 ? `${value.slice(0, 12)}…` : value
-            }
+            tickFormatter={(v) => tickSymbols[String(v)] ?? String(v)}
           />
           <PolarGrid />
           <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
