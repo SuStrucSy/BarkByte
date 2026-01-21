@@ -22,6 +22,16 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { LabelValue } from "@/components/Common/LabelValue";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
@@ -67,8 +77,6 @@ function SpecimenDetails() {
 			moisture: Number.isFinite(moistureValue) ? moistureValue : 0,
 		},
 	];
-
-	console.log("Specimen data:", data);
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -128,24 +136,48 @@ function SpecimenDetails() {
 										</div>
 									</Item>
 
-									<Item variant="outline" asChild>
-										<Link
-											to="/doi/$doiId"
-											params={{ doiId: data.doi.id }}
-											target="_blank"
-											className="block"
-										>
-											<ItemContent>
-												<ItemTitle>View DOI</ItemTitle>
-												<ItemDescription>
-													{data.doi.ref_title}
-												</ItemDescription>
-											</ItemContent>
-											<ItemActions>
-												<ExternalLinkIcon className="size-4" />
-											</ItemActions>
-										</Link>
+									<Item variant="outline">
+										<ItemContent>
+											<ItemTitle>DOI Reference</ItemTitle>
+											<ItemDescription>
+												{data.doi.ref_title}
+											</ItemDescription>
+										</ItemContent>
+										<ItemActions>
+											<Sheet>
+												<SheetTrigger asChild>
+													<Button size="sm" variant="outline">
+														Details
+													</Button>
+												</SheetTrigger>
+												<SheetContent>
+													<SheetHeader>
+													<SheetTitle>DOI details</SheetTitle>
+													<SheetDescription>
+														{data.doi.ref_title}
+													</SheetDescription>
+													</SheetHeader>
+
+													<div className="grid gap-3 py-4 text-sm">
+													<div>
+														<span className="text-muted-foreground">DOI:</span>{" "}
+														<span className="font-mono">{data.doi.id}</span>
+													</div>
+													{/* add more DOI metadata here */}
+													</div>
+
+													<SheetFooter>
+													<SheetClose asChild>
+														<Button variant="outline">Close</Button>
+													</SheetClose>
+													</SheetFooter>
+												</SheetContent>
+											</Sheet>
+										</ItemActions>
 									</Item>
+
+
+									
 								</div>
 							</CardContent>
 						</Card>
