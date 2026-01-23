@@ -4,6 +4,7 @@ import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
 	Card,
 	CardContent,
@@ -157,9 +158,9 @@ function SpecimenDetails() {
 														Details
 													</Button>
 												</SheetTrigger>
-												<SheetContent className="px-6 py-6">
+												<SheetContent className="flex h-full flex-col px-6 py-6">
 													<h3 className="text-xl font-semibold tracking-tight text-foreground">DOI Details</h3>														
-													<div className="space-y-4">
+													<div className="flex flex-1 min-h-0 flex-col gap-4">
 														<dl className="grid gap-3 ">
 															<div className="grid gap-1">
 															<dt className="text-xs font-medium text-muted-foreground">Title</dt>
@@ -179,9 +180,9 @@ function SpecimenDetails() {
 														<Item variant="outline" asChild>
 															<a href={data.doi.link} target="_blank" rel="noopener noreferrer">
 																<ItemContent>
-																	<ItemTitle>Link</ItemTitle>
+																	<ItemTitle>Publication Record</ItemTitle>
 																	<ItemDescription>
-																		For more information, please visit the doi.
+																		View the full DOI record and publication details.
 																	</ItemDescription>
 																</ItemContent>
 																<ItemActions>
@@ -190,25 +191,29 @@ function SpecimenDetails() {
 															</a>
 														</Item>
 
+														<div className="flex flex-1 min-h-0 flex-col gap-2">
 														<h3 className="text-xl font-semibold tracking-tight text-foreground">Specimens</h3>
-														<div className="grid gap-2 overflow-y-auto">
-															{(doiData?.specimens?.data ?? [])
-																.filter((specimen) => specimen.id !== data.id)
-																.map((specimen) => (
-																<Item key={specimen.id} variant="outline" asChild>
-																	<a href={`/specimens/${specimen.id}`} target="_blank">
-																		<ItemContent>
-																			<ItemTitle>{specimen.specimen_reference_id ?? specimen.id}</ItemTitle>
-																			<ItemDescription>
-																				{renderValue(specimen.joinery_type.label)}
-																			</ItemDescription>
-																		</ItemContent>
-																		<ItemActions>
-																			<ChevronRightIcon className="size-4" />
-																		</ItemActions>
-																	</a>
-																</Item>
-															))}
+														<ScrollArea className="flex-1 min-h-0">
+															<div className="grid gap-2">
+																{(doiData?.specimens?.data ?? [])
+																	.filter((specimen) => specimen.id !== data.id)
+																	.map((specimen) => (
+																	<Item key={specimen.id} variant="outline" asChild>
+																		<a href={`/specimens/${specimen.id}`} target="_blank">
+																			<ItemContent>
+																				<ItemTitle>{specimen.specimen_reference_id ?? specimen.id}</ItemTitle>
+																				<ItemDescription>
+																					{renderValue(specimen.joinery_type.label)}
+																				</ItemDescription>
+																			</ItemContent>
+																			<ItemActions>
+																				<ChevronRightIcon className="size-4" />
+																			</ItemActions>
+																		</a>
+																	</Item>
+																))}
+															</div>
+														</ScrollArea>
 														</div>
 													</div>
 													<SheetFooter>
