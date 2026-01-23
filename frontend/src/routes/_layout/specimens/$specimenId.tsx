@@ -112,19 +112,8 @@ function SpecimenDetails() {
 											<LabelValue property="joinery_type" data={data} />
 											<LabelValue property="sub_joinery_type" data={data} />
 
+											<LabelValue property="fastener_types" data={data} />
 											
-											{fastenerTypeLabels.length > 0 && (
-												<>
-													<span className="text-[10px] tracking-wide text-muted-foreground">{humanizeLabel("fastener_types")}</span>
-													<div className="flex flex-wrap gap-2">
-														{fastenerTypeLabels.map((label) => (
-														<Badge key={label}>
-															{label}
-														</Badge>
-														))}
-													</div>
-												</>
-											)}
 
 											<LabelValue property="loading_directions" data={data} />
 											<LabelValue property="practice" data={data} />
@@ -203,21 +192,9 @@ function SpecimenDetails() {
 									<LabelValue property="e_test_loading_type" data={data} />
 									<LabelValue property="e_yield_point_method" data={data} />
 									<LabelValue property="note" data={data} />
-									
-									<div className="grid gap-2">
+									<div className="mt-5 grid gap-2">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">Qualitative Failure Measures</h3>
-										
-										<span className="text-[10px] tracking-wide text-muted-foreground">QFM</span>
-											{qualitativeFailureMeasureLabels.length > 0 && (
-												<div className="flex flex-wrap gap-2">
-													{qualitativeFailureMeasureLabels.map((label) => (
-													<Badge className="bg-red-100 text-red-500" key={label}>
-														{label}
-													</Badge>
-													))}
-												</div>
-											)}
-										
+										<LabelValue property="e_qualitative_failure_measure" data={data} />
 										<LabelValue property="e_qfm_description" data={data} />
 									</div>
 								</div>

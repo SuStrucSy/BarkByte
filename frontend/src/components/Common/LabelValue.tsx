@@ -4,6 +4,7 @@ import type { Label } from "plotly.js"
 import * as React from "react"
 import { CheckIcon, XIcon } from "lucide-react"
 import {  } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 type LabelValueProps = {
   property: keyof SpecimenPublic
@@ -11,7 +12,8 @@ type LabelValueProps = {
 }
 
 const manual_labels: Partial<Record<keyof SpecimenPublic, string>> = {
-  e_qfm_description: "QFM Description"
+  e_qfm_description: "QFM Description",
+  e_qualitative_failure_measure: "QFM"
 }
 
 function renderYesNoValue(value: string) {
@@ -35,6 +37,21 @@ export function LabelValue({property, data}: LabelValueProps) {
   
   const label = getLabel(property);
   const value = renderYesNoValue(renderValue(data[property]));
+
+  if (Array.isArray(data[property])) {
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] tracking-wide text-muted-foreground">{label}</span>
+        <div className="flex flex-wrap gap-2">
+          {data[property].map((obj) => (
+          <Badge key={obj.label}>
+            {obj.label}
+          </Badge>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1">
