@@ -21,3 +21,11 @@ export function renderValue(value: any): string {
 	return value?.label || "—"
 }
 
+
+export function humanizeLabel(label: string): string {
+  return label
+    .replace(/^e_/, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}

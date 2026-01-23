@@ -1,8 +1,9 @@
 import type { SpecimenPublic } from "@/api/model"
-import { renderValue } from "@/lib/utils"
+import { renderValue, humanizeLabel } from "@/lib/utils"
 import type { Label } from "plotly.js"
 import * as React from "react"
 import { CheckIcon, XIcon } from "lucide-react"
+import {  } from "@/lib/utils"
 
 type LabelValueProps = {
   property: keyof SpecimenPublic
@@ -11,14 +12,6 @@ type LabelValueProps = {
 
 const manual_labels: Partial<Record<keyof SpecimenPublic, string>> = {
   e_qfm_description: "QFM Description"
-}
-
-function humanizeLabel(label: string): string {
-  return label
-    .replace(/^e_/, "")
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 function renderYesNoValue(value: string) {

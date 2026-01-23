@@ -11,6 +11,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Item,
   ItemActions,
@@ -40,6 +41,7 @@ import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import { renderValue } from "@/lib/utils";
 import type { ta } from "zod/v4/locales";
+import { humanizeLabel } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	staticData: {
@@ -86,6 +88,17 @@ function SpecimenDetails() {
 		},
 	];
 
+	const fastenerTypeLabels =
+	(data.fastener_types ?? [])
+		.map((x) => (typeof x === "string" ? x : x.label).trim());
+		
+	const qualitativeFailureMeasureLabels =
+	(data.e_qualitative_failure_measure ?? [])
+		.map((x) => (typeof x === "string" ? x : x.label).trim());
+
+	console.log("data.fastener_types:", data.fastener_types);
+	console.log("fastenerTypeLabels:", fastenerTypeLabels);
+
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
@@ -118,7 +131,21 @@ function SpecimenDetails() {
 											<LabelValue property="assembly_type" data={data} />
 											<LabelValue property="joinery_type" data={data} />
 											<LabelValue property="sub_joinery_type" data={data} />
-											<LabelValue property="fastener_types" data={data} />
+
+											
+											{fastenerTypeLabels.length > 0 && (
+												<>
+													<span className="text-[10px] tracking-wide text-muted-foreground">{humanizeLabel("fastener_types")}</span>
+													<div className="flex flex-wrap gap-2">
+														{fastenerTypeLabels.map((label) => (
+														<Badge key={label}>
+															{label}
+														</Badge>
+														))}
+													</div>
+												</>
+											)}
+
 											<LabelValue property="loading_directions" data={data} />
 											<LabelValue property="practice" data={data} />
 										</div>
@@ -269,7 +296,22 @@ function SpecimenDetails() {
 									
 									<div className="grid gap-2">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">Qualitative Failure Measures</h3>
+										
+										
 										<LabelValue property="e_qualitative_failure_measure" data={data} />
+										<span className="text-[10px] tracking-wide text-muted-foreground">{humanizeLabel("e_qualitative_failure_measure")}</span>
+											{qualitativeFailureMeasureLabels.length > 0 && (
+												<div className="flex flex-wrap gap-2">
+													{qualitativeFailureMeasureLabels.map((label) => (
+													<Badge variant="destructive" key={label}>
+														{label}
+													</Badge>
+													))}
+												</div>
+											)}
+										
+										
+										
 										<LabelValue property="e_qfm_description" data={data} />
 									</div>
 								</div>
