@@ -1,5 +1,6 @@
-import { ExternalLinkIcon } from "lucide-react"
+import { ChevronRightIcon, ExternalLinkIcon } from "lucide-react"
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -32,10 +33,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { Label } from "@/components/ui/label"
 import { LabelValue } from "@/components/Common/LabelValue";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import { renderValue } from "@/lib/utils";
+import type { ta } from "zod/v4/locales";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	staticData: {
@@ -49,9 +52,13 @@ function SpecimenDetails() {
 	const { specimenId } = Route.useParams();
 	const { data, isLoading, isError, error } =
 		useSpecimensReadSpecimen(specimenId);
-	
-	const renderLabels = (items?: { label: string }[]) =>
-		items?.length ? items.map((item) => item.label).join(", ") : "—";
+	const doiId = data?.doi?.id ?? "";
+	const { data: doiData } = useDoiGetDoiById(doiId, {
+		query: {
+			enabled: !!doiId,
+		},
+	});
+
 	if (isLoading) {
 		return <div>Loading specimen...</div>;
 	}
@@ -150,26 +157,64 @@ function SpecimenDetails() {
 														Details
 													</Button>
 												</SheetTrigger>
-												<SheetContent>
-													<SheetHeader>
-													<SheetTitle>DOI details</SheetTitle>
-													<SheetDescription>
-														{data.doi.ref_title}
-													</SheetDescription>
-													</SheetHeader>
+												<SheetContent className="px-6 py-6">
+													<h3 className="text-xl font-semibold tracking-tight text-foreground">DOI Details</h3>														
+													<div className="space-y-4">
+														<dl className="grid gap-3 ">
+															<div className="grid gap-1">
+															<dt className="text-xs font-medium text-muted-foreground">Title</dt>
+															<dd className="text-sm">{data.doi.ref_title}</dd>
+															</div>
 
-													<div className="grid gap-3 py-4 text-sm">
-													<div>
-														<span className="text-muted-foreground">DOI:</span>{" "}
-														<span className="font-mono">{data.doi.id}</span>
-													</div>
-													{/* add more DOI metadata here */}
-													</div>
+															<div className="grid gap-1">
+															<dt className="text-xs font-medium text-muted-foreground">Author(s)</dt>
+															<dd className="text-sm">{data.doi.authors}</dd>
+															</div>
 
+															<div className="grid gap-1">
+															<dt className="text-xs font-medium text-muted-foreground">Publication year</dt>
+															<dd className="text-sm">{data.doi.pub_year}</dd>
+															</div>
+														</dl>
+														<Item variant="outline" asChild>
+															<a href={data.doi.link} target="_blank" rel="noopener noreferrer">
+																<ItemContent>
+																	<ItemTitle>Link</ItemTitle>
+																	<ItemDescription>
+																		For more information, please visit the doi.
+																	</ItemDescription>
+																</ItemContent>
+																<ItemActions>
+																	<ExternalLinkIcon className="ml-1 inline-block h-4 w-4" />
+																</ItemActions>
+															</a>
+														</Item>
+
+														<h3 className="text-xl font-semibold tracking-tight text-foreground">Specimens</h3>
+														<div className="grid gap-2 overflow-y-auto">
+															{(doiData?.specimens?.data ?? [])
+																.filter((specimen) => specimen.id !== data.id)
+																.map((specimen) => (
+																<Item key={specimen.id} variant="outline" asChild>
+																	<a href={`/specimens/${specimen.id}`} target="_blank">
+																		<ItemContent>
+																			<ItemTitle>{specimen.specimen_reference_id ?? specimen.id}</ItemTitle>
+																			<ItemDescription>
+																				{renderValue(specimen.joinery_type.label)}
+																			</ItemDescription>
+																		</ItemContent>
+																		<ItemActions>
+																			<ChevronRightIcon className="size-4" />
+																		</ItemActions>
+																	</a>
+																</Item>
+															))}
+														</div>
+													</div>
 													<SheetFooter>
-													<SheetClose asChild>
-														<Button variant="outline">Close</Button>
-													</SheetClose>
+														<SheetClose asChild>
+															<Button variant="outline">Close</Button>
+														</SheetClose>
 													</SheetFooter>
 												</SheetContent>
 											</Sheet>
