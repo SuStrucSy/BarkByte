@@ -89,7 +89,7 @@ export function DOISheet({
 
 					<div className="flex flex-1 min-h-0 flex-col gap-2">
 						<h3 className="text-xl font-semibold tracking-tight text-foreground">
-							Specimens Referencing This Publication
+							Publication Specimens
 						</h3>
 						<ScrollArea className="flex-1 min-h-0">
 							<div className="grid gap-2">
