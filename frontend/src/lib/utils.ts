@@ -15,5 +15,9 @@ export function renderValue(value: any): string {
 	if (typeof value === "string") {
 		return value
 	}
+	if (Array.isArray(value)) {
+		return value.map((v) => renderValue(v)).join(", ");
+	}
 	return value?.label || "—"
 }
+

@@ -214,13 +214,12 @@ function SpecimenDetails() {
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">Experimental Results</h3>
 									<LabelValue property="e_date" data={data} />
 									<LabelValue property="e_test_loading_type" data={data} />
-									<LabelValue property="e_measurement_unit" data={data} />
 									<LabelValue property="e_yield_point_method" data={data} />
 									<LabelValue property="note" data={data} />
 									
 									<div className="grid gap-2">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">Qualitative Failure Measures</h3>
-										{/*<LabelValue label="Failure Modes" value={renderLabels(data.e_qualitative_failure_measure)} />*/}
+										<LabelValue property="e_qualitative_failure_measure" data={data} />
 										<LabelValue property="e_qfm_description" data={data} />
 									</div>
 								</div>

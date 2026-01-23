@@ -36,7 +36,8 @@ function Dashboard() {
 	return (
 		<div className="max-w-full">
 			<div className="">
-				<Plotly3DScatterPlot data={blah} />
+        hello there! 👋
+				{/* <Plotly3DScatterPlot data={blah} /> */}
 			</div>
 		</div>
 	);
