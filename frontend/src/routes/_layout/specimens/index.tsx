@@ -13,9 +13,9 @@ const specimensSearchSchema = z.object({
 	page: z.number().catch(1),
 });
 
-const PER_PAGE = 10;
+const PER_PAGE = 20;
 
-export const Route = createFileRoute("/_layout/specimens")({
+export const Route = createFileRoute("/_layout/specimens/")({
 	staticData: {
 		title: "Specimens",
 	},
@@ -68,15 +68,19 @@ function SpecimensTable() {
 	if (isLoading && !isPlaceholderData) {
 		return <PendingSpecimens />;
 	}
-
-  console.log(data?.data)
-
+	
 	return (
 		<DataTable<SpecimenPublic, unknown>
 			columns={columns}
 			initialColumnVisibility={getInitialColumnVisibility()}
 			data={data?.data ?? []}
 			isPlaceholderData={isPlaceholderData}
+			onRowClick={(row) =>
+				navigate({
+					to: "/specimens/$specimenId",
+					params: { specimenId: row.original.id },
+				})
+			}
 			rowCount={count}
 			pagination={pagination}
 			setPagination={handlePaginationChange}
@@ -85,9 +89,7 @@ function SpecimensTable() {
 }
 
 function Specimens() {
-	return (
-		<div className="grid grid-cols-1 grid-rows-2 h-dvh">
-			<SpecimensTable />
-		</div>
+	return (		
+		<SpecimensTable />
 	);
 }

@@ -87,7 +87,6 @@ function ResetPassword() {
 	});
 
 	const onSubmit: SubmitHandler<NewPasswordForm> = async (data) => {
-		console.log(data);
 		mutation.mutateAsync({ data: {new_password: data.new_password, token: token} });
 	};
 

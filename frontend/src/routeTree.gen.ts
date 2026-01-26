@@ -16,10 +16,11 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
-import { Route as LayoutSpecimensRouteImport } from './routes/_layout/specimens'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutDoisRouteImport } from './routes/_layout/dois'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutSpecimensIndexRouteImport } from './routes/_layout/specimens/index'
+import { Route as LayoutSpecimensSpecimenIdRouteImport } from './routes/_layout/specimens/$specimenId'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -55,11 +56,6 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutSpecimensRoute = LayoutSpecimensRouteImport.update({
-  id: '/specimens',
-  path: '/specimens',
-  getParentRoute: () => LayoutRoute,
-} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -75,6 +71,17 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSpecimensIndexRoute = LayoutSpecimensIndexRouteImport.update({
+  id: '/specimens/',
+  path: '/specimens/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutSpecimensSpecimenIdRoute =
+  LayoutSpecimensSpecimenIdRouteImport.update({
+    id: '/specimens/$specimenId',
+    path: '/specimens/$specimenId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -85,8 +92,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutAdminRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
-  '/specimens': typeof LayoutSpecimensRoute
   '/': typeof LayoutIndexRoute
+  '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
+  '/specimens': typeof LayoutSpecimensIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -97,8 +105,9 @@ export interface FileRoutesByTo {
   '/admin': typeof LayoutAdminRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
-  '/specimens': typeof LayoutSpecimensRoute
   '/': typeof LayoutIndexRoute
+  '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
+  '/specimens': typeof LayoutSpecimensIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -111,8 +120,9 @@ export interface FileRoutesById {
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/dois': typeof LayoutDoisRoute
   '/_layout/settings': typeof LayoutSettingsRoute
-  '/_layout/specimens': typeof LayoutSpecimensRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
+  '/_layout/specimens/': typeof LayoutSpecimensIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -125,8 +135,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dois'
     | '/settings'
-    | '/specimens'
     | '/'
+    | '/specimens/$specimenId'
+    | '/specimens'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -137,8 +148,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dois'
     | '/settings'
-    | '/specimens'
     | '/'
+    | '/specimens/$specimenId'
+    | '/specimens'
   id:
     | '__root__'
     | '/_layout'
@@ -150,8 +162,9 @@ export interface FileRouteTypes {
     | '/_layout/admin'
     | '/_layout/dois'
     | '/_layout/settings'
-    | '/_layout/specimens'
     | '/_layout/'
+    | '/_layout/specimens/$specimenId'
+    | '/_layout/specimens/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -214,13 +227,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/specimens': {
-      id: '/_layout/specimens'
-      path: '/specimens'
-      fullPath: '/specimens'
-      preLoaderRoute: typeof LayoutSpecimensRouteImport
-      parentRoute: typeof LayoutRoute
-    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
@@ -242,6 +248,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/specimens/': {
+      id: '/_layout/specimens/'
+      path: '/specimens'
+      fullPath: '/specimens'
+      preLoaderRoute: typeof LayoutSpecimensIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/specimens/$specimenId': {
+      id: '/_layout/specimens/$specimenId'
+      path: '/specimens/$specimenId'
+      fullPath: '/specimens/$specimenId'
+      preLoaderRoute: typeof LayoutSpecimensSpecimenIdRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
@@ -249,16 +269,18 @@ interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutDoisRoute: typeof LayoutDoisRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
-  LayoutSpecimensRoute: typeof LayoutSpecimensRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
+  LayoutSpecimensSpecimenIdRoute: typeof LayoutSpecimensSpecimenIdRoute
+  LayoutSpecimensIndexRoute: typeof LayoutSpecimensIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutDoisRoute: LayoutDoisRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
-  LayoutSpecimensRoute: LayoutSpecimensRoute,
   LayoutIndexRoute: LayoutIndexRoute,
+  LayoutSpecimensSpecimenIdRoute: LayoutSpecimensSpecimenIdRoute,
+  LayoutSpecimensIndexRoute: LayoutSpecimensIndexRoute,
 }
 
 const LayoutRouteWithChildren =

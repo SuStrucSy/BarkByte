@@ -23,9 +23,6 @@ function Dashboard() {
     return null
   }
 
-	console.log(typeof data);
-	console.log(data);
-
   const blah: DataPoint[] = data?.data?.map(specimen => {
     return {
       id: specimen.id,
@@ -39,7 +36,8 @@ function Dashboard() {
 	return (
 		<div className="max-w-full">
 			<div className="">
-				<Plotly3DScatterPlot data={blah} />
+        hello there! 👋
+				{/* <Plotly3DScatterPlot data={blah} /> */}
 			</div>
 		</div>
 	);
