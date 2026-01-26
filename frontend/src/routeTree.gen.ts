@@ -19,6 +19,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSpecimensRouteImport } from './routes/_layout/specimens'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutDoisRouteImport } from './routes/_layout/dois'
+import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -70,6 +71,11 @@ const LayoutDoisRoute = LayoutDoisRouteImport.update({
   path: '/dois',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof LayoutAdminRoute
+  '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
   '/specimens': typeof LayoutSpecimensRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof LayoutAdminRoute
+  '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
   '/specimens': typeof LayoutSpecimensRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/dashboard': typeof LayoutDashboardRoute
   '/_layout/dois': typeof LayoutDoisRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/specimens': typeof LayoutSpecimensRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/admin'
+    | '/dashboard'
     | '/dois'
     | '/settings'
     | '/specimens'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/admin'
+    | '/dashboard'
     | '/dois'
     | '/settings'
     | '/specimens'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/_layout/admin'
+    | '/_layout/dashboard'
     | '/_layout/dois'
     | '/_layout/settings'
     | '/_layout/specimens'
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutDoisRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/dashboard': {
+      id: '/_layout/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof LayoutDashboardRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/admin': {
       id: '/_layout/admin'
       path: '/admin'
@@ -247,6 +266,7 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutDashboardRoute: typeof LayoutDashboardRoute
   LayoutDoisRoute: typeof LayoutDoisRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutSpecimensRoute: typeof LayoutSpecimensRoute
@@ -255,6 +275,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
+  LayoutDashboardRoute: LayoutDashboardRoute,
   LayoutDoisRoute: LayoutDoisRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutSpecimensRoute: LayoutSpecimensRoute,
