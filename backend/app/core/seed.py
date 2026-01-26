@@ -102,11 +102,9 @@ def map_failure_labels_to_ids(session: Session, labels: list[str]) -> list[uuid.
 
 def map_fastener_labels_to_ids(session: Session, labels_string: str, fastener_numbers: int) -> list[uuid.UUID]:
     result_ids = []
-    if fastener_numbers == 0:
-        return result_ids
-    elif fastener_numbers > 0:
-        labels=labels_string.split(';')
 
+    labels=labels_string.split(';')
+    
     for label in labels:
         normalized_label = label.strip().lower()
 
