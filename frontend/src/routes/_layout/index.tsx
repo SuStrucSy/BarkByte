@@ -1,44 +1,62 @@
 import { createFileRoute } from "@tanstack/react-router";
-import * as d3 from "d3";
-import { useState } from "react";
-import {
-	Plotly3DScatterPlot,
-	type DataPoint,
-} from "@/components/Dashboard/ChartWithDimensions";
-import { useSpecimensReadSpecimens } from '@/api/endpoints/specimens/specimens.gen';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Github, Info, Mail, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_layout/")({
-	staticData: {
-		title: "Dashboard",
-	},
-	component: Dashboard,
+  staticData: {
+    title: "Home",
+  },
+  component: Home,
 });
 
-function Dashboard() {
-  const { data, isLoading, isPlaceholderData } = useSpecimensReadSpecimens(
+function Home() {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
+      <Card className="mx-auto w-full max-w-4xl">
+        <CardContent className="p-8 text-center md:p-12">
+          <h1 className="text-4xl font-bold leading-tight text-gray-600 md:text-6xl">
+            Welcome to BarkByte{" "}
+            <span role="img" aria-label="waving hand">
+              👋
+            </span>
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600 md:text-base">
+            BarkByte is a platform that helps civil engineers record, organize, and
+            understand data from timber and structural experiments in one place. It
+            lets you track specimens, materials, test setups, and results in a
+            clear, consistent way, instead of scattered spreadsheets and notes. The
+            system makes it easier to compare experiments, spot patterns, and
+            revisit results long after a test is finished. Ultimately, BarkByte
+            turns raw experimental data into something reliable, searchable, and
+            useful for research and decision making.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button type="button">
+              <Info className="h-4 w-4" />
+              About
+            </Button>
+            <Button type="button" variant="secondary">
+              <Users className="h-4 w-4" />
+              Team
+            </Button>
+            <Button type="button" variant="secondary">
+              <Mail className="h-4 w-4" />
+              Contact
+            </Button>
+            <Button asChild variant="secondary">
+              <a
+                href="https://github.com/SuStrucSy/BarkByte"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Github className="h-4 w-4" />
+                GitHub
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
-
-  if (isLoading && !isPlaceholderData) {
-
-    return null
-  }
-
-  const blah: DataPoint[] = data?.data?.map(specimen => {
-    return {
-      id: specimen.id,
-      ductility: specimen.e_ductility,
-      specimen_reference_id: specimen.specimen_reference_id,
-      stiffness: specimen.e_stiffness,
-      yield_force: specimen.e_yield_force
-    }
-  })
-
-	return (
-		<div className="max-w-full">
-			<div className="">
-        hello there! 👋
-				{/* <Plotly3DScatterPlot data={blah} /> */}
-			</div>
-		</div>
-	);
 }
