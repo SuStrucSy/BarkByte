@@ -6,6 +6,7 @@ import type {
 import { type ClassValue, clsx } from "clsx";
 import * as d3 from "d3";
 import { twMerge } from "tailwind-merge";
+import { isNumericValue } from "./typeGuards";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -50,26 +51,44 @@ export const getChartColors = () => {
   ].map((color) => (color.startsWith("oklch") ? color : `oklch(${color})`));
 };
 
-// Takes an array of numbers and compute some summary statistics from it like quantiles, median..
-// Those summary statistics are the info needed to draw a boxplot
-export const getSummaryStats = (data: number[]) => {
-  const sortedData = data.sort(function (a, b) {
-    return a - b;
-  });
+export interface SummaryStats {
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+  count: number;
+}
+
+export const getSummaryStats = (data: number[]): SummaryStats | null => {
+  if (!data || data.length === 0) {
+    console.warn("getSummaryStats: Empty data array");
+    return null;
+  }
+
+  const validData = data.filter(isNumericValue);
+
+  if (validData.length === 0) {
+    console.warn("getSummaryStats: No valid numeric data");
+    return null;
+  }
+
+  const sortedData = validData.sort((a, b) => a - b);
 
   const q1 = d3.quantile(sortedData, 0.25);
   const median = d3.quantile(sortedData, 0.5);
   const q3 = d3.quantile(sortedData, 0.75);
 
-  if (!q3 || !q1 || !median) {
-    return;
+  if (q1 == null || median == null || q3 == null) {
+    console.warn("getSummaryStats: Failed to calculate quantiles");
+    return null;
   }
 
   const interQuantileRange = q3 - q1;
   const min = q1 - 1.5 * interQuantileRange;
   const max = q3 + 1.5 * interQuantileRange;
 
-  return { min, q1, median, q3, max };
+  return { min, q1, median, q3, max, count: validData.length };
 };
 
 export function renderValue(value: any): string {

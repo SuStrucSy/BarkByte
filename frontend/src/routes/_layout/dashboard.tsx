@@ -1,3 +1,5 @@
+// ImprovedDashboard.tsx - Production-ready version
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -46,6 +48,8 @@ import {
 } from "@/lib/constants";
 import { SpecimenSheet } from "@/components/Specimens/SpecimenSheet";
 import { PageLoading } from "@/components/Dashboard/PageLoading";
+import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
+import { isNumericValue } from "@/lib/typeGuards";
 
 export const Route = createFileRoute("/_layout/dashboard")({
   staticData: {
@@ -54,8 +58,48 @@ export const Route = createFileRoute("/_layout/dashboard")({
   component: Dashboard,
 });
 
+// Hook for managing infinite query with better tracking
+function useSpecimenData(pageSize: number) {
+  const queryResult = useInfiniteQuery({
+    queryKey: ["specimens", "dashboard"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const params: SpecimensReadSpecimensParams = {
+        limit: pageSize,
+        skip: pageParam,
+      };
+      const result = await specimensReadSpecimens(params);
+
+      return result;
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => {
+      const specimens = lastPage.data;
+      return specimens.length === pageSize
+        ? pages.length * pageSize
+        : undefined;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+  });
+
+  const pages = queryResult.data?.pages ?? [];
+  const allSpecimens = pages.flatMap((page) => page.data);
+  const totalCount = pages[0]?.count ?? 0;
+  const loadedCount = allSpecimens.length;
+  const isLoadingAll =
+    queryResult.hasNextPage || queryResult.isFetchingNextPage;
+
+  return {
+    ...queryResult,
+    allSpecimens,
+    totalCount,
+    loadedCount,
+    isLoadingAll,
+  };
+}
+
 function Dashboard() {
-  const pageSize = 1000;
+  const PAGE_SIZE = 1000;
   const [selectedFastener, setSelectedFastener] = useState<string>("");
   const [mirrorPosition, setMirrorPosition] = useState(0);
   const [smoothing, setSmoothing] = useState<boolean>(false);
@@ -70,54 +114,36 @@ function Dashboard() {
   }, []);
 
   const {
-    data: infiniteData,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useInfiniteQuery({
-    queryKey: ["specimens", "dashboard"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const params: SpecimensReadSpecimensParams = {
-        limit: pageSize,
-        skip: pageParam,
-      };
-      return specimensReadSpecimens(params);
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, pages) => {
-      const specimens = lastPage.data;
-      return specimens.length === pageSize
-        ? pages.length * pageSize
-        : undefined;
-    },
-  });
+    isError,
+    error,
+    allSpecimens,
+    totalCount,
+    loadedCount,
+    isLoadingAll,
+  } = useSpecimenData(PAGE_SIZE);
 
   const { isLoading: isFastenerLoading, data: fastenerTypesData } =
     useFastenertypeGetFastenerTypes();
 
+  // Auto-fetch all pages
   useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const allSpecimens = useMemo(
-    () => infiniteData?.pages.flatMap((page) => page.data) ?? [],
-    [infiniteData],
-  );
-  const totalCount = infiniteData?.pages[0]?.count ?? 0;
-  const loadedCount = allSpecimens.length;
-  const isLoadingAll = hasNextPage || isFetchingNextPage;
-
-  // Group specimens by fastener type
+  // Group specimens by fastener type - only recompute when data changes
   const groupsByFastenerType = useMemo(
     () =>
       groupSpecimensByFastener(
-        { count: 0, data: allSpecimens },
+        { count: totalCount, data: allSpecimens },
         fastenerTypesData,
       ),
-    [allSpecimens, fastenerTypesData],
+    [allSpecimens, fastenerTypesData, totalCount],
   );
 
   const fastenerTypes = useMemo(
@@ -130,11 +156,43 @@ function Dashboard() {
     [groupsByFastenerType, selectedFastener],
   );
 
+  // Filter specimens with valid data for each chart
+  const stiffnessDuctilityData = useMemo(
+    () =>
+      allSpecimens.filter(
+        (s) => isNumericValue(s.e_stiffness) && isNumericValue(s.e_ductility),
+      ),
+    [allSpecimens],
+  );
+
+  const stiffnessYieldData = useMemo(
+    () =>
+      allSpecimens.filter(
+        (s) => isNumericValue(s.e_stiffness) && isNumericValue(s.e_yield_force),
+      ),
+    [allSpecimens],
+  );
+
+  // Loading state
   if (isLoading || isFastenerLoading) {
     return <PageLoading />;
   }
 
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+        <div className="text-lg font-semibold">
+          Failed to load dashboard data
+        </div>
+        <div className="text-sm">{error?.message || "Unknown error"}</div>
+      </div>
+    );
+  }
+
   const yLabel = getExperimentalLabel(yKey);
+  const loadingProgress =
+    totalCount > 0 ? Math.round((loadedCount / totalCount) * 100) : 0;
 
   return (
     <div className="space-y-4">
@@ -148,15 +206,18 @@ function Dashboard() {
                 {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
                 specimens
                 {isLoadingAll ? (
-                  <Badge variant="secondary" className="animate-pulse ml-1">
-                    Loading...{" "}
-                    {totalCount > 0
-                      ? Math.round((loadedCount / totalCount) * 100)
-                      : 0}
-                    %
+                  <Badge
+                    variant="secondary"
+                    className="animate-pulse ml-1"
+                    aria-live="polite"
+                    aria-label={`Loading specimens: ${loadingProgress}% complete`}
+                  >
+                    Loading... {loadingProgress}%
                   </Badge>
                 ) : (
-                  <Badge className="ml-1">✓ Complete</Badge>
+                  <Badge className="ml-1" aria-label="All specimens loaded">
+                    ✓ Complete
+                  </Badge>
                 )}
               </CardDescription>
             </div>
@@ -172,20 +233,27 @@ function Dashboard() {
             <CardTitle>Stiffness vs Ductility</CardTitle>
             <CardDescription>
               Analyzing structural performance metrics
+              {stiffnessDuctilityData.length > 0 && (
+                <span className="ml-2 text-xs">
+                  ({stiffnessDuctilityData.length.toLocaleString()} points)
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-4">
-            <ScatterPlotD3
-              data={allSpecimens}
-              fastenerTypesData={fastenerTypesData}
-              xKey="e_stiffness"
-              yKey="e_ductility"
-              xLabel="Stiffness (Ks) [KN/mm]"
-              yLabel="Ductility"
-              height={500}
-              title="Stiffness vs Ductility"
-              onPointClick={handlePointClick}
-            />
+            <ChartErrorBoundary chartName="Stiffness vs Ductility">
+              <ScatterPlotD3
+                data={stiffnessDuctilityData}
+                fastenerTypesData={fastenerTypesData}
+                xKey="e_stiffness"
+                yKey="e_ductility"
+                xLabel="Stiffness (Ks) [KN/mm]"
+                yLabel="Ductility"
+                height={500}
+                title="Stiffness vs Ductility"
+                onPointClick={handlePointClick}
+              />
+            </ChartErrorBoundary>
           </CardContent>
         </Card>
 
@@ -195,33 +263,45 @@ function Dashboard() {
             <CardTitle>Stiffness vs Yield Force</CardTitle>
             <CardDescription>
               Stiffness-force relationship analysis
+              {stiffnessYieldData.length > 0 && (
+                <span className="ml-2 text-xs">
+                  ({stiffnessYieldData.length.toLocaleString()} points)
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-4">
-            <ScatterPlotD3
-              data={allSpecimens.filter((s) => s.e_yield_force != null)}
-              fastenerTypesData={fastenerTypesData}
-              xKey="e_stiffness"
-              yKey="e_yield_force"
-              xLabel="Stiffness (Ks) [KN/mm]"
-              yLabel="Yield Strength (Fy) [KN]"
-              height={500}
-              title="Stiffness vs Yield Force"
-              onPointClick={handlePointClick}
-            />
+            <ChartErrorBoundary chartName="Stiffness vs Yield Force">
+              <ScatterPlotD3
+                data={stiffnessYieldData}
+                fastenerTypesData={fastenerTypesData}
+                xKey="e_stiffness"
+                yKey="e_yield_force"
+                xLabel="Stiffness (Ks) [KN/mm]"
+                yLabel="Yield Strength (Fy) [KN]"
+                height={500}
+                title="Stiffness vs Yield Force"
+                onPointClick={handlePointClick}
+              />
+            </ChartErrorBoundary>
           </CardContent>
         </Card>
 
-        <Card className="col-span-2">
+        <Card className="col-span-1 lg:col-span-2">
           <CardHeader className="pb-4">
-            <CardTitle>Boxplot</CardTitle>
+            <CardTitle>Box Plot Distribution</CardTitle>
             <CardDescription>
               Summarizes the distribution of {yLabel} grouped by joinery type
+              {selectedSpecimens.length > 0 && (
+                <span className="ml-2 text-xs">
+                  ({selectedSpecimens.length.toLocaleString()} specimens)
+                </span>
+              )}
             </CardDescription>
             <CardAction>
               <Item variant="muted">
                 <ItemMedia variant="icon">
-                  <ReplaceIcon />
+                  <ReplaceIcon aria-hidden="true" />
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>Chart Options</ItemTitle>
@@ -234,7 +314,10 @@ function Dashboard() {
                     onValueChange={(value) => setSelectedFastener(value)}
                     defaultValue={selectedFastener}
                   >
-                    <SelectTrigger className="w-full max-w-48">
+                    <SelectTrigger
+                      className="w-full max-w-48"
+                      aria-label="Select fastener type"
+                    >
                       <SelectValue placeholder="Select a fastener" />
                     </SelectTrigger>
                     <SelectContent>
@@ -252,7 +335,10 @@ function Dashboard() {
                     onValueChange={(value) => setYKey(value as ExperimentalKey)}
                     defaultValue={yKey}
                   >
-                    <SelectTrigger className="w-full max-w-48">
+                    <SelectTrigger
+                      className="w-full max-w-48"
+                      aria-label="Select experimental value"
+                    >
                       <SelectValue placeholder="Select an experimental value" />
                     </SelectTrigger>
                     <SelectContent>
@@ -271,24 +357,26 @@ function Dashboard() {
             </CardAction>
           </CardHeader>
           <CardContent className="pb-4">
-            <BoxPlot
-              selectedSpecimens={selectedSpecimens}
-              yKey={yKey}
-              yLabel={getFullLabel(yKey)}
-              mirrorPosition={mirrorPosition}
-              smoothing={smoothing}
-              onPointClick={handlePointClick}
-            />
+            <ChartErrorBoundary chartName="Box Plot">
+              <BoxPlot
+                selectedSpecimens={selectedSpecimens}
+                yKey={yKey}
+                yLabel={getFullLabel(yKey)}
+                mirrorPosition={mirrorPosition}
+                smoothing={smoothing}
+                onPointClick={handlePointClick}
+              />
+            </ChartErrorBoundary>
           </CardContent>
           <CardFooter>
             <Item variant="outline">
               <ItemMedia variant="icon">
-                <WrenchIcon />
+                <WrenchIcon aria-hidden="true" />
               </ItemMedia>
               <ItemContent>
                 <ItemTitle>Chart Options</ItemTitle>
                 <ItemDescription>
-                  Can toggle betweeen a box plot and a violin plot
+                  Toggle between a box plot and a violin plot
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
@@ -298,12 +386,14 @@ function Dashboard() {
                     setMirrorPosition(checked ? 1 : 0)
                   }
                   checked={mirrorPosition === 1}
+                  aria-label="Toggle violin plot"
                 />
                 <Label htmlFor="mirror">Violin</Label>
                 <Switch
                   id="smoothing"
                   onCheckedChange={(checked) => setSmoothing(checked)}
                   checked={smoothing}
+                  aria-label="Toggle smoothing"
                 />
                 <Label htmlFor="smoothing">Smoothing</Label>
               </ItemActions>
@@ -311,17 +401,19 @@ function Dashboard() {
           </CardFooter>
         </Card>
       </div>
+
       <SpecimenSheet
         specimen={selectedSpecimen}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
+
       {/* Loading progress indicator */}
       {isLoadingAll && (
         <div className="flex flex-col items-center gap-4">
           <Item variant="outline">
             <ItemMedia>
-              <Spinner />
+              <Spinner aria-hidden="true" />
             </ItemMedia>
             <ItemContent>
               <ItemTitle className="line-clamp-1">
@@ -329,7 +421,7 @@ function Dashboard() {
               </ItemTitle>
             </ItemContent>
             <ItemContent className="flex-none justify-end">
-              <span className="text-sm tabular-nums">
+              <span className="text-sm tabular-nums" aria-live="polite">
                 {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}
               </span>
             </ItemContent>
