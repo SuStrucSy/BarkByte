@@ -1,55 +1,18 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+// ImprovedScatterPlot.tsx - Production-ready version
+
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from "react";
 import * as d3 from "d3";
 import type { FastenerTypes, SpecimenPublic } from "@/api/model";
 import { getChartColors, groupSpecimensByFastener } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ZoomInIcon, ZoomOutIcon } from "lucide-react";
-
-const MARGIN = { top: 20, right: 100, bottom: 60, left: 70 };
-const POINT_RADIUS = 4;
-
-// Shape generators for different fastener types
-const SHAPE_GENERATORS = {
-  circle: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolCircle)
-      .size(r * r * Math.PI)(),
-  cross: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolCross)
-      .size(r * r * 4)(),
-  square: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolSquare)
-      .size(r * r * 4)(),
-  diamond: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolDiamond)
-      .size(r * r * 4)(),
-  triangle: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolTriangle)
-      .size(r * r * 3)(),
-  star: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolStar)
-      .size(r * r * 4)(),
-  wye: (r: number) =>
-    d3
-      .symbol()
-      .type(d3.symbolWye)
-      .size(r * r * 4)(),
-};
-
-const SHAPES = Object.keys(SHAPE_GENERATORS) as Array<
-  keyof typeof SHAPE_GENERATORS
->;
+import { isNumericValue } from "@/lib/typeGuards";
+import {
+  CHART_CONFIG,
+  SHAPE_GENERATORS,
+  SHAPES,
+} from "@/components/Charts/chartConfig";
+import useDebounce from "@/hooks/use-debounce";
 
 interface ScatterPlotD3Props {
   data: SpecimenPublic[];
@@ -68,6 +31,136 @@ interface ZoomExtent {
   y: [number, number];
 }
 
+interface GroupedDataItem {
+  groupName: string;
+  specimens: SpecimenPublic[];
+  color: string;
+  shape: keyof typeof SHAPE_GENERATORS;
+}
+
+// Memoized Legend component
+const Legend = memo(({ groupedData }: { groupedData: GroupedDataItem[] }) => (
+  <div
+    className="flex flex-wrap justify-center gap-4 pt-2"
+    role="list"
+    aria-label="Chart legend"
+  >
+    {groupedData.map((group) => (
+      <div
+        key={group.groupName}
+        className="flex items-center gap-2 text-sm"
+        role="listitem"
+      >
+        <svg width="20" height="20" aria-hidden="true">
+          <path
+            d={SHAPE_GENERATORS[group.shape](6)}
+            transform="translate(10,10)"
+            fill={group.color}
+            fillOpacity={0.6}
+            stroke={group.color}
+            strokeWidth={1}
+          />
+        </svg>
+        <span>{group.groupName}</span>
+      </div>
+    ))}
+  </div>
+));
+
+Legend.displayName = "Legend";
+
+// Memoized Tooltip component
+const ScatterTooltip = memo(
+  ({
+    hoveredPoint,
+    tooltipPos,
+    dimensions,
+    xLabel,
+    yLabel,
+    xKey,
+    yKey,
+  }: {
+    hoveredPoint: SpecimenPublic;
+    tooltipPos: { x: number; y: number };
+    dimensions: { width: number; height: number };
+    xLabel: string;
+    yLabel: string;
+    xKey: keyof SpecimenPublic;
+    yKey: keyof SpecimenPublic;
+  }) => (
+    <div
+      style={{
+        position: "absolute",
+        left: Math.min(tooltipPos.x + 15, dimensions.width - 300),
+        top: tooltipPos.y - 10,
+        pointerEvents: "none",
+        zIndex: 50,
+      }}
+      className="rounded-lg border bg-background p-3 shadow-xl max-w-sm"
+      role="tooltip"
+    >
+      <div className="font-semibold text-sm mb-2">
+        {hoveredPoint.specimen_reference_id || "N/A"}
+      </div>
+      <div className="space-y-1 text-xs">
+        <div className="flex justify-between gap-3">
+          <span className="text-muted-foreground">{xLabel}:</span>
+          <span className="font-mono">
+            {isNumericValue(hoveredPoint[xKey])
+              ? (hoveredPoint[xKey] as number).toFixed(2)
+              : "N/A"}
+          </span>
+        </div>
+        <div className="flex justify-between gap-3">
+          <span className="text-muted-foreground">{yLabel}:</span>
+          <span className="font-mono">
+            {isNumericValue(hoveredPoint[yKey])
+              ? (hoveredPoint[yKey] as number).toFixed(2)
+              : "N/A"}
+          </span>
+        </div>
+        {isNumericValue(hoveredPoint.e_stiffness) && xKey !== "e_stiffness" && (
+          <div className="flex justify-between gap-3">
+            <span className="text-muted-foreground">Stiffness:</span>
+            <span className="font-mono">
+              {hoveredPoint.e_stiffness.toFixed(2)}
+            </span>
+          </div>
+        )}
+        {isNumericValue(hoveredPoint.e_ductility) && yKey !== "e_ductility" && (
+          <div className="flex justify-between gap-3">
+            <span className="text-muted-foreground">Ductility:</span>
+            <span className="font-mono">
+              {hoveredPoint.e_ductility.toFixed(2)}
+            </span>
+          </div>
+        )}
+        {isNumericValue(hoveredPoint.e_yield_force) &&
+          yKey !== "e_yield_force" && (
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground">Yield Force:</span>
+              <span className="font-mono">
+                {hoveredPoint.e_yield_force.toFixed(2)}
+              </span>
+            </div>
+          )}
+        {hoveredPoint.joinery_type && (
+          <div className="flex items-center gap-2 pt-1 border-t mt-1">
+            <span className="text-muted-foreground font-medium">Joinery:</span>
+            <span className="font-medium bg-primary/10 px-1.5 py-0.5 rounded text-xs">
+              {typeof hoveredPoint.joinery_type === "string"
+                ? hoveredPoint.joinery_type
+                : hoveredPoint.joinery_type.label || "N/A"}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  ),
+);
+
+ScatterTooltip.displayName = "ScatterTooltip";
+
 export function ScatterPlotD3({
   data,
   fastenerTypesData,
@@ -80,7 +173,6 @@ export function ScatterPlotD3({
 }: ScatterPlotD3Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const brushRef = useRef<d3.BrushBehavior<unknown> | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
   const [hoveredPoint, setHoveredPoint] = useState<SpecimenPublic | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -88,27 +180,37 @@ export function ScatterPlotD3({
   const [zoomMode, setZoomMode] = useState(false);
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
 
-  // Group specimens by fastener type
-  const groups = useMemo(
-    () => groupSpecimensByFastener({ count: 0, data }, fastenerTypesData),
-    [data, fastenerTypesData],
-  );
-
+  // Filter and group data
   const groupedData = useMemo(() => {
+    const validData = data.filter(
+      (s) => isNumericValue(s[xKey]) && isNumericValue(s[yKey]),
+    );
+
+    const groups = groupSpecimensByFastener(
+      { count: validData.length, data: validData },
+      fastenerTypesData,
+    );
+
     const colors = getChartColors();
     return Object.entries(groups).map(([groupName, specimens], index) => ({
       groupName,
-      specimens: specimens.filter((s) => s[xKey] != null && s[yKey] != null),
+      specimens,
       color: colors[index % colors.length],
       shape: SHAPES[index % SHAPES.length],
     }));
-  }, [groups, xKey, yKey]);
+  }, [data, fastenerTypesData, xKey, yKey]);
 
   // Calculate bounds
-  const boundsWidth = dimensions.width - MARGIN.left - MARGIN.right;
-  const boundsHeight = dimensions.height - MARGIN.top - MARGIN.bottom;
+  const boundsWidth =
+    dimensions.width -
+    CHART_CONFIG.scatterMargins.left -
+    CHART_CONFIG.scatterMargins.right;
+  const boundsHeight =
+    dimensions.height -
+    CHART_CONFIG.scatterMargins.top -
+    CHART_CONFIG.scatterMargins.bottom;
 
-  // Create scales
+  // Create scales with proper null handling
   const { xScale, yScale } = useMemo(() => {
     const allValues = groupedData.flatMap((g) =>
       g.specimens.map((s) => ({
@@ -144,219 +246,271 @@ export function ScatterPlotD3({
     setHoveredPoint(null);
   }, []);
 
-  // Render chart with D3
+  // D3 rendering with update pattern
   useEffect(() => {
     if (!svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
     const g = svg.select<SVGGElement>(".chart-area");
 
-    // Clear previous render
-    g.selectAll(".scatter-group").remove();
-    g.selectAll(".grid").remove();
-    g.selectAll(".axis").remove();
-    g.selectAll(".axis-label").remove();
-    g.selectAll(".brush").remove();
-    g.selectAll(".clip-path").remove();
+    // Use D3's join pattern for better performance
+    const updateChart = () => {
+      // Clear only what's needed
+      g.selectAll(".grid").remove();
+      g.selectAll(".axis").remove();
+      g.selectAll(".axis-label").remove();
+      g.selectAll(".brush").remove();
 
-    // Create clip path to constrain points to chart area
-    svg.select("defs").remove();
-    const defs = svg.append("defs");
-    defs
-      .append("clipPath")
-      .attr("id", "chart-clip")
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("width", boundsWidth)
-      .attr("height", boundsHeight);
+      // Create clip path
+      svg.select("defs").remove();
+      const defs = svg.append("defs");
+      defs
+        .append("clipPath")
+        .attr("id", "chart-clip")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", boundsWidth)
+        .attr("height", boundsHeight);
 
-    // Add grid
-    g.append("g")
-      .attr("class", "grid")
-      .attr("opacity", 0.1)
-      .call(
-        d3
-          .axisLeft(yScale)
-          .tickSize(-boundsWidth)
-          .tickFormat(() => ""),
-      );
+      // Add grid
+      g.append("g")
+        .attr("class", "grid")
+        .attr("opacity", 0.1)
+        .call(
+          d3
+            .axisLeft(yScale)
+            .tickSize(-boundsWidth)
+            .tickFormat(() => ""),
+        );
 
-    g.append("g")
-      .attr("class", "grid")
-      .attr("opacity", 0.1)
-      .attr("transform", `translate(0,${boundsHeight})`)
-      .call(
-        d3
-          .axisBottom(xScale)
-          .tickSize(-boundsHeight)
-          .tickFormat(() => ""),
-      );
+      g.append("g")
+        .attr("class", "grid")
+        .attr("opacity", 0.1)
+        .attr("transform", `translate(0,${boundsHeight})`)
+        .call(
+          d3
+            .axisBottom(xScale)
+            .tickSize(-boundsHeight)
+            .tickFormat(() => ""),
+        );
 
-    // Add axes
-    const xAxis = g
-      .append("g")
-      .attr("class", "axis")
-      .attr("transform", `translate(0,${boundsHeight})`)
-      .call(d3.axisBottom(xScale));
-
-    const yAxis = g.append("g").attr("class", "axis").call(d3.axisLeft(yScale));
-
-    // Style axes
-    [xAxis, yAxis].forEach((axis) => {
-      axis
-        .selectAll("text")
-        .attr("fill", "currentColor")
-        .attr("font-size", "12px");
-      axis.selectAll("line").attr("stroke", "currentColor");
-      axis.select(".domain").attr("stroke", "currentColor");
-    });
-
-    // Add axis labels
-    g.append("text")
-      .attr("class", "axis-label x-label")
-      .attr("text-anchor", "middle")
-      .attr("x", boundsWidth / 2)
-      .attr("y", boundsHeight + 45)
-      .attr("fill", "currentColor")
-      .attr("font-size", "14px")
-      .text(xLabel);
-
-    g.append("text")
-      .attr("class", "axis-label y-label")
-      .attr("text-anchor", "middle")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -boundsHeight / 2)
-      .attr("y", -50)
-      .attr("fill", "currentColor")
-      .attr("font-size", "14px")
-      .text(yLabel);
-
-    // Create container for points with clip path
-    const pointsContainer = g
-      .append("g")
-      .attr("class", "points-container")
-      .attr("clip-path", "url(#chart-clip)");
-
-    // Render points for each group
-    groupedData.forEach((group) => {
-      const isGroupFaded = hoveredGroup && group.shape !== hoveredGroup;
-      const scatterGroup = pointsContainer
+      // Add axes
+      const xAxis = g
         .append("g")
-        .attr("class", "scatter-group")
-        .attr("data-group", group.groupName);
+        .attr("class", "axis x-axis")
+        .attr("transform", `translate(0,${boundsHeight})`)
+        .call(d3.axisBottom(xScale));
 
-      const paths = scatterGroup
-        .selectAll("path")
-        .data(group.specimens)
-        .join("path")
-        .attr("d", SHAPE_GENERATORS[group.shape](POINT_RADIUS))
-        .attr("transform", (d) => {
-          const x = xScale(d[xKey] as number);
-          const y = yScale(d[yKey] as number);
-          return `translate(${x},${y})`;
-        })
-        .attr("fill", group.color)
-        .attr("fill-opacity", 0.6)
-        .attr("stroke", group.color)
-        .attr("stroke-width", 1)
-        .attr("stroke-opacity", 0.8)
-        .attr(
-          "class",
-          isGroupFaded
-            ? "opacity-10 transition-opacity duration-500 delay-500"
-            : "transition-opacity duration-500",
-        )
-        .style("cursor", onPointClick ? "pointer" : "default")
-        .on("mouseenter", function (event, d) {
-          if (zoomMode) return;
+      const yAxis = g
+        .append("g")
+        .attr("class", "axis y-axis")
+        .call(d3.axisLeft(yScale));
 
-          setHoveredGroup(group.shape);
+      // Style axes
+      [xAxis, yAxis].forEach((axis) => {
+        axis
+          .selectAll("text")
+          .attr("fill", "currentColor")
+          .attr("font-size", "12px");
+        axis.selectAll("line").attr("stroke", "currentColor");
+        axis.select(".domain").attr("stroke", "currentColor");
+      });
 
-          d3.select(this)
-            .transition()
-            .duration(150)
-            .attr("fill-opacity", 1)
-            .attr("stroke-width", 2)
-            .attr("d", SHAPE_GENERATORS[group.shape](POINT_RADIUS * 1.5));
+      // Add axis labels
+      g.append("text")
+        .attr("class", "axis-label x-label")
+        .attr("text-anchor", "middle")
+        .attr("x", boundsWidth / 2)
+        .attr("y", boundsHeight + 45)
+        .attr("fill", "currentColor")
+        .attr("font-size", "14px")
+        .text(xLabel);
 
-          d3.select(this).raise();
+      g.append("text")
+        .attr("class", "axis-label y-label")
+        .attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -boundsHeight / 2)
+        .attr("y", -50)
+        .attr("fill", "currentColor")
+        .attr("font-size", "14px")
+        .text(yLabel);
 
-          setHoveredPoint(d);
+      // Get or create points container
+      let pointsContainer = g.select<SVGGElement>(".points-container");
+      if (pointsContainer.empty()) {
+        pointsContainer = g
+          .append("g")
+          .attr("class", "points-container")
+          .attr("clip-path", "url(#chart-clip)");
+      }
 
-          const containerRect = containerRef.current?.getBoundingClientRect();
-          if (containerRect) {
-            setTooltipPos({
-              x: event.clientX - containerRect.left,
-              y: event.clientY - containerRect.top,
+      // Update points using D3's join pattern
+      groupedData.forEach((group) => {
+        const isGroupFaded = hoveredGroup && group.shape !== hoveredGroup;
+
+        let scatterGroup = pointsContainer.select<SVGGElement>(
+          `.scatter-group-${group.shape}`,
+        );
+        if (scatterGroup.empty()) {
+          scatterGroup = pointsContainer
+            .append("g")
+            .attr("class", `scatter-group scatter-group-${group.shape}`)
+            .attr("data-group", group.groupName);
+        }
+
+        scatterGroup
+          .selectAll<SVGPathElement, SpecimenPublic>("path")
+          .data(
+            group.specimens,
+            (d) => d.id || d.specimen_reference_id || String(Math.random()),
+          )
+          .join(
+            (enter) =>
+              enter
+                .append("path")
+                .attr(
+                  "d",
+                  SHAPE_GENERATORS[group.shape](CHART_CONFIG.pointRadius),
+                )
+                .attr("fill", group.color)
+                .attr("fill-opacity", 1)
+                .attr("stroke", group.color)
+                .attr("stroke-width", 1)
+                .attr("stroke-opacity", 0)
+                .attr("transform", (d) => {
+                  const x = xScale(d[xKey] as number);
+                  const y = yScale(d[yKey] as number);
+                  return `translate(${x},${y})`;
+                })
+                .call((enter) =>
+                  enter
+                    .transition()
+                    .duration(CHART_CONFIG.transitionDuration)
+                    .attr("fill-opacity", 0.6)
+                    .attr("stroke-opacity", 0.8),
+                ),
+            (update) =>
+              update.call((update) =>
+                update
+                  .transition()
+                  .duration(CHART_CONFIG.transitionDuration)
+                  .attr("transform", (d) => {
+                    const x = xScale(d[xKey] as number);
+                    const y = yScale(d[yKey] as number);
+                    return `translate(${x},${y})`;
+                  })
+                  .attr("class", isGroupFaded ? "opacity-10" : ""),
+              ),
+            (exit) =>
+              exit.call((exit) =>
+                exit
+                  .transition()
+                  .duration(CHART_CONFIG.transitionDuration)
+                  .attr("fill-opacity", 0)
+                  .attr("stroke-opacity", 0)
+                  .remove(),
+              ),
+          )
+          .style("cursor", onPointClick ? "pointer" : "default")
+          .on("mouseenter", function (event, d) {
+            if (zoomMode) return;
+
+            setHoveredGroup(group.shape);
+
+            d3.select(this)
+              .transition()
+              .duration(150)
+              .attr("fill-opacity", 1)
+              .attr("stroke-width", 2)
+              .attr(
+                "d",
+                SHAPE_GENERATORS[group.shape](CHART_CONFIG.pointRadius * 1.5),
+              );
+
+            d3.select(this).raise();
+
+            setHoveredPoint(d);
+
+            const containerRect = containerRef.current?.getBoundingClientRect();
+            if (containerRect) {
+              setTooltipPos({
+                x: event.clientX - containerRect.left,
+                y: event.clientY - containerRect.top,
+              });
+            }
+          })
+          .on("mousemove", function (event) {
+            if (zoomMode) return;
+
+            const containerRect = containerRef.current?.getBoundingClientRect();
+            if (containerRect) {
+              setTooltipPos({
+                x: event.clientX - containerRect.left,
+                y: event.clientY - containerRect.top,
+              });
+            }
+          })
+          .on("mouseleave", function () {
+            setHoveredGroup(null);
+
+            d3.select(this)
+              .transition()
+              .duration(150)
+              .attr("fill-opacity", 0.6)
+              .attr("stroke-width", 1)
+              .attr(
+                "d",
+                SHAPE_GENERATORS[group.shape](CHART_CONFIG.pointRadius),
+              );
+
+            setHoveredPoint(null);
+          })
+          .on("click", (event, d) => {
+            if (onPointClick && !zoomMode) {
+              event.stopPropagation();
+              onPointClick(d);
+            }
+          });
+      });
+
+      // Zoom behavior
+      if (zoomMode) {
+        const brush = d3
+          .brush()
+          .extent([
+            [0, 0],
+            [boundsWidth, boundsHeight],
+          ])
+          .on("end", (event) => {
+            if (!event.selection) return;
+
+            const [[x0, y0], [x1, y1]] = event.selection as [
+              [number, number],
+              [number, number],
+            ];
+
+            setZoomExtent({
+              x: [xScale.invert(x0), xScale.invert(x1)],
+              y: [yScale.invert(y1), yScale.invert(y0)],
             });
-          }
-        })
-        .on("mousemove", function (event) {
-          if (zoomMode) return;
 
-          const containerRect = containerRef.current?.getBoundingClientRect();
-          if (containerRect) {
-            setTooltipPos({
-              x: event.clientX - containerRect.left,
-              y: event.clientY - containerRect.top,
-            });
-          }
-        })
-        .on("mouseleave", function () {
-          setHoveredGroup(null);
-
-          d3.select(this)
-            .transition()
-            .duration(150)
-            .attr("fill-opacity", 0.6)
-            .attr("stroke-width", 1)
-            .attr("d", SHAPE_GENERATORS[group.shape](POINT_RADIUS));
-
-          setHoveredPoint(null);
-        })
-        .on("click", (event, d) => {
-          if (onPointClick && !zoomMode) {
-            event.stopPropagation();
-            onPointClick(d);
-          }
-        });
-    });
-
-    // Zoom behavior with brush - only active when zoomMode is true
-    if (zoomMode) {
-      const brush = d3
-        .brush()
-        .extent([
-          [0, 0],
-          [boundsWidth, boundsHeight],
-        ])
-        .on("end", (event) => {
-          if (!event.selection) return;
-
-          const [[x0, y0], [x1, y1]] = event.selection;
-
-          setZoomExtent({
-            x: [xScale.invert(x0), xScale.invert(x1)],
-            y: [yScale.invert(y1), yScale.invert(y0)],
+            g.select(".brush").call(brush.move as any, null);
           });
 
-          // Clear brush
-          g.select(".brush").call(brush.move as any, null);
-        });
+        const brushGroup = g.append("g").attr("class", "brush").call(brush);
 
-      brushRef.current = brush;
+        brushGroup.select(".overlay").style("cursor", "crosshair");
+        brushGroup
+          .select(".selection")
+          .attr("fill", "steelblue")
+          .attr("fill-opacity", 0.2)
+          .attr("stroke", "steelblue");
+      }
+    };
 
-      const brushGroup = g.append("g").attr("class", "brush").call(brush);
-
-      // Style brush
-      brushGroup.select(".overlay").style("cursor", "crosshair");
-      brushGroup
-        .select(".selection")
-        .attr("fill", "steelblue")
-        .attr("fill-opacity", 0.2)
-        .attr("stroke", "steelblue");
-    }
+    updateChart();
   }, [
     groupedData,
     xScale,
@@ -372,9 +526,14 @@ export function ScatterPlotD3({
     yKey,
   ]);
 
-  // Handle resize
+  const debouncedWindowSize = useDebounce(
+    dimensions,
+    CHART_CONFIG.resizeDebounceMs,
+  );
+
+  // Debounced resize handler
   useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
+    const handleResize = (entries: ResizeObserverEntry[]) => {
       const entry = entries[0];
       if (entry) {
         setDimensions({
@@ -382,20 +541,23 @@ export function ScatterPlotD3({
           height: entry.contentRect.height,
         });
       }
-    });
+    };
+
+    const resizeObserver = new ResizeObserver(handleResize);
 
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
     return () => resizeObserver.disconnect();
-  }, []);
+  }, [debouncedWindowSize]);
 
   if (data.length === 0) {
     return (
       <div
         className="flex items-center justify-center text-muted-foreground"
         style={{ height: `${height}px` }}
+        role="status"
       >
         No data available
       </div>
@@ -416,8 +578,10 @@ export function ScatterPlotD3({
             size="sm"
             onClick={toggleZoomMode}
             className="text-xs"
+            aria-pressed={zoomMode}
+            aria-label={zoomMode ? "Exit zoom mode" : "Enter zoom mode"}
           >
-            <ZoomInIcon className="h-3 w-3 mr-1" />
+            <ZoomInIcon className="h-3 w-3 mr-1" aria-hidden="true" />
             {zoomMode ? "Exit Zoom" : "Zoom Mode"}
           </Button>
           {zoomExtent && (
@@ -426,8 +590,9 @@ export function ScatterPlotD3({
               size="sm"
               onClick={handleZoomOut}
               className="text-xs"
+              aria-label="Reset zoom"
             >
-              <ZoomOutIcon className="h-3 w-3 mr-1" />
+              <ZoomOutIcon className="h-3 w-3 mr-1" aria-hidden="true" />
               Reset
             </Button>
           )}
@@ -438,6 +603,8 @@ export function ScatterPlotD3({
         ref={containerRef}
         className="relative w-full"
         style={{ height: `${height}px` }}
+        role="img"
+        aria-label={`Scatter plot of ${yLabel} vs ${xLabel}`}
       >
         <svg
           ref={svgRef}
@@ -447,101 +614,24 @@ export function ScatterPlotD3({
         >
           <g
             className="chart-area"
-            transform={`translate(${MARGIN.left},${MARGIN.top})`}
+            transform={`translate(${CHART_CONFIG.scatterMargins.left},${CHART_CONFIG.scatterMargins.top})`}
           />
         </svg>
 
-        {/* Tooltip */}
         {hoveredPoint && !zoomMode && (
-          <div
-            style={{
-              position: "absolute",
-              left: Math.min(tooltipPos.x + 15, dimensions.width - 300),
-              top: tooltipPos.y - 10,
-              pointerEvents: "none",
-              zIndex: 50,
-            }}
-            className="rounded-lg border bg-background p-3 shadow-xl max-w-sm"
-          >
-            <div className="font-semibold text-sm mb-2">
-              {hoveredPoint.specimen_reference_id || "N/A"}
-            </div>
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">{xLabel}:</span>
-                <span className="font-mono">
-                  {((hoveredPoint[xKey] as number) ?? 0).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">{yLabel}:</span>
-                <span className="font-mono">
-                  {((hoveredPoint[yKey] as number) ?? 0).toFixed(2)}
-                </span>
-              </div>
-              {hoveredPoint.e_stiffness != null && xKey !== "e_stiffness" && (
-                <div className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">Stiffness:</span>
-                  <span className="font-mono">
-                    {hoveredPoint.e_stiffness.toFixed(2)}
-                  </span>
-                </div>
-              )}
-              {hoveredPoint.e_ductility != null && yKey !== "e_ductility" && (
-                <div className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">Ductility:</span>
-                  <span className="font-mono">
-                    {hoveredPoint.e_ductility.toFixed(2)}
-                  </span>
-                </div>
-              )}
-              {hoveredPoint.e_yield_force != null &&
-                yKey !== "e_yield_force" && (
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Yield Force:</span>
-                    <span className="font-mono">
-                      {hoveredPoint.e_yield_force.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-              {hoveredPoint.joinery_type && (
-                <div className="flex items-center gap-2 pt-1 border-t mt-1">
-                  <span className="text-muted-foreground font-medium">
-                    Joinery:
-                  </span>
-                  <span className="font-medium bg-primary/10 px-1.5 py-0.5 rounded text-xs">
-                    {typeof hoveredPoint.joinery_type === "string"
-                      ? hoveredPoint.joinery_type
-                      : hoveredPoint.joinery_type.label || "N/A"}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          <ScatterTooltip
+            hoveredPoint={hoveredPoint}
+            tooltipPos={tooltipPos}
+            dimensions={dimensions}
+            xLabel={xLabel}
+            yLabel={yLabel}
+            xKey={xKey}
+            yKey={yKey}
+          />
         )}
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap justify-center gap-4 pt-2">
-        {groupedData.map((group) => (
-          <div
-            key={group.groupName}
-            className="flex items-center gap-2 text-sm"
-          >
-            <svg width="20" height="20">
-              <path
-                d={SHAPE_GENERATORS[group.shape](6)}
-                transform="translate(10,10)"
-                fill={group.color}
-                fillOpacity={0.6}
-                stroke={group.color}
-                strokeWidth={1}
-              />
-            </svg>
-            <span>{group.groupName}</span>
-          </div>
-        ))}
-      </div>
+      <Legend groupedData={groupedData} />
     </div>
   );
 }
