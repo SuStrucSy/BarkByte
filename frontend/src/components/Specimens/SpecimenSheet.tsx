@@ -78,7 +78,7 @@ export function SpecimenSheet({
         </div>
         <SheetFooter>
           <Button asChild>
-            <Link href={`/specimen/${specimen.id}`}>More Details</Link>
+            <Link href={`/specimens/${specimen.id}`}>More Details</Link>
           </Button>
         </SheetFooter>
       </SheetContent>
