@@ -1,8 +1,10 @@
 import { ThemeProviderContext } from "@/hooks/useTheme";
+import type { modes, themes } from "@/lib/constants";
 import { useEffect, useState } from "react";
 
-type Mode = "dark" | "light" | "system";
-type Theme = "neutral" | "stone" | "zinc" | "gray" | "slate";
+type Mode = (typeof modes)[number];
+
+type Theme = (typeof themes)[number];
 
 type ThemeProviderProps = {
   children: React.ReactNode;

@@ -45,7 +45,7 @@ const SidebarItems = () => {
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
           tooltip={item.title}
-          className="cursor-pointer"
+          className="cursor-pointer data-[active=true]:font-bold"
           isActive={item.path === pathname}
         >
           {item.icon && <item.icon />}

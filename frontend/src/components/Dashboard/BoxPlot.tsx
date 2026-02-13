@@ -1,5 +1,5 @@
 import type { SpecimenPublic } from "@/api/model";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { VerticalBox } from "./VerticalBox";
 import { AxisLeft } from "./AxisLeft";
@@ -23,6 +23,7 @@ interface BoxPlotProps {
   onPointClick?: (specimen: SpecimenPublic) => void;
   mirrorPosition?: number;
   smoothing?: boolean;
+  height?: number;
 }
 
 // Stable jitter hook with proper memoization
@@ -152,10 +153,11 @@ export function BoxPlot({
   yLabel,
   onPointClick,
   mirrorPosition = 0,
-  smoothing = false,
+  smoothing = true,
+  height = 400,
 }: BoxPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
+  const [dimensions, setDimensions] = useState({ width: 600, height });
 
   // Filter valid specimens once
   const validSpecimens = useMemo(() => {
@@ -166,17 +168,27 @@ export function BoxPlot({
 
   const jitterMap = useStableJitter(validSpecimens);
 
+  // Debounce dimensions to avoid excessive re-renders during resize
+  const debouncedDimensions = useDebounce(
+    dimensions,
+    CHART_CONFIG.resizeDebounceMs,
+  );
+
   const boundsWidth = useMemo(() => {
     return (
-      dimensions.width - CHART_CONFIG.margins.right - CHART_CONFIG.margins.left
+      debouncedDimensions.width -
+      CHART_CONFIG.margins.right -
+      CHART_CONFIG.margins.left
     );
-  }, [dimensions.width]);
+  }, [debouncedDimensions.width]);
 
   const boundsHeight = useMemo(() => {
     return (
-      dimensions.height - CHART_CONFIG.margins.top - CHART_CONFIG.margins.bottom
+      debouncedDimensions.height -
+      CHART_CONFIG.margins.top -
+      CHART_CONFIG.margins.bottom
     );
-  }, [dimensions.height]);
+  }, [debouncedDimensions.height]);
 
   // Compute chart data with proper error handling
   const chartData = useMemo(() => {
@@ -364,19 +376,14 @@ export function BoxPlot({
     yScale,
   ]);
 
-  const debouncedWindowSize = useDebounce(
-    dimensions,
-    CHART_CONFIG.resizeDebounceMs,
-  );
-
-  // Debounced resize handler
+  // Resize handler - only for ongoing resize events
   useEffect(() => {
     const handleResize = (entries: ResizeObserverEntry[]) => {
       const entry = entries[0];
       if (entry) {
         setDimensions({
           width: entry.contentRect.width,
-          height: entry.contentRect.height,
+          height: height,
         });
       }
     };
@@ -390,7 +397,7 @@ export function BoxPlot({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [debouncedWindowSize]);
+  }, [height]);
 
   // Empty state
   if (validSpecimens.length === 0) {
@@ -409,66 +416,73 @@ export function BoxPlot({
     <TooltipProvider delayDuration={100}>
       <div
         ref={containerRef}
-        className="w-full h-full min-h-[400px]"
+        className="w-full"
+        style={{ height }}
         role="img"
         aria-label={`Box plot showing ${yLabel} distribution across ${chartData.groups.length} groups`}
       >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: dimensions.height,
-          }}
-        >
+        {debouncedDimensions.width === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            Loading chart...
+          </div>
+        ) : (
           <div
             style={{
-              width: dimensions.width,
+              position: "relative",
+              width: "100%",
               height: dimensions.height,
-              position: "absolute",
-              top: 0,
-              left: 0,
             }}
           >
             <div
               style={{
-                width: boundsWidth,
-                height: boundsHeight,
-                transform: `translate(${CHART_CONFIG.margins.left}px, ${CHART_CONFIG.margins.top}px)`,
+                width: "100%",
+                height: dimensions.height,
+                position: "absolute",
+                top: 0,
+                left: 0,
               }}
             >
-              {allBoxes}
-              {allViolins}
+              <div
+                style={{
+                  width: boundsWidth,
+                  height: boundsHeight,
+                  transform: `translate(${CHART_CONFIG.margins.left}px, ${CHART_CONFIG.margins.top}px)`,
+                }}
+              >
+                {allBoxes}
+                {allViolins}
+              </div>
             </div>
-          </div>
-          <svg
-            width={dimensions.width}
-            height={dimensions.height}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              pointerEvents: "none",
-            }}
-            className="text-foreground"
-            aria-hidden="true"
-          >
-            <g
-              width={boundsWidth}
-              height={boundsHeight}
-              transform={`translate(${CHART_CONFIG.margins.left}, ${CHART_CONFIG.margins.top})`}
-              style={{ color: "hsl(var(--foreground))" }}
+            <svg
+              width="100%"
+              height={dimensions.height}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                pointerEvents: "none",
+              }}
+              className="text-foreground"
+              aria-hidden="true"
             >
-              <AxisLeft
-                yScale={yScale}
-                pixelsPerTick={CHART_CONFIG.pixelsPerTick}
-                title={yLabel}
-              />
-              <g transform={`translate(0, ${boundsHeight})`}>
-                <AxisBottom xScale={xScale} />
+              <g
+                width={boundsWidth}
+                height={boundsHeight}
+                transform={`translate(${CHART_CONFIG.margins.left}, ${CHART_CONFIG.margins.top})`}
+                style={{ color: "hsl(var(--foreground))" }}
+              >
+                <AxisLeft
+                  yScale={yScale}
+                  pixelsPerTick={CHART_CONFIG.pixelsPerTick}
+                  title={yLabel}
+                />
+                <g transform={`translate(0, ${boundsHeight})`}>
+                  <AxisBottom xScale={xScale} />
+                </g>
               </g>
-            </g>
-          </svg>
-        </div>
+            </svg>
+          </div>
+        )}
         {!enableInteractions && (
           <div className="text-xs text-muted-foreground mt-2 text-center">
             Point interactions disabled for performance (

@@ -13,7 +13,7 @@ export const EXPERIMENTAL_LABELS = {
 export const EXPERIMENTAL_UNITS = {
   e_stiffness: "KN/mm",
   e_yield_force: "KN",
-  e_ductility: "%",
+  e_ductility: "",
 } as const;
 
 export const EXPERIMENTAL_KEYS = [
@@ -43,3 +43,10 @@ export const getExperimentalUnit = (key: ExperimentalKey): string => {
 
 export const getFullLabel = (key: ExperimentalKey): string =>
   `${EXPERIMENTAL_LABELS[key as keyof typeof EXPERIMENTAL_LABELS]} (${EXPERIMENTAL_UNITS[key as keyof typeof EXPERIMENTAL_UNITS]})`;
+
+// ============================================
+// THEME PROVIDER CONSTANTS
+// ============================================
+//
+export const modes = ["light", "dark", "system"] as const;
+export const themes = ["neutral", "stone", "zinc", "gray", "slate"] as const;

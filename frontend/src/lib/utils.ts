@@ -114,3 +114,17 @@ export function humanizeLabel(label: string): string {
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
+
+export function getInitials(fullName: string): string {
+  // Trim, split on spaces, and remove empty parts
+  const parts = fullName.trim().split(" ").filter(Boolean);
+
+  // Take first letter of first and last "words"
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+
+  const first = parts[0][0].toUpperCase();
+  const last = parts[parts.length - 1][0].toUpperCase();
+
+  return first + last;
+}

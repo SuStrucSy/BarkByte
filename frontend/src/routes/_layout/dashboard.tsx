@@ -39,17 +39,24 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ReplaceIcon, WrenchIcon } from "lucide-react";
+import { CandlestickChartIcon, ReplaceIcon, WrenchIcon } from "lucide-react";
 import {
   EXPERIMENTAL_KEYS,
   getExperimentalLabel,
   getFullLabel,
   type ExperimentalKey,
 } from "@/lib/constants";
-import { SpecimenSheet } from "@/components/Specimens/SpecimenSheet";
+
 import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { isNumericValue } from "@/lib/typeGuards";
+import { DOISheet } from "@/components/Specimens/DOISheet";
+import { Toggle } from "@/components/ui/toggle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/_layout/dashboard")({
   staticData: {
@@ -102,7 +109,6 @@ function Dashboard() {
   const PAGE_SIZE = 1000;
   const [selectedFastener, setSelectedFastener] = useState<string>("");
   const [mirrorPosition, setMirrorPosition] = useState(0);
-  const [smoothing, setSmoothing] = useState<boolean>(false);
   const [yKey, setYKey] = useState<ExperimentalKey>(EXPERIMENTAL_KEYS[0]);
   const [selectedSpecimen, setSelectedSpecimen] =
     useState<SpecimenPublic | null>(null);
@@ -190,7 +196,11 @@ function Dashboard() {
     );
   }
 
-  const yLabel = getExperimentalLabel(yKey);
+  const yLabels = EXPERIMENTAL_KEYS.map((key) => ({
+    key,
+    label: getExperimentalLabel(key),
+  }));
+  console.log({ yLabels });
   const loadingProgress =
     totalCount > 0 ? Math.round((loadedCount / totalCount) * 100) : 0;
 
@@ -286,127 +296,97 @@ function Dashboard() {
             </ChartErrorBoundary>
           </CardContent>
         </Card>
-
-        <Card className="col-span-1 lg:col-span-2">
-          <CardHeader className="pb-4">
-            <CardTitle>Box Plot Distribution</CardTitle>
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>Chart Options</CardTitle>
             <CardDescription>
-              Summarizes the distribution of {yLabel} grouped by joinery type
-              {selectedSpecimens.length > 0 && (
-                <span className="ml-2 text-xs">
-                  ({selectedSpecimens.length.toLocaleString()} specimens)
-                </span>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Toggle
+                    aria-label="Toggle violin plot"
+                    variant="outline"
+                    onPressedChange={(pressed) =>
+                      setMirrorPosition(pressed ? 1 : 0)
+                    }
+                  >
+                    <CandlestickChartIcon className="group-data-[state=on]/toggle:fill-foreground" />
+                    Violin
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle between boxplot and violin plot</p>
+                </TooltipContent>
+              </Tooltip>
             </CardDescription>
             <CardAction>
-              <Item variant="muted">
-                <ItemMedia variant="icon">
-                  <ReplaceIcon aria-hidden="true" />
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>Chart Options</ItemTitle>
-                  <ItemDescription>
-                    Select fastener type and/or experimental value
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Select
-                    onValueChange={(value) => setSelectedFastener(value)}
-                    defaultValue={selectedFastener}
-                  >
-                    <SelectTrigger
-                      className="w-full max-w-48"
-                      aria-label="Select fastener type"
-                    >
-                      <SelectValue placeholder="Select a fastener" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Fastener</SelectLabel>
-                        {fastenerTypes.map((fastener) => (
-                          <SelectItem key={fastener} value={fastener}>
-                            {fastener}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    onValueChange={(value) => setYKey(value as ExperimentalKey)}
-                    defaultValue={yKey}
-                  >
-                    <SelectTrigger
-                      className="w-full max-w-48"
-                      aria-label="Select experimental value"
-                    >
-                      <SelectValue placeholder="Select an experimental value" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Experimental Value</SelectLabel>
-                        {EXPERIMENTAL_KEYS.map((expValue) => (
-                          <SelectItem key={expValue} value={expValue}>
-                            {getExperimentalLabel(expValue)}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </ItemActions>
-              </Item>
+              <Select
+                onValueChange={(value) => setSelectedFastener(value)}
+                defaultValue={selectedFastener}
+              >
+                <SelectTrigger
+                  className="w-full max-w-48"
+                  aria-label="Select fastener type"
+                >
+                  <SelectValue placeholder="Select a fastener" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Fastener</SelectLabel>
+                    {fastenerTypes.map((fastener) => (
+                      <SelectItem key={fastener} value={fastener}>
+                        {fastener}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </CardAction>
           </CardHeader>
-          <CardContent className="pb-4">
-            <ChartErrorBoundary chartName="Box Plot">
-              <BoxPlot
-                selectedSpecimens={selectedSpecimens}
-                yKey={yKey}
-                yLabel={getFullLabel(yKey)}
-                mirrorPosition={mirrorPosition}
-                smoothing={smoothing}
-                onPointClick={handlePointClick}
-              />
-            </ChartErrorBoundary>
-          </CardContent>
-          <CardFooter>
-            <Item variant="outline">
-              <ItemMedia variant="icon">
-                <WrenchIcon aria-hidden="true" />
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>Chart Options</ItemTitle>
-                <ItemDescription>
-                  Toggle between a box plot and a violin plot
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Switch
-                  id="mirror"
-                  onCheckedChange={(checked) =>
-                    setMirrorPosition(checked ? 1 : 0)
-                  }
-                  checked={mirrorPosition === 1}
-                  aria-label="Toggle violin plot"
-                />
-                <Label htmlFor="mirror">Violin</Label>
-                <Switch
-                  id="smoothing"
-                  onCheckedChange={(checked) => setSmoothing(checked)}
-                  checked={smoothing}
-                  aria-label="Toggle smoothing"
-                />
-                <Label htmlFor="smoothing">Smoothing</Label>
-              </ItemActions>
-            </Item>
-          </CardFooter>
         </Card>
+
+        {yLabels.map((ylabel) => {
+          return (
+            <Card
+              key={ylabel.key}
+              className="col-span-1 last:col-span-2 odd:last-of-type:col-span-2"
+            >
+              <CardHeader className="pb-4">
+                <CardTitle>Box Plot Distribution</CardTitle>
+                <CardDescription>
+                  Summarizes the distribution of {ylabel.label} grouped by
+                  joinery type
+                  {selectedSpecimens.length > 0 && (
+                    <span className="ml-2 text-xs">
+                      ({selectedSpecimens.length.toLocaleString()} specimens)
+                    </span>
+                  )}
+                </CardDescription>
+                <CardAction></CardAction>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <ChartErrorBoundary chartName="Box Plot">
+                  <BoxPlot
+                    selectedSpecimens={selectedSpecimens}
+                    yKey={ylabel.key}
+                    yLabel={getFullLabel(ylabel.key)}
+                    mirrorPosition={mirrorPosition}
+                    onPointClick={handlePointClick}
+                  />
+                </ChartErrorBoundary>
+              </CardContent>
+              <CardFooter></CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
-      <SpecimenSheet
-        specimen={selectedSpecimen}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-      />
+      {selectedSpecimen && (
+        <DOISheet
+          doi={selectedSpecimen.doi}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+        />
+      )}
 
       {/* Loading progress indicator */}
       {isLoadingAll && (
