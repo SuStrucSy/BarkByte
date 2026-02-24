@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 type LabelValueProps = {
   property: keyof SpecimenPublic;
   data: SpecimenPublic;
+  unit?: string;
 };
 
 const manual_labels: Partial<Record<keyof SpecimenPublic, string>> = {
@@ -29,9 +30,11 @@ function getLabel(property: keyof SpecimenPublic): string {
   return manual_labels[property] || humanizeLabel(property);
 }
 
-export function LabelValue({ property, data }: LabelValueProps) {
+export function LabelValue({ property, data, unit }: LabelValueProps) {
   const label = getLabel(property);
   const value = renderYesNoValue(renderValue(data[property]));
+
+  console.log(`${label}: ${value}`);
 
   if (Array.isArray(data[property])) {
     return (
@@ -53,7 +56,14 @@ export function LabelValue({ property, data }: LabelValueProps) {
       <span className="text-[10px] tracking-wide text-muted-foreground">
         {label}
       </span>
-      <span className="font-medium">{value}</span>
+      <span className="font-medium">
+        {value}{" "}
+        {unit ? (
+          <span className="text-muted-foreground font-light text-sm">
+            {unit}
+          </span>
+        ) : null}
+      </span>
     </div>
   );
 }

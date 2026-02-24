@@ -101,6 +101,9 @@ export function renderValue(value: any): string {
   if (typeof value === "string") {
     return value;
   }
+  if (typeof value === "number") {
+    return value.toString();
+  }
   if (Array.isArray(value)) {
     return value.map((v) => renderValue(v)).join(", ");
   }

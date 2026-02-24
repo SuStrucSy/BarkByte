@@ -21,6 +21,8 @@ import { Route as LayoutDoisRouteImport } from './routes/_layout/dois'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutSpecimensIndexRouteImport } from './routes/_layout/specimens/index'
+import { Route as LayoutSpecimensPendingRouteImport } from './routes/_layout/specimens/pending'
+import { Route as LayoutSpecimensNewRouteImport } from './routes/_layout/specimens/new'
 import { Route as LayoutSpecimensSpecimenIdRouteImport } from './routes/_layout/specimens/$specimenId'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -82,6 +84,16 @@ const LayoutSpecimensIndexRoute = LayoutSpecimensIndexRouteImport.update({
   path: '/specimens/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutSpecimensPendingRoute = LayoutSpecimensPendingRouteImport.update({
+  id: '/specimens/pending',
+  path: '/specimens/pending',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutSpecimensNewRoute = LayoutSpecimensNewRouteImport.update({
+  id: '/specimens/new',
+  path: '/specimens/new',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSpecimensSpecimenIdRoute =
   LayoutSpecimensSpecimenIdRouteImport.update({
     id: '/specimens/$specimenId',
@@ -90,6 +102,7 @@ const LayoutSpecimensSpecimenIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof LayoutIndexRoute
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -99,9 +112,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
-  '/': typeof LayoutIndexRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
-  '/specimens': typeof LayoutSpecimensIndexRoute
+  '/specimens/new': typeof LayoutSpecimensNewRoute
+  '/specimens/pending': typeof LayoutSpecimensPendingRoute
+  '/specimens/': typeof LayoutSpecimensIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -115,6 +129,8 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
+  '/specimens/new': typeof LayoutSpecimensNewRoute
+  '/specimens/pending': typeof LayoutSpecimensPendingRoute
   '/specimens': typeof LayoutSpecimensIndexRoute
 }
 export interface FileRoutesById {
@@ -131,11 +147,14 @@ export interface FileRoutesById {
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
+  '/_layout/specimens/new': typeof LayoutSpecimensNewRoute
+  '/_layout/specimens/pending': typeof LayoutSpecimensPendingRoute
   '/_layout/specimens/': typeof LayoutSpecimensIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/login'
     | '/recover-password'
     | '/reset-password'
@@ -145,9 +164,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/dois'
     | '/settings'
-    | '/'
     | '/specimens/$specimenId'
-    | '/specimens'
+    | '/specimens/new'
+    | '/specimens/pending'
+    | '/specimens/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -161,6 +181,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/'
     | '/specimens/$specimenId'
+    | '/specimens/new'
+    | '/specimens/pending'
     | '/specimens'
   id:
     | '__root__'
@@ -176,6 +198,8 @@ export interface FileRouteTypes {
     | '/_layout/settings'
     | '/_layout/'
     | '/_layout/specimens/$specimenId'
+    | '/_layout/specimens/new'
+    | '/_layout/specimens/pending'
     | '/_layout/specimens/'
   fileRoutesById: FileRoutesById
 }
@@ -228,7 +252,7 @@ declare module '@tanstack/react-router' {
     '/_layout': {
       id: '/_layout'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -270,8 +294,22 @@ declare module '@tanstack/react-router' {
     '/_layout/specimens/': {
       id: '/_layout/specimens/'
       path: '/specimens'
-      fullPath: '/specimens'
+      fullPath: '/specimens/'
       preLoaderRoute: typeof LayoutSpecimensIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/specimens/pending': {
+      id: '/_layout/specimens/pending'
+      path: '/specimens/pending'
+      fullPath: '/specimens/pending'
+      preLoaderRoute: typeof LayoutSpecimensPendingRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/specimens/new': {
+      id: '/_layout/specimens/new'
+      path: '/specimens/new'
+      fullPath: '/specimens/new'
+      preLoaderRoute: typeof LayoutSpecimensNewRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/specimens/$specimenId': {
@@ -291,6 +329,8 @@ interface LayoutRouteChildren {
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSpecimensSpecimenIdRoute: typeof LayoutSpecimensSpecimenIdRoute
+  LayoutSpecimensNewRoute: typeof LayoutSpecimensNewRoute
+  LayoutSpecimensPendingRoute: typeof LayoutSpecimensPendingRoute
   LayoutSpecimensIndexRoute: typeof LayoutSpecimensIndexRoute
 }
 
@@ -301,6 +341,8 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSpecimensSpecimenIdRoute: LayoutSpecimensSpecimenIdRoute,
+  LayoutSpecimensNewRoute: LayoutSpecimensNewRoute,
+  LayoutSpecimensPendingRoute: LayoutSpecimensPendingRoute,
   LayoutSpecimensIndexRoute: LayoutSpecimensIndexRoute,
 }
 

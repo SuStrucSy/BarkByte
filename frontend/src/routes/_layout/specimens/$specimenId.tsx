@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
 import { DOISheet } from "@/components/Specimens/DOISheet";
 import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
-import PendingSpecimen from "@/components/Pending/PendingSpecimen";
+import SkeletonSpecimen from "@/components/Skeleton/SkeletonSpecimen";
 import { useState } from "react";
 import { Specimen } from "@/components/Specimens/Specimen";
 
@@ -28,7 +28,7 @@ function SpecimenDetails() {
   });
 
   if (isLoading || doiLoading) {
-    return <PendingSpecimen />;
+    return <SkeletonSpecimen />;
   }
 
   if (isError) {

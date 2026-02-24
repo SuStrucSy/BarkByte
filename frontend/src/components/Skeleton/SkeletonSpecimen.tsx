@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Card, CardContent, CardHeader } from "../ui/card";
 
-const PendingSpecimen = () => (
+const SkeletonSpecimen = () => (
   <div className="flex flex-col gap-6">
     <div className="flex items-center justify-between">
       <Skeleton className="h-4 w-20" />
@@ -36,4 +36,4 @@ const PendingSpecimen = () => (
   </div>
 );
 
-export default PendingSpecimen;
+export default SkeletonSpecimen;

@@ -4,6 +4,8 @@ import {
   ChartSpline,
   Home,
   Layers,
+  LayersPlus,
+  ListTodo,
   type LucideIcon,
   Newspaper,
   Settings,
@@ -24,6 +26,14 @@ const items = [
   { icon: Layers, title: "Specimens", path: "/specimens" },
   { icon: Newspaper, title: "References", path: "/dois" },
   { icon: Settings, title: "User Settings", path: "/settings" },
+];
+
+const groupTwoItems = [
+  { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
+];
+
+const groupThreeItems = [
+  { icon: ListTodo, title: "Pending Specimens", path: "/specimens/pending" },
 ];
 
 interface Item {
@@ -55,11 +65,51 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
+  const projectItems = groupTwoItems.map((item) => (
+    <RouterLink key={item.title} to={item.path}>
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          tooltip={item.title}
+          className="cursor-pointer data-[active=true]:font-bold"
+          isActive={item.path === pathname}
+        >
+          {item.icon && <item.icon />}
+          <span>{item.title}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </RouterLink>
+  ));
+
+  const adminItems = groupThreeItems.map((item) => (
+    <RouterLink key={item.title} to={item.path}>
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          tooltip={item.title}
+          className="cursor-pointer data-[active=true]:font-bold"
+          isActive={item.path === pathname}
+        >
+          {item.icon && <item.icon />}
+          <span>{item.title}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </RouterLink>
+  ));
+
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Menu</SidebarGroupLabel>
-      <SidebarMenu>{listItems}</SidebarMenu>
-    </SidebarGroup>
+    <>
+      <SidebarGroup>
+        <SidebarGroupLabel>Menu</SidebarGroupLabel>
+        <SidebarMenu>{listItems}</SidebarMenu>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel>Projects</SidebarGroupLabel>
+        <SidebarMenu>{projectItems}</SidebarMenu>
+      </SidebarGroup>
+      <SidebarGroup>
+        <SidebarGroupLabel>Admin</SidebarGroupLabel>
+        <SidebarMenu>{adminItems}</SidebarMenu>
+      </SidebarGroup>
+    </>
   );
 };
 
