@@ -1,3 +1,4 @@
+// import { NuqsAdapter } from "nuqs/adapters/react";
 import {
   MutationCache,
   QueryCache,
@@ -55,14 +56,16 @@ declare module "@tanstack/react-router" {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider
-      defaultMode="dark"
-      defaultTheme="neutral"
-      storageKey="vite-ui-theme"
-    >
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </ThemeProvider>
+    {/* <NuqsAdapter> */}
+      <ThemeProvider
+        defaultMode="dark"
+        defaultTheme="neutral"
+        storageKey="vite-ui-theme"
+      >
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </ThemeProvider>
+    {/* </NuqsAdapter> */}
   </StrictMode>,
 );

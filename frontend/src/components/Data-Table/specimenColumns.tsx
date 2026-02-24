@@ -18,7 +18,7 @@ interface ColumnConfig {
 const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	// Hidden by default
 	id: { header: "ID", hidden: true },
-	uploader_id: { header: "Uploader ID", hidden: true },
+	uploader_id: { header: "Uploader", hidden: true, meta: { renderAs: "uploader_name" } },
 	note: { header: "Notes", hidden: true },
 	connector_mechanical_properties: { header: "Connector Props", hidden: true },
 	fastener_mechanical_properties: { header: "Fastener Props", hidden: true },
@@ -80,15 +80,17 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 export const createColumns = <
 	TData extends SpecimenPublic,
 >(): ColumnDef<TData>[] =>
-	Object.entries(columnConfig).map(([key, config]) => ({
-		id: key,
-		accessorKey: key as any,
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title={config.header} />
-		),
-		meta: config.meta,
-		enableSorting: config.sortable ?? false,
-	}));
+	Object.entries(columnConfig)
+		.filter(([key]) => key !== "id")
+		.map(([key, config]) => ({
+			id: key,
+			accessorKey: key as any,
+			header: ({ column }) => (
+				<DataTableColumnHeader column={column} title={config.header} />
+			),
+			meta: config.meta,
+			enableSorting: config.sortable ?? false,
+		}));
 
 // ✅ Exports initial visibility from config
 export const getInitialColumnVisibility = (): Record<string, boolean> => {

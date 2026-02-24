@@ -151,6 +151,13 @@ export function DataTable<TData, TValue>({
                               ?.join(", ") || "None"
                           );
                         }
+                        if (meta?.renderAs === "uploader_name") {
+                          return (
+                            (cell.row.original as any).uploader_name ||
+                            cell.getValue() ||
+                            "Unknown"
+                          );
+                        }
 
                         return (
                           flexRender(
