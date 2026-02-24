@@ -27,7 +27,7 @@ const AppSidebar = () => {
             >
               <a href="/">
                 <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">BarkByte</span>
+                <span className="text-base font-semibold">Timverse</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -95,7 +95,7 @@ def update_pending_specimen(
     pending_specimen: PendingSpecimen,
     update_in: PendingSpecimenUpdate,
 ) -> PendingSpecimen:
-    data = update_in.model_dump(exclude_unset=True)
+    data = update_in.model_dump(mode="json", exclude_unset=True)
 
     # If nothing was provided, skip everything and just return the original
     if not data:
