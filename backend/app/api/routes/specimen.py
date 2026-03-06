@@ -7,7 +7,13 @@ from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models.specimen import Specimen
-from app.schemas.specimen import SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
+from app.schemas.specimen import (
+    SpecimenCreate,
+    SpecimenFilterOptionsPublic,
+    SpecimenPublic,
+    SpecimensPublic,
+    SpecimenUpdate,
+)
 from app.schemas.doi import DOICreate
 from app.schemas.pendingspecimen import PendingSpecimenPublic
 from app.crud import specimen as specimen_crud
@@ -27,6 +33,13 @@ def read_specimens(
     Retrieve specimens.
     """
     return specimen_crud.get_specimens(session=session, skip=skip, limit=limit)
+
+@router.get("/filter-options", response_model=SpecimenFilterOptionsPublic)
+def read_specimen_filter_options(session: SessionDep) -> SpecimenFilterOptionsPublic:
+    """
+    Retrieve predefined specimen filter options for facet controls.
+    """
+    return specimen_crud.get_specimen_filter_options(session=session)
 
 @router.get("/{id}", response_model=SpecimenPublic)
 def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:

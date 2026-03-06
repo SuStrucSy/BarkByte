@@ -75,3 +75,11 @@ class SpecimenPublic(SpecimenBase):
 class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
     count: int
+
+class SpecimenFilterOptionsPublic(SQLModel):
+    assembly_types: list[str]
+    practices: list[str]
+    joinery_types: list[str]
+    sub_joinery_types: list[str]
+    loading_types: list[str]
+    uploader: list[str]

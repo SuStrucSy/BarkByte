@@ -1,27 +1,39 @@
 import {
   specimensReadSpecimens,
-  useSpecimensReadSpecimens,
 } from "@/api/endpoints/specimens/specimens.gen";
 import { useUsersReadUsers } from "@/api/endpoints/users/users.gen";
+import { customInstance } from "@/api/mutator/custom-instance";
 import type { SpecimenPublic } from "@/api/model";
 import { DataTableFilterCommand } from "@/components/Data-Table/DataTableFilterCommand";
 import {
-  DataTableFilterControls,
   type DataTableFilterField,
 } from "@/components/Data-Table/DataTableFilterControls";
 import { DataTablePagination } from "@/components/Data-Table/DataTablePagination";
+import { SpecimenTableSideBar } from "@/components/Data-Table/SpecimenTableSideBar";
+import { SpecimensResultsTable } from "@/components/Data-Table/SpecimensResultsTable";
+import {
+  CHECKBOX_FILTER_CONFIG,
+  createEmptySelectedFilters,
+  type CommandToken,
+  filterSpecimenRows,
+  isFacetField,
+  type CheckboxField,
+  type SelectedFilters,
+  SLIDER_FILTER_CONFIG,
+  type SliderField,
+  type SliderValuesByField,
+  type SpecimenFilterOptionsResponse,
+  type SpecimenRow,
+} from "@/components/Data-Table/specimenTableFilters";
+import { useSpecimenSearchFilterSync } from "@/components/Data-Table/useSpecimenSearchFilterSync";
 import { DataTableToolbar } from "@/components/Data-Table/DataTableToolbar";
-import { DataTable } from "@/components/Data-Table/DataTable";
 import {
   createColumns,
-  getInitialColumnVisibility,
 } from "@/components/Data-Table/specimenColumns";
 import PendingSpecimens from "@/components/Pending/PendingSpecimens";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   type ColumnDef,
@@ -31,25 +43,15 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import z from "zod/v4";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 const specimensSearchSchema = z.object({
   page: z.number().catch(1),
 });
 
-const PER_PAGE = 20;
 const TABLE_PANEL_HEIGHT = "h-[calc(100vh-11rem)]";
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
-const hasNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
+type Bounds = { min: number; max: number };
 
 export const Route = createFileRoute("/_layout/specimens/")({
   staticData: {
@@ -59,12 +61,17 @@ export const Route = createFileRoute("/_layout/specimens/")({
   validateSearch: (search) => specimensSearchSchema.parse(search),
 });
 
+/**
+ * Fetches users and builds a lookup map from uploader ID -> display name.
+ * Display name fallback order is full name, then email, then raw user ID.
+ */
 function useUploaderNameMap() {
   const { data } = useUsersReadUsers({
     skip: 0,
     limit: 1000,
   });
 
+  // Build a stable uploader ID -> display name map from user records.
   return useMemo(() => {
     const entries = (data?.data ?? []).map((user) => [
       user.id,
@@ -74,7 +81,12 @@ function useUploaderNameMap() {
   }, [data?.data]);
 }
 
+/**
+ * Fetches every specimen by repeatedly requesting paginated batches
+ * and returns one combined list with a total count.
+ */
 function useAllSpecimens() {
+  // Gets the full specimens dataset (batched requests) for client-side filtering.
   return useQuery({
     queryKey: ["specimens", "all"],
     queryFn: async () => {
@@ -102,113 +114,50 @@ function useAllSpecimens() {
   });
 }
 
-function SpecimensTable() {
-  const navigate = useNavigate({ from: Route.fullPath });
-  const { page } = Route.useSearch();
-  const columns = useMemo(() => createColumns<SpecimenPublic>(), []);
-  const uploaderNameMap = useUploaderNameMap();
-
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: page - 1,
-    pageSize: PER_PAGE,
-  });
-
-  // Call the Orval-generated hook instead of useQuery
-  const { data, isLoading, isPlaceholderData } = useSpecimensReadSpecimens(
-    {
-      skip: pagination.pageIndex * pagination.pageSize,
-      limit: pagination.pageSize,
-    },
-    {
-      query: {
-        placeholderData: (prevData) => prevData,
-      },
-    },
-  );
-
-  const handlePaginationChange = (
-    updater: PaginationState | ((old: PaginationState) => PaginationState),
-  ) => {
-    const newPagination =
-      typeof updater === "function" ? updater(pagination) : updater;
-
-    setPagination(newPagination);
-
-    // Update URL search params
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        page: newPagination.pageIndex + 1, // pageIndex 0 = page 1
+/**
+ * Fetches predefined facet option lists used by checkbox filters.
+ */
+function useSpecimenFilterOptions() {
+  return useQuery({
+    queryKey: ["specimens", "filter-options"],
+    queryFn: () =>
+      customInstance<SpecimenFilterOptionsResponse>({
+        url: "/api/v1/specimens/filter-options",
+        method: "GET",
       }),
-    });
-  };
-
-  const count = data?.count ?? 0;
-  const tableData = useMemo(
-    () =>
-      (data?.data ?? []).map((row) => ({
-        ...row,
-        uploader_name: uploaderNameMap[row.uploader_id] ?? row.uploader_id,
-      })),
-    [data?.data, uploaderNameMap],
-  );
-
-  if (isLoading && !isPlaceholderData) {
-    return <PendingSpecimens />;
-  }
-
-  return (
-    <DataTable<SpecimenPublic, unknown>
-      columns={columns}
-      initialColumnVisibility={getInitialColumnVisibility()}
-      data={tableData as SpecimenPublic[]}
-      isPlaceholderData={isPlaceholderData}
-      onRowClick={(row) =>
-        navigate({
-          to: "/specimens/$specimenId",
-          params: { specimenId: row.original.id },
-        })
-      }
-      rowCount={count}
-      pagination={pagination}
-      setPagination={handlePaginationChange}
-    />
-  );
+    staleTime: 5 * 60_000,
+  });
 }
 
 function SpecimensKitTable() {
+  
   const navigate = useNavigate({ from: Route.fullPath });
   const uploaderNameMap = useUploaderNameMap();
-  const [controlsOpen, setControlsOpen] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchField, setSearchField] = useState<string>("all");
-  const [assemblyFilters, setAssemblyFilters] = useState<string[]>([]);
-  const [practiceFilters, setPracticeFilters] = useState<string[]>([]);
-  const [joineryFilters, setJoineryFilters] = useState<string[]>([]);
-  const [subJoineryFilters, setSubJoineryFilters] = useState<string[]>([]);
-  const [loadingTypeFilters, setLoadingTypeFilters] = useState<string[]>([]);
-  const [uploaderFilters, setUploaderFilters] = useState<string[]>([]);
-  const [connectorFilters, setConnectorFilters] = useState<string[]>([]);
-  const [dowelFilters, setDowelFilters] = useState<string[]>([]);
-  const [sliderValuesByField, setSliderValuesByField] = useState<
-    Record<string, [number, number]>
-  >({});
-  const [toggleAllSignal, setToggleAllSignal] = useState(0);
-  const [toggleAllOpenState, setToggleAllOpenState] = useState(false);
-  const [allControlsCollapsed, setAllControlsCollapsed] = useState(false);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
 
+  // Controls whether the right-side filter sidebar is visible.
+  const [controlsOpen, setControlsOpen] = useState(true);
+  // Free-text / command input used in the top search bar.
+  const [searchTerm, setSearchTerm] = useState("");
+  // Active search mode (all fields or a specific field).
+  const [searchField, setSearchField] = useState<string>("all");
+  // Checkbox filter selections keyed by filter field.
+  const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>(createEmptySelectedFilters);
+  // Slider range selections keyed by slider field.
+  const [sliderValuesByField, setSliderValuesByField] = useState<SliderValuesByField>({});
+  // Client-side pagination state for the filtered table.
+  const [pagination, setPagination] = useState<PaginationState>({pageIndex: 0,pageSize: 20});
+
+  // Memoized table column definitions.
   const kitColumns = useMemo<ColumnDef<SpecimenPublic>[]>(
     () => createColumns<SpecimenPublic>(),
     [],
   );
 
   const { data, isLoading } = useAllSpecimens();
+  const { data: filterOptionsData } = useSpecimenFilterOptions();
 
-  const rows = useMemo(
+  // Normalize row data by attaching uploader display names.
+  const rows = useMemo<SpecimenRow[]>(
     () =>
       (data?.data ?? []).map((row) => ({
         ...row,
@@ -217,22 +166,7 @@ function SpecimensKitTable() {
     [data?.data, uploaderNameMap],
   );
 
-  const assemblyOptions = useMemo(
-    () =>
-      Array.from(new Set(rows.map((row) => row.assembly_type)))
-        .filter(Boolean)
-        .sort(),
-    [rows],
-  );
-
-  const practiceOptions = useMemo(
-    () =>
-      Array.from(new Set(rows.map((row) => row.practice)))
-        .filter(Boolean)
-        .sort(),
-    [rows],
-  );
-
+  // Unique reference IDs used as options in command search.
   const referenceOptions = useMemo(
     () =>
       Array.from(new Set(rows.map((row) => row.specimen_reference_id)))
@@ -241,142 +175,67 @@ function SpecimensKitTable() {
     [rows],
   );
 
-  const joineryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(rows.map((row) => row.joinery_type?.label).filter(isNonEmptyString)),
-      ).sort(),
-    [rows],
-  );
+  // Build checkbox options per filter field from facet payload/static options.
+  const checkboxOptionsByField = useMemo(() => {
+    const entries = CHECKBOX_FILTER_CONFIG.map((config) => {
+      if (config.options) {
+        return [config.field, config.options] as const;
+      }
 
-  const subJoineryOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(rows.map((row) => row.sub_joinery_type?.label).filter(isNonEmptyString)),
-      ).sort(),
-    [rows],
-  );
+      if (isFacetField(config.field)) {
+        const facetOptions = (filterOptionsData?.[config.field] ?? [])
+          .filter(isNonEmptyString)
+          .slice()
+          .sort();
+        return [config.field, facetOptions] as const;
+      }
 
-  const loadingTypeOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(rows.map((row) => row.e_test_loading_type).filter(isNonEmptyString)),
-      ).sort(),
-    [rows],
-  );
+      return [config.field, []] as const;
+    });
 
-  const uploaderOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          rows
-            .map((row) => (row as any).uploader_name as string | undefined)
-            .filter(isNonEmptyString),
-        ),
-      ).sort(),
-    [rows],
-  );
+    return Object.fromEntries(entries) as Record<CheckboxField, string[]>;
+  }, [filterOptionsData]);
 
+  // All searchable command fields plus reference values.
   const fieldOptions = useMemo(
     () => ({
       reference: referenceOptions,
-      assembly: assemblyOptions,
-      practice: practiceOptions,
-      joinery: joineryOptions,
-      sub_joinery: subJoineryOptions,
-      loading_type: loadingTypeOptions,
-      uploader: uploaderOptions,
-      connector: ["true", "false"],
-      dowel: ["true", "false"],
+      ...checkboxOptionsByField,
     }),
-    [
-      referenceOptions,
-      assemblyOptions,
-      practiceOptions,
-      joineryOptions,
-      subJoineryOptions,
-      loadingTypeOptions,
-      uploaderOptions,
-    ],
+    [referenceOptions, checkboxOptionsByField],
   );
 
   const getBounds = (values: Array<number | null | undefined>) => {
-    const nums = values.filter(hasNumber);
+    const nums = values.filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value),
+    );
     if (!nums.length) return { min: 0, max: 0 };
     return { min: Math.min(...nums), max: Math.max(...nums) };
   };
 
-  const replicateBounds = useMemo(
-    () => getBounds(rows.map((row) => row.replicate_tests)),
-    [rows],
-  );
-  const fastenerBounds = useMemo(
-    () => getBounds(rows.map((row) => row.fastener_numbers)),
-    [rows],
-  );
-  const yieldForceBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_yield_force)),
-    [rows],
-  );
-  const maxForceBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_max_force)),
-    [rows],
-  );
-  const yieldDispBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_yield_displacement)),
-    [rows],
-  );
-  const maxDispBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_max_displacement)),
-    [rows],
-  );
-  const ultimateForceBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_ultimate_force)),
-    [rows],
-  );
-  const ultimateDispBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_ultimate_displacement)),
-    [rows],
-  );
-  const stiffnessBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_stiffness)),
-    [rows],
-  );
-  const ductilityBounds = useMemo(
-    () => getBounds(rows.map((row) => row.e_ductility)),
-    [rows],
-  );
+  // Compute min/max bounds for each slider field from current rows.
+  const sliderBoundsByField = useMemo(() => {
+    const entries = SLIDER_FILTER_CONFIG.map((config) => [
+      config.field,
+      getBounds(rows.map((row) => config.getValue(row))),
+    ]);
+    return Object.fromEntries(entries) as Record<SliderField, Bounds>;
+  }, [rows]);
 
+  // Default slider ranges initialized from computed bounds.
   const sliderDefaults = useMemo(
-    () => ({
-      replicate_tests: [replicateBounds.min, replicateBounds.max] as [number, number],
-      fastener_numbers: [fastenerBounds.min, fastenerBounds.max] as [number, number],
-      e_yield_force: [yieldForceBounds.min, yieldForceBounds.max] as [number, number],
-      e_max_force: [maxForceBounds.min, maxForceBounds.max] as [number, number],
-      e_yield_displacement: [yieldDispBounds.min, yieldDispBounds.max] as [number, number],
-      e_max_displacement: [maxDispBounds.min, maxDispBounds.max] as [number, number],
-      e_ultimate_force: [ultimateForceBounds.min, ultimateForceBounds.max] as [number, number],
-      e_ultimate_displacement: [
-        ultimateDispBounds.min,
-        ultimateDispBounds.max,
-      ] as [number, number],
-      e_stiffness: [stiffnessBounds.min, stiffnessBounds.max] as [number, number],
-      e_ductility: [ductilityBounds.min, ductilityBounds.max] as [number, number],
-    }),
-    [
-      replicateBounds,
-      fastenerBounds,
-      yieldForceBounds,
-      maxForceBounds,
-      yieldDispBounds,
-      maxDispBounds,
-      ultimateForceBounds,
-      ultimateDispBounds,
-      stiffnessBounds,
-      ductilityBounds,
-    ],
+    () =>
+      Object.fromEntries(
+        SLIDER_FILTER_CONFIG.map((config) => {
+          const bounds = sliderBoundsByField[config.field];
+          return [config.field, [bounds.min, bounds.max] as [number, number]];
+        }),
+      ) as Record<SliderField, [number, number]>,
+    [sliderBoundsByField],
   );
 
+  // Seeds slider state from computed defaults, while preserving any existing user-adjusted values.
   useEffect(() => {
     setSliderValuesByField((prev) => ({
       ...sliderDefaults,
@@ -384,152 +243,31 @@ function SpecimensKitTable() {
     }));
   }, [sliderDefaults]);
 
+  // Convert filter config + bounds/options into UI-ready filter field definitions.
   const filterFields = useMemo<DataTableFilterField[]>(
     () => [
-      { type: "checkbox", value: "assembly", label: "Assembly Type", options: assemblyOptions },
-      { type: "checkbox", value: "practice", label: "Practice", options: practiceOptions },
-      { type: "checkbox", value: "joinery", label: "Joinery Type", options: joineryOptions },
-      { type: "checkbox", value: "sub_joinery", label: "Sub Joinery", options: subJoineryOptions },
-      { type: "checkbox", value: "loading_type", label: "Loading Type", options: loadingTypeOptions },
-      { type: "checkbox", value: "uploader", label: "Uploader", options: uploaderOptions },
-      { type: "checkbox", value: "connector", label: "Connector", options: ["true", "false"] },
-      { type: "checkbox", value: "dowel", label: "Dowel", options: ["true", "false"] },
-      {
-        type: "slider",
-        value: "replicate_tests",
-        label: "Replicate Tests",
-        min: replicateBounds.min,
-        max: replicateBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "fastener_numbers",
-        label: "Fastener Count",
-        min: fastenerBounds.min,
-        max: fastenerBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_yield_force",
-        label: "Yield Force (kN)",
-        min: yieldForceBounds.min,
-        max: yieldForceBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_max_force",
-        label: "Max Force (kN)",
-        min: maxForceBounds.min,
-        max: maxForceBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_yield_displacement",
-        label: "Yield Displacement (mm)",
-        min: yieldDispBounds.min,
-        max: yieldDispBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_max_displacement",
-        label: "Max Displacement (mm)",
-        min: maxDispBounds.min,
-        max: maxDispBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_ultimate_force",
-        label: "Ultimate Force (kN)",
-        min: ultimateForceBounds.min,
-        max: ultimateForceBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_ultimate_displacement",
-        label: "Ultimate Displacement (mm)",
-        min: ultimateDispBounds.min,
-        max: ultimateDispBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_stiffness",
-        label: "Stiffness (kN/mm)",
-        min: stiffnessBounds.min,
-        max: stiffnessBounds.max,
-        step: 1,
-      },
-      {
-        type: "slider",
-        value: "e_ductility",
-        label: "Ductility",
-        min: ductilityBounds.min,
-        max: ductilityBounds.max,
-        step: 1,
-      },
+      ...CHECKBOX_FILTER_CONFIG.map((config) => ({
+        type: "checkbox" as const,
+        value: config.field,
+        label: config.label,
+        options: checkboxOptionsByField[config.field],
+      })),
+      ...SLIDER_FILTER_CONFIG.map((config) => {
+        const bounds = sliderBoundsByField[config.field];
+        return {
+          type: "slider" as const,
+          value: config.field,
+          label: config.label,
+          min: bounds.min,
+          max: bounds.max,
+          step: config.step,
+        };
+      }),
     ],
-    [
-      assemblyOptions,
-      practiceOptions,
-      joineryOptions,
-      subJoineryOptions,
-      loadingTypeOptions,
-      uploaderOptions,
-      replicateBounds,
-      fastenerBounds,
-      yieldForceBounds,
-      maxForceBounds,
-      yieldDispBounds,
-      maxDispBounds,
-      ultimateForceBounds,
-      ultimateDispBounds,
-      stiffnessBounds,
-      ductilityBounds,
-    ],
+    [checkboxOptionsByField, sliderBoundsByField],
   );
 
-  const getSearchValue = (row: SpecimenPublic & { uploader_name?: string }, field: string) => {
-    switch (field) {
-      case "reference":
-        return row.specimen_reference_id;
-      case "assembly":
-        return row.assembly_type;
-      case "practice":
-        return row.practice;
-      case "joinery":
-        return row.joinery_type?.label ?? "";
-      case "sub_joinery":
-        return row.sub_joinery_type?.label ?? "";
-      case "loading_type":
-        return row.e_test_loading_type ?? "";
-      case "uploader":
-        return row.uploader_name ?? row.uploader_id;
-      case "connector":
-        return row.connector ? "true" : "false";
-      case "dowel":
-        return row.dowel ? "true" : "false";
-      default:
-        return [
-          row.specimen_reference_id,
-          row.assembly_type,
-          row.practice,
-          row.joinery_type?.label ?? "",
-          row.sub_joinery_type?.label ?? "",
-          row.e_test_loading_type ?? "",
-          row.uploader_name ?? row.uploader_id,
-          row.connector ? "true" : "false",
-          row.dowel ? "true" : "false",
-        ].join(" ");
-    }
-  };
-
+  // Parse command-style tokens from search text, e.g. "field:value".
   const commandTokens = useMemo(() => {
     if (!(searchField === "all" && searchTerm.includes(":"))) return [];
 
@@ -548,201 +286,127 @@ function SpecimensKitTable() {
 
         return { field, value: tokenValue };
       })
-      .filter((token): token is { field: string; value: string } => token !== null);
+      .filter((token): token is CommandToken => token !== null);
   }, [searchField, searchTerm, fieldOptions]);
 
-  const filteredRows = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+  // Keeps command-search text and sidebar checkbox selections synchronized both ways.
+  useSpecimenSearchFilterSync({
+    searchField,
+    searchTerm,
+    commandTokens,
+    checkboxOptionsByField,
+    selectedFilters,
+    setSelectedFilters,
+    setSearchTerm,
+  });
 
-    return rows.filter((row) => {
-      const referenceText = row.specimen_reference_id.toLowerCase();
-      const matchesQuery =
-        commandTokens.length > 0
-          ? commandTokens.every((token) =>
-              getSearchValue(row, token.field).toLowerCase().includes(token.value),
-            )
-          : query.length === 0
-            ? true
-            : getSearchValue(row, searchField).toLowerCase().includes(query) ||
-              (searchField === "all" && referenceText.includes(query));
-
-      const matchesAssembly =
-        assemblyFilters.length === 0 ||
-        assemblyFilters.includes(row.assembly_type);
-
-      const matchesPractice =
-        practiceFilters.length === 0 || practiceFilters.includes(row.practice);
-
-      const matchesJoinery =
-        joineryFilters.length === 0 ||
-        joineryFilters.includes(row.joinery_type?.label ?? "");
-
-      const matchesSubJoinery =
-        subJoineryFilters.length === 0 ||
-        subJoineryFilters.includes(row.sub_joinery_type?.label ?? "");
-
-      const matchesLoadingType =
-        loadingTypeFilters.length === 0 ||
-        loadingTypeFilters.includes(row.e_test_loading_type ?? "");
-
-      const matchesUploader =
-        uploaderFilters.length === 0 ||
-        uploaderFilters.includes((row as any).uploader_name ?? row.uploader_id);
-
-      const matchesConnector =
-        connectorFilters.length === 0 ||
-        connectorFilters.includes(row.connector ? "true" : "false");
-
-      const matchesDowel =
-        dowelFilters.length === 0 ||
-        dowelFilters.includes(row.dowel ? "true" : "false");
-
-      const replicateRange =
-        sliderValuesByField.replicate_tests ?? sliderDefaults.replicate_tests;
-      const fastenerRange =
-        sliderValuesByField.fastener_numbers ?? sliderDefaults.fastener_numbers;
-      const yieldRange =
-        sliderValuesByField.e_yield_force ?? sliderDefaults.e_yield_force;
-      const maxRange =
-        sliderValuesByField.e_max_force ?? sliderDefaults.e_max_force;
-      const yieldDispRange =
-        sliderValuesByField.e_yield_displacement ??
-        sliderDefaults.e_yield_displacement;
-      const maxDispRange =
-        sliderValuesByField.e_max_displacement ??
-        sliderDefaults.e_max_displacement;
-      const ultimateForceRange =
-        sliderValuesByField.e_ultimate_force ?? sliderDefaults.e_ultimate_force;
-      const ultimateDispRange =
-        sliderValuesByField.e_ultimate_displacement ??
-        sliderDefaults.e_ultimate_displacement;
-      const stiffnessRange =
-        sliderValuesByField.e_stiffness ?? sliderDefaults.e_stiffness;
-      const ductilityRange =
-        sliderValuesByField.e_ductility ?? sliderDefaults.e_ductility;
-
-      const matchesReplicateSlider =
-        row.replicate_tests >= replicateRange[0] &&
-        row.replicate_tests <= replicateRange[1];
-      const matchesFastenerSlider =
-        row.fastener_numbers >= fastenerRange[0] &&
-        row.fastener_numbers <= fastenerRange[1];
-      const matchesYieldSlider = hasNumber(row.e_yield_force)
-        ? row.e_yield_force >= yieldRange[0] &&
-          row.e_yield_force <= yieldRange[1]
-        : true;
-      const matchesMaxSlider = hasNumber(row.e_max_force)
-        ? row.e_max_force >= maxRange[0] && row.e_max_force <= maxRange[1]
-        : true;
-      const matchesYieldDispSlider = hasNumber(row.e_yield_displacement)
-        ? row.e_yield_displacement >= yieldDispRange[0] &&
-          row.e_yield_displacement <= yieldDispRange[1]
-        : true;
-      const matchesMaxDispSlider = hasNumber(row.e_max_displacement)
-        ? row.e_max_displacement >= maxDispRange[0] &&
-          row.e_max_displacement <= maxDispRange[1]
-        : true;
-      const matchesUltimateForceSlider = hasNumber(row.e_ultimate_force)
-        ? row.e_ultimate_force >= ultimateForceRange[0] &&
-          row.e_ultimate_force <= ultimateForceRange[1]
-        : true;
-      const matchesUltimateDispSlider = hasNumber(row.e_ultimate_displacement)
-        ? row.e_ultimate_displacement >= ultimateDispRange[0] &&
-          row.e_ultimate_displacement <= ultimateDispRange[1]
-        : true;
-      const matchesStiffnessSlider = hasNumber(row.e_stiffness)
-        ? row.e_stiffness >= stiffnessRange[0] &&
-          row.e_stiffness <= stiffnessRange[1]
-        : true;
-      const matchesDuctilitySlider = hasNumber(row.e_ductility)
-        ? row.e_ductility >= ductilityRange[0] &&
-          row.e_ductility <= ductilityRange[1]
-        : true;
-
-      return (
-        matchesQuery &&
-        matchesAssembly &&
-        matchesPractice &&
-        matchesJoinery &&
-        matchesSubJoinery &&
-        matchesLoadingType &&
-        matchesUploader &&
-        matchesConnector &&
-        matchesDowel &&
-        matchesReplicateSlider &&
-        matchesFastenerSlider &&
-        matchesYieldSlider &&
-        matchesMaxSlider &&
-        matchesYieldDispSlider &&
-        matchesMaxDispSlider &&
-        matchesUltimateForceSlider &&
-        matchesUltimateDispSlider &&
-        matchesStiffnessSlider &&
-        matchesDuctilitySlider
-      );
-    });
+  // Resets back to page 1 whenever any search/filter criteria changes.
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [
-    rows,
     searchTerm,
     searchField,
-    commandTokens,
-    assemblyFilters,
-    practiceFilters,
-    joineryFilters,
-    subJoineryFilters,
-    loadingTypeFilters,
-    uploaderFilters,
-    connectorFilters,
-    dowelFilters,
+    selectedFilters,
     sliderValuesByField,
     sliderDefaults,
   ]);
 
+  // Apply command/text search, checkbox filters, and slider ranges to produce visible rows.
+  const filteredRows = useMemo(
+    () =>
+      filterSpecimenRows({
+        rows,
+        searchTerm,
+        searchField,
+        commandTokens,
+        selectedFilters,
+        sliderValuesByField,
+        sliderDefaults,
+      }),
+    [
+      rows,
+      searchTerm,
+      searchField,
+      commandTokens,
+      selectedFilters,
+      sliderValuesByField,
+      sliderDefaults,
+    ],
+  );
+
   const hasActiveFilters =
     searchTerm.trim().length > 0 ||
     searchField !== "all" ||
-    assemblyFilters.length > 0 ||
-    practiceFilters.length > 0 ||
-    joineryFilters.length > 0 ||
-    subJoineryFilters.length > 0 ||
-    loadingTypeFilters.length > 0 ||
-    uploaderFilters.length > 0 ||
-    connectorFilters.length > 0 ||
-    dowelFilters.length > 0 ||
-    Object.keys(sliderDefaults).some((key) => {
-      const current = sliderValuesByField[key];
-      const baseline = sliderDefaults[key as keyof typeof sliderDefaults];
+    CHECKBOX_FILTER_CONFIG.some(
+      (config) => selectedFilters[config.field].length > 0,
+    ) ||
+    SLIDER_FILTER_CONFIG.some((config) => {
+      const current = sliderValuesByField[config.field];
+      const baseline = sliderDefaults[config.field];
       return (
         !!current &&
         (current[0] !== baseline[0] || current[1] !== baseline[1])
       );
     });
 
-  const toggleFilter = (
-    value: string,
-    setSelected: (updater: string[] | ((prev: string[]) => string[])) => void,
-  ) => {
-    setSelected((prev) =>
-      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
-    );
+  const toggleFilter = (field: CheckboxField, value: string) => {
+    setSelectedFilters((prev) => {
+      const selected = prev[field];
+      const nextSelected = selected.includes(value)
+        ? selected.filter((item) => item !== value)
+        : [...selected, value];
+
+      return {
+        ...prev,
+        [field]: nextSelected,
+      };
+    });
   };
 
-  useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [
-    searchTerm,
-    searchField,
-    assemblyFilters,
-    practiceFilters,
-    joineryFilters,
-    subJoineryFilters,
-    loadingTypeFilters,
-    uploaderFilters,
-    connectorFilters,
-    dowelFilters,
-    sliderValuesByField,
-    sliderDefaults,
-  ]);
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSearchField("all");
+    setSelectedFilters(createEmptySelectedFilters());
+    setSliderValuesByField(sliderDefaults);
+  };
+
+  const handleToggleOption = (field: string, option: string) => {
+    if (field in selectedFilters) {
+      toggleFilter(field as CheckboxField, option);
+    }
+  };
+
+  const handleResetField = (field: string) => {
+    if (field in selectedFilters) {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        [field]: [],
+      }));
+
+      setSearchTerm((prev) => {
+        if (!prev.includes(":")) return prev;
+
+        const nextSegments = prev
+          .split(",")
+          .map((segment) => segment.trim())
+          .filter(Boolean)
+          .filter((segment) => {
+            const firstColon = segment.indexOf(":");
+            if (firstColon === -1) return true;
+            const segmentField = segment.slice(0, firstColon).trim().toLowerCase();
+            return segmentField !== field.toLowerCase();
+          });
+
+        return nextSegments.join(", ");
+      });
+    }
+    if (field in sliderDefaults) {
+      setSliderValuesByField((prev) => ({
+        ...prev,
+        [field]: sliderDefaults[field as keyof typeof sliderDefaults],
+      }));
+    }
+  };
 
   const table = useReactTable({
     data: filteredRows,
@@ -776,223 +440,37 @@ function SpecimensKitTable() {
           controlsOpen={controlsOpen}
           onToggleControls={() => setControlsOpen((prev) => !prev)}
           hasActiveFilters={hasActiveFilters}
-          onResetFilters={() => {
-            setSearchTerm("");
-            setSearchField("all");
-            setAssemblyFilters([]);
-            setPracticeFilters([]);
-            setJoineryFilters([]);
-            setSubJoineryFilters([]);
-          setLoadingTypeFilters([]);
-          setUploaderFilters([]);
-          setConnectorFilters([]);
-          setDowelFilters([]);
-          setSliderValuesByField(sliderDefaults);
-          }}
+          onResetFilters={clearAllFilters}
         />
 
         {/* Main results grid: this is the actual list of specimens users can scan and click into. */}
-        <div className="min-h-0 flex-1 overflow-auto rounded-md border">
-          <Table>
-            {/* Frozen header row: column names stay visible while the table content scrolls. */}
-            <TableHeader className="sticky top-0 z-10 bg-muted/50">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="sticky top-0 z-10 bg-muted/50">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="cursor-pointer hover:bg-muted/40"
-                    onClick={() =>
-                      navigate({
-                        to: "/specimens/$specimenId",
-                        params: { specimenId: row.original.id },
-                      })
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {(() => {
-                          // Special-case column formatting: some raw values need custom display tweaks.
-                          const meta = cell.column.columnDef.meta;
-
-                          if (meta?.renderAs === "joinery_label") {
-                            return (
-                              (cell.row.original as any).joinery_type?.label ||
-                              "N/A"
-                            );
-                          }
-                          if (meta?.renderAs === "sub_joinery_label") {
-                            return (
-                              (cell.row.original as any).sub_joinery_type
-                                ?.label || "N/A"
-                            );
-                          }
-                          if (meta?.renderAs === "array_join") {
-                            const value = cell.getValue();
-                            return Array.isArray(value)
-                              ? value.join(", ")
-                              : value;
-                          }
-                          if (meta?.renderAs === "array_labels") {
-                            const value = cell.getValue() as any[];
-                            return (
-                              value
-                                ?.map((item) => item?.label)
-                                ?.filter(Boolean)
-                                ?.join(", ") || "None"
-                            );
-                          }
-                          if (meta?.renderAs === "uploader_name") {
-                            return (
-                              (cell.row.original as any).uploader_name ||
-                              cell.getValue() ||
-                              "Unknown"
-                            );
-                          }
-
-                          // Default rendering path for all normal columns without special formatting rules.
-                          return (
-                            flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            ) ?? ""
-                          );
-                        })()}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={kitColumns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <SpecimensResultsTable
+          table={table}
+          columnCount={kitColumns.length}
+          onRowClick={(row) =>
+            navigate({
+              to: "/specimens/$specimenId",
+              params: { specimenId: row.original.id },
+            })
+          }
+        />
         {/* Bottom pager: lets users move between pages and control how many rows are shown. */}
         <DataTablePagination table={table} pagination={pagination} />
       </div>
 
-      <aside
-        className={`w-full min-h-0 overflow-hidden rounded-md border sm:w-72 sm:min-w-72 sm:max-w-72 md:w-80 md:min-w-80 md:max-w-80 ${TABLE_PANEL_HEIGHT} ${
-          controlsOpen ? "block" : "hidden"
-        }`}
-      >
-        <div className="sticky top-0 z-10 border-b bg-background p-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Filters</h3>
-            <div className="flex items-center gap-1">
-
-              {/* Toggles every filter subsection open/closed in one click. */}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  const nextCollapsedState = !allControlsCollapsed;
-                  setToggleAllOpenState(!nextCollapsedState);
-                  setToggleAllSignal((prev) => prev + 1);
-                }}
-              >
-                {allControlsCollapsed ? "Expand all" : "Collapse all"}
-              </Button>
-
-              {/* Clears all active filters and resets sliders/search back to defaults. */}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSearchField("all");
-                  setAssemblyFilters([]);
-                  setPracticeFilters([]);
-                  setJoineryFilters([]);
-                  setSubJoineryFilters([]);
-                  setLoadingTypeFilters([]);
-                  setUploaderFilters([]);
-                  setConnectorFilters([]);
-                  setDowelFilters([]);
-                  setSliderValuesByField(sliderDefaults);
-                }}
-              >
-                Clear
-              </Button>
-              
-            </div>
-          </div>
-        </div>
-        <div className="h-[calc(100%-57px)] overflow-auto p-3">
-          <DataTableFilterControls
-            fields={filterFields}
-            selectedByField={{
-              assembly: assemblyFilters,
-              practice: practiceFilters,
-              joinery: joineryFilters,
-              sub_joinery: subJoineryFilters,
-              loading_type: loadingTypeFilters,
-              uploader: uploaderFilters,
-              connector: connectorFilters,
-              dowel: dowelFilters,
-            }}
-            sliderValuesByField={sliderValuesByField}
-            onToggleOption={(field, option) => {
-              if (field === "assembly") toggleFilter(option, setAssemblyFilters);
-              if (field === "practice") toggleFilter(option, setPracticeFilters);
-              if (field === "joinery") toggleFilter(option, setJoineryFilters);
-              if (field === "sub_joinery")
-                toggleFilter(option, setSubJoineryFilters);
-              if (field === "loading_type")
-                toggleFilter(option, setLoadingTypeFilters);
-              if (field === "uploader") toggleFilter(option, setUploaderFilters);
-              if (field === "connector")
-                toggleFilter(option, setConnectorFilters);
-              if (field === "dowel") toggleFilter(option, setDowelFilters);
-            }}
-            onSliderChange={(field, value) => {
-              setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
-            }}
-            onResetField={(field) => {
-              if (field === "assembly") setAssemblyFilters([]);
-              if (field === "practice") setPracticeFilters([]);
-              if (field === "joinery") setJoineryFilters([]);
-              if (field === "sub_joinery") setSubJoineryFilters([]);
-              if (field === "loading_type") setLoadingTypeFilters([]);
-              if (field === "uploader") setUploaderFilters([]);
-              if (field === "connector") setConnectorFilters([]);
-              if (field === "dowel") setDowelFilters([]);
-              if (field in sliderDefaults) {
-                setSliderValuesByField((prev) => ({
-                  ...prev,
-                  [field]: sliderDefaults[field as keyof typeof sliderDefaults],
-                }));
-              }
-            }}
-            toggleAllSignal={toggleAllSignal}
-            toggleAllOpenState={toggleAllOpenState}
-            onAllCollapsedChange={setAllControlsCollapsed}
-          />
-        </div>
-      </aside>
+      <SpecimenTableSideBar
+        controlsOpen={controlsOpen}
+        panelHeightClassName={TABLE_PANEL_HEIGHT}
+        onClearAll={clearAllFilters}
+        fields={filterFields}
+        selectedByField={selectedFilters}
+        sliderValuesByField={sliderValuesByField}
+        onToggleOption={handleToggleOption}
+        onSliderChange={(field, value) => {
+          setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
+        }}
+        onResetField={handleResetField}
+      />
     </div>
   );
 }
@@ -1000,7 +478,6 @@ function SpecimensKitTable() {
 function Specimens() {
   return (
     <div className="w-full min-h-0">
-      {/* <SpecimensTable /> */}
       <SpecimensKitTable />
     </div>
   );
