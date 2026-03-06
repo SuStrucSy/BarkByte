@@ -760,6 +760,7 @@ function SpecimensKitTable() {
   return (
     <div className="flex w-full min-h-0 flex-col gap-3 sm:flex-row">
       <div className={`flex w-full min-h-0 flex-1 flex-col gap-4 overflow-hidden ${TABLE_PANEL_HEIGHT}`}>
+        {/* Quick search bar: users type plain text or field:value commands to narrow results. */}
         <DataTableFilterCommand
           value={searchTerm}
           onValueChange={setSearchTerm}
@@ -767,6 +768,7 @@ function SpecimensKitTable() {
           onSearchFieldChange={setSearchField}
           fieldOptions={fieldOptions}
         />
+        {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
         <DataTableToolbar
           table={table}
           totalRows={rows.length}
@@ -786,11 +788,13 @@ function SpecimensKitTable() {
           setConnectorFilters([]);
           setDowelFilters([]);
           setSliderValuesByField(sliderDefaults);
-        }}
-      />
+          }}
+        />
 
+        {/* Main results grid: this is the actual list of specimens users can scan and click into. */}
         <div className="min-h-0 flex-1 overflow-auto rounded-md border">
           <Table>
+            {/* Frozen header row: column names stay visible while the table content scrolls. */}
             <TableHeader className="sticky top-0 z-10 bg-muted/50">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="hover:bg-transparent">
@@ -823,6 +827,7 @@ function SpecimensKitTable() {
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {(() => {
+                          // Special-case column formatting: some raw values need custom display tweaks.
                           const meta = cell.column.columnDef.meta;
 
                           if (meta?.renderAs === "joinery_label") {
@@ -860,6 +865,7 @@ function SpecimensKitTable() {
                             );
                           }
 
+                          // Default rendering path for all normal columns without special formatting rules.
                           return (
                             flexRender(
                               cell.column.columnDef.cell,
@@ -884,6 +890,7 @@ function SpecimensKitTable() {
             </TableBody>
           </Table>
         </div>
+        {/* Bottom pager: lets users move between pages and control how many rows are shown. */}
         <DataTablePagination table={table} pagination={pagination} />
       </div>
 
@@ -896,6 +903,8 @@ function SpecimensKitTable() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">Filters</h3>
             <div className="flex items-center gap-1">
+
+              {/* Toggles every filter subsection open/closed in one click. */}
               <Button
                 variant="secondary"
                 size="sm"
@@ -907,6 +916,8 @@ function SpecimensKitTable() {
               >
                 {allControlsCollapsed ? "Expand all" : "Collapse all"}
               </Button>
+
+              {/* Clears all active filters and resets sliders/search back to defaults. */}
               <Button
                 variant="secondary"
                 size="sm"
@@ -926,6 +937,7 @@ function SpecimensKitTable() {
               >
                 Clear
               </Button>
+              
             </div>
           </div>
         </div>
