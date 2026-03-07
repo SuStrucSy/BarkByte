@@ -25,6 +25,6 @@ COPY --chown=node:node . .
 EXPOSE 5173
 
 # Start Vite on all interfaces so Docker port mapping works
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 
 

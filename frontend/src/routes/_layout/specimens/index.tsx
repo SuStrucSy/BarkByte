@@ -31,7 +31,7 @@ import {
   createColumns,
   getInitialColumnVisibility,
 } from "@/components/Data-Table/specimenColumns";
-import PendingSpecimens from "@/components/Pending/PendingSpecimens";
+import SkeletonSpecimensTable from "@/components/Skeleton/SkeletonSpecimensTable";
 import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -440,7 +440,7 @@ function SpecimensKitTable() {
   });
 
   if (isLoading) {
-    return <PendingSpecimens />;
+    return <SkeletonSpecimensTable />;
   }
 
   return (

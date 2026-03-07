@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 import AddUser from "@/components/Admin/AddUser";
 import { createColumns } from "@/components/Data-Table/columns";
 import { DataTable } from "@/components/Data-Table/DataTable";
-import PendingUsers from "@/components/Pending/PendingUsers";
+import SkeletonUsersTable from "@/components/Skeleton/SkeletonUsersTable";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { UserPublic } from "@/api/model";
 import { useUsersReadUsers } from "@/api/endpoints/users/users.gen";
@@ -71,7 +71,7 @@ function UsersTable() {
   const count = data?.count ?? 0;
 
   if (isLoading && !isPlaceholderData) {
-    return <PendingUsers />;
+    return <SkeletonUsersTable />;
   }
 
   const getRowStyle = <TData extends UserPublic>(row: Row<TData>) => {

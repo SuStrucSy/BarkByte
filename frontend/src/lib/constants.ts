@@ -50,3 +50,12 @@ export const getFullLabel = (key: ExperimentalKey): string =>
 //
 export const modes = ["light", "dark", "system"] as const;
 export const themes = ["neutral", "stone", "zinc", "gray", "slate"] as const;
+
+// ============================================
+// SPECIMEN CONSTANTS
+// ============================================
+export const ASSEMBLY_TYPES = [
+  "Wall-Floor",
+  "Wall-Wall",
+  "Wall-Floor & Wall-Wall",
+] as const;

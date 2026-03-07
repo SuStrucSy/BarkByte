@@ -18,7 +18,6 @@ export const Route = createFileRoute("/_layout/dois")({
 });
 
 function DoisTable() {
-  // Call the Orval-generated hook instead of useQuery
   const { data, isLoading } = useDoiGetDois();
 
   if (isLoading) {

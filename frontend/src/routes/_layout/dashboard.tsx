@@ -15,14 +15,7 @@ import {
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens.gen";
 import type { SpecimenPublic, SpecimensReadSpecimensParams } from "@/api/model";
 import { Badge } from "@/components/ui/badge";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
+import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
 import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype.gen";
@@ -37,14 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { CandlestickChartIcon, ReplaceIcon, WrenchIcon } from "lucide-react";
+import { CandlestickChartIcon } from "lucide-react";
 import {
   EXPERIMENTAL_KEYS,
   getExperimentalLabel,
   getFullLabel,
-  type ExperimentalKey,
 } from "@/lib/constants";
 
 import { PageLoading } from "@/components/Dashboard/PageLoading";
@@ -109,7 +99,6 @@ function Dashboard() {
   const PAGE_SIZE = 1000;
   const [selectedFastener, setSelectedFastener] = useState<string>("");
   const [mirrorPosition, setMirrorPosition] = useState(0);
-  const [yKey, setYKey] = useState<ExperimentalKey>(EXPERIMENTAL_KEYS[0]);
   const [selectedSpecimen, setSelectedSpecimen] =
     useState<SpecimenPublic | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);

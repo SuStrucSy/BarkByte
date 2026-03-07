@@ -157,7 +157,7 @@ export function BoxPlot({
   height = 400,
 }: BoxPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 600, height });
+  const [dimensions, setDimensions] = useState({ width: 0, height });
 
   // Filter valid specimens once
   const validSpecimens = useMemo(() => {

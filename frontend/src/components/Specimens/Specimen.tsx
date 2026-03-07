@@ -33,6 +33,7 @@ export function Specimen({ data, setSheetOpen }: SpecimenProps) {
       moisture: Number.isFinite(moistureValue) ? moistureValue : 0,
     },
   ];
+  console.log({ data });
   return (
     <>
       <SpecimenHeader id={data.specimen_reference_id ?? data.id} />
