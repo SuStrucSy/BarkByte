@@ -29,6 +29,7 @@ import { useSpecimenSearchFilterSync } from "@/components/Data-Table/useSpecimen
 import { DataTableToolbar } from "@/components/Data-Table/DataTableToolbar";
 import {
   createColumns,
+  getInitialColumnVisibility,
 } from "@/components/Data-Table/specimenColumns";
 import PendingSpecimens from "@/components/Pending/PendingSpecimens";
 import { useNavigate } from "@tanstack/react-router";
@@ -38,6 +39,7 @@ import {
   getPaginationRowModel,
   type ColumnDef,
   type PaginationState,
+  type VisibilityState,
   useReactTable,
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
@@ -146,6 +148,10 @@ function SpecimensKitTable() {
   const [sliderValuesByField, setSliderValuesByField] = useState<SliderValuesByField>({});
   // Client-side pagination state for the filtered table.
   const [pagination, setPagination] = useState<PaginationState>({pageIndex: 0,pageSize: 20});
+  // Default visible/hidden columns on first render. Users can still change this from Toggle Columns.
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
+    getInitialColumnVisibility(),
+  );
 
   // Memoized table column definitions.
   const kitColumns = useMemo<ColumnDef<SpecimenPublic>[]>(
@@ -411,8 +417,9 @@ function SpecimensKitTable() {
   const table = useReactTable({
     data: filteredRows,
     columns: kitColumns,
-    state: { pagination },
+    state: { pagination, columnVisibility },
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
