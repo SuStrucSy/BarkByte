@@ -14,6 +14,7 @@ interface SpecimenTableSideBarProps {
   controlsOpen: boolean;
   panelHeightClassName: string;
   onClearAll: () => void;
+  hasActiveSidebarFilters: boolean;
   fields: DataTableFilterField[];
   selectedByField: Record<string, string[]>;
   sliderValuesByField: Record<string, [number, number]>;
@@ -30,6 +31,7 @@ export function SpecimenTableSideBar({
   controlsOpen,
   panelHeightClassName,
   onClearAll,
+  hasActiveSidebarFilters,
   fields,
   selectedByField,
   sliderValuesByField,
@@ -67,10 +69,12 @@ export function SpecimenTableSideBar({
               {allControlsCollapsed ? "Expand all" : "Collapse all"}
             </Button>
 
-            {/* Clears all active filters and resets sliders/search back to defaults. */}
-            <Button variant="secondary" size="sm" onClick={onClearAll}>
-              Clear
-            </Button>
+            {/* Clears all active sidebar filters and resets sliders back to defaults. */}
+            {hasActiveSidebarFilters ? (
+              <Button variant="secondary" size="sm" onClick={onClearAll}>
+                Clear
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>

@@ -357,6 +357,19 @@ function SpecimensKitTable() {
       );
     });
 
+  const hasActiveSidebarFilters =
+    CHECKBOX_FILTER_CONFIG.some(
+      (config) => selectedFilters[config.field].length > 0,
+    ) ||
+    SLIDER_FILTER_CONFIG.some((config) => {
+      const current = sliderValuesByField[config.field];
+      const baseline = sliderDefaults[config.field];
+      return (
+        !!current &&
+        (current[0] !== baseline[0] || current[1] !== baseline[1])
+      );
+    });
+
   const toggleFilter = (field: CheckboxField, value: string) => {
     setSelectedFilters((prev) => {
       const selected = prev[field];
@@ -471,6 +484,7 @@ function SpecimensKitTable() {
         controlsOpen={controlsOpen}
         panelHeightClassName={TABLE_PANEL_HEIGHT}
         onClearAll={clearAllFilters}
+        hasActiveSidebarFilters={hasActiveSidebarFilters}
         fields={filterFields}
         selectedByField={selectedFilters}
         sliderValuesByField={sliderValuesByField}
