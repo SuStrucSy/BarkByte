@@ -243,11 +243,13 @@ function SpecimensKitTable() {
 
   // Seeds slider state from computed defaults, while preserving any existing user-adjusted values.
   useEffect(() => {
+    if (rows.length === 0) return;
+
     setSliderValuesByField((prev) => ({
       ...sliderDefaults,
       ...prev,
     }));
-  }, [sliderDefaults]);
+  }, [rows.length, sliderDefaults]);
 
   // Convert filter config + bounds/options into UI-ready filter field definitions.
   const filterFields = useMemo<DataTableFilterField[]>(
