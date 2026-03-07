@@ -1,10 +1,7 @@
 import type { SpecimenPublic } from "@/api/model";
 import {
-  Table,
-  TableBody,
   TableCell,
   TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { flexRender, type Row, type Table as ReactTable } from "@tanstack/react-table";
@@ -27,13 +24,16 @@ export function SpecimensResultsTable({
 }: SpecimensResultsTableProps) {
   return (
     <div className="min-h-0 flex-1 overflow-auto rounded-md border">
-      <Table>
+      <table className="w-full caption-bottom border-separate border-spacing-0 text-sm">
         {/* Frozen header row: column names stay visible while the table content scrolls. */}
-        <TableHeader className="sticky top-0 z-10 bg-muted/50">
+        <thead className="[&_tr]:border-b">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="sticky top-0 z-10 bg-muted/50">
+                <TableHead
+                  key={header.id}
+                  className="sticky top-0 z-20 border-b bg-background"
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -44,8 +44,8 @@ export function SpecimensResultsTable({
               ))}
             </TableRow>
           ))}
-        </TableHeader>
-        <TableBody>
+        </thead>
+        <tbody className="[&_tr:last-child]:border-0">
           {/* Render paginated/visible rows from TanStack table state. */}
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
@@ -113,8 +113,8 @@ export function SpecimensResultsTable({
               </TableCell>
             </TableRow>
           )}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
 }
