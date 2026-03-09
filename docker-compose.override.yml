@@ -106,9 +106,6 @@ services:
       - ./frontend:/app
     user: "node"  # Run as the 'node' user
 
-volumes:
-  frontend-node-modules:
-
 networks:
   traefik-public:
     # For local dev, don't expect an external Traefik network

@@ -1,15 +1,1714 @@
+openapi: 3.1.0
+info:
+  title: BarkByte
+  version: 0.1.0
+paths:
+  /api/v1/login/access-token:
+    post:
+      tags:
+        - login
+      summary: Login Access Token
+      description: OAuth2 compatible token login, get an access token for future requests
+      operationId: login-login_access_token
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Body_login-login_access_token"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "400":
+          description: Incorrect email or password
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/login/test-token:
+    post:
+      tags:
+        - login
+      summary: Test Token
+      description: Test access token
+      operationId: login-test_token
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+      security:
+        - OAuth2PasswordBearer: []
+  /api/v1/password-recovery/{email}:
+    post:
+      tags:
+        - login
+      summary: Recover Password
+      description: Password Recovery
+      operationId: login-recover_password
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Email
+      responses:
+        "200":
+          description: If an account exists with that email, you'll receive recovery
+            instructions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/reset-password/:
+    post:
+      tags:
+        - login
+      summary: Reset Password
+      description: Reset password
+      operationId: login-reset_password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPassword"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          description: Invalid token or inactive user
+        "404":
+          description: The user with this email does not exist in the system.
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/me:
+    get:
+      tags:
+        - users
+      summary: Read User Me
+      description: Get current user.
+      operationId: users-read_user_me
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+      security:
+        - OAuth2PasswordBearer: []
+    delete:
+      tags:
+        - users
+      summary: Delete User Me
+      description: Delete own user.
+      operationId: users-delete_user_me
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+      security:
+        - OAuth2PasswordBearer: []
+    patch:
+      tags:
+        - users
+      summary: Update User Me
+      description: Update own user.
+      operationId: users-update_user_me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateMe"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+      security:
+        - OAuth2PasswordBearer: []
+  /api/v1/users/me/password:
+    patch:
+      tags:
+        - users
+      summary: Update Password Me
+      description: Update own password.
+      operationId: users-update_password_me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePassword"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+      security:
+        - OAuth2PasswordBearer: []
+  /api/v1/users/:
+    get:
+      tags:
+        - users
+      summary: Read Users
+      description: Retrieve users.
+      operationId: users-read_users
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - users
+      summary: Create User
+      description: Create new user.
+      operationId: users-create_user
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/{user_id}:
+    get:
+      tags:
+        - users
+      summary: Read User By Id
+      description: Get a specific user by id.
+      operationId: users-read_user_by_id
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: User Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    patch:
+      tags:
+        - users
+      summary: Update User
+      description: Update a user.
+      operationId: users-update_user
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - users
+      summary: Delete User
+      description: Delete a user.
+      operationId: users-delete_user
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: User Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/signup:
+    post:
+      tags:
+        - users
+      summary: Register User
+      description: Create new user without the need to be logged in.
+      operationId: users-register_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegister"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/verify-email/:
+    post:
+      tags:
+        - users
+      summary: Verify Email
+      description: verify email and reset password.
+      operationId: users-verify_email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewAccount"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          description: Invalid token or inactive user
+        "404":
+          description: The user with this email does not exist in the system.
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/utils/health-check/:
+    get:
+      tags:
+        - utils
+      summary: Health Check
+      operationId: utils-health_check
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: boolean
+                title: Response Utils-Health Check
+  /api/v1/specimens/:
+    get:
+      tags:
+        - specimens
+      summary: Read Specimens
+      description: Retrieve specimens.
+      operationId: specimens-read_specimens
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecimensPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - specimens
+      summary: Create Specimen
+      description: Submit a new specimen for review.
+      operationId: specimens-create_specimen
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpecimenCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/specimens/filter-options:
+    get:
+      tags:
+        - specimens
+      summary: Read Specimen Filter Options
+      description: Retrieve predefined specimen filter options for facet controls.
+      operationId: specimens-read_specimen_filter_options
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecimenFilterOptionsPublic"
+  /api/v1/specimens/{id}:
+    get:
+      tags:
+        - specimens
+      summary: Read Specimen
+      description: Get specimen by ID.
+      operationId: specimens-read_specimen
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    put:
+      tags:
+        - specimens
+      summary: Update Specimen
+      description: Submit an update for an existing specimen.
+      operationId: specimens-update_specimen
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpecimenUpdate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - specimens
+      summary: Delete Specimen
+      description: Delete a specimen.
+      operationId: specimens-delete_specimen
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Specimens-Delete Specimen
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/failuremode/:
+    get:
+      tags:
+        - failuremode
+      summary: Get Modes
+      description: |-
+        Retrieve failure modes.
+
+        Filters:
+          - ?dowel=true       -> include FailureMode.type == DOWEL
+          - ?connector=true   -> include FailureMode.type == CONNECTOR
+          - both true         -> include either type
+          - none provided     -> return only WOOD and OTHER
+      operationId: failuremode-get_modes
+      parameters:
+        - name: dowel
+          in: query
+          required: true
+          schema:
+            type: boolean
+            title: Dowel
+        - name: connector
+          in: query
+          required: true
+          schema:
+            type: boolean
+            title: Connector
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailureModes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - failuremode
+      summary: Create Mode
+      description: Create failure mode.
+      operationId: failuremode-create_mode
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FailureModeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailureMode"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/failuremode/{id}:
+    put:
+      tags:
+        - failuremode
+      summary: Update Mode
+      description: Update failure mode.
+      operationId: failuremode-update_mode
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FailureModeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FailureMode"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - failuremode
+      summary: Delete Mode
+      description: Delete failure mode ONLY if not in use.
+      operationId: failuremode-delete_mode
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Failuremode-Delete Mode
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/joinerytype/:
+    get:
+      tags:
+        - joinerytype
+      summary: Get Jtypes
+      description: Retrieve joinery types.
+      operationId: joinerytype-get_jtypes
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoineryTypes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - joinerytype
+      summary: Create Jtype
+      description: Create joinery type.
+      operationId: joinerytype-create_jtype
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoineryTypeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoineryType"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/joinerytype/{id}:
+    put:
+      tags:
+        - joinerytype
+      summary: Update Jtype
+      description: Update joinery type.
+      operationId: joinerytype-update_jtype
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoineryTypeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoineryType"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - joinerytype
+      summary: Delete Jtype
+      description: Delete joinery type ONLY if not in use.
+      operationId: joinerytype-delete_jtype
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Joinerytype-Delete Jtype
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/subjoinerytype/:
+    get:
+      tags:
+        - subjoinerytype
+      summary: Get Sjtypes
+      description: Retrieve sub joinery types.
+      operationId: subjoinerytype-get_sjtypes
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubJoineryTypes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - subjoinerytype
+      summary: Create Sjtype
+      description: Create sub joinery type.
+      operationId: subjoinerytype-create_sjtype
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubJoineryTypeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubJoineryType"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/subjoinerytype/{id}:
+    put:
+      tags:
+        - subjoinerytype
+      summary: Update Sjtype
+      description: Update sub joinery type.
+      operationId: subjoinerytype-update_sjtype
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubJoineryTypeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubJoineryType"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - subjoinerytype
+      summary: Delete Sjtype
+      description: Delete sub joinery type ONLY if not in use.
+      operationId: subjoinerytype-delete_sjtype
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Subjoinerytype-Delete Sjtype
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/subjoinerytype/{joinery_type_id}/:
+    get:
+      tags:
+        - subjoinerytype
+      summary: Get Sjtypes For Jtype
+      description: Retrieve sub joinery types for a specific joinery type.
+      operationId: subjoinerytype-get_sjtypes_for_jtype
+      parameters:
+        - name: joinery_type_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Joinery Type Id
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubJoineryTypes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/fastenertype/:
+    get:
+      tags:
+        - fastenertype
+      summary: Get Fastener Types
+      description: Retrieve all fastener types.
+      operationId: fastenertype-get_fastener_types
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FastenerTypes"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - fastenertype
+      summary: Create Fastener Type
+      description: Create fastener type.
+      operationId: fastenertype-create_fastener_type
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FastenerTypeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FastenerType"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/fastenertype/{id}:
+    put:
+      tags:
+        - fastenertype
+      summary: Update Fastener Type
+      description: Update fastener type.
+      operationId: fastenertype-update_fastener_type
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FastenerTypeCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FastenerType"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - fastenertype
+      summary: Delete Fastener Type
+      description: Delete fastener type ONLY if not in use.
+      operationId: fastenertype-delete_fastener_type
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Fastenertype-Delete Fastener Type
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/loadingdirection/:
+    get:
+      tags:
+        - loadingdirection
+      summary: Get Loading Directions
+      description: Retrieve loading direction.
+      operationId: loadingdirection-get_loading_directions
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoadingDirections"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - loadingdirection
+      summary: Create Loading Direction
+      description: Create loading direction.
+      operationId: loadingdirection-create_loading_direction
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoadingDirectionCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoadingDirection"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/loadingdirection/{id}:
+    put:
+      tags:
+        - loadingdirection
+      summary: Update Loading Direction
+      description: Update loading direction.
+      operationId: loadingdirection-update_loading_direction
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoadingDirectionCreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoadingDirection"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - loadingdirection
+      summary: Delete Loading Direction
+      description: Delete loading direction ONLY if not in use.
+      operationId: loadingdirection-delete_loading_direction
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Loadingdirection-Delete Loading Direction
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/pending-specimens/:
+    get:
+      tags:
+        - pending-specimens
+      summary: List Pending Specimens
+      description: |-
+        List pending specimens, optionally filtered by status.
+        If no status is provided, all pending specimens are returned.
+      operationId: pending-specimens-list_pending_specimens
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - $ref: "#/components/schemas/PendingStatus"
+              - type: "null"
+            title: Status
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimensPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/pending-specimens/{pending_id}/approve:
+    post:
+      tags:
+        - pending-specimens
+      summary: Approve Pending Specimen
+      description: Approve a pending specimen and apply it to the specimen table.
+      operationId: pending-specimens-approve_pending_specimen
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: pending_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Pending Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PendingSpecimenReview"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/pending-specimens/{pending_id}/reject:
+    post:
+      tags:
+        - pending-specimens
+      summary: Reject Pending Specimen Route
+      description: Reject a pending specimen without touching the specimen table.
+      operationId: pending-specimens-reject_pending_specimen_route
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: pending_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Pending Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PendingSpecimenReview"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/pending-specimens/{pending_id}:
+    put:
+      tags:
+        - pending-specimens
+      summary: Update Pending Specimen
+      description: |-
+        Update the changed_data of an existing pending specimen
+        before it is approved/rejected.
+      operationId: pending-specimens-update_pending_specimen
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: pending_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Pending Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PendingSpecimenUpdate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - pending-specimens
+      summary: Delete Pending Specimen
+      description: Delete a pending specimen (only allowed while status is PENDING).
+      operationId: pending-specimens-delete_pending_specimen
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: pending_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Pending Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/pending-specimens/specimen/{specimen_id}:
+    get:
+      tags:
+        - pending-specimens
+      summary: List Approved Specimen Trail
+      description: List all pending specimens.
+      operationId: pending-specimens-list_approved_specimen_trail
+      parameters:
+        - name: specimen_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Specimen Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimensPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/doi/:
+    get:
+      tags:
+        - doi
+      summary: Get Dois
+      description: Retrieve a list of dois.
+      operationId: doi-get_dois
+      parameters:
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Skip
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+            title: Limit
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DOIsPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - doi
+      summary: Create Doi
+      description: Create DOI.
+      operationId: doi-create_doi
+      security:
+        - OAuth2PasswordBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DOICreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DOIPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/doi/{id}:
+    get:
+      tags:
+        - doi
+      summary: Get Doi By Id
+      description: Retrieve a specific doi, including its specimens.
+      operationId: doi-get_doi_by_id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DOIDetailPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+        - doi
+      summary: Update Doi
+      description: Create doi.
+      operationId: doi-update_doi
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DOICreate"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DOIPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - doi
+      summary: Delete Doi
+      description: Delete joinery type ONLY if not in use.
+      operationId: doi-delete_doi
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Doi-Delete Doi
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/private/users/:
+    get:
+      tags:
+        - private
+      summary: Get All Users
+      description: Get all users.
+      operationId: private-get_all_users
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/UserPublic"
+                type: array
+                title: Response Private-Get All Users
+      security:
+        - OAuth2PasswordBearer: []
+    post:
+      tags:
+        - private
+      summary: Create User
+      description: Create a new user.
+      operationId: private-create_user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrivateUserCreate"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+      security:
+        - OAuth2PasswordBearer: []
 components:
   schemas:
     AssemblyType:
+      type: string
       enum:
         - Wall-Floor
         - Wall-Wall
         - Wall-Floor & Wall-Wall
       title: AssemblyType
-      type: string
-
     Body_login-login_access_token:
       properties:
+        grant_type:
+          anyOf:
+            - type: string
+              pattern: ^password$
+            - type: "null"
+          title: Grant Type
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          format: password
+          title: Password
+        scope:
+          type: string
+          title: Scope
+          default: ""
         client_id:
           anyOf:
             - type: string
@@ -21,103 +1720,84 @@ components:
             - type: "null"
           format: password
           title: Client Secret
-        grant_type:
-          anyOf:
-            - pattern: ^password$
-              type: string
-            - type: "null"
-          title: Grant Type
-        password:
-          format: password
-          title: Password
-          type: string
-        scope:
-          default: ""
-          title: Scope
-          type: string
-        username:
-          title: Username
-          type: string
+      type: object
       required:
         - username
         - password
       title: Body_login-login_access_token
-      type: object
-
     DOI:
       properties:
-        authors:
-          maxLength: 255
-          minLength: 1
-          title: Authors
-          type: string
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
         link:
+          type: string
           maxLength: 255
           minLength: 1
           title: Link
-          type: string
-        pub_year:
-          title: Pub Year
-          type: integer
         ref_title:
+          type: string
           maxLength: 255
           minLength: 1
           title: Ref Title
+        authors:
           type: string
+          maxLength: 255
+          minLength: 1
+          title: Authors
+        pub_year:
+          type: integer
+          title: Pub Year
+      type: object
       required:
         - link
         - ref_title
         - authors
         - pub_year
       title: DOI
-      type: object
-
     DOICreate:
       properties:
-        authors:
-          title: Authors
-          type: string
         link:
+          type: string
           title: Link
-          type: string
-        pub_year:
-          title: Pub Year
-          type: integer
         ref_title:
-          title: Ref Title
           type: string
+          title: Ref Title
+        authors:
+          type: string
+          title: Authors
+        pub_year:
+          type: integer
+          title: Pub Year
+      type: object
       required:
         - link
         - ref_title
         - authors
         - pub_year
       title: DOICreate
-      type: object
-
     DOIDetailPublic:
       properties:
-        authors:
-          title: Authors
+        link:
           type: string
+          title: Link
+        ref_title:
+          type: string
+          title: Ref Title
+        authors:
+          type: string
+          title: Authors
+        pub_year:
+          type: integer
+          title: Pub Year
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
-        link:
-          title: Link
-          type: string
-        pub_year:
-          title: Pub Year
-          type: integer
-        ref_title:
-          title: Ref Title
-          type: string
         specimens:
           $ref: "#/components/schemas/SpecimensPublic"
+      type: object
       required:
         - link
         - ref_title
@@ -126,27 +1806,25 @@ components:
         - id
         - specimens
       title: DOIDetailPublic
-      type: object
-
     DOIPublic:
-      description: What you return via API.
       properties:
-        authors:
-          title: Authors
+        link:
           type: string
+          title: Link
+        ref_title:
+          type: string
+          title: Ref Title
+        authors:
+          type: string
+          title: Authors
+        pub_year:
+          type: integer
+          title: Pub Year
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
-        link:
-          title: Link
-          type: string
-        pub_year:
-          title: Pub Year
-          type: integer
-        ref_title:
-          title: Ref Title
-          type: string
+      type: object
       required:
         - link
         - ref_title
@@ -154,792 +1832,680 @@ components:
         - pub_year
         - id
       title: DOIPublic
-      type: object
-
+      description: What you return via API.
     DOIsPublic:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/DOIPublic"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: DOIsPublic
-      type: object
-
     FailureMode:
       properties:
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
         type:
           $ref: "#/components/schemas/FailureModeType"
+      type: object
       required:
         - label
         - type
       title: FailureMode
-      type: object
-
     FailureModeCreate:
       properties:
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
         type:
           $ref: "#/components/schemas/FailureModeType"
+      type: object
       required:
         - label
         - type
       title: FailureModeCreate
-      type: object
-
     FailureModeType:
+      type: string
       enum:
         - WOOD
         - DOWEL
         - CONNECTOR
         - OTHER
       title: FailureModeType
-      type: string
-
     FailureModes:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/FailureMode"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: FailureModes
-      type: object
-
     FastenerType:
       properties:
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+      type: object
       required:
         - label
       title: FastenerType
-      type: object
-
     FastenerTypeCreate:
       properties:
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+      type: object
       required:
         - label
       title: FastenerTypeCreate
-      type: object
-
     FastenerTypes:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/FastenerType"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: FastenerTypes
-      type: object
-
     HTTPValidationError:
       properties:
         detail:
           items:
             $ref: "#/components/schemas/ValidationError"
-          title: Detail
           type: array
-      title: HTTPValidationError
+          title: Detail
       type: object
-
+      title: HTTPValidationError
     JoineryType:
       properties:
-        has_dowel:
-          title: Has Dowel
-          type: boolean
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+        has_dowel:
+          type: boolean
+          title: Has Dowel
+      type: object
       required:
         - label
         - has_dowel
       title: JoineryType
-      type: object
-
     JoineryTypeCreate:
       properties:
-        has_dowel:
-          title: Has Dowel
-          type: boolean
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+        has_dowel:
+          type: boolean
+          title: Has Dowel
+      type: object
       required:
         - label
         - has_dowel
       title: JoineryTypeCreate
-      type: object
-
     JoineryTypes:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/JoineryType"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: JoineryTypes
-      type: object
-
     LoadingDirection:
       properties:
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+      type: object
       required:
         - label
       title: LoadingDirection
-      type: object
-
     LoadingDirectionCreate:
       properties:
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+      type: object
       required:
         - label
       title: LoadingDirectionCreate
-      type: object
-
     LoadingDirections:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/LoadingDirection"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: LoadingDirections
-      type: object
-
     Message:
       properties:
         message:
-          title: Message
           type: string
+          title: Message
+      type: object
       required:
         - message
       title: Message
-      type: object
-
     NewAccount:
       properties:
         token:
-          title: Token
           type: string
+          title: Token
+      type: object
       required:
         - token
       title: NewAccount
-      type: object
-
     NewPassword:
       properties:
+        token:
+          type: string
+          title: Token
         new_password:
+          type: string
           maxLength: 64
           minLength: 8
           title: New Password
-          type: string
-        token:
-          title: Token
-          type: string
+      type: object
       required:
         - token
         - new_password
       title: NewPassword
-      type: object
-
     PendingSpecimenPublic:
       properties:
+        specimen_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          title: Specimen Id
         changed_by_user_id:
+          type: string
           format: uuid
           title: Changed By User Id
-          type: string
-
         changed_data:
           additionalProperties: true
-          title: Changed Data
           type: object
-
+          title: Changed Data
+        id:
+          type: string
+          format: uuid
+          title: Id
+        status:
+          $ref: "#/components/schemas/PendingStatus"
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        reviewer_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          title: Reviewer Id
         comment_by_reviewer:
           anyOf:
             - type: string
             - type: "null"
           title: Comment By Reviewer
-
-        created_at:
-          format: date-time
-          title: Created At
-          type: string
-
-        id:
-          format: uuid
-          title: Id
-          type: string
-
         reviewed_at:
           anyOf:
-            - format: date-time
-              type: string
+            - type: string
+              format: date-time
             - type: "null"
           title: Reviewed At
-
-        reviewer_id:
-          anyOf:
-            - format: uuid
-              type: string
-            - type: "null"
-          title: Reviewer Id
-
-        specimen_id:
-          anyOf:
-            - format: uuid
-              type: string
-            - type: "null"
-          title: Specimen Id
-
-        status:
-          $ref: "#/components/schemas/PendingStatus"
-
+      type: object
       required:
         - changed_by_user_id
         - changed_data
         - id
         - status
         - created_at
-
       title: PendingSpecimenPublic
-
-      type: object
-
     PendingSpecimenReview:
-      description: Body for approve or reject actions.
       properties:
         comment:
-          title: Comment
           type: string
+          title: Comment
+      type: object
       required:
         - comment
       title: PendingSpecimenReview
-      type: object
-
+      description: Body for approve or reject actions.
     PendingSpecimenUpdate:
-      description: Body for updating the pending specimen's changed_data.
-
       properties:
-        assembly_type:
-          anyOf:
-            - $ref: "#/components/schemas/AssemblyType"
-            - type: "null"
-
-        connection_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connection Description
-
-        connector:
-          anyOf:
-            - type: boolean
-            - type: "null"
-          title: Connector
-
-        connector_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connector Mechanical Properties
-
-        dowel:
-          anyOf:
-            - type: boolean
-            - type: "null"
-          title: Dowel
-
-        e_date:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Date
-
-        e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ductility
-
-        e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Displacement
-
-        e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Force
-
-        e_measurement_unit:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Measurement Unit
-
-        e_qfm_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Qfm Description
-
-        e_qualitative_failure_measure:
-          anyOf:
-            - items:
-                format: uuid
-                type: string
-              type: array
-            - type: "null"
-          title: E Qualitative Failure Measure
-
-        e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Stiffness
-
-        e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
-
-        e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Displacement
-
-        e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Force
-
-        e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Displacement
-
-        e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Force
-
-        e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
-
-        element_dimension:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Element Dimension
-
-        fastener_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Fastener Mechanical Properties
-
-        fastener_numbers:
-          anyOf:
-            - type: integer
-            - type: "null"
-          title: Fastener Numbers
-
-        fastener_type_ids:
-          anyOf:
-            - items:
-                format: uuid
-                type: string
-              type: array
-            - type: "null"
-          title: Fastener Type Ids
-
-        joinery_type_id:
-          anyOf:
-            - format: uuid
-              type: string
-            - type: "null"
-          title: Joinery Type Id
-
-        loading_direction_ids:
-          anyOf:
-            - items:
-                format: uuid
-                type: string
-              type: array
-            - type: "null"
-          title: Loading Direction Ids
-
-        moisture_percentage:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Moisture Percentage
-
-        note:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Note
-
-        practice:
-          anyOf:
-            - $ref: "#/components/schemas/Practice"
-            - type: "null"
-
-        replicate_tests:
-          anyOf:
-            - type: integer
-            - type: "null"
-          title: Replicate Tests
-
         specimen_reference_id:
           anyOf:
             - type: string
             - type: "null"
           title: Specimen Reference Id
-
-        sub_joinery_type_id:
+        replicate_tests:
           anyOf:
-            - format: uuid
-              type: string
+            - type: integer
             - type: "null"
-          title: Sub Joinery Type Id
-
-        wood_mechanical_properties:
+          title: Replicate Tests
+        note:
           anyOf:
             - type: string
             - type: "null"
-          title: Wood Mechanical Properties
-
+          title: Note
+        dowel:
+          anyOf:
+            - type: boolean
+            - type: "null"
+          title: Dowel
+        connector:
+          anyOf:
+            - type: boolean
+            - type: "null"
+          title: Connector
+        assembly_type:
+          anyOf:
+            - $ref: "#/components/schemas/AssemblyType"
+            - type: "null"
+        practice:
+          anyOf:
+            - $ref: "#/components/schemas/Practice"
+            - type: "null"
+        connection_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connection Description
+        element_dimension:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Element Dimension
+        fastener_numbers:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Fastener Numbers
+        moisture_percentage:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Moisture Percentage
         wood_type:
           anyOf:
             - type: string
             - type: "null"
           title: Wood Type
-
-      title: PendingSpecimenUpdate
-
+        wood_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Wood Mechanical Properties
+        connector_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connector Mechanical Properties
+        fastener_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Fastener Mechanical Properties
+        e_date:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Date
+        e_test_loading_type:
+          anyOf:
+            - $ref: "#/components/schemas/TestLoadingType"
+            - type: "null"
+        e_yield_point_method:
+          anyOf:
+            - $ref: "#/components/schemas/YieldPointMethod"
+            - type: "null"
+        e_stiffness:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Stiffness
+        e_yield_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Displacement
+        e_yield_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Force
+        e_max_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Displacement
+        e_max_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Force
+        e_ultimate_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Displacement
+        e_ultimate_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Force
+        e_ductility:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ductility
+        e_qfm_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Qfm Description
+        e_qualitative_failure_measure:
+          anyOf:
+            - items:
+                type: string
+                format: uuid
+              type: array
+            - type: "null"
+          title: E Qualitative Failure Measure
+        fastener_type_ids:
+          anyOf:
+            - items:
+                type: string
+                format: uuid
+              type: array
+            - type: "null"
+          title: Fastener Type Ids
+        loading_direction_ids:
+          anyOf:
+            - items:
+                type: string
+                format: uuid
+              type: array
+            - type: "null"
+          title: Loading Direction Ids
+        joinery_type_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          title: Joinery Type Id
+        sub_joinery_type_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          title: Sub Joinery Type Id
       type: object
-
+      title: PendingSpecimenUpdate
+      description: Body for updating the pending specimen's changed_data.
     PendingSpecimensPublic:
-      description: Response model for listing multiple pending specimens.
       properties:
-        count:
-          title: Count
-          type: integer
         pending_specimens:
           items:
             $ref: "#/components/schemas/PendingSpecimenPublic"
-          title: Pending Specimens
           type: array
+          title: Pending Specimens
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - pending_specimens
         - count
       title: PendingSpecimensPublic
-      type: object
-
+      description: Response model for listing multiple pending specimens.
     PendingStatus:
+      type: string
       enum:
         - pending
         - approved
         - rejected
       title: PendingStatus
-      type: string
-
     Practice:
+      type: string
       enum:
         - Conventional
         - Research and Development
       title: Practice
-      type: string
-
     PrivateUserCreate:
       properties:
         email:
+          type: string
           title: Email
-          type: string
-        full_name:
-          title: Full Name
-          type: string
-        is_verified:
-          default: no
-          title: Is Verified
-          type: boolean
         password:
-          title: Password
           type: string
+          title: Password
+        full_name:
+          type: string
+          title: Full Name
+        is_verified:
+          type: boolean
+          title: Is Verified
+          default: false
+      type: object
       required:
         - email
         - password
         - full_name
       title: PrivateUserCreate
-      type: object
-
     SpecimenCreate:
       properties:
-        assembly_type:
-          $ref: "#/components/schemas/AssemblyType"
-
-        connection_description:
-          title: Connection Description
+        specimen_reference_id:
           type: string
-
-        connector:
-          title: Connector
-          type: boolean
-
-        connector_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connector Mechanical Properties
-
-        doi_id:
-          format: uuid
-          title: Doi Id
-          type: string
-
-        dowel:
-          title: Dowel
-          type: boolean
-
-        e_date:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Date
-
-        e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ductility
-
-        e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Displacement
-
-        e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Force
-
-        e_measurement_unit:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Measurement Unit
-
-        e_qfm_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Qfm Description
-
-        e_qualitative_failure_measure:
-          items:
-            format: uuid
-            type: string
-          title: E Qualitative Failure Measure
-          type: array
-
-        e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Stiffness
-
-        e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
-
-        e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Displacement
-
-        e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Force
-
-        e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Displacement
-
-        e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Force
-
-        e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
-
-        element_dimension:
-          title: Element Dimension
-          type: string
-
-        fastener_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Fastener Mechanical Properties
-
-        fastener_numbers:
-          title: Fastener Numbers
+          title: Specimen Reference Id
+        replicate_tests:
           type: integer
-
-        fastener_type_ids:
-          items:
-            format: uuid
-            type: string
-          title: Fastener Type Ids
-          type: array
-
-        joinery_type_id:
-          format: uuid
-          title: Joinery Type Id
-          type: string
-
-        loading_direction_ids:
-          items:
-            format: uuid
-            type: string
-          title: Loading Direction Ids
-          type: array
-
-        moisture_percentage:
-          title: Moisture Percentage
-          type: string
-
+          title: Replicate Tests
         note:
           anyOf:
             - type: string
             - type: "null"
           title: Note
-
+        dowel:
+          type: boolean
+          title: Dowel
+        connector:
+          type: boolean
+          title: Connector
+        assembly_type:
+          $ref: "#/components/schemas/AssemblyType"
         practice:
           $ref: "#/components/schemas/Practice"
-
-        replicate_tests:
-          title: Replicate Tests
-          type: integer
-
-        specimen_reference_id:
-          title: Specimen Reference Id
-          type: string
-
-        sub_joinery_type_id:
-          format: uuid
-          title: Sub Joinery Type Id
-          type: string
-
-        wood_mechanical_properties:
+        connection_description:
           anyOf:
             - type: string
             - type: "null"
-          title: Wood Mechanical Properties
-
+          title: Connection Description
+        element_dimension:
+          type: string
+          maxLength: 1000
+          title: Element Dimension
+        fastener_numbers:
+          type: integer
+          title: Fastener Numbers
+        moisture_percentage:
+          type: string
+          title: Moisture Percentage
         wood_type:
           anyOf:
             - type: string
             - type: "null"
           title: Wood Type
-
+        wood_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Wood Mechanical Properties
+        connector_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connector Mechanical Properties
+        fastener_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Fastener Mechanical Properties
+        e_date:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Date
+        e_test_loading_type:
+          anyOf:
+            - $ref: "#/components/schemas/TestLoadingType"
+            - type: "null"
+        e_yield_point_method:
+          anyOf:
+            - $ref: "#/components/schemas/YieldPointMethod"
+            - type: "null"
+        e_stiffness:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Stiffness
+        e_yield_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Displacement
+        e_yield_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Force
+        e_max_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Displacement
+        e_max_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Force
+        e_ultimate_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Displacement
+        e_ultimate_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Force
+        e_ductility:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ductility
+        e_qfm_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Qfm Description
+        doi_id:
+          type: string
+          format: uuid
+          title: Doi Id
+        e_qualitative_failure_measure:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: E Qualitative Failure Measure
+        fastener_type_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Fastener Type Ids
+        loading_direction_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Loading Direction Ids
+        joinery_type_id:
+          type: string
+          format: uuid
+          title: Joinery Type Id
+        sub_joinery_type_id:
+          type: string
+          format: uuid
+          title: Sub Joinery Type Id
+      type: object
       required:
         - specimen_reference_id
         - replicate_tests
@@ -947,7 +2513,6 @@ components:
         - connector
         - assembly_type
         - practice
-        - connection_description
         - element_dimension
         - fastener_numbers
         - moisture_percentage
@@ -957,194 +2522,194 @@ components:
         - loading_direction_ids
         - joinery_type_id
         - sub_joinery_type_id
-
       title: SpecimenCreate
-
+    SpecimenFilterOptionsPublic:
+      properties:
+        assembly_types:
+          items:
+            type: string
+          type: array
+          title: Assembly Types
+        practices:
+          items:
+            type: string
+          type: array
+          title: Practices
+        joinery_types:
+          items:
+            type: string
+          type: array
+          title: Joinery Types
+        sub_joinery_types:
+          items:
+            type: string
+          type: array
+          title: Sub Joinery Types
+        loading_types:
+          items:
+            type: string
+          type: array
+          title: Loading Types
+        uploader:
+          items:
+            type: string
+          type: array
+          title: Uploader
       type: object
-
+      required:
+        - assembly_types
+        - practices
+        - joinery_types
+        - sub_joinery_types
+        - loading_types
+        - uploader
+      title: SpecimenFilterOptionsPublic
     SpecimenPublic:
       properties:
-        assembly_type:
-          $ref: "#/components/schemas/AssemblyType"
-
-        connection_description:
-          title: Connection Description
+        specimen_reference_id:
           type: string
-
-        connector:
-          title: Connector
-          type: boolean
-
-        connector_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connector Mechanical Properties
-
-        doi:
-          $ref: "#/components/schemas/DOI"
-
-        dowel:
-          title: Dowel
-          type: boolean
-
-        e_date:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Date
-
-        e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ductility
-
-        e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Displacement
-
-        e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Force
-
-        e_measurement_unit:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Measurement Unit
-
-        e_qfm_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Qfm Description
-
-        e_qualitative_failure_measure:
-          items:
-            $ref: "#/components/schemas/FailureMode"
-          title: E Qualitative Failure Measure
-          type: array
-
-        e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Stiffness
-
-        e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
-
-        e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Displacement
-
-        e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Force
-
-        e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Displacement
-
-        e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Force
-
-        e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
-
-        element_dimension:
-          title: Element Dimension
-          type: string
-
-        fastener_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Fastener Mechanical Properties
-
-        fastener_numbers:
-          title: Fastener Numbers
+          title: Specimen Reference Id
+        replicate_tests:
           type: integer
-
-        fastener_types:
-          items:
-            $ref: "#/components/schemas/FastenerType"
-          title: Fastener Types
-          type: array
-
-        id:
-          format: uuid
-          title: Id
-          type: string
-
-        joinery_type:
-          $ref: "#/components/schemas/JoineryType"
-
-        loading_directions:
-          items:
-            $ref: "#/components/schemas/LoadingDirection"
-          title: Loading Directions
-          type: array
-
-        moisture_percentage:
-          title: Moisture Percentage
-          type: string
-
+          title: Replicate Tests
         note:
           anyOf:
             - type: string
             - type: "null"
           title: Note
-
+        dowel:
+          type: boolean
+          title: Dowel
+        connector:
+          type: boolean
+          title: Connector
+        assembly_type:
+          $ref: "#/components/schemas/AssemblyType"
         practice:
           $ref: "#/components/schemas/Practice"
-
-        replicate_tests:
-          title: Replicate Tests
-          type: integer
-
-        specimen_reference_id:
-          title: Specimen Reference Id
-          type: string
-
-        sub_joinery_type:
-          $ref: "#/components/schemas/SubJoineryType"
-
-        uploader_id:
-          format: uuid
-          title: Uploader Id
-          type: string
-
-        wood_mechanical_properties:
+        connection_description:
           anyOf:
             - type: string
             - type: "null"
-          title: Wood Mechanical Properties
-
+          title: Connection Description
+        element_dimension:
+          type: string
+          maxLength: 1000
+          title: Element Dimension
+        fastener_numbers:
+          type: integer
+          title: Fastener Numbers
+        moisture_percentage:
+          type: string
+          title: Moisture Percentage
         wood_type:
           anyOf:
             - type: string
             - type: "null"
           title: Wood Type
-
+        wood_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Wood Mechanical Properties
+        connector_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connector Mechanical Properties
+        fastener_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Fastener Mechanical Properties
+        e_date:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Date
+        e_test_loading_type:
+          anyOf:
+            - $ref: "#/components/schemas/TestLoadingType"
+            - type: "null"
+        e_yield_point_method:
+          anyOf:
+            - $ref: "#/components/schemas/YieldPointMethod"
+            - type: "null"
+        e_stiffness:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Stiffness
+        e_yield_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Displacement
+        e_yield_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Force
+        e_max_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Displacement
+        e_max_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Force
+        e_ultimate_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Displacement
+        e_ultimate_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Force
+        e_ductility:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ductility
+        e_qfm_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Qfm Description
+        id:
+          type: string
+          format: uuid
+          title: Id
+        uploader_id:
+          type: string
+          format: uuid
+          title: Uploader Id
+        doi:
+          $ref: "#/components/schemas/DOI"
+        joinery_type:
+          $ref: "#/components/schemas/JoineryType"
+        sub_joinery_type:
+          $ref: "#/components/schemas/SubJoineryType"
+        e_qualitative_failure_measure:
+          items:
+            $ref: "#/components/schemas/FailureMode"
+          type: array
+          title: E Qualitative Failure Measure
+        fastener_types:
+          items:
+            $ref: "#/components/schemas/FastenerType"
+          type: array
+          title: Fastener Types
+        loading_directions:
+          items:
+            $ref: "#/components/schemas/LoadingDirection"
+          type: array
+          title: Loading Directions
+      type: object
       required:
         - specimen_reference_id
         - replicate_tests
@@ -1152,7 +2717,6 @@ components:
         - connector
         - assembly_type
         - practice
-        - connection_description
         - element_dimension
         - fastener_numbers
         - moisture_percentage
@@ -1164,429 +2728,363 @@ components:
         - e_qualitative_failure_measure
         - fastener_types
         - loading_directions
-
       title: SpecimenPublic
-
-      type: object
-
     SpecimenUpdate:
       properties:
-        assembly_type:
-          anyOf:
-            - $ref: "#/components/schemas/AssemblyType"
-            - type: "null"
-
-        connection_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connection Description
-
-        connector:
-          anyOf:
-            - type: boolean
-            - type: "null"
-          title: Connector
-
-        connector_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connector Mechanical Properties
-
-        dowel:
-          anyOf:
-            - type: boolean
-            - type: "null"
-          title: Dowel
-
-        e_date:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Date
-
-        e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ductility
-
-        e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Displacement
-
-        e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Force
-
-        e_measurement_unit:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Measurement Unit
-
-        e_qfm_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Qfm Description
-
-        e_qualitative_failure_measure:
-          anyOf:
-            - items:
-                format: uuid
-                type: string
-              type: array
-            - type: "null"
-          title: E Qualitative Failure Measure
-
-        e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Stiffness
-
-        e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
-
-        e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Displacement
-
-        e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Force
-
-        e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Displacement
-
-        e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Force
-
-        e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
-
-        element_dimension:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Element Dimension
-
-        fastener_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Fastener Mechanical Properties
-
-        fastener_numbers:
-          anyOf:
-            - type: integer
-            - type: "null"
-          title: Fastener Numbers
-
-        fastener_type_ids:
-          anyOf:
-            - items:
-                format: uuid
-                type: string
-              type: array
-            - type: "null"
-          title: Fastener Type Ids
-
-        joinery_type_id:
-          anyOf:
-            - format: uuid
-              type: string
-            - type: "null"
-          title: Joinery Type Id
-
-        loading_direction_ids:
-          anyOf:
-            - items:
-                format: uuid
-                type: string
-              type: array
-            - type: "null"
-          title: Loading Direction Ids
-
-        moisture_percentage:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Moisture Percentage
-
-        note:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Note
-
-        practice:
-          anyOf:
-            - $ref: "#/components/schemas/Practice"
-            - type: "null"
-
-        replicate_tests:
-          anyOf:
-            - type: integer
-            - type: "null"
-          title: Replicate Tests
-
         specimen_reference_id:
           anyOf:
             - type: string
             - type: "null"
           title: Specimen Reference Id
-
-        sub_joinery_type_id:
+        replicate_tests:
           anyOf:
-            - format: uuid
-              type: string
+            - type: integer
             - type: "null"
-          title: Sub Joinery Type Id
-
-        wood_mechanical_properties:
+          title: Replicate Tests
+        note:
           anyOf:
             - type: string
             - type: "null"
-          title: Wood Mechanical Properties
-
+          title: Note
+        dowel:
+          anyOf:
+            - type: boolean
+            - type: "null"
+          title: Dowel
+        connector:
+          anyOf:
+            - type: boolean
+            - type: "null"
+          title: Connector
+        assembly_type:
+          anyOf:
+            - $ref: "#/components/schemas/AssemblyType"
+            - type: "null"
+        practice:
+          anyOf:
+            - $ref: "#/components/schemas/Practice"
+            - type: "null"
+        connection_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connection Description
+        element_dimension:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Element Dimension
+        fastener_numbers:
+          anyOf:
+            - type: integer
+            - type: "null"
+          title: Fastener Numbers
+        moisture_percentage:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Moisture Percentage
         wood_type:
           anyOf:
             - type: string
             - type: "null"
           title: Wood Type
-
-      title: SpecimenUpdate
-
+        wood_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Wood Mechanical Properties
+        connector_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connector Mechanical Properties
+        fastener_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Fastener Mechanical Properties
+        e_date:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Date
+        e_test_loading_type:
+          anyOf:
+            - $ref: "#/components/schemas/TestLoadingType"
+            - type: "null"
+        e_yield_point_method:
+          anyOf:
+            - $ref: "#/components/schemas/YieldPointMethod"
+            - type: "null"
+        e_stiffness:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Stiffness
+        e_yield_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Displacement
+        e_yield_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Force
+        e_max_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Displacement
+        e_max_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Force
+        e_ultimate_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Displacement
+        e_ultimate_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Force
+        e_ductility:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ductility
+        e_qfm_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Qfm Description
+        e_qualitative_failure_measure:
+          anyOf:
+            - items:
+                type: string
+                format: uuid
+              type: array
+            - type: "null"
+          title: E Qualitative Failure Measure
+        fastener_type_ids:
+          anyOf:
+            - items:
+                type: string
+                format: uuid
+              type: array
+            - type: "null"
+          title: Fastener Type Ids
+        loading_direction_ids:
+          anyOf:
+            - items:
+                type: string
+                format: uuid
+              type: array
+            - type: "null"
+          title: Loading Direction Ids
+        joinery_type_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          title: Joinery Type Id
+        sub_joinery_type_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          title: Sub Joinery Type Id
       type: object
-
+      title: SpecimenUpdate
     SpecimensPublic:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/SpecimenPublic"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: SpecimensPublic
-      type: object
-
     SubJoineryType:
       properties:
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
         joinery_type_id:
+          type: string
           format: uuid
           title: Joinery Type Id
-          type: string
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+      type: object
       required:
         - joinery_type_id
         - label
       title: SubJoineryType
-      type: object
-
     SubJoineryTypeCreate:
       properties:
         joinery_type_id:
+          type: string
           format: uuid
           title: Joinery Type Id
-          type: string
         label:
+          type: string
           maxLength: 255
           minLength: 1
           title: Label
-          type: string
+      type: object
       required:
         - joinery_type_id
         - label
       title: SubJoineryTypeCreate
-      type: object
-
     SubJoineryTypes:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/SubJoineryType"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: SubJoineryTypes
-      type: object
-
     TestLoadingType:
+      type: string
       enum:
         - Cyclic
         - Monotonic
         - Monotonic and Cyclic
       title: TestLoadingType
-      type: string
-
     Token:
       properties:
         access_token:
+          type: string
           title: Access Token
-          type: string
         token_type:
-          default: bearer
-          title: Token Type
           type: string
+          title: Token Type
+          default: bearer
+      type: object
       required:
         - access_token
       title: Token
-      type: object
-
     UpdatePassword:
       properties:
         current_password:
+          type: string
           maxLength: 64
           minLength: 8
           title: Current Password
-          type: string
         new_password:
+          type: string
           maxLength: 64
           minLength: 8
           title: New Password
-          type: string
+      type: object
       required:
         - current_password
         - new_password
       title: UpdatePassword
-      type: object
-
     UserCreate:
       properties:
         email:
+          type: string
           format: email
           title: Email
-          type: string
+        is_active:
+          type: boolean
+          title: Is Active
+        is_superuser:
+          type: boolean
+          title: Is Superuser
         full_name:
           anyOf:
             - type: string
             - type: "null"
           title: Full Name
-        is_active:
-          title: Is Active
-          type: boolean
-        is_superuser:
-          title: Is Superuser
-          type: boolean
         password:
+          type: string
           maxLength: 64
           minLength: 8
           title: Password
-          type: string
+      type: object
       required:
         - email
         - is_active
         - is_superuser
         - password
       title: UserCreate
-      type: object
-
     UserPublic:
       properties:
         email:
+          type: string
           format: email
           title: Email
-          type: string
+        is_active:
+          type: boolean
+          title: Is Active
+        is_superuser:
+          type: boolean
+          title: Is Superuser
         full_name:
           anyOf:
             - type: string
             - type: "null"
           title: Full Name
         id:
+          type: string
           format: uuid
           title: Id
-          type: string
-        is_active:
-          title: Is Active
-          type: boolean
-        is_superuser:
-          title: Is Superuser
-          type: boolean
+      type: object
       required:
         - email
         - is_active
         - is_superuser
         - id
       title: UserPublic
-      type: object
-
     UserRegister:
       properties:
         email:
-          format: email
-          maxLength: 255
-          title: Email
           type: string
-        full_name:
-          anyOf:
-            - maxLength: 255
-              type: string
-            - type: "null"
-          title: Full Name
+          maxLength: 255
+          format: email
+          title: Email
         password:
+          type: string
           maxLength: 64
           minLength: 8
           title: Password
-          type: string
+        full_name:
+          anyOf:
+            - type: string
+              maxLength: 255
+            - type: "null"
+          title: Full Name
+      type: object
       required:
         - email
         - password
       title: UserRegister
-      type: object
-
     UserUpdate:
       properties:
-        email:
-          anyOf:
-            - format: email
-              maxLength: 255
-              type: string
-            - type: "null"
-          title: Email
-        full_name:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Full Name
         is_active:
           anyOf:
             - type: boolean
@@ -1597,48 +3095,57 @@ components:
             - type: boolean
             - type: "null"
           title: Is Superuser
-      title: UserUpdate
-      type: object
-
-    UserUpdateMe:
-      properties:
-        email:
-          anyOf:
-            - format: email
-              maxLength: 255
-              type: string
-            - type: "null"
-          title: Email
         full_name:
           anyOf:
-            - maxLength: 255
-              type: string
+            - type: string
             - type: "null"
           title: Full Name
+        email:
+          anyOf:
+            - type: string
+              maxLength: 255
+              format: email
+            - type: "null"
+          title: Email
+      type: object
+      title: UserUpdate
+    UserUpdateMe:
+      properties:
         is_active:
           anyOf:
             - type: boolean
             - type: "null"
           title: Is Active
-      title: UserUpdateMe
+        full_name:
+          anyOf:
+            - type: string
+              maxLength: 255
+            - type: "null"
+          title: Full Name
+        email:
+          anyOf:
+            - type: string
+              maxLength: 255
+              format: email
+            - type: "null"
+          title: Email
       type: object
-
+      title: UserUpdateMe
     UsersPublic:
       properties:
-        count:
-          title: Count
-          type: integer
         data:
           items:
             $ref: "#/components/schemas/UserPublic"
-          title: Data
           type: array
+          title: Data
+        count:
+          type: integer
+          title: Count
+      type: object
       required:
         - data
         - count
       title: UsersPublic
-      type: object
-
     ValidationError:
       properties:
         loc:
@@ -1646,1744 +3153,36 @@ components:
             anyOf:
               - type: string
               - type: integer
-          title: Location
           type: array
+          title: Location
         msg:
+          type: string
           title: Message
-          type: string
         type:
-          title: Error Type
           type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
       required:
         - loc
         - msg
         - type
       title: ValidationError
-      type: object
-
     YieldPointMethod:
+      type: string
       enum:
         - CEN 1/6
         - EEEP
         - FEMA P795
       title: YieldPointMethod
-      type: string
-
   securitySchemes:
     OAuth2PasswordBearer:
+      type: oauth2
       flows:
         password:
           scopes: {}
           tokenUrl: /api/v1/login/access-token
-      type: oauth2
-
-info:
-  title: BarkByte
-  version: 0.1.0
-
-openapi: 3.1.0
-
-paths:
-  /api/v1/doi/:
-    get:
-      description: Retrieve a list of dois.
-      operationId: doi-get_dois
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DOIsPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Dois
-      tags:
-        - doi
-
-    post:
-      description: Create DOI.
-      operationId: doi-create_doi
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DOICreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DOIPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Doi
-      tags:
-        - doi
-
-  /api/v1/doi/{id}:
-    delete:
-      description: Delete joinery type ONLY if not in use.
-      operationId: doi-delete_doi
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Doi-Delete Doi
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Doi
-      tags:
-        - doi
-
-    get:
-      description: Retrieve a specific doi, including its specimens.
-      operationId: doi-get_doi_by_id
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DOIDetailPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Doi By Id
-      tags:
-        - doi
-
-    post:
-      description: Create doi.
-      operationId: doi-update_doi
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DOICreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DOIPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Doi
-      tags:
-        - doi
-
-  /api/v1/failuremode/:
-    get:
-      description: |-
-        Retrieve failure modes.
-
-        Filters:
-          - ?dowel=true       -> include FailureMode.type == DOWEL
-          - ?connector=true   -> include FailureMode.type == CONNECTOR
-          - both true         -> include either type
-          - none provided     -> return only WOOD and OTHER
-      operationId: failuremode-get_modes
-      parameters:
-        - in: query
-          name: dowel
-          required: true
-          schema:
-            title: Dowel
-            type: boolean
-        - in: query
-          name: connector
-          required: true
-          schema:
-            title: Connector
-            type: boolean
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailureModes"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Modes
-      tags:
-        - failuremode
-    post:
-      description: Create failure mode.
-      operationId: failuremode-create_mode
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FailureModeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailureMode"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Mode
-      tags:
-        - failuremode
-  /api/v1/failuremode/{id}:
-    delete:
-      description: Delete failure mode ONLY if not in use.
-      operationId: failuremode-delete_mode
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Failuremode-Delete Mode
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Mode
-      tags:
-        - failuremode
-
-    put:
-      description: Update failure mode.
-      operationId: failuremode-update_mode
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FailureModeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailureMode"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Mode
-      tags:
-        - failuremode
-
-  /api/v1/fastenertype/:
-    get:
-      description: Retrieve all fastener types.
-      operationId: fastenertype-get_fastener_types
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FastenerTypes"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Fastener Types
-      tags:
-        - fastenertype
-
-    post:
-      description: Create fastener type.
-      operationId: fastenertype-create_fastener_type
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FastenerTypeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FastenerType"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Fastener Type
-      tags:
-        - fastenertype
-
-  /api/v1/fastenertype/{id}:
-    delete:
-      description: Delete fastener type ONLY if not in use.
-      operationId: fastenertype-delete_fastener_type
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Fastenertype-Delete Fastener Type
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Fastener Type
-      tags:
-        - fastenertype
-
-    put:
-      description: Update fastener type.
-      operationId: fastenertype-update_fastener_type
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FastenerTypeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FastenerType"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Fastener Type
-      tags:
-        - fastenertype
-
-  /api/v1/joinerytype/:
-    get:
-      description: Retrieve joinery types.
-      operationId: joinerytype-get_jtypes
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JoineryTypes"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Jtypes
-      tags:
-        - joinerytype
-
-    post:
-      description: Create joinery type.
-      operationId: joinerytype-create_jtype
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/JoineryTypeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JoineryType"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Jtype
-      tags:
-        - joinerytype
-
-  /api/v1/joinerytype/{id}:
-    delete:
-      description: Delete joinery type ONLY if not in use.
-      operationId: joinerytype-delete_jtype
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Joinerytype-Delete Jtype
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Jtype
-      tags:
-        - joinerytype
-
-    put:
-      description: Update joinery type.
-      operationId: joinerytype-update_jtype
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/JoineryTypeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JoineryType"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Jtype
-      tags:
-        - joinerytype
-
-  /api/v1/loadingdirection/:
-    get:
-      description: Retrieve loading direction.
-      operationId: loadingdirection-get_loading_directions
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoadingDirections"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Loading Directions
-      tags:
-        - loadingdirection
-
-    post:
-      description: Create loading direction.
-      operationId: loadingdirection-create_loading_direction
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoadingDirectionCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoadingDirection"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Loading Direction
-      tags:
-        - loadingdirection
-
-  /api/v1/loadingdirection/{id}:
-    delete:
-      description: Delete loading direction ONLY if not in use.
-      operationId: loadingdirection-delete_loading_direction
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Loadingdirection-Delete Loading Direction
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Loading Direction
-      tags:
-        - loadingdirection
-
-    put:
-      description: Update loading direction.
-      operationId: loadingdirection-update_loading_direction
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoadingDirectionCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LoadingDirection"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Loading Direction
-      tags:
-        - loadingdirection
-
-  /api/v1/login/access-token:
-    post:
-      description: OAuth2 compatible token login, get an access token for future requests
-      operationId: login-login_access_token
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Body_login-login_access_token"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Token"
-          description: Successful Response
-        "400":
-          description: Incorrect email or password
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Login Access Token
-      tags:
-        - login
-  /api/v1/login/test-token:
-    post:
-      description: Test access token
-      operationId: login-test_token
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Test Token
-      tags:
-        - login
-  /api/v1/password-recovery/{email}:
-    post:
-      description: Password Recovery
-      operationId: login-recover_password
-      parameters:
-        - in: path
-          name: email
-          required: true
-          schema:
-            title: Email
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: If an account exists with that email, you'll receive recovery instructions.
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Recover Password
-      tags:
-        - login
-  /api/v1/pending-specimens/:
-    get:
-      description: |-
-        List pending specimens, optionally filtered by status.
-        If no status is provided, all pending specimens are returned.
-      operationId: pending-specimens-list_pending_specimens
-      parameters:
-        - in: query
-          name: status
-          required: false
-          schema:
-            anyOf:
-              - $ref: "#/components/schemas/PendingStatus"
-              - type: "null"
-            title: Status
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimensPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: List Pending Specimens
-      tags:
-        - pending-specimens
-  /api/v1/pending-specimens/specimen/{specimen_id}:
-    get:
-      description: List all pending specimens.
-      operationId: pending-specimens-list_approved_specimen_trail
-      parameters:
-        - in: path
-          name: specimen_id
-          required: true
-          schema:
-            format: uuid
-            title: Specimen Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimensPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: List Approved Specimen Trail
-      tags:
-        - pending-specimens
-  /api/v1/pending-specimens/{pending_id}:
-    delete:
-      description: Delete a pending specimen (only allowed while status is PENDING).
-      operationId: pending-specimens-delete_pending_specimen
-      parameters:
-        - in: path
-          name: pending_id
-          required: true
-          schema:
-            format: uuid
-            title: Pending Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Pending Specimen
-      tags:
-        - pending-specimens
-
-    put:
-      description: |-
-        Update the changed_data of an existing pending specimen
-        before it is approved/rejected.
-      operationId: pending-specimens-update_pending_specimen
-      parameters:
-        - in: path
-          name: pending_id
-          required: true
-          schema:
-            format: uuid
-            title: Pending Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PendingSpecimenUpdate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Pending Specimen
-      tags:
-        - pending-specimens
-
-  /api/v1/pending-specimens/{pending_id}/approve:
-    post:
-      description: Approve a pending specimen and apply it to the specimen table.
-      operationId: pending-specimens-approve_pending_specimen
-      parameters:
-        - in: path
-          name: pending_id
-          required: true
-          schema:
-            format: uuid
-            title: Pending Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PendingSpecimenReview"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Approve Pending Specimen
-      tags:
-        - pending-specimens
-  /api/v1/pending-specimens/{pending_id}/reject:
-    post:
-      description: Reject a pending specimen without touching the specimen table.
-      operationId: pending-specimens-reject_pending_specimen_route
-      parameters:
-        - in: path
-          name: pending_id
-          required: true
-          schema:
-            format: uuid
-            title: Pending Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PendingSpecimenReview"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Reject Pending Specimen Route
-      tags:
-        - pending-specimens
-  /api/v1/private/users/:
-    get:
-      description: Get all users.
-      operationId: private-get_all_users
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/UserPublic"
-                title: Response Private-Get All Users
-                type: array
-          description: Successful Response
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Get All Users
-      tags:
-        - private
-
-    post:
-      description: Create a new user.
-      operationId: private-create_user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PrivateUserCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create User
-      tags:
-        - private
-
-  /api/v1/reset-password/:
-    post:
-      description: Reset password
-      operationId: login-reset_password
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NewPassword"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: Successful Response
-        "400":
-          description: Invalid token or inactive user
-        "404":
-          description: The user with this email does not exist in the system.
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Reset Password
-      tags:
-        - login
-  /api/v1/specimens/:
-    get:
-      description: Retrieve specimens.
-      operationId: specimens-read_specimens
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SpecimensPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Read Specimens
-      tags:
-        - specimens
-
-    post:
-      description: Submit a new specimen for review.
-      operationId: specimens-create_specimen
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SpecimenCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Specimen
-      tags:
-        - specimens
-
-  /api/v1/specimens/{id}:
-    delete:
-      description: Delete a specimen.
-      operationId: specimens-delete_specimen
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Specimens-Delete Specimen
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Specimen
-      tags:
-        - specimens
-
-    get:
-      description: Get specimen by ID.
-      operationId: specimens-read_specimen
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Read Specimen
-      tags:
-        - specimens
-
-    put:
-      description: Submit an update for an existing specimen.
-      operationId: specimens-update_specimen
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SpecimenUpdate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimenPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Specimen
-      tags:
-        - specimens
-
-  /api/v1/subjoinerytype/:
-    get:
-      description: Retrieve sub joinery types.
-      operationId: subjoinerytype-get_sjtypes
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SubJoineryTypes"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Sjtypes
-      tags:
-        - subjoinerytype
-
-    post:
-      description: Create sub joinery type.
-      operationId: subjoinerytype-create_sjtype
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SubJoineryTypeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SubJoineryType"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create Sjtype
-      tags:
-        - subjoinerytype
-
-  /api/v1/subjoinerytype/{id}:
-    delete:
-      description: Delete sub joinery type ONLY if not in use.
-      operationId: subjoinerytype-delete_sjtype
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Subjoinerytype-Delete Sjtype
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete Sjtype
-      tags:
-        - subjoinerytype
-
-    put:
-      description: Update sub joinery type.
-      operationId: subjoinerytype-update_sjtype
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            format: uuid
-            title: Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SubJoineryTypeCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SubJoineryType"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Sjtype
-      tags:
-        - subjoinerytype
-
-  /api/v1/subjoinerytype/{joinery_type_id}/:
-    get:
-      description: Retrieve sub joinery types for a specific joinery type.
-      operationId: subjoinerytype-get_sjtypes_for_jtype
-      parameters:
-        - in: path
-          name: joinery_type_id
-          required: true
-          schema:
-            format: uuid
-            title: Joinery Type Id
-            type: string
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SubJoineryTypes"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Sjtypes For Jtype
-      tags:
-        - subjoinerytype
-  /api/v1/users/:
-    get:
-      description: Retrieve users.
-      operationId: users-read_users
-      parameters:
-        - in: query
-          name: skip
-          required: false
-          schema:
-            default: 0
-            title: Skip
-            type: integer
-        - in: query
-          name: limit
-          required: false
-          schema:
-            default: 100
-            title: Limit
-            type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UsersPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Read Users
-      tags:
-        - users
-
-    post:
-      description: Create new user.
-      operationId: users-create_user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserCreate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Create User
-      tags:
-        - users
-
-  /api/v1/users/me:
-    delete:
-      description: Delete own user.
-      operationId: users-delete_user_me
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: Successful Response
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete User Me
-      tags:
-        - users
-
-    get:
-      description: Get current user.
-      operationId: users-read_user_me
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Read User Me
-      tags:
-        - users
-
-    patch:
-      description: Update own user.
-      operationId: users-update_user_me
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserUpdateMe"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update User Me
-      tags:
-        - users
-
-  /api/v1/users/me/password:
-    patch:
-      description: Update own password.
-      operationId: users-update_password_me
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdatePassword"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update Password Me
-      tags:
-        - users
-  /api/v1/users/signup:
-    post:
-      description: Create new user without the need to be logged in.
-      operationId: users-register_user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserRegister"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Register User
-      tags:
-        - users
-  /api/v1/users/verify-email/:
-    post:
-      description: verify email and reset password.
-      operationId: users-verify_email
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NewAccount"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: Successful Response
-        "400":
-          description: Invalid token or inactive user
-        "404":
-          description: The user with this email does not exist in the system.
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Verify Email
-      tags:
-        - users
-  /api/v1/users/{user_id}:
-    delete:
-      description: Delete a user.
-      operationId: users-delete_user
-      parameters:
-        - in: path
-          name: user_id
-          required: true
-          schema:
-            format: uuid
-            title: User Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Delete User
-      tags:
-        - users
-
-    get:
-      description: Get a specific user by id.
-      operationId: users-read_user_by_id
-      parameters:
-        - in: path
-          name: user_id
-          required: true
-          schema:
-            format: uuid
-            title: User Id
-            type: string
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Read User By Id
-      tags:
-        - users
-
-    patch:
-      description: Update a user.
-      operationId: users-update_user
-      parameters:
-        - in: path
-          name: user_id
-          required: true
-          schema:
-            format: uuid
-            title: User Id
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserUpdate"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserPublic"
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      security:
-        - OAuth2PasswordBearer: []
-      summary: Update User
-      tags:
-        - users
-
-  /api/v1/utils/health-check/:
-    get:
-      operationId: utils-health_check
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                title: Response Utils-Health Check
-                type: boolean
-          description: Successful Response
-      summary: Health Check
-      tags:
-        - utils

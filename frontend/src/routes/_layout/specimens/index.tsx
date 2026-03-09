@@ -1,5 +1,6 @@
 import {
   specimensReadSpecimens,
+  useSpecimensReadSpecimenFilterOptions,
 } from "@/api/endpoints/specimens/specimens.gen";
 import { useUsersReadUsers } from "@/api/endpoints/users/users.gen";
 import { customInstance } from "@/api/mutator/custom-instance";
@@ -116,21 +117,6 @@ function useAllSpecimens() {
   });
 }
 
-/**
- * Fetches predefined facet option lists used by checkbox filters.
- */
-function useSpecimenFilterOptions() {
-  return useQuery({
-    queryKey: ["specimens", "filter-options"],
-    queryFn: () =>
-      customInstance<SpecimenFilterOptionsResponse>({
-        url: "/api/v1/specimens/filter-options",
-        method: "GET",
-      }),
-    staleTime: 5 * 60_000,
-  });
-}
-
 function SpecimensKitTable() {
   
   const navigate = useNavigate({ from: Route.fullPath });
@@ -160,7 +146,7 @@ function SpecimensKitTable() {
   );
 
   const { data, isLoading } = useAllSpecimens();
-  const { data: filterOptionsData } = useSpecimenFilterOptions();
+  const { data: filterOptionsData } = useSpecimensReadSpecimenFilterOptions();
 
   // Normalize row data by attaching uploader display names.
   const rows = useMemo<SpecimenRow[]>(
