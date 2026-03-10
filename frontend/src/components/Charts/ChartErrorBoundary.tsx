@@ -40,7 +40,7 @@ export class ChartErrorBoundary extends Component<
       }
 
       return (
-        <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center h-full min-h-100 gap-4 text-muted-foreground">
           <AlertCircle className="h-12 w-12" />
           <div className="text-center">
             <div className="font-semibold">Failed to render chart</div>

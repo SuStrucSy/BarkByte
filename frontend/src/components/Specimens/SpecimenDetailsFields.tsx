@@ -41,6 +41,9 @@ import {
   useComboboxAnchor,
 } from "../ui/combobox";
 import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection.gen";
+import { FieldHelpHover } from "./FieldHelpHover";
+import Failures from "@/assets/failures.svg?react";
+import JoineryTypes from "@/assets/joineryTypes.svg?react";
 
 interface AddSpecimenFormProps {
   control: Control<AddNewSpecimenFormValues, any>;
@@ -126,7 +129,10 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="joinery_type_id">Joinery Type</FieldLabel>
+            <FieldLabel htmlFor="joinery_type_id">
+              Joinery Type
+              <FieldHelpHover svg={<JoineryTypes className="w-4xl h-auto" />} />
+            </FieldLabel>
             <Select
               name={field.name}
               value={field.value}
@@ -174,7 +180,7 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
             </Select>
             <FieldDescription>
               {joineryTypes
-                ? `Filtered for Joinery ${joineryTypes}`
+                ? `Filtered for ${joineryTypeList.find((j) => j.id === joineryTypes)?.label}`
                 : "Select joinery type first"}
             </FieldDescription>
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

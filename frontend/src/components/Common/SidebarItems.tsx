@@ -8,7 +8,6 @@ import {
   ListTodo,
   type LucideIcon,
   Newspaper,
-  Settings,
   Users,
 } from "lucide-react";
 import {
@@ -23,16 +22,13 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 const items = [
   { icon: Home, title: "Home", path: "/" },
   { icon: ChartSpline, title: "Dashboard", path: "/dashboard" },
-  { icon: Layers, title: "Specimens", path: "/specimens" },
+
   { icon: Newspaper, title: "References", path: "/dois" },
-  { icon: Settings, title: "User Settings", path: "/settings" },
 ];
 
-const groupTwoItems = [
+const specimenMenuItems = [
+  { icon: Layers, title: "Specimens", path: "/specimens" },
   { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
-];
-
-const groupThreeItems = [
   { icon: ListTodo, title: "Pending Specimens", path: "/specimens/pending" },
 ];
 
@@ -46,11 +42,11 @@ const SidebarItems = () => {
   const { data: currentUser } = useCurrentUser();
   const { pathname } = useLocation();
 
-  const finalItems: Item[] = currentUser?.is_superuser
-    ? [...items, { icon: Users, title: "Admin", path: "/admin" }]
-    : items;
+  const adminMenuItems: Item[] = currentUser?.is_superuser
+    ? [{ icon: Users, title: "User Management", path: "/admin" }]
+    : [];
 
-  const listItems = finalItems.map((item) => (
+  const listItems = items.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -65,7 +61,7 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
-  const projectItems = groupTwoItems.map((item) => (
+  const specimentItems = specimenMenuItems.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -80,7 +76,7 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
-  const adminItems = groupThreeItems.map((item) => (
+  const adminItems = adminMenuItems.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -102,8 +98,8 @@ const SidebarItems = () => {
         <SidebarMenu>{listItems}</SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Projects</SidebarGroupLabel>
-        <SidebarMenu>{projectItems}</SidebarMenu>
+        <SidebarGroupLabel>Specimen</SidebarGroupLabel>
+        <SidebarMenu>{specimentItems}</SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupLabel>Admin</SidebarGroupLabel>
