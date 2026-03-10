@@ -76,7 +76,7 @@ export function DOISheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex h-full flex-col px-6 py-6">
         <SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
-          DOI Details
+          Reference Details
         </SheetTitle>
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <dl className="grid gap-3 ">

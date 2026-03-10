@@ -1,49 +1,38 @@
-// ============================================
-// EXPERIMENTAL DATA CONSTANTS
-// ============================================
+import type { SpecimenPublic } from "@/api/model/specimenPublic";
 
-// 1. Labels (display names)
-export const EXPERIMENTAL_LABELS = {
-  e_stiffness: "Stiffness (Ks)",
-  e_yield_force: "Yield Strength (Fy)",
-  e_ductility: "Ductility (μ)",
-} as const;
+// Extract all e_ keys from SpecimenPublic
+type SpecimenExperimentalKey = Extract<keyof SpecimenPublic, `e_${string}`>;
 
-// 2. Units (separate)
-export const EXPERIMENTAL_UNITS = {
-  e_stiffness: "KN/mm",
-  e_yield_force: "KN",
-  e_ductility: "",
-} as const;
+// satisfies ensures every key is a real SpecimenPublic field,
+// without requiring all e_ keys to be present
+const EXPERIMENTAL_DATA = {
+  e_stiffness: { label: "Stiffness", unit: "kN/mm" },
+  e_yield_force: { label: "Yield Strength", unit: "kN" },
+  e_yield_displacement: { label: "Yield Displacement", unit: "mm" },
+  e_max_force: { label: "Max Force", unit: "kN" },
+  e_max_displacement: { label: "Max Displacement", unit: "mm" },
+  e_ultimate_force: { label: "Ultimate Force", unit: "kN" },
+  e_ultimate_displacement: { label: "Ultimate Displacement", unit: "mm" },
+  e_ductility: { label: "Ductility", unit: "" },
+} satisfies Partial<
+  Record<SpecimenExperimentalKey, { label: string; unit: string }>
+>;
 
-export const EXPERIMENTAL_KEYS = [
-  "e_stiffness",
-  "e_yield_force",
-  "e_ductility",
-] as const;
+export type ExperimentalKey = keyof typeof EXPERIMENTAL_DATA;
+export const EXPERIMENTAL_KEYS = Object.keys(
+  EXPERIMENTAL_DATA,
+) as ExperimentalKey[];
 
-// ============================================
-// TYPE EXPORTS (must come before helpers)
-// ============================================
-export type ExperimentalKey = (typeof EXPERIMENTAL_KEYS)[number];
+export const getExperimentalLabel = (key: ExperimentalKey) =>
+  EXPERIMENTAL_DATA[key].label;
 
-// ============================================
-// UTILITY HELPERS (now fully type-safe)
-// ============================================
+export const getExperimentalUnit = (key: ExperimentalKey) =>
+  EXPERIMENTAL_DATA[key].unit;
 
-export const getExperimentalLabel = (key: ExperimentalKey): string => {
-  return (
-    EXPERIMENTAL_LABELS[key as keyof typeof EXPERIMENTAL_LABELS] ?? String(key)
-  );
+export const getFullLabel = (key: ExperimentalKey) => {
+  const { label, unit } = EXPERIMENTAL_DATA[key];
+  return unit ? `${label} (${unit})` : label;
 };
-
-export const getExperimentalUnit = (key: ExperimentalKey): string => {
-  return EXPERIMENTAL_UNITS[key as keyof typeof EXPERIMENTAL_UNITS];
-};
-
-export const getFullLabel = (key: ExperimentalKey): string =>
-  `${EXPERIMENTAL_LABELS[key as keyof typeof EXPERIMENTAL_LABELS]} (${EXPERIMENTAL_UNITS[key as keyof typeof EXPERIMENTAL_UNITS]})`;
-
 // ============================================
 // THEME PROVIDER CONSTANTS
 // ============================================

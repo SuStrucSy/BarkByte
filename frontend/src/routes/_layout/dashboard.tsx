@@ -19,11 +19,7 @@ import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Spinner } from "@/components/ui/spinner";
 import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype.gen";
-import {
-  countByArrayAttribute,
-  countByAttribute,
-  groupSpecimensByFastener,
-} from "@/lib/utils";
+import { groupSpecimensByFastener } from "@/lib/utils";
 import { BoxPlot } from "@/components/Dashboard/BoxPlot";
 import {
   Select,
@@ -44,7 +40,6 @@ import {
 import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { isNumericValue } from "@/lib/typeGuards";
-import { DOISheet } from "@/components/Specimens/DOISheet";
 import { Toggle } from "@/components/ui/toggle";
 import {
   Tooltip,
@@ -52,7 +47,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { Donut } from "@/components/Charts/Donut";
+import { SpecimenSheet } from "@/components/Specimens/SpecimenSheet";
+import { Separator } from "@/components/ui/separator";
+import { DemographyGrid } from "@/components/Dashboard/DemographyGrid";
+import { ExpandableChart } from "@/components/Charts/ExpandableChart";
 
 export const Route = createFileRoute("/_layout/dashboard")({
   staticData: {
@@ -174,57 +172,6 @@ function Dashboard() {
     [allSpecimens],
   );
 
-  const joineryCounts = useMemo(
-    () => countByAttribute(allSpecimens, (s) => s.joinery_type.label),
-    [allSpecimens],
-  );
-
-  const fastenerCounts = useMemo(
-    () =>
-      countByArrayAttribute(
-        allSpecimens,
-        (s) => s.fastener_types.map((f) => f.label),
-        "Dowel-Free",
-      ),
-    [allSpecimens],
-  );
-
-  const loadingDirectionCounts = useMemo(
-    () =>
-      countByArrayAttribute(allSpecimens, (s) =>
-        s.loading_directions.map((l) => l.label),
-      ),
-    [allSpecimens],
-  );
-
-  const assemblyCounts = useMemo(
-    () => countByAttribute(allSpecimens, (s) => s.assembly_type),
-    [allSpecimens],
-  );
-
-  const loadingTypeCounts = useMemo(
-    () => countByAttribute(allSpecimens, (s) => s.e_test_loading_type || ""),
-    [allSpecimens],
-  );
-
-  const yieldPointCounts = useMemo(
-    () => countByAttribute(allSpecimens, (s) => s.e_yield_point_method || ""),
-    [allSpecimens],
-  );
-
-  const subjoineryCounts = useMemo(
-    () => countByAttribute(allSpecimens, (s) => s.sub_joinery_type.label),
-    [allSpecimens],
-  );
-
-  const qfmCounts = useMemo(
-    () =>
-      countByArrayAttribute(allSpecimens, (s) =>
-        s.e_qualitative_failure_measure.map((q) => q.label),
-      ),
-    [allSpecimens],
-  );
-
   // Loading state
   if (isLoading || isFastenerLoading) {
     return <PageLoading />;
@@ -250,40 +197,59 @@ function Dashboard() {
   const loadingProgress =
     totalCount > 0 ? Math.round((loadedCount / totalCount) * 100) : 0;
 
+  const stiffnessDuctilityProps = {
+    data: stiffnessDuctilityData,
+    fastenerTypesData,
+    xKey: "e_stiffness",
+    yKey: "e_ductility",
+    xLabel: "Stiffness (Ks) [KN/mm]",
+    yLabel: "Ductility",
+    title: "Stiffness vs Ductility",
+    onPointClick: handlePointClick,
+  } as const;
+
+  const stiffnessYieldProps = {
+    data: stiffnessYieldData,
+    fastenerTypesData,
+    xKey: "e_stiffness",
+    yKey: "e_yield_force",
+    xLabel: "Stiffness (Ks) [KN/mm]",
+    yLabel: "Yield Strength (Fy) [KN]",
+    title: "Stiffness vs Yield Force",
+    onPointClick: handlePointClick,
+  } as const;
+
   return (
     <div className="space-y-4">
       {/* Header with loading status */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Specimen Analysis Dashboard</CardTitle>
-              <CardDescription>
-                {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
-                specimens
-                {isLoadingAll ? (
-                  <Badge
-                    variant="secondary"
-                    className="animate-pulse ml-1"
-                    aria-live="polite"
-                    aria-label={`Loading specimens: ${loadingProgress}% complete`}
-                  >
-                    Loading... {loadingProgress}%
-                  </Badge>
-                ) : (
-                  <Badge className="ml-1" aria-label="All specimens loaded">
-                    ✓ Complete
-                  </Badge>
-                )}
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle>Specimen Analysis Dashboard</CardTitle>
+          <CardDescription>
+            {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
+            specimens
+            {isLoadingAll ? (
+              <Badge
+                variant="secondary"
+                className="animate-pulse ml-1"
+                aria-live="polite"
+                aria-label={`Loading specimens: ${loadingProgress}% complete`}
+              >
+                Loading... {loadingProgress}%
+              </Badge>
+            ) : (
+              <Badge className="ml-1" aria-label="All specimens loaded">
+                ✓ Complete
+              </Badge>
+            )}
+          </CardDescription>
         </CardHeader>
       </Card>
 
       {/* Two column grid of charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Stiffness vs Ductility */}
+
         <Card>
           <CardHeader className="pb-4">
             <CardTitle>Stiffness vs Ductility</CardTitle>
@@ -295,23 +261,19 @@ function Dashboard() {
                 </span>
               )}
             </CardDescription>
+            <CardAction>
+              <ExpandableChart title="Stiffness vs Ductility">
+                {() => <ScatterPlotD3 {...stiffnessDuctilityProps} />}
+              </ExpandableChart>
+            </CardAction>
           </CardHeader>
           <CardContent className="pb-4">
             <ChartErrorBoundary chartName="Stiffness vs Ductility">
-              <ScatterPlotD3
-                data={stiffnessDuctilityData}
-                fastenerTypesData={fastenerTypesData}
-                xKey="e_stiffness"
-                yKey="e_ductility"
-                xLabel="Stiffness (Ks) [KN/mm]"
-                yLabel="Ductility"
-                height={500}
-                title="Stiffness vs Ductility"
-                onPointClick={handlePointClick}
-              />
+              <ScatterPlotD3 {...stiffnessDuctilityProps} height={500} />
             </ChartErrorBoundary>
           </CardContent>
         </Card>
+
         {/* Stiffness vs Yield Force */}
         <Card>
           <CardHeader className="pb-4">
@@ -324,24 +286,19 @@ function Dashboard() {
                 </span>
               )}
             </CardDescription>
+            <CardAction>
+              <ExpandableChart title="Stiffness vs Yield Force">
+                {() => <ScatterPlotD3 {...stiffnessYieldProps} />}
+              </ExpandableChart>
+            </CardAction>
           </CardHeader>
           <CardContent className="pb-4">
             <ChartErrorBoundary chartName="Stiffness vs Yield Force">
-              <ScatterPlotD3
-                data={stiffnessYieldData}
-                fastenerTypesData={fastenerTypesData}
-                xKey="e_stiffness"
-                yKey="e_yield_force"
-                xLabel="Stiffness (Ks) [KN/mm]"
-                yLabel="Yield Strength (Fy) [KN]"
-                height={500}
-                title="Stiffness vs Yield Force"
-                onPointClick={handlePointClick}
-              />
+              <ScatterPlotD3 {...stiffnessYieldProps} height={500} />
             </ChartErrorBoundary>
           </CardContent>
         </Card>
-        <Card className="col-span-2">
+        <Card className="col-span-full">
           <CardHeader>
             <CardTitle>Chart Options</CardTitle>
             <CardDescription>
@@ -422,132 +379,13 @@ function Dashboard() {
             </Card>
           );
         })}
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Joinery
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={joineryCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Fastener
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={fastenerCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Loading Direction
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={loadingDirectionCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Assembly
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={assemblyCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Test Loading Type
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={loadingTypeCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Yield Point Method
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={yieldPointCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Sub-Joinery
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={subjoineryCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
-        <Card className="col-span-1">
-          <CardHeader className="pb-4">
-            <CardTitle>
-              Demography based on determinative records of specimens
-            </CardTitle>
-            <CardDescription>
-              Summarizes the Distribution of Specimens by Quantitative Failure
-              Modes
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center px-2 pb-4">
-            <ChartErrorBoundary chartName="Donut">
-              <Donut counts={qfmCounts} />
-            </ChartErrorBoundary>
-          </CardContent>
-        </Card>
+        <Separator className="col-span-2" />
+        <DemographyGrid specimens={allSpecimens} />
       </div>
 
       {selectedSpecimen && (
-        <DOISheet
-          doi={selectedSpecimen.doi}
+        <SpecimenSheet
+          specimen={selectedSpecimen}
           open={sheetOpen}
           onOpenChange={setSheetOpen}
         />
