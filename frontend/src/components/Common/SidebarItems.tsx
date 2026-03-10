@@ -26,10 +26,8 @@ const items = [
   { icon: Newspaper, title: "References", path: "/dois" },
 ];
 
-const specimenMenuItems = [
+const groupTwoItems = [
   { icon: Layers, title: "Specimens", path: "/specimens" },
-  { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
-  { icon: ListTodo, title: "Pending Specimens", path: "/specimens/pending" },
 ];
 
 interface Item {
@@ -42,8 +40,20 @@ const SidebarItems = () => {
   const { data: currentUser } = useCurrentUser();
   const { pathname } = useLocation();
 
-  const adminMenuItems: Item[] = currentUser?.is_superuser
-    ? [{ icon: Users, title: "User Management", path: "/admin" }]
+  const specimenItems: Item[] = currentUser
+    ? [
+        ...groupTwoItems,
+        { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
+        {
+          icon: ListTodo,
+          title: "Pending Specimens",
+          path: "/specimens/pending",
+        },
+      ]
+    : groupTwoItems;
+
+  const adminItems: Item[] = currentUser?.is_superuser
+    ? [{ icon: Users, title: "Users Management", path: "/admin" }]
     : [];
 
   const listItems = items.map((item) => (
@@ -61,7 +71,7 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
-  const specimentItems = specimenMenuItems.map((item) => (
+  const specimenMenuItems = specimenItems.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -76,7 +86,7 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
-  const adminItems = adminMenuItems.map((item) => (
+  const adminMenuItems = adminItems.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -99,12 +109,14 @@ const SidebarItems = () => {
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupLabel>Specimen</SidebarGroupLabel>
-        <SidebarMenu>{specimentItems}</SidebarMenu>
+        <SidebarMenu>{specimenMenuItems}</SidebarMenu>
       </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel>Admin</SidebarGroupLabel>
-        <SidebarMenu>{adminItems}</SidebarMenu>
-      </SidebarGroup>
+      {currentUser?.is_superuser ? (
+        <SidebarGroup>
+          <SidebarGroupLabel>Admin</SidebarGroupLabel>
+          <SidebarMenu>{adminMenuItems}</SidebarMenu>
+        </SidebarGroup>
+      ) : null}
     </>
   );
 };
