@@ -56,7 +56,6 @@ export function DataTableToolbar<TData>({
                     event.preventDefault();
                     column.toggleVisibility(!column.getIsVisible());
                   }}
-                  className="capitalize"
                 >
                   <div
                     className={cn(
@@ -68,7 +67,7 @@ export function DataTableToolbar<TData>({
                   >
                     <Check className="h-4 w-4" />
                   </div>
-                  {column.id.replaceAll("_", " ")}
+                  {column.columnDef.meta?.label ?? column.id.replaceAll("_", " ")}
                 </DropdownMenuItem>
               ))}
             </div>

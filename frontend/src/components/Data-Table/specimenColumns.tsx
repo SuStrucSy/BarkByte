@@ -10,6 +10,7 @@ interface ColumnConfig {
 	sortable?: boolean;
 	hidden?: boolean;
 	meta?: {
+		label?: string;
 		renderAs?: string; // e.g. 'joinery_label', 'array_join'
 		// Add any custom props you need
 	};
@@ -88,7 +89,10 @@ export const createColumns = <
 				header: ({ column }) => (
 					<DataTableColumnHeader column={column} title={config.header} />
 				),
-				meta: config.meta,
+				meta: {
+					label: config.header,
+					...config.meta,
+				},
 				enableSorting: config.sortable ?? false,
 			} satisfies Partial<ColumnDef<TData>>;
 
