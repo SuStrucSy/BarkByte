@@ -69,7 +69,6 @@ export function SpecimenTableSideBar({
               {allControlsCollapsed ? "Expand all" : "Collapse all"}
             </Button>
 
-            {/* Clears all active sidebar filters and resets sliders back to defaults. */}
             {hasActiveSidebarFilters ? (
               <Button variant="secondary" size="sm" onClick={onClearAll}>
                 Clear

@@ -1,5 +1,10 @@
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import {
+  parseStructuredFilterQuery,
+  serializeStructuredFilterQuery,
+  slugifyFilterValue,
+  type StructuredFilterClause,
+} from "@/components/Data-Table/specimenTableFilters";
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -22,11 +27,9 @@ export function DataTableFilterCommand({
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
-  const getExternalDisplayValue = () =>
-    searchField === "all" || value.trim().length === 0
-      ? value
-      : `${searchField}:${value}`;
+  const getExternalDisplayValue = () => value;
 
   useEffect(() => {
     if (open) return;
@@ -36,6 +39,7 @@ export function DataTableFilterCommand({
   useEffect(() => {
     if (!open) return;
     setInputValue(getExternalDisplayValue());
+    setHighlightedIndex(0);
     inputRef.current?.focus();
   }, [open]);
 
@@ -67,92 +71,139 @@ export function DataTableFilterCommand({
   }, []);
 
   const parseAndEmit = (rawValue: string) => {
-    // Allow multi-token command strings like:
-    // assembly:Wall-Floor, sub_joinery:AB:Elastomeric Angle Bracket
-    if (rawValue.includes(",")) {
-      onSearchFieldChange("all");
-      onValueChange(rawValue);
-      return;
-    }
-
-    const colonIndex = rawValue.indexOf(":");
-    if (colonIndex === -1) {
-      onSearchFieldChange("all");
-      onValueChange(rawValue);
-      return;
-    }
-
-    const rawField = rawValue.slice(0, colonIndex).trim().toLowerCase();
-    const rawTerm = rawValue.slice(colonIndex + 1);
-    const allowedFields = new Set(Object.keys(fieldOptions ?? {}));
-    if (allowedFields.has(rawField)) {
-      onSearchFieldChange(rawField);
-      onValueChange(rawTerm);
-      return;
-    }
-
     onSearchFieldChange("all");
     onValueChange(rawValue);
   };
 
+  const suggestionContext = useMemo(() => {
+    const rawSegments = inputValue.split(";");
+    const currentSegment = rawSegments.at(-1)?.trim() ?? "";
+    const completedSegments = rawSegments.slice(0, -1).join(";");
+    const completedClauses = parseStructuredFilterQuery(completedSegments);
+
+    if (!currentSegment.includes(":")) {
+      return {
+        mode: "field" as const,
+        query: currentSegment.toLowerCase(),
+        completedClauses,
+      };
+    }
+
+    const firstColon = currentSegment.indexOf(":");
+    const field = currentSegment.slice(0, firstColon).trim().toLowerCase();
+    const rawValuePart = currentSegment.slice(firstColon + 1);
+    const rawValueSegments = rawValuePart.split(",");
+    const currentValueQuery = rawValueSegments.at(-1)?.trim().toLowerCase() ?? "";
+    const committedValues = rawValueSegments
+      .slice(0, -1)
+      .map((value) => slugifyFilterValue(value))
+      .filter(Boolean);
+
+    return {
+      mode: "value" as const,
+      field,
+      query: currentValueQuery,
+      committedValues,
+      completedClauses,
+    };
+  }, [inputValue]);
+
   const suggestions = useMemo(() => {
-    const lastCommaIndex = inputValue.lastIndexOf(",");
-    const prefix =
-      lastCommaIndex === -1 ? "" : `${inputValue.slice(0, lastCommaIndex + 1)} `;
-    const segment =
-      lastCommaIndex === -1
-        ? inputValue.trimStart()
-        : inputValue.slice(lastCommaIndex + 1).trimStart();
-
-    const colonIndex = segment.indexOf(":");
-    if (colonIndex === -1) {
-      const q = segment.trim().toLowerCase();
-      const fields = Object.keys(fieldOptions ?? {});
-      return fields
-        .filter((field) => field.includes(q))
-        .map((field) => ({
-          key: `field:${field}`,
-          label: `${field}:`,
-          kind: "field" as const,
-          value: field,
-          prefix,
-        }));
+    if (suggestionContext.mode === "value") {
+      const options = fieldOptions?.[suggestionContext.field] ?? [];
+      return options
+        .map((option) => {
+          const slug = slugifyFilterValue(option);
+          return {
+            key: `${suggestionContext.field}:${slug}`,
+            label: `${suggestionContext.field}:${[
+              ...suggestionContext.committedValues,
+              slug,
+            ].join(",")}`,
+            field: suggestionContext.field,
+            value: slug,
+            displayValue: option,
+            mode: "value" as const,
+          };
+        })
+        .filter(
+          (suggestion) =>
+            !suggestionContext.committedValues.includes(suggestion.value) &&
+            (suggestionContext.query === "" ||
+              suggestion.value.includes(
+                suggestionContext.query.replace(/\s+/g, "_"),
+              ) ||
+              suggestion.displayValue
+                .toLowerCase()
+                .includes(suggestionContext.query)),
+        )
+        .slice(0, 20)
+        .sort((left, right) => left.label.localeCompare(right.label));
     }
 
-    const rawField = segment.slice(0, colonIndex).trim().toLowerCase();
-    const rawTerm = segment.slice(colonIndex + 1).trim().toLowerCase();
-    if (!fieldOptions?.[rawField]) {
-      return [];
-    }
-    return (fieldOptions[rawField] ?? [])
-      .filter((option) => option.toLowerCase().includes(rawTerm))
+    return Object.entries(fieldOptions ?? {})
+      .flatMap(([field, options]) =>
+        options.map((option) => {
+          const slug = slugifyFilterValue(option);
+          return {
+            key: `${field}:${slug}`,
+            label: `${field}:${slug}`,
+            field,
+            value: slug,
+            displayValue: option,
+            mode: "field" as const,
+          };
+        }),
+      )
+      .filter(
+        (suggestion) =>
+          suggestionContext.query === "" ||
+          suggestion.value.includes(
+            suggestionContext.query.replace(/\s+/g, "_"),
+          ) ||
+          suggestion.displayValue
+            .toLowerCase()
+            .includes(suggestionContext.query) ||
+          suggestion.label.includes(suggestionContext.query),
+      )
       .slice(0, 20)
-      .map((option) => ({
-        key: `value:${rawField}:${option}`,
-        label: option,
-        kind: "value" as const,
-        value: option,
-        field: rawField,
-        prefix,
-      }));
-  }, [inputValue, fieldOptions]);
+      .sort((left, right) => left.label.localeCompare(right.label));
+  }, [fieldOptions, suggestionContext]);
 
-  const applySuggestion = (
-    suggestion:
-      | { kind: "field"; value: string; prefix?: string }
-      | { kind: "value"; value: string; field: string; prefix?: string },
-  ) => {
-    const prefix = suggestion.prefix ?? "";
-    if (suggestion.kind === "field") {
-      const next = `${prefix}${suggestion.value}:`;
-      setInputValue(next);
-      onSearchFieldChange("all");
-      onValueChange(next);
-      inputRef.current?.focus();
-      return;
-    }
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [suggestions]);
 
-    const next = `${prefix}${suggestion.field}:${suggestion.value}`;
+  const applySuggestion = (suggestion: {
+    field: string;
+    value: string;
+    mode: "field" | "value";
+  }) => {
+    const nextClauses = suggestionContext.completedClauses
+      .filter((clause) => clause.field !== suggestion.field)
+      .map((clause) => ({ ...clause }));
+    const existingClause = suggestionContext.completedClauses.find(
+      (clause) => clause.field === suggestion.field,
+    );
+
+    const mergedValues = Array.from(
+      new Set([
+        ...(existingClause?.values ?? []),
+        ...(suggestionContext.mode === "value"
+          ? suggestionContext.field === suggestion.field
+            ? suggestionContext.committedValues
+            : []
+          : []),
+        suggestion.value,
+      ]),
+    );
+
+    nextClauses.push({
+      field: suggestion.field,
+      values: mergedValues,
+    } satisfies StructuredFilterClause);
+
+    const next = `${serializeStructuredFilterQuery(nextClauses)};`;
     setInputValue(next);
     onSearchFieldChange("all");
     onValueChange(next);
@@ -190,6 +241,28 @@ export function DataTableFilterCommand({
         <Input
           ref={inputRef}
           value={inputValue}
+          onKeyDown={(event) => {
+            if (!suggestions.length) return;
+
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setHighlightedIndex((prev) =>
+                prev === suggestions.length - 1 ? 0 : prev + 1,
+              );
+            }
+
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setHighlightedIndex((prev) =>
+                prev === 0 ? suggestions.length - 1 : prev - 1,
+              );
+            }
+
+            if (event.key === "Enter" && suggestions[highlightedIndex]) {
+              event.preventDefault();
+              applySuggestion(suggestions[highlightedIndex]);
+            }
+          }}
           onChange={(event) => {
             const next = event.target.value;
             setInputValue(next);
@@ -217,7 +290,11 @@ export function DataTableFilterCommand({
                 type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => applySuggestion(suggestion)}
-                className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+                className={`flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${
+                  suggestions[highlightedIndex]?.key === suggestion.key
+                    ? "bg-muted"
+                    : ""
+                }`}
               >
                 {suggestion.label}
               </button>

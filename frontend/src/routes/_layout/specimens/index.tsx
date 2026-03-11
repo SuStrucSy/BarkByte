@@ -3,7 +3,6 @@ import {
   useSpecimensReadSpecimenFilterOptions,
 } from "@/api/endpoints/specimens/specimens.gen";
 import { useUsersReadUsers } from "@/api/endpoints/users/users.gen";
-import { customInstance } from "@/api/mutator/custom-instance";
 import type { SpecimenPublic } from "@/api/model";
 import { DataTableFilterCommand } from "@/components/Data-Table/DataTableFilterCommand";
 import {
@@ -15,15 +14,15 @@ import { SpecimensResultsTable } from "@/components/Data-Table/SpecimensResultsT
 import {
   CHECKBOX_FILTER_CONFIG,
   createEmptySelectedFilters,
-  type CommandToken,
   filterSpecimenRows,
   isFacetField,
+  parseStructuredFilterQuery,
+  serializeStructuredFilterQuery,
   type CheckboxField,
   type SelectedFilters,
   SLIDER_FILTER_CONFIG,
   type SliderField,
   type SliderValuesByField,
-  type SpecimenFilterOptionsResponse,
   type SpecimenRow,
 } from "@/components/Data-Table/specimenTableFilters";
 import { useSpecimenSearchFilterSync } from "@/components/Data-Table/useSpecimenSearchFilterSync";
@@ -38,23 +37,83 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   type ColumnDef,
   type PaginationState,
+  type SortingState,
   type VisibilityState,
   useReactTable,
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import z from "zod/v4";
 
+const sliderSearchSchemaFields = Object.fromEntries(
+  SLIDER_FILTER_CONFIG.map((config) => [config.field, z.string().optional()]),
+) as Record<SliderField, z.ZodOptional<z.ZodString>>;
+
 const specimensSearchSchema = z.object({
-  page: z.number().catch(1),
+  q: z.string().catch(""),
+  ...sliderSearchSchemaFields,
 });
 
 const TABLE_PANEL_HEIGHT = "h-[calc(100vh-11rem)]";
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 type Bounds = { min: number; max: number };
+const DEFAULT_PAGE_SIZE = 20;
+
+const parseSliderParam = (value?: string): [number, number] | undefined => {
+  if (!value) return undefined;
+
+  const [rawMin, rawMax] = value.split("-");
+  const min = Number(rawMin);
+  const max = Number(rawMax);
+
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return undefined;
+  return [min, max];
+};
+
+const serializeSliderParam = (value?: [number, number]) => {
+  if (!value) return undefined;
+  return `${value[0]}-${value[1]}`;
+};
+
+type RelevantSearchState = {
+  q?: string;
+} & Partial<Record<SliderField, string | undefined>>;
+
+const getRelevantSearchState = (
+  search: z.infer<typeof specimensSearchSchema>,
+) =>
+  ({
+    q: search.q.trim().length > 0 ? search.q : undefined,
+    ...Object.fromEntries(
+      SLIDER_FILTER_CONFIG.map((config) => [config.field, search[config.field]]),
+    ),
+  }) satisfies RelevantSearchState;
+
+const areRelevantSearchStatesEqual = (
+  left: RelevantSearchState,
+  right: RelevantSearchState,
+) =>
+  left.q === right.q &&
+  SLIDER_FILTER_CONFIG.every(
+    (config) => left[config.field] === right[config.field],
+  );
+
+const areRangeValuesEqual = (
+  left?: [number, number],
+  right?: [number, number],
+) => !!left && !!right && left[0] === right[0] && left[1] === right[1];
+
+const areSliderMapsEqual = (
+  left: SliderValuesByField,
+  right: SliderValuesByField,
+) =>
+  SLIDER_FILTER_CONFIG.every((config) =>
+    areRangeValuesEqual(left[config.field], right[config.field]),
+  );
 
 export const Route = createFileRoute("/_layout/specimens/")({
   staticData: {
@@ -63,26 +122,6 @@ export const Route = createFileRoute("/_layout/specimens/")({
   component: Specimens,
   validateSearch: (search) => specimensSearchSchema.parse(search),
 });
-
-/**
- * Fetches users and builds a lookup map from uploader ID -> display name.
- * Display name fallback order is full name, then email, then raw user ID.
- */
-function useUploaderNameMap() {
-  const { data } = useUsersReadUsers({
-    skip: 0,
-    limit: 1000,
-  });
-
-  // Build a stable uploader ID -> display name map from user records.
-  return useMemo(() => {
-    const entries = (data?.data ?? []).map((user) => [
-      user.id,
-      user.full_name || user.email || user.id,
-    ]);
-    return Object.fromEntries(entries) as Record<string, string>;
-  }, [data?.data]);
-}
 
 /**
  * Fetches every specimen by repeatedly requesting paginated batches
@@ -117,23 +156,41 @@ function useAllSpecimens() {
   });
 }
 
+function useUploaderNameMap() {
+  const { data } = useUsersReadUsers({
+    skip: 0,
+    limit: 1000,
+  });
+
+  return useMemo(() => {
+    const entries = (data?.data ?? []).map((user) => [
+      user.id,
+      user.full_name || user.email || user.id,
+    ]);
+    return Object.fromEntries(entries) as Record<string, string>;
+  }, [data?.data]);
+}
+
 function SpecimensKitTable() {
-  
+  const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const uploaderNameMap = useUploaderNameMap();
 
   // Controls whether the right-side filter sidebar is visible.
   const [controlsOpen, setControlsOpen] = useState(true);
   // Free-text / command input used in the top search bar.
-  const [searchTerm, setSearchTerm] = useState("");
-  // Active search mode (all fields or a specific field).
-  const [searchField, setSearchField] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState(search.q);
+  const lastSyncedSearchTermRef = useRef(search.q);
   // Checkbox filter selections keyed by filter field.
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>(createEmptySelectedFilters);
   // Slider range selections keyed by slider field.
   const [sliderValuesByField, setSliderValuesByField] = useState<SliderValuesByField>({});
   // Client-side pagination state for the filtered table.
-  const [pagination, setPagination] = useState<PaginationState>({pageIndex: 0,pageSize: 20});
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
+  const [sorting, setSorting] = useState<SortingState>([]);
   // Default visible/hidden columns on first render. Users can still change this from Toggle Columns.
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
     getInitialColumnVisibility(),
@@ -227,15 +284,46 @@ function SpecimensKitTable() {
     [sliderBoundsByField],
   );
 
-  // Seeds slider state from computed defaults, while preserving any existing user-adjusted values.
   useEffect(() => {
-    if (rows.length === 0) return;
+    lastSyncedSearchTermRef.current = search.q;
+    setSearchTerm((prev) => (prev === search.q ? prev : search.q));
+  }, [search.q]);
 
-    setSliderValuesByField((prev) => ({
-      ...sliderDefaults,
-      ...prev,
-    }));
-  }, [rows.length, sliderDefaults]);
+  useEffect(() => {
+    if (searchTerm === lastSyncedSearchTermRef.current) {
+      return;
+    }
+
+    lastSyncedSearchTermRef.current = searchTerm;
+    syncSearchState({
+      q: searchTerm.trim().length > 0 ? searchTerm : undefined,
+    });
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const nextSliderValues = Object.fromEntries(
+      SLIDER_FILTER_CONFIG.map((config) => {
+        const parsedValue = parseSliderParam(search[config.field]);
+        return [config.field, parsedValue ?? sliderDefaults[config.field]];
+      }),
+    ) as Record<SliderField, [number, number]>;
+
+    setSliderValuesByField((prev) =>
+      areSliderMapsEqual(prev, nextSliderValues) ? prev : nextSliderValues,
+    );
+  }, [
+    search.e_ductility,
+    search.e_max_displacement,
+    search.e_max_force,
+    search.e_stiffness,
+    search.e_ultimate_displacement,
+    search.e_ultimate_force,
+    search.e_yield_displacement,
+    search.e_yield_force,
+    search.fastener_numbers,
+    search.replicate_tests,
+    sliderDefaults,
+  ]);
 
   // Convert filter config + bounds/options into UI-ready filter field definitions.
   const filterFields = useMemo<DataTableFilterField[]>(
@@ -262,32 +350,18 @@ function SpecimensKitTable() {
   );
 
   // Parse command-style tokens from search text, e.g. "field:value".
-  const commandTokens = useMemo(() => {
-    if (!(searchField === "all" && searchTerm.includes(":"))) return [];
-
-    return searchTerm
-      .split(",")
-      .map((segment) => segment.trim())
-      .filter(Boolean)
-      .map((segment) => {
-        const firstColon = segment.indexOf(":");
-        if (firstColon === -1) return null;
-
-        const field = segment.slice(0, firstColon).trim().toLowerCase();
-        const tokenValue = segment.slice(firstColon + 1).trim().toLowerCase();
-        if (!field || !tokenValue) return null;
-        if (!(field in fieldOptions)) return null;
-
-        return { field, value: tokenValue };
-      })
-      .filter((token): token is CommandToken => token !== null);
-  }, [searchField, searchTerm, fieldOptions]);
+  const structuredFilters = useMemo(() => {
+    if (!searchTerm.includes(":")) return [];
+    return parseStructuredFilterQuery(searchTerm).filter(
+      (clause) => clause.field in fieldOptions,
+    );
+  }, [searchTerm, fieldOptions]);
 
   // Keeps command-search text and sidebar checkbox selections synchronized both ways.
   useSpecimenSearchFilterSync({
-    searchField,
+    searchField: "all",
     searchTerm,
-    commandTokens,
+    structuredFilters,
     checkboxOptionsByField,
     selectedFilters,
     setSelectedFilters,
@@ -296,10 +370,11 @@ function SpecimensKitTable() {
 
   // Resets back to page 1 whenever any search/filter criteria changes.
   useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+    );
   }, [
     searchTerm,
-    searchField,
     selectedFilters,
     sliderValuesByField,
     sliderDefaults,
@@ -311,8 +386,8 @@ function SpecimensKitTable() {
       filterSpecimenRows({
         rows,
         searchTerm,
-        searchField,
-        commandTokens,
+        searchField: "all",
+        structuredFilters,
         selectedFilters,
         sliderValuesByField,
         sliderDefaults,
@@ -320,28 +395,12 @@ function SpecimensKitTable() {
     [
       rows,
       searchTerm,
-      searchField,
-      commandTokens,
+      structuredFilters,
       selectedFilters,
       sliderValuesByField,
       sliderDefaults,
     ],
   );
-
-  const hasActiveFilters =
-    searchTerm.trim().length > 0 ||
-    searchField !== "all" ||
-    CHECKBOX_FILTER_CONFIG.some(
-      (config) => selectedFilters[config.field].length > 0,
-    ) ||
-    SLIDER_FILTER_CONFIG.some((config) => {
-      const current = sliderValuesByField[config.field];
-      const baseline = sliderDefaults[config.field];
-      return (
-        !!current &&
-        (current[0] !== baseline[0] || current[1] !== baseline[1])
-      );
-    });
 
   const hasActiveSidebarFilters =
     CHECKBOX_FILTER_CONFIG.some(
@@ -355,6 +414,22 @@ function SpecimensKitTable() {
         (current[0] !== baseline[0] || current[1] !== baseline[1])
       );
     });
+
+  function syncSearchState(overrides: Partial<RelevantSearchState>) {
+    const nextSearch = {
+      ...getRelevantSearchState(search),
+      ...overrides,
+    } satisfies RelevantSearchState;
+
+    if (areRelevantSearchStatesEqual(getRelevantSearchState(search), nextSearch)) {
+      return;
+    }
+
+    navigate({
+      replace: true,
+      search: nextSearch,
+    });
+  }
 
   const toggleFilter = (field: CheckboxField, value: string) => {
     setSelectedFilters((prev) => {
@@ -372,9 +447,12 @@ function SpecimensKitTable() {
 
   const clearAllFilters = () => {
     setSearchTerm("");
-    setSearchField("all");
     setSelectedFilters(createEmptySelectedFilters());
     setSliderValuesByField(sliderDefaults);
+    navigate({
+      replace: true,
+      search: {},
+    });
   };
 
   const handleToggleOption = (field: string, option: string) => {
@@ -392,19 +470,11 @@ function SpecimensKitTable() {
 
       setSearchTerm((prev) => {
         if (!prev.includes(":")) return prev;
-
-        const nextSegments = prev
-          .split(",")
-          .map((segment) => segment.trim())
-          .filter(Boolean)
-          .filter((segment) => {
-            const firstColon = segment.indexOf(":");
-            if (firstColon === -1) return true;
-            const segmentField = segment.slice(0, firstColon).trim().toLowerCase();
-            return segmentField !== field.toLowerCase();
-          });
-
-        return nextSegments.join(", ");
+        return serializeStructuredFilterQuery(
+          parseStructuredFilterQuery(prev).filter(
+            (clause) => clause.field !== field.toLowerCase(),
+          ),
+        );
       });
     }
     if (field in sliderDefaults) {
@@ -412,16 +482,21 @@ function SpecimensKitTable() {
         ...prev,
         [field]: sliderDefaults[field as keyof typeof sliderDefaults],
       }));
+      syncSearchState({ [field]: undefined });
     }
   };
 
   const table = useReactTable({
     data: filteredRows,
     columns: kitColumns,
-    state: { pagination, columnVisibility },
-    onPaginationChange: setPagination,
+    state: { pagination, sorting, columnVisibility },
+    onPaginationChange: (updater) => {
+      setPagination(updater);
+    },
+    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
@@ -436,8 +511,8 @@ function SpecimensKitTable() {
         <DataTableFilterCommand
           value={searchTerm}
           onValueChange={setSearchTerm}
-          searchField={searchField}
-          onSearchFieldChange={setSearchField}
+          searchField="all"
+          onSearchFieldChange={() => {}}
           fieldOptions={fieldOptions}
         />
         {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
@@ -447,8 +522,6 @@ function SpecimensKitTable() {
           filteredRows={filteredRows.length}
           controlsOpen={controlsOpen}
           onToggleControls={() => setControlsOpen((prev) => !prev)}
-          hasActiveFilters={hasActiveFilters}
-          onResetFilters={clearAllFilters}
         />
 
         {/* Main results grid: this is the actual list of specimens users can scan and click into. */}
@@ -477,6 +550,13 @@ function SpecimensKitTable() {
         onToggleOption={handleToggleOption}
         onSliderChange={(field, value) => {
           setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
+          syncSearchState({
+            [field]:
+              value[0] !== sliderDefaults[field as SliderField][0] ||
+              value[1] !== sliderDefaults[field as SliderField][1]
+                ? serializeSliderParam(value)
+                : undefined,
+          });
         }}
         onResetField={handleResetField}
       />

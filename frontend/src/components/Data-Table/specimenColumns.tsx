@@ -82,15 +82,59 @@ export const createColumns = <
 >(): ColumnDef<TData>[] =>
 	Object.entries(columnConfig)
 		.filter(([key]) => key !== "id")
-		.map(([key, config]) => ({
-			id: key,
-			accessorKey: key as any,
-			header: ({ column }) => (
-				<DataTableColumnHeader column={column} title={config.header} />
-			),
-			meta: config.meta,
-			enableSorting: config.sortable ?? false,
-		}));
+		.map(([key, config]) => {
+			const baseColumn = {
+				id: key,
+				header: ({ column }) => (
+					<DataTableColumnHeader column={column} title={config.header} />
+				),
+				meta: config.meta,
+				enableSorting: config.sortable ?? false,
+			} satisfies Partial<ColumnDef<TData>>;
+
+			switch (config.meta?.renderAs) {
+				case "joinery_label":
+					return {
+						...baseColumn,
+						accessorFn: (row) => row.joinery_type?.label ?? "",
+					} satisfies ColumnDef<TData>;
+				case "sub_joinery_label":
+					return {
+						...baseColumn,
+						accessorFn: (row) => row.sub_joinery_type?.label ?? "",
+					} satisfies ColumnDef<TData>;
+				case "uploader_name":
+					return {
+						...baseColumn,
+						accessorFn: (row) =>
+							("uploader_name" in row && typeof row.uploader_name === "string"
+								? row.uploader_name
+								: row.uploader_id) ?? "",
+					} satisfies ColumnDef<TData>;
+				case "array_labels":
+					return {
+						...baseColumn,
+						accessorFn: (row) =>
+							((row as any)[key] as Array<{ label?: string }> | undefined)
+								?.map((item) => item?.label ?? "")
+								.filter(Boolean)
+								.join(", ") ?? "",
+					} satisfies ColumnDef<TData>;
+				case "array_join":
+					return {
+						...baseColumn,
+						accessorFn: (row) =>
+							(Array.isArray((row as any)[key])
+								? (row as any)[key].join(", ")
+								: (row as any)[key]) ?? "",
+					} satisfies ColumnDef<TData>;
+				default:
+					return {
+						...baseColumn,
+						accessorKey: key as any,
+					} satisfies ColumnDef<TData>;
+			}
+		});
 
 // ✅ Exports initial visibility from config
 export const getInitialColumnVisibility = (): Record<string, boolean> => {

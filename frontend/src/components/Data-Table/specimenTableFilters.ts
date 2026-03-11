@@ -36,6 +36,7 @@ export type SliderField =
 export type SelectedFilters = Record<CheckboxField, string[]>;
 export type SliderValuesByField = Record<string, [number, number]>;
 export type CommandToken = { field: string; value: string };
+export type StructuredFilterClause = { field: string; values: string[] };
 
 /** Reused display options for boolean-style checkbox filters. */
 const BOOLEAN_FILTER_OPTIONS = ["true", "false"];
@@ -110,8 +111,22 @@ export const CHECKBOX_FIELD_SET = new Set(
   CHECKBOX_FILTER_CONFIG.map((config) => config.field),
 );
 
+export const slugifyFilterValue = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_-]+/g, "")
+    .replace(/^_+|_+$/g, "");
+
+export const canonicalizeFilterValue = (value: string) =>
+  slugifyFilterValue(value).replace(/[_-]+/g, "");
+
 const normalizeValues = (values: string[]) =>
-  [...values].map((value) => value.toLowerCase()).sort().join("\u0000");
+  [...values]
+    .map((value) => canonicalizeFilterValue(value))
+    .sort()
+    .join("\u0000");
 
 /** Order-insensitive equality check for selected checkbox values by field. */
 export const areSelectedFiltersEqual = (
@@ -203,6 +218,35 @@ export const createEmptySelectedFilters = (): SelectedFilters => ({
   dowel: [],
 });
 
+export const parseStructuredFilterQuery = (input: string) =>
+  input
+    .split(";")
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .map((segment) => {
+      const firstColon = segment.indexOf(":");
+      if (firstColon === -1) return null;
+
+      const field = segment.slice(0, firstColon).trim().toLowerCase();
+      const values = segment
+        .slice(firstColon + 1)
+        .split(",")
+        .map((value) => slugifyFilterValue(value))
+        .filter(Boolean);
+
+      if (!field || values.length === 0) return null;
+      return { field, values } satisfies StructuredFilterClause;
+    })
+    .filter((clause): clause is StructuredFilterClause => clause !== null);
+
+export const serializeStructuredFilterQuery = (
+  clauses: StructuredFilterClause[],
+) =>
+  clauses
+    .filter((clause) => clause.values.length > 0)
+    .map((clause) => `${clause.field}:${clause.values.join(",")}`)
+    .join(";");
+
 /**
  * Returns the searchable text value for a given row+field.
  * Used by command search (`field:value`) and free-text search.
@@ -249,7 +293,7 @@ interface FilterSpecimenRowsParams {
   rows: SpecimenRow[];
   searchTerm: string;
   searchField: string;
-  commandTokens: CommandToken[];
+  structuredFilters: StructuredFilterClause[];
   selectedFilters: SelectedFilters;
   sliderValuesByField: SliderValuesByField;
   sliderDefaults: Record<SliderField, [number, number]>;
@@ -266,7 +310,7 @@ export function filterSpecimenRows({
   rows,
   searchTerm,
   searchField,
-  commandTokens,
+  structuredFilters,
   selectedFilters,
   sliderValuesByField,
   sliderDefaults,
@@ -276,15 +320,21 @@ export function filterSpecimenRows({
   return rows.filter((row) => {
     const referenceText = row.specimen_reference_id.toLowerCase();
     const matchesQuery =
-      commandTokens.length > 0
-        ? commandTokens.every((token) => {
-            const rowValue = getSearchValue(row, token.field).toLowerCase();
-            const isCheckboxToken = CHECKBOX_FIELD_SET.has(
-              token.field as CheckboxField,
+      structuredFilters.length > 0
+        ? structuredFilters.every((clause) => {
+            const rowValue = canonicalizeFilterValue(
+              getSearchValue(row, clause.field),
             );
-            return isCheckboxToken
-              ? rowValue === token.value
-              : rowValue.includes(token.value);
+            const isCheckboxToken = CHECKBOX_FIELD_SET.has(
+              clause.field as CheckboxField,
+            );
+            return clause.values.some((value) => {
+              const normalizedValue = canonicalizeFilterValue(value);
+              return isCheckboxToken
+                ? rowValue === normalizedValue
+                : rowValue.includes(normalizedValue);
+            },
+            );
           })
         : query.length === 0
           ? true
@@ -294,7 +344,10 @@ export function filterSpecimenRows({
     const matchesCheckboxFilters = CHECKBOX_FILTER_CONFIG.every((config) => {
       const selected = selectedFilters[config.field];
       if (selected.length === 0) return true;
-      return selected.includes(config.getValue(row));
+      const rowValue = canonicalizeFilterValue(config.getValue(row));
+      return selected.some(
+        (value) => canonicalizeFilterValue(value) === rowValue,
+      );
     });
 
     const matchesSliderFilters = SLIDER_FILTER_CONFIG.every((config) => {

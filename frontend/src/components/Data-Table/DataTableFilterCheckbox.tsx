@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { canonicalizeFilterValue } from "@/components/Data-Table/specimenTableFilters";
 import { Input } from "@/components/ui/input";
 import { useMemo, useState } from "react";
 
@@ -40,7 +41,11 @@ export function DataTableFilterCheckbox({
         {filteredOptions.map((option) => (
           <label key={option} className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={selected.includes(option)}
+              checked={selected.some(
+                (selectedOption) =>
+                  canonicalizeFilterValue(selectedOption) ===
+                  canonicalizeFilterValue(option),
+              )}
               onCheckedChange={() => onToggle(field, option)}
             />
             <span className="truncate">{option}</span>

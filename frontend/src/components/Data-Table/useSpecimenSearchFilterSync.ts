@@ -1,18 +1,21 @@
 import {
   areSelectedFiltersEqual,
+  canonicalizeFilterValue,
   CHECKBOX_FIELD_SET,
   type CheckboxField,
+  parseStructuredFilterQuery,
   type SelectedFilters,
+  serializeStructuredFilterQuery,
+  slugifyFilterValue,
+  type StructuredFilterClause,
   createEmptySelectedFilters,
 } from "@/components/Data-Table/specimenTableFilters";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 
-type CommandToken = { field: string; value: string };
-
 interface UseSpecimenSearchFilterSyncParams {
   searchField: string;
   searchTerm: string;
-  commandTokens: CommandToken[];
+  structuredFilters: StructuredFilterClause[];
   checkboxOptionsByField: Record<CheckboxField, string[]>;
   selectedFilters: SelectedFilters;
   setSelectedFilters: Dispatch<SetStateAction<SelectedFilters>>;
@@ -31,7 +34,7 @@ interface UseSpecimenSearchFilterSyncParams {
 export function useSpecimenSearchFilterSync({
   searchField,
   searchTerm,
-  commandTokens,
+  structuredFilters,
   checkboxOptionsByField,
   selectedFilters,
   setSelectedFilters,
@@ -39,36 +42,53 @@ export function useSpecimenSearchFilterSync({
 }: UseSpecimenSearchFilterSyncParams) {
   // Sync command tokens (field:value) into checkbox selections.
   useEffect(() => {
-    if (!(searchField === "all" && searchTerm.includes(":"))) return;
-
     const nextSelected = createEmptySelectedFilters();
+
+    if (!(searchField === "all" && searchTerm.includes(":"))) {
+      setSelectedFilters((prev) =>
+        areSelectedFiltersEqual(prev, nextSelected) ? prev : nextSelected,
+      );
+      return;
+    }
+
     let hasCheckboxToken = false;
 
-    for (const token of commandTokens) {
-      if (!CHECKBOX_FIELD_SET.has(token.field as CheckboxField)) continue;
+    for (const clause of structuredFilters) {
+      if (!CHECKBOX_FIELD_SET.has(clause.field as CheckboxField)) continue;
 
-      const field = token.field as CheckboxField;
-      const matchedOption = checkboxOptionsByField[field].find(
-        (option) => option.toLowerCase() === token.value,
-      );
-      const optionValue = matchedOption ?? token.value;
+      const field = clause.field as CheckboxField;
 
-      if (
-        !nextSelected[field].some(
-          (current) => current.toLowerCase() === optionValue.toLowerCase(),
-        )
-      ) {
-        nextSelected[field].push(optionValue);
+      for (const clauseValue of clause.values) {
+        const matchedOption = checkboxOptionsByField[field].find(
+          (option) => canonicalizeFilterValue(option) === canonicalizeFilterValue(clauseValue),
+        );
+        const optionValue = matchedOption ?? clauseValue;
+
+        if (
+          !nextSelected[field].some(
+            (current) =>
+              canonicalizeFilterValue(current) ===
+              canonicalizeFilterValue(optionValue),
+          )
+        ) {
+          nextSelected[field].push(optionValue);
+        }
       }
       hasCheckboxToken = true;
     }
 
-    if (!hasCheckboxToken) return;
+    if (!hasCheckboxToken) {
+      setSelectedFilters((prev) =>
+        areSelectedFiltersEqual(prev, nextSelected) ? prev : nextSelected,
+      );
+      return;
+    }
+
     setSelectedFilters((prev) =>
       areSelectedFiltersEqual(prev, nextSelected) ? prev : nextSelected,
     );
   }, [
-    commandTokens,
+    structuredFilters,
     searchField,
     searchTerm,
     checkboxOptionsByField,
@@ -79,24 +99,42 @@ export function useSpecimenSearchFilterSync({
   // Non-checkbox/free-text segments are preserved.
   useEffect(() => {
     setSearchTerm((prev) => {
-      const nonCheckboxSegments = prev
-        .split(",")
+      const segments = prev
+        .split(";")
         .map((segment) => segment.trim())
-        .filter(Boolean)
-        .filter((segment) => {
-          const firstColon = segment.indexOf(":");
-          if (firstColon === -1) return true;
-          const field = segment.slice(0, firstColon).trim().toLowerCase();
-          return !CHECKBOX_FIELD_SET.has(field as CheckboxField);
-        });
+        .filter(Boolean);
+      const trailingSegment = segments.at(-1) ?? "";
+      const parsedTrailingClauses = parseStructuredFilterQuery(trailingSegment);
+      const hasIncompleteTrailingSegment =
+        trailingSegment.length > 0 &&
+        (parsedTrailingClauses.length === 0 ||
+          serializeStructuredFilterQuery(parsedTrailingClauses) !==
+            trailingSegment);
 
-      const checkboxSegments = Object.entries(selectedFilters).flatMap(
-        ([field, values]) =>
-          values.map((value) => `${field}:${value}`),
+      const nonCheckboxClauses = parseStructuredFilterQuery(prev).filter(
+        (clause) => !CHECKBOX_FIELD_SET.has(clause.field as CheckboxField),
       );
 
-      const nextTerm = [...nonCheckboxSegments, ...checkboxSegments].join(", ");
-      return nextTerm === prev ? prev : nextTerm;
+      const checkboxClauses = Object.entries(selectedFilters).flatMap(
+        ([field, values]) =>
+          values.length === 0
+            ? []
+            : [
+                {
+                  field,
+                  values: values.map((value) => slugifyFilterValue(value)),
+                } satisfies StructuredFilterClause,
+              ],
+      );
+
+      const nextTerm = serializeStructuredFilterQuery([
+        ...nonCheckboxClauses,
+        ...checkboxClauses,
+      ]);
+      const nextValue = hasIncompleteTrailingSegment
+        ? [nextTerm, trailingSegment].filter(Boolean).join(";")
+        : nextTerm;
+      return nextValue === prev ? prev : nextValue;
     });
   }, [selectedFilters, setSearchTerm]);
 }

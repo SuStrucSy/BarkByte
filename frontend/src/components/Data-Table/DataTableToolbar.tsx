@@ -13,7 +13,6 @@ import {
   Check,
   PanelRightClose,
   PanelRightOpen,
-  RotateCcw,
   Settings2,
 } from "lucide-react";
 
@@ -23,8 +22,6 @@ interface DataTableToolbarProps<TData> {
   filteredRows: number;
   controlsOpen: boolean;
   onToggleControls: () => void;
-  hasActiveFilters: boolean;
-  onResetFilters: () => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -33,8 +30,6 @@ export function DataTableToolbar<TData>({
   filteredRows,
   controlsOpen,
   onToggleControls,
-  hasActiveFilters,
-  onResetFilters,
 }: DataTableToolbarProps<TData>) {
   const visibleColumns = table
     .getAllColumns()
@@ -100,13 +95,6 @@ export function DataTableToolbar<TData>({
             </>
           )}
         </Button>
-
-        {hasActiveFilters ? (
-          <Button variant="outline" size="sm" onClick={onResetFilters}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
-        ) : null}
       </div>
     </div>
   );

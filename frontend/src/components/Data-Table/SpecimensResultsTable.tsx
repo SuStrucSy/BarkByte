@@ -77,13 +77,18 @@ export function SpecimensResultsTable({
                         return Array.isArray(value) ? value.join(", ") : value;
                       }
                       if (meta?.renderAs === "array_labels") {
-                        const value = cell.getValue() as any[];
-                        return (
-                          value
-                            ?.map((item) => item?.label)
-                            ?.filter(Boolean)
-                            ?.join(", ") || "None"
-                        );
+                        const value = cell.getValue();
+                        if (Array.isArray(value)) {
+                          return (
+                            value
+                              .map((item) =>
+                                typeof item === "string" ? item : item?.label,
+                              )
+                              .filter(Boolean)
+                              .join(", ") || "None"
+                          );
+                        }
+                        return value || "None";
                       }
                       if (meta?.renderAs === "uploader_name") {
                         return (
