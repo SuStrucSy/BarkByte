@@ -66,7 +66,7 @@ export function SpecimenTabMeta({ data, setSheetOpen }: SpecimenTabMetaProps) {
 
             <Item variant="outline">
               <ItemContent>
-                <ItemTitle>DOI Reference</ItemTitle>
+                <ItemTitle>Source Reference</ItemTitle>
                 <ItemDescription>{data.doi.ref_title}</ItemDescription>
               </ItemContent>
               <ItemActions>

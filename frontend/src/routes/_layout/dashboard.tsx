@@ -40,7 +40,7 @@ import {
 import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { isNumericValue } from "@/lib/typeGuards";
-import { DOISheet } from "@/components/Specimens/DOISheet";
+import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { Toggle } from "@/components/ui/toggle";
 import {
   Tooltip,
@@ -370,8 +370,8 @@ function Dashboard() {
       </div>
 
       {selectedSpecimen && (
-        <DOISheet
-          doi={selectedSpecimen.doi}
+        <SpecimenReferenceSheet
+          specimen={selectedSpecimen}
           open={sheetOpen}
           onOpenChange={setSheetOpen}
         />
