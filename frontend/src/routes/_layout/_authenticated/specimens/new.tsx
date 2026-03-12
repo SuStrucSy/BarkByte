@@ -46,7 +46,7 @@ import { SpecimenExperimentalFields } from "@/components/Specimens/SpecimenExper
 import { useSpecimensCreateSpecimen } from "@/api/endpoints/specimens/specimens.gen";
 import { handleError } from "@/utils";
 
-export const Route = createFileRoute("/_layout/specimens/new")({
+export const Route = createFileRoute("/_layout/_authenticated/specimens/new")({
   component: NewSpecimen,
 });
 

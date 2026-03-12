@@ -38,7 +38,7 @@ import { Layers, RefreshCcwIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_layout/specimens/pending")({
+export const Route = createFileRoute("/_layout/_authenticated/specimens/pending")({
   staticData: {
     title: "Pending Specimens",
   },

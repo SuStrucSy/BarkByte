@@ -16,7 +16,7 @@ const usersSearchSchema = z.object({
 
 const PER_PAGE = 10;
 
-export const Route = createFileRoute("/_layout/admin")({
+export const Route = createFileRoute("/_layout/_authenticated/admin")({
   staticData: {
     title: "Admin",
   },
