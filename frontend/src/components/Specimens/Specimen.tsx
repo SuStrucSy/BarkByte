@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import type { SpecimenPublic } from "@/api/model";
 import { SpecimenHeader } from "./SpecimenHeader";
+import { SpecimenFailureModeLinks } from "./SpecimenFailureModeLinks";
 import { SpecimenTabMeta } from "./SpecimenTabMeta";
 import { SpecimenTabStructural } from "./SpecimenTabStructural";
 
@@ -67,9 +67,8 @@ export function Specimen({ data, setSheetOpen }: SpecimenProps) {
                     <h3 className="text-xl font-semibold tracking-tight text-foreground">
                       Qualitative Failure Measures
                     </h3>
-                    <LabelValue
-                      property="e_qualitative_failure_measure"
-                      data={data}
+                    <SpecimenFailureModeLinks
+                      failureModes={data.e_qualitative_failure_measure}
                     />
                     <LabelValue property="e_qfm_description" data={data} />
                   </div>
