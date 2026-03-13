@@ -14,12 +14,14 @@ export type SpecimenFilterOptionsResponse = {
   joinery_types: string[];
   sub_joinery_types: string[];
   loading_types: string[];
+  failure_modes: string[];
   uploader: string[];
 };
 
 export type FacetField = keyof SpecimenFilterOptionsResponse;
 
-export type CheckboxField = FacetField | "connector" | "dowel";
+export type CheckboxField = FacetField | "connector" | "dowel" | "failure_modes";
+export type FailureModeFilterMode = "any" | "all" | "exact";
 
 export type SliderField =
   | "replicate_tests"
@@ -35,8 +37,11 @@ export type SliderField =
 
 export type SelectedFilters = Record<CheckboxField, string[]>;
 export type SliderValuesByField = Record<string, [number, number]>;
-export type CommandToken = { field: string; value: string };
-export type StructuredFilterClause = { field: string; values: string[] };
+export type StructuredFilterClause = {
+  field: string;
+  mode?: FailureModeFilterMode;
+  values: string[];
+};
 
 /** Reused display options for boolean-style checkbox filters. */
 const BOOLEAN_FILTER_OPTIONS = ["true", "false"];
@@ -48,6 +53,7 @@ const FACET_FIELDS: FacetField[] = [
   "joinery_types",
   "sub_joinery_types",
   "loading_types",
+  "failure_modes",
   "uploader",
 ];
 
@@ -64,7 +70,7 @@ export const isFacetField = (field: CheckboxField): field is FacetField =>
 export const CHECKBOX_FILTER_CONFIG: Array<{
   field: CheckboxField;
   label: string;
-  getValue: (row: SpecimenRow) => string;
+  getValue: (row: SpecimenRow) => string | string[];
   options?: string[];
 }> = [
   {
@@ -104,6 +110,12 @@ export const CHECKBOX_FILTER_CONFIG: Array<{
     label: "Dowel",
     getValue: (row) => (row.dowel ? "true" : "false"),
     options: BOOLEAN_FILTER_OPTIONS,
+  },
+  {
+    field: "failure_modes",
+    label: "Failure Mode",
+    getValue: (row) =>
+      row.e_qualitative_failure_measure.map((mode) => mode.label ?? "").filter(Boolean),
   },
 ];
 
@@ -216,35 +228,51 @@ export const createEmptySelectedFilters = (): SelectedFilters => ({
   uploader: [],
   connector: [],
   dowel: [],
+  failure_modes: [],
 });
 
-export const parseStructuredFilterQuery = (input: string) =>
+export const parseStructuredFilterQuery = (
+  input: string,
+): StructuredFilterClause[] =>
   input
     .split(";")
     .map((segment) => segment.trim())
     .filter(Boolean)
-    .map((segment) => {
+    .flatMap((segment) => {
       const firstColon = segment.indexOf(":");
-      if (firstColon === -1) return null;
+      if (firstColon === -1) return [];
 
-      const field = segment.slice(0, firstColon).trim().toLowerCase();
+      const rawField = segment.slice(0, firstColon).trim().toLowerCase();
+      const fieldParts = rawField.split(".");
+      const field = fieldParts[0];
+      const rawMode = fieldParts[1];
+      const mode: FailureModeFilterMode | undefined =
+        field === "failure_modes" &&
+        (rawMode === "any" || rawMode === "all" || rawMode === "exact")
+          ? rawMode
+          : undefined;
       const values = segment
         .slice(firstColon + 1)
         .split(",")
         .map((value) => slugifyFilterValue(value))
         .filter(Boolean);
 
-      if (!field || values.length === 0) return null;
-      return { field, values } satisfies StructuredFilterClause;
-    })
-    .filter((clause): clause is StructuredFilterClause => clause !== null);
+      if (!field || values.length === 0) return [];
+      return [{ field, mode, values }];
+    });
 
 export const serializeStructuredFilterQuery = (
   clauses: StructuredFilterClause[],
 ) =>
   clauses
     .filter((clause) => clause.values.length > 0)
-    .map((clause) => `${clause.field}:${clause.values.join(",")}`)
+    .map((clause) => {
+      const fieldName =
+        clause.field === "failure_modes" && clause.mode
+          ? `${clause.field}.${clause.mode}`
+          : clause.field;
+      return `${fieldName}:${clause.values.join(",")}`;
+    })
     .join(";");
 
 /**
@@ -271,6 +299,11 @@ export const getSearchValue = (row: SpecimenRow, field: string) => {
       return row.connector ? "true" : "false";
     case "dowel":
       return row.dowel ? "true" : "false";
+    case "failure_modes":
+      return row.e_qualitative_failure_measure
+        .map((mode) => mode.label ?? "")
+        .filter(Boolean)
+        .join(" ");
     default:
       return [
         row.specimen_reference_id,
@@ -282,6 +315,10 @@ export const getSearchValue = (row: SpecimenRow, field: string) => {
         row.uploader_name ?? row.uploader_id,
         row.connector ? "true" : "false",
         row.dowel ? "true" : "false",
+        row.e_qualitative_failure_measure
+          .map((mode) => mode.label ?? "")
+          .filter(Boolean)
+          .join(" "),
       ].join(" ");
   }
 };
@@ -295,6 +332,7 @@ interface FilterSpecimenRowsParams {
   searchField: string;
   structuredFilters: StructuredFilterClause[];
   selectedFilters: SelectedFilters;
+  failureModeFilterMode: FailureModeFilterMode;
   sliderValuesByField: SliderValuesByField;
   sliderDefaults: Record<SliderField, [number, number]>;
 }
@@ -312,6 +350,7 @@ export function filterSpecimenRows({
   searchField,
   structuredFilters,
   selectedFilters,
+  failureModeFilterMode,
   sliderValuesByField,
   sliderDefaults,
 }: FilterSpecimenRowsParams) {
@@ -322,19 +361,55 @@ export function filterSpecimenRows({
     const matchesQuery =
       structuredFilters.length > 0
         ? structuredFilters.every((clause) => {
-            const rowValue = canonicalizeFilterValue(
-              getSearchValue(row, clause.field),
-            );
             const isCheckboxToken = CHECKBOX_FIELD_SET.has(
               clause.field as CheckboxField,
             );
+
+            if (isCheckboxToken) {
+              const config = CHECKBOX_FILTER_CONFIG.find(
+                (item) => item.field === clause.field,
+              );
+              if (!config) return false;
+
+              const rawValue = config.getValue(row);
+              const rowValues = (Array.isArray(rawValue) ? rawValue : [rawValue]).map(
+                canonicalizeFilterValue,
+              );
+
+              if (clause.field === "failure_modes") {
+                if (clause.mode === "exact") {
+                  const clauseValues = clause.values
+                    .map(canonicalizeFilterValue)
+                    .slice()
+                    .sort();
+                  const normalizedRowValues = rowValues.slice().sort();
+                  return (
+                    normalizedRowValues.length === clauseValues.length &&
+                    normalizedRowValues.every(
+                      (value, index) => value === clauseValues[index],
+                    )
+                  );
+                }
+
+                if (clause.mode === "all") {
+                  return clause.values.every((value) =>
+                    rowValues.includes(canonicalizeFilterValue(value)),
+                  );
+                }
+              }
+
+              return clause.values.some((value) =>
+                rowValues.includes(canonicalizeFilterValue(value)),
+              );
+            }
+
+            const rowValue = canonicalizeFilterValue(
+              getSearchValue(row, clause.field),
+            );
             return clause.values.some((value) => {
               const normalizedValue = canonicalizeFilterValue(value);
-              return isCheckboxToken
-                ? rowValue === normalizedValue
-                : rowValue.includes(normalizedValue);
-            },
-            );
+              return rowValue.includes(normalizedValue);
+            });
           })
         : query.length === 0
           ? true
@@ -344,9 +419,33 @@ export function filterSpecimenRows({
     const matchesCheckboxFilters = CHECKBOX_FILTER_CONFIG.every((config) => {
       const selected = selectedFilters[config.field];
       if (selected.length === 0) return true;
-      const rowValue = canonicalizeFilterValue(config.getValue(row));
-      return selected.some(
-        (value) => canonicalizeFilterValue(value) === rowValue,
+      const rawValue = config.getValue(row);
+      const rowValues = (Array.isArray(rawValue) ? rawValue : [rawValue]).map(
+        canonicalizeFilterValue,
+      );
+      if (config.field === "failure_modes") {
+        if (failureModeFilterMode === "exact") {
+          const selectedValues = selected
+            .map(canonicalizeFilterValue)
+            .slice()
+            .sort();
+          const normalizedRowValues = rowValues.slice().sort();
+          return (
+            normalizedRowValues.length === selectedValues.length &&
+            normalizedRowValues.every((value, index) => value === selectedValues[index])
+          );
+        }
+        if (failureModeFilterMode === "all") {
+          return selected.every((value) =>
+            rowValues.includes(canonicalizeFilterValue(value)),
+          );
+        }
+        return selected.some((value) =>
+          rowValues.includes(canonicalizeFilterValue(value)),
+        );
+      }
+      return selected.some((value) =>
+        rowValues.includes(canonicalizeFilterValue(value)),
       );
     });
 

@@ -239,6 +239,7 @@ export const SpecimensReadSpecimenFilterOptionsResponse = zod.object({
 	joinery_types: zod.array(zod.string()),
 	sub_joinery_types: zod.array(zod.string()),
 	loading_types: zod.array(zod.string()),
+	failure_modes: zod.array(zod.string()),
 	uploader: zod.array(zod.string()),
 });
 

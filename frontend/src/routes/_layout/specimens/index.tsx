@@ -18,7 +18,9 @@ import {
   isFacetField,
   parseStructuredFilterQuery,
   serializeStructuredFilterQuery,
+  slugifyFilterValue,
   type CheckboxField,
+  type FailureModeFilterMode,
   type SelectedFilters,
   SLIDER_FILTER_CONFIG,
   type SliderField,
@@ -45,7 +47,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import z from "zod/v4";
 
 const sliderSearchSchemaFields = Object.fromEntries(
@@ -62,6 +71,14 @@ const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 type Bounds = { min: number; max: number };
 const DEFAULT_PAGE_SIZE = 20;
+
+const getInitialQuerySearchTerm = (fallback: string) => {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  return new URLSearchParams(window.location.search).get("q") ?? fallback;
+};
 
 const parseSliderParam = (value?: string): [number, number] | undefined => {
   if (!value) return undefined;
@@ -175,14 +192,20 @@ function SpecimensKitTable() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const uploaderNameMap = useUploaderNameMap();
+  const initialBrowserQuerySearchTerm = useRef(
+    getInitialQuerySearchTerm(search.q),
+  ).current;
 
   // Controls whether the right-side filter sidebar is visible.
   const [controlsOpen, setControlsOpen] = useState(true);
   // Free-text / command input used in the top search bar.
-  const [searchTerm, setSearchTerm] = useState(search.q);
-  const lastSyncedSearchTermRef = useRef(search.q);
+  const [searchTerm, setSearchTerm] = useState(initialBrowserQuerySearchTerm);
+  const searchTermRef = useRef(initialBrowserQuerySearchTerm);
+  const hasAppliedInitialBrowserQueryRef = useRef(false);
   // Checkbox filter selections keyed by filter field.
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>(createEmptySelectedFilters);
+  const [failureModeFilterMode, setFailureModeFilterMode] =
+    useState<FailureModeFilterMode>("any");
   // Slider range selections keyed by slider field.
   const [sliderValuesByField, setSliderValuesByField] = useState<SliderValuesByField>({});
   // Client-side pagination state for the filtered table.
@@ -196,10 +219,93 @@ function SpecimensKitTable() {
     getInitialColumnVisibility(),
   );
 
+  function syncSearchState(overrides: Partial<RelevantSearchState>) {
+    const nextSearch = {
+      ...getRelevantSearchState(search),
+      ...overrides,
+    } satisfies RelevantSearchState;
+
+    if (areRelevantSearchStatesEqual(getRelevantSearchState(search), nextSearch)) {
+      return;
+    }
+
+    navigate({
+      replace: true,
+      search: nextSearch,
+    });
+  }
+
+  const setSearchTermAndSync: Dispatch<SetStateAction<string>> = (updater) => {
+    const currentValue = searchTermRef.current;
+    const nextValue =
+      typeof updater === "function" ? updater(currentValue) : updater;
+
+    if (nextValue === currentValue && (search.q ?? "") === nextValue) {
+      return;
+    }
+
+    searchTermRef.current = nextValue;
+    setSearchTerm(nextValue);
+    syncSearchState({
+      q: nextValue.trim().length > 0 ? nextValue : undefined,
+    });
+  };
+
+  const updateCheckboxSearchClause = (
+    field: CheckboxField,
+    values: string[],
+    mode?: FailureModeFilterMode,
+  ) => {
+    setSearchTermAndSync((prev) => {
+      const parsedClauses = parseStructuredFilterQuery(prev);
+      const nextClauses = parsedClauses.filter((clause) => clause.field !== field);
+
+      if (values.length === 0) {
+        return serializeStructuredFilterQuery(nextClauses);
+      }
+
+      nextClauses.push({
+        field,
+        mode: field === "failure_modes" ? mode : undefined,
+        values: values.map((value) => slugifyFilterValue(value)),
+      });
+
+      return serializeStructuredFilterQuery(nextClauses);
+    });
+  };
+
   // Memoized table column definitions.
   const kitColumns = useMemo<ColumnDef<SpecimenPublic>[]>(
-    () => createColumns<SpecimenPublic>(),
-    [],
+    () =>
+      createColumns<SpecimenPublic>({
+        onFailureModeClick: (failureMode) => {
+          setSearchTermAndSync((prev) => {
+            const parsedClauses = parseStructuredFilterQuery(prev);
+            const nonCheckboxClauses = parsedClauses.filter(
+              (clause) => clause.field !== "failure_modes",
+            );
+            const currentFailureModes =
+              parsedClauses
+                .find((clause) => clause.field === "failure_modes")
+                ?.values ?? [];
+            const sluggedFailureMode = slugifyFilterValue(failureMode);
+            const nextFailureModes = currentFailureModes.includes(sluggedFailureMode)
+              ? currentFailureModes
+              : [...currentFailureModes, sluggedFailureMode];
+
+            return serializeStructuredFilterQuery([
+              ...nonCheckboxClauses,
+              {
+                field: "failure_modes",
+                mode: failureModeFilterMode,
+                values: nextFailureModes,
+              },
+            ]);
+          });
+          setControlsOpen(true);
+        },
+      }),
+    [failureModeFilterMode, setSearchTermAndSync],
   );
 
   const { data, isLoading } = useAllSpecimens();
@@ -285,20 +391,23 @@ function SpecimensKitTable() {
   );
 
   useEffect(() => {
-    lastSyncedSearchTermRef.current = search.q;
-    setSearchTerm((prev) => (prev === search.q ? prev : search.q));
-  }, [search.q]);
+    const shouldUseInitialBrowserQuery =
+      !hasAppliedInitialBrowserQueryRef.current &&
+      search.q.length === 0 &&
+      initialBrowserQuerySearchTerm.length > 0;
+    const nextHydratedSearchTerm = shouldUseInitialBrowserQuery
+      ? initialBrowserQuerySearchTerm
+      : search.q;
 
-  useEffect(() => {
-    if (searchTerm === lastSyncedSearchTermRef.current) {
-      return;
+    searchTermRef.current = nextHydratedSearchTerm;
+    setSearchTerm((prev) =>
+      prev === nextHydratedSearchTerm ? prev : nextHydratedSearchTerm,
+    );
+
+    if (shouldUseInitialBrowserQuery || search.q.length > 0) {
+      hasAppliedInitialBrowserQueryRef.current = true;
     }
-
-    lastSyncedSearchTermRef.current = searchTerm;
-    syncSearchState({
-      q: searchTerm.trim().length > 0 ? searchTerm : undefined,
-    });
-  }, [searchTerm]);
+  }, [initialBrowserQuerySearchTerm, search.q]);
 
   useEffect(() => {
     const nextSliderValues = Object.fromEntries(
@@ -357,15 +466,14 @@ function SpecimensKitTable() {
     );
   }, [searchTerm, fieldOptions]);
 
-  // Keeps command-search text and sidebar checkbox selections synchronized both ways.
+  // Hydrates sidebar checkbox state from the current command-search text.
   useSpecimenSearchFilterSync({
     searchField: "all",
     searchTerm,
     structuredFilters,
     checkboxOptionsByField,
-    selectedFilters,
     setSelectedFilters,
-    setSearchTerm,
+    setFailureModeFilterMode,
   });
 
   // Resets back to page 1 whenever any search/filter criteria changes.
@@ -389,6 +497,7 @@ function SpecimensKitTable() {
         searchField: "all",
         structuredFilters,
         selectedFilters,
+        failureModeFilterMode,
         sliderValuesByField,
         sliderDefaults,
       }),
@@ -397,6 +506,7 @@ function SpecimensKitTable() {
       searchTerm,
       structuredFilters,
       selectedFilters,
+      failureModeFilterMode,
       sliderValuesByField,
       sliderDefaults,
     ],
@@ -415,39 +525,27 @@ function SpecimensKitTable() {
       );
     });
 
-  function syncSearchState(overrides: Partial<RelevantSearchState>) {
-    const nextSearch = {
-      ...getRelevantSearchState(search),
-      ...overrides,
-    } satisfies RelevantSearchState;
-
-    if (areRelevantSearchStatesEqual(getRelevantSearchState(search), nextSearch)) {
-      return;
-    }
-
-    navigate({
-      replace: true,
-      search: nextSearch,
-    });
-  }
-
   const toggleFilter = (field: CheckboxField, value: string) => {
-    setSelectedFilters((prev) => {
-      const selected = prev[field];
-      const nextSelected = selected.includes(value)
-        ? selected.filter((item) => item !== value)
-        : [...selected, value];
+    const selected = selectedFilters[field];
+    const nextSelected = selected.includes(value)
+      ? selected.filter((item) => item !== value)
+      : [...selected, value];
 
-      return {
-        ...prev,
-        [field]: nextSelected,
-      };
-    });
+    setSelectedFilters((prev) => ({
+      ...prev,
+      [field]: nextSelected,
+    }));
+    updateCheckboxSearchClause(
+      field,
+      nextSelected,
+      field === "failure_modes" ? failureModeFilterMode : undefined,
+    );
   };
 
   const clearAllFilters = () => {
-    setSearchTerm("");
+    setSearchTermAndSync("");
     setSelectedFilters(createEmptySelectedFilters());
+    setFailureModeFilterMode("any");
     setSliderValuesByField(sliderDefaults);
     navigate({
       replace: true,
@@ -467,15 +565,11 @@ function SpecimensKitTable() {
         ...prev,
         [field]: [],
       }));
+      if (field === "failure_modes") {
+        setFailureModeFilterMode("any");
+      }
 
-      setSearchTerm((prev) => {
-        if (!prev.includes(":")) return prev;
-        return serializeStructuredFilterQuery(
-          parseStructuredFilterQuery(prev).filter(
-            (clause) => clause.field !== field.toLowerCase(),
-          ),
-        );
-      });
+      updateCheckboxSearchClause(field as CheckboxField, []);
     }
     if (field in sliderDefaults) {
       setSliderValuesByField((prev) => ({
@@ -510,7 +604,11 @@ function SpecimensKitTable() {
         {/* Quick search bar: users type plain text or field:value commands to narrow results. */}
         <DataTableFilterCommand
           value={searchTerm}
-          onValueChange={setSearchTerm}
+          onValueChange={(value) => {
+            searchTermRef.current = value;
+            setSearchTerm(value);
+          }}
+          onCommitValueChange={setSearchTermAndSync}
           searchField="all"
           onSearchFieldChange={() => {}}
           fieldOptions={fieldOptions}
@@ -547,6 +645,7 @@ function SpecimensKitTable() {
         fields={filterFields}
         selectedByField={selectedFilters}
         sliderValuesByField={sliderValuesByField}
+        failureModeFilterMode={failureModeFilterMode}
         onToggleOption={handleToggleOption}
         onSliderChange={(field, value) => {
           setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
@@ -557,6 +656,16 @@ function SpecimensKitTable() {
                 ? serializeSliderParam(value)
                 : undefined,
           });
+        }}
+        onFailureModeFilterModeChange={(mode) => {
+          setFailureModeFilterMode(mode);
+          if (selectedFilters.failure_modes.length > 0) {
+            updateCheckboxSearchClause(
+              "failure_modes",
+              selectedFilters.failure_modes,
+              mode,
+            );
+          }
         }}
         onResetField={handleResetField}
       />

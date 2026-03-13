@@ -2,8 +2,26 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import type { SpecimenPublic } from "@/api/model";
+import { Badge } from "@/components/ui/badge";
 
 type SpecimenPublicKey = keyof SpecimenPublic;
+
+const failureModeBadgeClasses = [
+	"border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100",
+	"border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
+	"border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100",
+	"border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100",
+	"border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100",
+	"border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100",
+];
+
+function getFailureModeBadgeClass(label: string) {
+	let hash = 0;
+	for (let i = 0; i < label.length; i += 1) {
+		hash = (hash * 31 + label.charCodeAt(i)) >>> 0;
+	}
+	return failureModeBadgeClasses[hash % failureModeBadgeClasses.length];
+}
 
 interface ColumnConfig {
 	header: string;
@@ -14,6 +32,10 @@ interface ColumnConfig {
 		renderAs?: string; // e.g. 'joinery_label', 'array_join'
 		// Add any custom props you need
 	};
+}
+
+interface CreateColumnsOptions {
+	onFailureModeClick?: (failureMode: string) => void;
 }
 
 const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
@@ -63,7 +85,7 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	e_ductility: { header: "Ductility" },
 	e_qualitative_failure_measure: {
 		header: "Failure Mode",
-		meta: { renderAs: "array_labels" },
+		meta: { renderAs: "array_badges" },
 	},
 	e_qfm_description: { header: "Failure Desc", hidden: true },
 	e_test_loading_type: { header: "Loading Type" },
@@ -80,7 +102,7 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 
 export const createColumns = <
 	TData extends SpecimenPublic,
->(): ColumnDef<TData>[] =>
+>(options: CreateColumnsOptions = {}): ColumnDef<TData>[] =>
 	Object.entries(columnConfig)
 		.filter(([key]) => key !== "id")
 		.map(([key, config]) => {
@@ -123,6 +145,44 @@ export const createColumns = <
 								?.map((item) => item?.label ?? "")
 								.filter(Boolean)
 								.join(", ") ?? "",
+					} satisfies ColumnDef<TData>;
+				case "array_badges":
+					return {
+						...baseColumn,
+						accessorFn: (row) =>
+							((row as any)[key] as Array<{ label?: string }> | undefined)
+								?.map((item) => item?.label ?? "")
+								.filter(Boolean)
+								.join(", ") ?? "",
+						cell: ({ row }) => {
+							const items = (((row.original as any)[key] as Array<{
+								label?: string;
+							}> | undefined) ?? [])
+								.map((item) => item?.label ?? "")
+								.filter(Boolean);
+
+							if (items.length === 0) {
+								return "None";
+							}
+
+							return (
+								<div className="flex flex-wrap gap-1">
+									{items.map((item) => (
+										<Badge
+											key={item}
+											className={getFailureModeBadgeClass(item)}
+											variant="outline"
+											onClick={(event) => {
+												event.stopPropagation();
+												options.onFailureModeClick?.(item);
+											}}
+										>
+											{item}
+										</Badge>
+									))}
+								</div>
+							);
+						},
 					} satisfies ColumnDef<TData>;
 				case "array_join":
 					return {

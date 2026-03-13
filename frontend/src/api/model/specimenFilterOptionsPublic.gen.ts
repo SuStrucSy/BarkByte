@@ -11,5 +11,6 @@ export interface SpecimenFilterOptionsPublic {
 	joinery_types: string[];
 	sub_joinery_types: string[];
 	loading_types: string[];
+	failure_modes: string[];
 	uploader: string[];
 }

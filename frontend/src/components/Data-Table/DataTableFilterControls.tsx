@@ -1,6 +1,7 @@
 import { DataTableFilterCheckbox } from "@/components/Data-Table/DataTableFilterCheckbox";
 import { DataTableFilterResetButton } from "@/components/Data-Table/DataTableFilterResetButton";
 import { DataTableFilterSlider } from "@/components/Data-Table/DataTableFilterSlider";
+import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -28,8 +29,10 @@ interface DataTableFilterControlsProps {
   fields: DataTableFilterField[];
   selectedByField: Record<string, string[]>;
   sliderValuesByField: Record<string, [number, number]>;
+  failureModeFilterMode: FailureModeFilterMode;
   onToggleOption: (field: string, option: string) => void;
   onSliderChange: (field: string, value: [number, number]) => void;
+  onFailureModeFilterModeChange: (mode: FailureModeFilterMode) => void;
   onResetField: (field: string) => void;
   toggleAllSignal?: number;
   toggleAllOpenState?: boolean;
@@ -40,8 +43,10 @@ export function DataTableFilterControls({
   fields,
   selectedByField,
   sliderValuesByField,
+  failureModeFilterMode,
   onToggleOption,
   onSliderChange,
+  onFailureModeFilterModeChange,
   onResetField,
   toggleAllSignal,
   toggleAllOpenState,
@@ -116,19 +121,21 @@ export function DataTableFilterControls({
                 {field.label}
               </p>
             </div>
-            <DataTableFilterResetButton
-              field={field.value}
-              count={
-                field.type === "checkbox"
-                  ? selectedByField[field.value]?.length ?? 0
-                  : sliderValuesByField[field.value] &&
-                      (sliderValuesByField[field.value][0] !== field.min ||
-                        sliderValuesByField[field.value][1] !== field.max)
-                    ? 1
-                    : 0
-              }
-              onReset={onResetField}
-            />
+            <div className="flex items-center gap-2">
+              <DataTableFilterResetButton
+                field={field.value}
+                count={
+                  field.type === "checkbox"
+                    ? selectedByField[field.value]?.length ?? 0
+                    : sliderValuesByField[field.value] &&
+                        (sliderValuesByField[field.value][0] !== field.min ||
+                          sliderValuesByField[field.value][1] !== field.max)
+                      ? 1
+                      : 0
+                }
+                onReset={onResetField}
+              />
+            </div>
           </summary>
           <div className="border-t p-3 pt-2">
             {field.type === "checkbox" ? (
@@ -136,7 +143,15 @@ export function DataTableFilterControls({
                 field={field.value}
                 options={field.options}
                 selected={selectedByField[field.value] ?? []}
+                failureModeFilterMode={
+                  field.value === "failure_modes" ? failureModeFilterMode : undefined
+                }
                 onToggle={onToggleOption}
+                onFailureModeFilterModeChange={
+                  field.value === "failure_modes"
+                    ? onFailureModeFilterModeChange
+                    : undefined
+                }
               />
             ) : (
               <DataTableFilterSlider

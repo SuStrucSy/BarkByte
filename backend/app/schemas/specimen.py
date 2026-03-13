@@ -82,4 +82,5 @@ class SpecimenFilterOptionsPublic(SQLModel):
     joinery_types: list[str]
     sub_joinery_types: list[str]
     loading_types: list[str]
+    failure_modes: list[str]
     uploader: list[str]

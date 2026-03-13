@@ -2,6 +2,7 @@ import {
   DataTableFilterControls,
   type DataTableFilterField,
 } from "@/components/Data-Table/DataTableFilterControls";
+import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -18,8 +19,10 @@ interface SpecimenTableSideBarProps {
   fields: DataTableFilterField[];
   selectedByField: Record<string, string[]>;
   sliderValuesByField: Record<string, [number, number]>;
+  failureModeFilterMode: FailureModeFilterMode;
   onToggleOption: (field: string, option: string) => void;
   onSliderChange: (field: string, value: [number, number]) => void;
+  onFailureModeFilterModeChange: (mode: FailureModeFilterMode) => void;
   onResetField: (field: string) => void;
 }
 
@@ -35,8 +38,10 @@ export function SpecimenTableSideBar({
   fields,
   selectedByField,
   sliderValuesByField,
+  failureModeFilterMode,
   onToggleOption,
   onSliderChange,
+  onFailureModeFilterModeChange,
   onResetField,
 }: SpecimenTableSideBarProps) {
   // Signals DataTableFilterControls to apply a bulk open/close action once.
@@ -83,8 +88,10 @@ export function SpecimenTableSideBar({
           fields={fields}
           selectedByField={selectedByField}
           sliderValuesByField={sliderValuesByField}
+          failureModeFilterMode={failureModeFilterMode}
           onToggleOption={onToggleOption}
           onSliderChange={onSliderChange}
+          onFailureModeFilterModeChange={onFailureModeFilterModeChange}
           onResetField={onResetField}
           toggleAllSignal={toggleAllSignal}
           toggleAllOpenState={toggleAllOpenState}

@@ -2,12 +2,10 @@ import {
   areSelectedFiltersEqual,
   canonicalizeFilterValue,
   CHECKBOX_FIELD_SET,
+  type FailureModeFilterMode,
   type CheckboxField,
-  parseStructuredFilterQuery,
-  type SelectedFilters,
-  serializeStructuredFilterQuery,
-  slugifyFilterValue,
   type StructuredFilterClause,
+  type SelectedFilters,
   createEmptySelectedFilters,
 } from "@/components/Data-Table/specimenTableFilters";
 import { useEffect, type Dispatch, type SetStateAction } from "react";
@@ -17,34 +15,31 @@ interface UseSpecimenSearchFilterSyncParams {
   searchTerm: string;
   structuredFilters: StructuredFilterClause[];
   checkboxOptionsByField: Record<CheckboxField, string[]>;
-  selectedFilters: SelectedFilters;
   setSelectedFilters: Dispatch<SetStateAction<SelectedFilters>>;
-  setSearchTerm: Dispatch<SetStateAction<string>>;
+  setFailureModeFilterMode: Dispatch<SetStateAction<FailureModeFilterMode>>;
 }
 
 /**
- * Keeps command-search text and checkbox filter state synchronized both ways.
+ * Hydrates checkbox sidebar state from the current command-search text.
  *
- * Direction A: command tokens in `searchTerm` -> `selectedFilters`
- * Direction B: `selectedFilters` -> command tokens in `searchTerm`
- *
- * This ensures users can use either the command input or sidebar checkboxes
- * and still see consistent filtering state in both UIs.
+ * The command/query string is the source of truth; this hook parses
+ * structured `field:value` clauses and mirrors them into checkbox selections
+ * plus the failure-mode matching mode shown in the sidebar.
  */
 export function useSpecimenSearchFilterSync({
   searchField,
   searchTerm,
   structuredFilters,
   checkboxOptionsByField,
-  selectedFilters,
   setSelectedFilters,
-  setSearchTerm,
+  setFailureModeFilterMode,
 }: UseSpecimenSearchFilterSyncParams) {
   // Sync command tokens (field:value) into checkbox selections.
   useEffect(() => {
     const nextSelected = createEmptySelectedFilters();
 
     if (!(searchField === "all" && searchTerm.includes(":"))) {
+      setFailureModeFilterMode((prev) => (prev === "any" ? prev : "any"));
       setSelectedFilters((prev) =>
         areSelectedFiltersEqual(prev, nextSelected) ? prev : nextSelected,
       );
@@ -52,11 +47,15 @@ export function useSpecimenSearchFilterSync({
     }
 
     let hasCheckboxToken = false;
+    let nextFailureModeFilterMode: FailureModeFilterMode = "any";
 
     for (const clause of structuredFilters) {
       if (!CHECKBOX_FIELD_SET.has(clause.field as CheckboxField)) continue;
 
       const field = clause.field as CheckboxField;
+      if (field === "failure_modes" && clause.mode) {
+        nextFailureModeFilterMode = clause.mode;
+      }
 
       for (const clauseValue of clause.values) {
         const matchedOption = checkboxOptionsByField[field].find(
@@ -78,12 +77,16 @@ export function useSpecimenSearchFilterSync({
     }
 
     if (!hasCheckboxToken) {
+      setFailureModeFilterMode((prev) => (prev === "any" ? prev : "any"));
       setSelectedFilters((prev) =>
         areSelectedFiltersEqual(prev, nextSelected) ? prev : nextSelected,
       );
       return;
     }
 
+    setFailureModeFilterMode((prev) =>
+      prev === nextFailureModeFilterMode ? prev : nextFailureModeFilterMode,
+    );
     setSelectedFilters((prev) =>
       areSelectedFiltersEqual(prev, nextSelected) ? prev : nextSelected,
     );
@@ -92,49 +95,7 @@ export function useSpecimenSearchFilterSync({
     searchField,
     searchTerm,
     checkboxOptionsByField,
+    setFailureModeFilterMode,
     setSelectedFilters,
   ]);
-
-  // Sync checkbox selections back into command-search text.
-  // Non-checkbox/free-text segments are preserved.
-  useEffect(() => {
-    setSearchTerm((prev) => {
-      const segments = prev
-        .split(";")
-        .map((segment) => segment.trim())
-        .filter(Boolean);
-      const trailingSegment = segments.at(-1) ?? "";
-      const parsedTrailingClauses = parseStructuredFilterQuery(trailingSegment);
-      const hasIncompleteTrailingSegment =
-        trailingSegment.length > 0 &&
-        (parsedTrailingClauses.length === 0 ||
-          serializeStructuredFilterQuery(parsedTrailingClauses) !==
-            trailingSegment);
-
-      const nonCheckboxClauses = parseStructuredFilterQuery(prev).filter(
-        (clause) => !CHECKBOX_FIELD_SET.has(clause.field as CheckboxField),
-      );
-
-      const checkboxClauses = Object.entries(selectedFilters).flatMap(
-        ([field, values]) =>
-          values.length === 0
-            ? []
-            : [
-                {
-                  field,
-                  values: values.map((value) => slugifyFilterValue(value)),
-                } satisfies StructuredFilterClause,
-              ],
-      );
-
-      const nextTerm = serializeStructuredFilterQuery([
-        ...nonCheckboxClauses,
-        ...checkboxClauses,
-      ]);
-      const nextValue = hasIncompleteTrailingSegment
-        ? [nextTerm, trailingSegment].filter(Boolean).join(";")
-        : nextTerm;
-      return nextValue === prev ? prev : nextValue;
-    });
-  }, [selectedFilters, setSearchTerm]);
 }

@@ -46,6 +46,7 @@ const queryClient = new QueryClient({
 
 const router = createRouter({
   routeTree,
+  trailingSlash: "never",
   defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
 });
 declare module "@tanstack/react-router" {

@@ -2550,6 +2550,11 @@ components:
             type: string
           type: array
           title: Loading Types
+        failure_modes:
+          items:
+            type: string
+          type: array
+          title: Failure Modes
         uploader:
           items:
             type: string
@@ -2562,6 +2567,7 @@ components:
         - joinery_types
         - sub_joinery_types
         - loading_types
+        - failure_modes
         - uploader
       title: SpecimenFilterOptionsPublic
     SpecimenPublic:

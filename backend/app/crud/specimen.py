@@ -68,6 +68,9 @@ def get_specimen_filter_options(*, session: Session) -> SpecimenFilterOptionsPub
     sub_joinery_types = sorted(
         set(session.exec(select(SubJoineryType.label)).all())
     )
+    failure_modes = sorted(
+        set(session.exec(select(FailureMode.label)).all())
+    )
     uploader_ids = list(
         set(session.exec(select(Specimen.uploader_id)).all())
     )
@@ -87,6 +90,7 @@ def get_specimen_filter_options(*, session: Session) -> SpecimenFilterOptionsPub
         joinery_types=joinery_types,
         sub_joinery_types=sub_joinery_types,
         loading_types=sorted(item.value for item in TestLoadingType),
+        failure_modes=failure_modes,
         uploader=uploader,
     )
 

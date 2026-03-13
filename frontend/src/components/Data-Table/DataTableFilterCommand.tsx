@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import {
+  type FailureModeFilterMode,
   parseStructuredFilterQuery,
   serializeStructuredFilterQuery,
   slugifyFilterValue,
@@ -11,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 interface DataTableFilterCommandProps {
   value: string;
   onValueChange: (value: string) => void;
+  onCommitValueChange: (value: string) => void;
   searchField: string;
   onSearchFieldChange: (value: string) => void;
   fieldOptions?: Record<string, string[]>;
@@ -19,10 +21,16 @@ interface DataTableFilterCommandProps {
 export function DataTableFilterCommand({
   value,
   onValueChange,
+  onCommitValueChange,
   searchField,
   onSearchFieldChange,
   fieldOptions,
 }: DataTableFilterCommandProps) {
+  const FAILURE_MODE_FILTER_MODES: FailureModeFilterMode[] = [
+    "any",
+    "all",
+    "exact",
+  ];
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +59,7 @@ export function DataTableFilterCommand({
         setOpen((prev) => !prev);
       }
       if (key === "escape") {
+        setInputValue(getExternalDisplayValue());
         setOpen(false);
       }
     };
@@ -58,6 +67,7 @@ export function DataTableFilterCommand({
     const onMouseDown = (event: MouseEvent) => {
       if (!rootRef.current) return;
       if (!rootRef.current.contains(event.target as Node)) {
+        setInputValue(getExternalDisplayValue());
         setOpen(false);
       }
     };
@@ -68,20 +78,35 @@ export function DataTableFilterCommand({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("mousedown", onMouseDown);
     };
-  }, []);
+  }, [searchField, value]);
 
   const parseAndEmit = (rawValue: string) => {
     onSearchFieldChange("all");
     onValueChange(rawValue);
   };
 
+  const commitValue = (rawValue: string) => {
+    onSearchFieldChange("all");
+    onCommitValueChange(rawValue);
+  };
+
   const suggestionContext = useMemo(() => {
     const rawSegments = inputValue.split(";");
-    const currentSegment = rawSegments.at(-1)?.trim() ?? "";
+    const currentSegment = rawSegments[rawSegments.length - 1]?.trim() ?? "";
     const completedSegments = rawSegments.slice(0, -1).join(";");
     const completedClauses = parseStructuredFilterQuery(completedSegments);
 
     if (!currentSegment.includes(":")) {
+      const dotIndex = currentSegment.indexOf(".");
+      if (dotIndex !== -1) {
+        return {
+          mode: "operator" as const,
+          field: currentSegment.slice(0, dotIndex).trim().toLowerCase(),
+          query: currentSegment.slice(dotIndex + 1).trim().toLowerCase(),
+          completedClauses,
+        };
+      }
+
       return {
         mode: "field" as const,
         query: currentSegment.toLowerCase(),
@@ -90,18 +115,28 @@ export function DataTableFilterCommand({
     }
 
     const firstColon = currentSegment.indexOf(":");
-    const field = currentSegment.slice(0, firstColon).trim().toLowerCase();
+    const fieldWithMode = currentSegment
+      .slice(0, firstColon)
+      .trim()
+      .toLowerCase();
+    const [field, rawMode] = fieldWithMode.split(".");
     const rawValuePart = currentSegment.slice(firstColon + 1);
     const rawValueSegments = rawValuePart.split(",");
-    const currentValueQuery = rawValueSegments.at(-1)?.trim().toLowerCase() ?? "";
+    const currentValueQuery =
+      rawValueSegments[rawValueSegments.length - 1]?.trim().toLowerCase() ?? "";
     const committedValues = rawValueSegments
       .slice(0, -1)
-      .map((value) => slugifyFilterValue(value))
+      .map((value: string) => slugifyFilterValue(value))
       .filter(Boolean);
 
     return {
       mode: "value" as const,
       field,
+      clauseMode:
+        field === "failure_modes" &&
+        (rawMode === "any" || rawMode === "all" || rawMode === "exact")
+          ? rawMode
+          : undefined,
       query: currentValueQuery,
       committedValues,
       completedClauses,
@@ -109,18 +144,43 @@ export function DataTableFilterCommand({
   }, [inputValue]);
 
   const suggestions = useMemo(() => {
+    if (suggestionContext.mode === "operator") {
+      if (suggestionContext.field !== "failure_modes") {
+        return [];
+      }
+
+      return FAILURE_MODE_FILTER_MODES.map((mode) => ({
+        key: `failure_modes.${mode}`,
+        label: `failure_modes.${mode}`,
+        field: "failure_modes",
+        clauseMode: mode,
+        value: "",
+        displayValue: mode,
+        mode: "operator" as const,
+      })).filter((suggestion) =>
+        suggestionContext.query === "" ||
+        suggestion.label.includes(suggestionContext.query),
+      );
+    }
+
     if (suggestionContext.mode === "value") {
       const options = fieldOptions?.[suggestionContext.field] ?? [];
       return options
         .map((option) => {
           const slug = slugifyFilterValue(option);
+          const fieldLabel =
+            suggestionContext.field === "failure_modes" &&
+            suggestionContext.clauseMode
+              ? `${suggestionContext.field}.${suggestionContext.clauseMode}`
+              : suggestionContext.field;
           return {
             key: `${suggestionContext.field}:${slug}`,
-            label: `${suggestionContext.field}:${[
+            label: `${fieldLabel}:${[
               ...suggestionContext.committedValues,
               slug,
             ].join(",")}`,
             field: suggestionContext.field,
+            clauseMode: suggestionContext.clauseMode,
             value: slug,
             displayValue: option,
             mode: "value" as const,
@@ -143,17 +203,27 @@ export function DataTableFilterCommand({
 
     return Object.entries(fieldOptions ?? {})
       .flatMap(([field, options]) =>
-        options.map((option) => {
-          const slug = slugifyFilterValue(option);
-          return {
-            key: `${field}:${slug}`,
-            label: `${field}:${slug}`,
-            field,
-            value: slug,
-            displayValue: option,
-            mode: "field" as const,
-          };
-        }),
+        field === "failure_modes"
+          ? FAILURE_MODE_FILTER_MODES.map((mode) => ({
+              key: `${field}.${mode}`,
+              label: `${field}.${mode}:`,
+              field,
+              clauseMode: mode,
+              value: "",
+              displayValue: `${field} ${mode}`,
+              mode: "field" as const,
+            }))
+          : options.map((option) => {
+              const slug = slugifyFilterValue(option);
+              return {
+                key: `${field}:${slug}`,
+                label: `${field}:${slug}`,
+                field,
+                value: slug,
+                displayValue: option,
+                mode: "field" as const,
+              };
+            }),
       )
       .filter(
         (suggestion) =>
@@ -176,9 +246,28 @@ export function DataTableFilterCommand({
 
   const applySuggestion = (suggestion: {
     field: string;
+    clauseMode?: FailureModeFilterMode;
     value: string;
-    mode: "field" | "value";
+    mode: "field" | "operator" | "value";
   }) => {
+    if (suggestion.mode === "field" && suggestion.field === "failure_modes") {
+      const next = `${suggestion.field}.${suggestion.clauseMode}:`;
+      setInputValue(next);
+      onSearchFieldChange("all");
+      onValueChange(next);
+      inputRef.current?.focus();
+      return;
+    }
+
+    if (suggestion.mode === "operator") {
+      const next = `${suggestion.field}.${suggestion.clauseMode}:`;
+      setInputValue(next);
+      onSearchFieldChange("all");
+      onValueChange(next);
+      inputRef.current?.focus();
+      return;
+    }
+
     const nextClauses = suggestionContext.completedClauses
       .filter((clause) => clause.field !== suggestion.field)
       .map((clause) => ({ ...clause }));
@@ -200,6 +289,7 @@ export function DataTableFilterCommand({
 
     nextClauses.push({
       field: suggestion.field,
+      mode: suggestion.clauseMode ?? existingClause?.mode,
       values: mergedValues,
     } satisfies StructuredFilterClause);
 
@@ -207,6 +297,7 @@ export function DataTableFilterCommand({
     setInputValue(next);
     onSearchFieldChange("all");
     onValueChange(next);
+    onCommitValueChange(next);
     inputRef.current?.focus();
   };
 
@@ -258,9 +349,13 @@ export function DataTableFilterCommand({
               );
             }
 
-            if (event.key === "Enter" && suggestions[highlightedIndex]) {
+            if (event.key === "Enter") {
               event.preventDefault();
-              applySuggestion(suggestions[highlightedIndex]);
+              if (suggestions[highlightedIndex]) {
+                applySuggestion(suggestions[highlightedIndex]);
+                return;
+              }
+              commitValue(inputValue);
             }
           }}
           onChange={(event) => {
@@ -273,7 +368,10 @@ export function DataTableFilterCommand({
         />
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            commitValue(inputValue);
+            setOpen(false);
+          }}
           className="inline-flex h-8 w-8 items-center justify-center rounded text-muted-foreground hover:bg-muted"
           aria-label="Close search"
         >
@@ -302,7 +400,7 @@ export function DataTableFilterCommand({
             </div>
           ) : (
             <p className="px-2 py-1 text-sm text-muted-foreground">
-              Use `field:value` to filter.
+              Use `field:value` or `failure_modes.all:value` to filter.
             </p>
           )}
         </div>
