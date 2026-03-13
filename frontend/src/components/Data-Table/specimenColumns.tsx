@@ -30,10 +30,10 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	fastener_mechanical_properties: { header: "Fastener Props", hidden: true },
 	wood_mechanical_properties: { header: "Wood Props", hidden: true },
 
-	// Visible columns (sortable where appropriate)
-	specimen_reference_id: { header: "Reference ID", sortable: true },
-	doi: { header: "DOI", sortable: true, hidden: true },
-	assembly_type: { header: "Assembly Type", sortable: true },
+	// Visible columns are sortable by default unless explicitly disabled.
+	specimen_reference_id: { header: "Reference ID" },
+	doi: { header: "DOI", hidden: true },
+	assembly_type: { header: "Assembly Type" },
 
 	connector: { header: "Connector" },
 
@@ -41,25 +41,23 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 
 	joinery_type: {
 		header: "Joinery Type",
-		sortable: true,
 		meta: { renderAs: "joinery_label" },
 	},
 	sub_joinery_type: {
 		header: "Sub Joinery",
-		sortable: true,
 		meta: { renderAs: "sub_joinery_label" },
 	},
 	loading_directions: {
 		header: "Loading Directions",
 		meta: { renderAs: "array_labels" },
 	},
-	practice: { header: "Practice", sortable: true },
-	moisture_percentage: { header: "Moisture %", sortable: true },
+	practice: { header: "Practice" },
+	moisture_percentage: { header: "Moisture %" },
 
-	replicate_tests: { header: "Replicates", sortable: true },
-	e_date: { header: "Test Date", sortable: true, hidden: true },
-	e_yield_force: { header: "Yield Force (KN)", sortable: true },
-	e_max_force: { header: "Max Force (KN)", sortable: true },
+	replicate_tests: { header: "Replicates" },
+	e_date: { header: "Test Date", hidden: true },
+	e_yield_force: { header: "Yield Force (KN)" },
+	e_max_force: { header: "Max Force (KN)" },
 	e_yield_displacement: { header: "Yield Disp (mm)" },
 	e_max_displacement: { header: "Max Disp (mm)" },
 	e_ultimate_force: { header: "Ultimate Force (KN)" },
@@ -68,6 +66,7 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	e_ductility: { header: "Ductility" },
 	e_qualitative_failure_measure: {
 		header: "Failure Mode",
+		sortable: false,
 		meta: { renderAs: "array_badges" },
 	},
 	e_qfm_description: { header: "Failure Desc", hidden: true },
@@ -78,7 +77,7 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 		header: "Fastener Types",
 		meta: { renderAs: "array_labels" },
 	},
-	fastener_numbers: { header: "Fastener Count", sortable: true, hidden: true },
+	fastener_numbers: { header: "Fastener Count", hidden: true },
 	connection_description: { header: "Connection Desc", hidden: true },
 	element_dimension: { header: "Dimensions", hidden: true },
 };
@@ -98,7 +97,7 @@ export const createColumns = <
 					label: config.header,
 					...config.meta,
 				},
-				enableSorting: config.sortable ?? false,
+				enableSorting: config.sortable ?? true,
 			} satisfies Partial<ColumnDef<TData>>;
 
 			switch (config.meta?.renderAs) {
@@ -149,7 +148,7 @@ export const createColumns = <
 							}
 
 							return (
-								<div className="flex flex-wrap gap-1">
+								<div className="flex max-w-[18rem] flex-wrap gap-1">
 									{items.map((item) => (
 										<FailureModeBadge
 											key={item}

@@ -1,4 +1,5 @@
 import type { SpecimenPublic } from "@/api/model";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   TableCell,
   TableHead,
@@ -23,8 +24,8 @@ export function SpecimensResultsTable({
   onRowClick,
 }: SpecimensResultsTableProps) {
   return (
-    <div className="min-h-0 flex-1 overflow-auto rounded-md border">
-      <table className="w-full caption-bottom border-separate border-spacing-0 text-sm">
+    <ScrollArea className="min-h-0 flex-1 rounded-md border">
+      <table className="min-w-max w-full caption-bottom border-separate border-spacing-0 text-sm">
         {/* Frozen header row: column names stay visible while the table content scrolls. */}
         <thead className="[&_tr]:border-b">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -120,6 +121,6 @@ export function SpecimensResultsTable({
           )}
         </tbody>
       </table>
-    </div>
+    </ScrollArea>
   );
 }

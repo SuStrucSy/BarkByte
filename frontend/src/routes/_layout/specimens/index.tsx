@@ -66,7 +66,7 @@ const specimensSearchSchema = z.object({
   ...sliderSearchSchemaFields,
 });
 
-const TABLE_PANEL_HEIGHT = "h-[calc(100vh-11rem)]";
+const TABLE_PANEL_HEIGHT = "flex-1 min-h-0";
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 type Bounds = { min: number; max: number };
@@ -599,7 +599,7 @@ function SpecimensKitTable() {
   }
 
   return (
-    <div className="flex w-full min-h-0 flex-col gap-3 sm:flex-row">
+    <div className="flex w-full min-h-0 flex-1 flex-col gap-3 sm:flex-row">
       <div className={`flex w-full min-h-0 flex-1 flex-col gap-4 overflow-hidden ${TABLE_PANEL_HEIGHT}`}>
         {/* Quick search bar: users type plain text or field:value commands to narrow results. */}
         <DataTableFilterCommand
@@ -675,7 +675,7 @@ function SpecimensKitTable() {
 
 function Specimens() {
   return (
-    <div className="w-full min-h-0">
+    <div className="flex w-full min-h-0 flex-1 flex-col">
       <SpecimensKitTable />
     </div>
   );

@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { Table } from "@tanstack/react-table";
 import {
@@ -45,10 +46,10 @@ export function DataTableToolbar<TData>({
               <span className="sr-only">View options</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-72">
+          <DropdownMenuContent align="start" className="w-72 overflow-hidden p-0">
             <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <div className="max-h-72 overflow-y-auto">
+            <ScrollArea className="h-72">
               {visibleColumns.map((column) => (
                 <DropdownMenuItem
                   key={column.id}
@@ -70,7 +71,7 @@ export function DataTableToolbar<TData>({
                   {column.columnDef.meta?.label ?? column.id.replaceAll("_", " ")}
                 </DropdownMenuItem>
               ))}
-            </div>
+            </ScrollArea>
           </DropdownMenuContent>
         </DropdownMenu>
 

@@ -4,6 +4,7 @@ import {
 } from "@/components/Data-Table/DataTableFilterControls";
 import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
 /**
@@ -83,21 +84,23 @@ export function SpecimenTableSideBar({
         </div>
       </div>
       {/* Scrollable body that renders all checkbox + slider filter controls. */}
-      <div className="h-[calc(100%-57px)] overflow-auto p-3">
-        <DataTableFilterControls
-          fields={fields}
-          selectedByField={selectedByField}
-          sliderValuesByField={sliderValuesByField}
-          failureModeFilterMode={failureModeFilterMode}
-          onToggleOption={onToggleOption}
-          onSliderChange={onSliderChange}
-          onFailureModeFilterModeChange={onFailureModeFilterModeChange}
-          onResetField={onResetField}
-          toggleAllSignal={toggleAllSignal}
-          toggleAllOpenState={toggleAllOpenState}
-          onAllCollapsedChange={setAllControlsCollapsed}
-        />
-      </div>
+      <ScrollArea className="h-[calc(100%-57px)]">
+        <div className="p-3">
+          <DataTableFilterControls
+            fields={fields}
+            selectedByField={selectedByField}
+            sliderValuesByField={sliderValuesByField}
+            failureModeFilterMode={failureModeFilterMode}
+            onToggleOption={onToggleOption}
+            onSliderChange={onSliderChange}
+            onFailureModeFilterModeChange={onFailureModeFilterModeChange}
+            onResetField={onResetField}
+            toggleAllSignal={toggleAllSignal}
+            toggleAllOpenState={toggleAllOpenState}
+            onAllCollapsedChange={setAllControlsCollapsed}
+          />
+        </div>
+      </ScrollArea>
     </aside>
   );
 }
