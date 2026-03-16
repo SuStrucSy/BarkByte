@@ -103,7 +103,7 @@ function ReferenceDetails({
       </p>
       <Item variant="outline" asChild>
         <a
-          href={specimen.doi.id ? `/dois/${specimen.doi.id}` : specimen.doi.link}
+          href={specimen.doi.link}
           target="_blank"
           rel="noopener noreferrer"
         >
