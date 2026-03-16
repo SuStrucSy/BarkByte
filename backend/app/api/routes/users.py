@@ -4,14 +4,15 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
-from app.crud import user as user_crud
-from app.crud import specimen as specimen_crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
+from app.crud import specimen as specimen_crud
+from app.crud import user as user_crud
 from app.models.user import User
 from app.schemas.user import (
     Message,
+    NewAccount,
     UpdatePassword,
     UserCreate,
     UserPublic,
@@ -19,13 +20,19 @@ from app.schemas.user import (
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
-    NewAccount
 )
-from app.utils import verify_password_reset_token, generate_new_account_email, generate_password_reset_token, send_email, generate_signup_email
+from app.utils import (
+    generate_new_account_email,
+    generate_password_reset_token,
+    generate_signup_email,
+    send_email,
+    verify_password_reset_token,
+)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 # ------------ Current user endpoints ------------
+
 
 @router.get("/me", response_model=UserPublic)
 def read_user_me(current_user: CurrentUser) -> Any:
@@ -33,6 +40,7 @@ def read_user_me(current_user: CurrentUser) -> Any:
     Get current user.
     """
     return current_user
+
 
 @router.patch("/me", response_model=UserPublic)
 def update_user_me(
@@ -42,10 +50,15 @@ def update_user_me(
     Update own user.
     """
     if user_in.email:
-        if user_crud.is_email_taken(session=session, email=user_in.email, exclude_user_id=current_user.id):
-            raise HTTPException(status_code=409, detail="User with this email already exists")
-    
+        if user_crud.is_email_taken(
+            session=session, email=user_in.email, exclude_user_id=current_user.id
+        ):
+            raise HTTPException(
+                status_code=409, detail="User with this email already exists"
+            )
+
     return user_crud.update_user(session=session, db_user=current_user, user_in=user_in)
+
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
@@ -66,6 +79,7 @@ def update_password_me(
     session.commit()
     return Message(message="Password updated successfully")
 
+
 @router.delete("/me", response_model=Message)
 def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
@@ -73,10 +87,12 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     user_in = UserUpdateMe(is_activate=False)
     user_crud.update_user(session=session, user_in=user_in, db_user=current_user)
-    
+
     return Message(message="User deleted successfully")
 
+
 # ------------ General Users endpoints ------------
+
 
 @router.get(
     "/",
@@ -89,6 +105,7 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> UserPubl
     """
 
     return user_crud.get_all_users(session=session, skip=skip, limit=limit)
+
 
 @router.get("/{user_id}", response_model=UserPublic)
 def read_user_by_id(user_id: uuid.UUID, session: SessionDep) -> UserPublic:
@@ -103,7 +120,10 @@ def read_user_by_id(user_id: uuid.UUID, session: SessionDep) -> UserPublic:
         )
     return db_user
 
-@router.post("/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic)
+
+@router.post(
+    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
+)
 def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic:
     """
     Create new user.
@@ -126,6 +146,7 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic:
         )
     return user
 
+
 @router.patch(
     "/{user_id}",
     dependencies=[Depends(get_current_active_superuser)],
@@ -146,15 +167,20 @@ def update_user(
             status_code=404,
             detail="The user with this id does not exist in the system",
         )
-    
+
     if user_in.email:
-        if user_crud.is_email_taken(session=session, email=user_in.email, exclude_user_id=db_user.id,):
+        if user_crud.is_email_taken(
+            session=session,
+            email=user_in.email,
+            exclude_user_id=db_user.id,
+        ):
             raise HTTPException(
                 status_code=409,
                 detail="User with this email already exists",
             )
 
     return user_crud.update_user(session=session, db_user=db_user, user_in=user_in)
+
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_user(
@@ -173,9 +199,10 @@ def delete_user(
 
     if user == current_user:
         raise HTTPException(
-            status_code=403, detail="Use the /users/me endpoint to delete your own account."
+            status_code=403,
+            detail="Use the /users/me endpoint to delete your own account.",
         )
-    
+
     if user.is_superuser:
         raise HTTPException(
             status_code=403,
@@ -186,12 +213,14 @@ def delete_user(
     except IntegrityError:
         raise HTTPException(
             status_code=409,
-            detail="Cannot delete user: it is still referenced by one or more specimens."
+            detail="Cannot delete user: it is still referenced by one or more specimens.",
         )
-    
+
     return Message(message="User deleted successfully")
 
+
 # ------------ Authentication related endpoints ------------
+
 
 @router.post("/signup", response_model=Message)
 def register_user(session: SessionDep, user_in: UserRegister) -> Any:
@@ -204,9 +233,15 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
             detail="User with this email already exists",
         )
 
-    user_create = UserCreate.model_validate(user_in)
+    user_create = UserCreate(
+        email=user_in.email,
+        password=user_in.password,
+        full_name=user_in.full_name,
+        is_active=False,
+        is_superuser=False,
+    )
     user_crud.create_user(session=session, user_create=user_create)
-    
+
     if settings.emails_enabled and user_in.email:
         register_user_token = generate_password_reset_token(email=user_in.email)
         email_data = generate_signup_email(
@@ -220,12 +255,13 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
 
     return Message(message="Please check your email to validate your account.")
 
+
 @router.post(
     "/verify-email/",
     responses={
         400: {"description": "Invalid token or inactive user"},
-        404: {"description": "The user with this email does not exist in the system."}
-    }
+        404: {"description": "The user with this email does not exist in the system."},
+    },
 )
 def verify_email(session: SessionDep, body: NewAccount) -> Message:
     """
@@ -242,9 +278,8 @@ def verify_email(session: SessionDep, body: NewAccount) -> Message:
         )
     elif user.is_active:
         raise HTTPException(status_code=400, detail="This account is already active.")
-    
+
     user.is_active = True
     session.add(user)
     session.commit()
     return Message(message="User account activated successfully.")
-

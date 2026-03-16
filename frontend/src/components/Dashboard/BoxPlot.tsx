@@ -1,5 +1,5 @@
 import type { SpecimenPublic } from "@/api/model";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { VerticalBox } from "./VerticalBox";
 import { AxisLeft } from "./AxisLeft";
@@ -159,6 +159,37 @@ export function BoxPlot({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height });
 
+  // Responsive margins based on container width
+  const margins = useMemo(() => {
+    const w = dimensions.width;
+    if (w < 400) return { top: 20, right: 10, bottom: 80, left: 45 };
+    if (w < 640) return { top: 20, right: 15, bottom: 80, left: 50 };
+    return CHART_CONFIG.margins;
+  }, [dimensions.width]);
+
+  // Responsive height
+  const responsiveHeight = useMemo(() => {
+    const w = dimensions.width;
+    if (w < 400) return Math.min(height, 280);
+    if (w < 640) return Math.min(height, 350);
+    return height;
+  }, [dimensions.width, height]);
+
+  const debouncedDimensions = useDebounce(
+    dimensions,
+    CHART_CONFIG.resizeDebounceMs,
+  );
+
+  const boundsWidth = useMemo(
+    () => debouncedDimensions.width - margins.right - margins.left,
+    [debouncedDimensions.width, margins],
+  );
+
+  const boundsHeight = useMemo(
+    () => responsiveHeight - margins.top - margins.bottom,
+    [responsiveHeight, margins],
+  );
+
   // Filter valid specimens once
   const validSpecimens = useMemo(() => {
     return selectedSpecimens.filter(
@@ -167,28 +198,6 @@ export function BoxPlot({
   }, [selectedSpecimens, yKey]);
 
   const jitterMap = useStableJitter(validSpecimens);
-
-  // Debounce dimensions to avoid excessive re-renders during resize
-  const debouncedDimensions = useDebounce(
-    dimensions,
-    CHART_CONFIG.resizeDebounceMs,
-  );
-
-  const boundsWidth = useMemo(() => {
-    return (
-      debouncedDimensions.width -
-      CHART_CONFIG.margins.right -
-      CHART_CONFIG.margins.left
-    );
-  }, [debouncedDimensions.width]);
-
-  const boundsHeight = useMemo(() => {
-    return (
-      debouncedDimensions.height -
-      CHART_CONFIG.margins.top -
-      CHART_CONFIG.margins.bottom
-    );
-  }, [debouncedDimensions.height]);
 
   // Compute chart data with proper error handling
   const chartData = useMemo(() => {
@@ -379,13 +388,10 @@ export function BoxPlot({
   // Resize handler - only for ongoing resize events
   useEffect(() => {
     if (!containerRef.current) return;
-
-    // Set initial size immediately
-    const { width, height: h } = containerRef.current.getBoundingClientRect();
-    setDimensions({ width, height: h });
+    const { width: w } = containerRef.current.getBoundingClientRect();
+    setDimensions({ width: w, height });
 
     let timeoutId: ReturnType<typeof setTimeout>;
-
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
@@ -393,18 +399,17 @@ export function BoxPlot({
       timeoutId = setTimeout(() => {
         setDimensions({
           width: entry.contentRect.width,
-          height: entry.contentRect.height,
+          height,
         });
       }, CHART_CONFIG.resizeDebounceMs);
     });
 
     resizeObserver.observe(containerRef.current);
-
     return () => {
       clearTimeout(timeoutId);
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [height]);
 
   // Empty state
   if (validSpecimens.length === 0) {
@@ -424,7 +429,7 @@ export function BoxPlot({
       <div
         ref={containerRef}
         className="w-full"
-        style={{ height }}
+        style={{ height: responsiveHeight }}
         role="img"
         aria-label={`Box plot showing ${yLabel} distribution across ${chartData.groups.length} groups`}
       >
@@ -437,13 +442,13 @@ export function BoxPlot({
             style={{
               position: "relative",
               width: "100%",
-              height: dimensions.height,
+              height: responsiveHeight,
             }}
           >
             <div
               style={{
                 width: "100%",
-                height: dimensions.height,
+                height: responsiveHeight,
                 position: "absolute",
                 top: 0,
                 left: 0,
@@ -462,7 +467,7 @@ export function BoxPlot({
             </div>
             <svg
               width="100%"
-              height={dimensions.height}
+              height={responsiveHeight}
               style={{
                 position: "absolute",
                 top: 0,
@@ -473,18 +478,21 @@ export function BoxPlot({
               aria-hidden="true"
             >
               <g
-                width={boundsWidth}
-                height={boundsHeight}
-                transform={`translate(${CHART_CONFIG.margins.left}, ${CHART_CONFIG.margins.top})`}
+                transform={`translate(${margins.left}, ${margins.top})`}
                 style={{ color: "hsl(var(--foreground))" }}
               >
                 <AxisLeft
                   yScale={yScale}
-                  pixelsPerTick={CHART_CONFIG.pixelsPerTick}
+                  pixelsPerTick={
+                    boundsWidth < 400 ? 60 : CHART_CONFIG.pixelsPerTick
+                  }
                   title={yLabel}
                 />
                 <g transform={`translate(0, ${boundsHeight})`}>
-                  <AxisBottom xScale={xScale} />
+                  <AxisBottom
+                    xScale={xScale}
+                    width={boundsWidth} // ← pass width for label rotation
+                  />
                 </g>
               </g>
             </svg>

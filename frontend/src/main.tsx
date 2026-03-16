@@ -11,7 +11,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider
       defaultMode="dark"
-      defaultTheme="neutral"
+      defaultTheme="default"
       storageKey="vite-ui-theme"
     >
       <QueryClientProvider client={queryClient}>

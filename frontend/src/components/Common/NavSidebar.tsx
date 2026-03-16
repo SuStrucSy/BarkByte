@@ -50,9 +50,9 @@ const AppSidebar = () => {
       </SidebarHeader>
       <SidebarContent>
         <SidebarItems />
-        <ModeToggle />
       </SidebarContent>
       <SidebarFooter>
+        <ModeToggle />
         {isLoggedIn ? <NavUser /> : <LoginButton />}
       </SidebarFooter>
       <SidebarRail />

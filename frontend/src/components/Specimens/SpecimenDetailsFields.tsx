@@ -98,7 +98,9 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
         render={({ field, fieldState }) => (
           <FieldSet data-invalid={fieldState.invalid}>
             <FieldLegend>Assembly Type</FieldLegend>
-            <FieldDescription>Select how</FieldDescription>
+            <FieldDescription>
+              Select how specimen is assembled
+            </FieldDescription>
             <RadioGroup
               name={field.name}
               value={field.value}
@@ -243,7 +245,9 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
-              <FieldDescription>Select the fastener types.</FieldDescription>
+              <FieldDescription>
+                Select one or more fastener types
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           );
@@ -299,7 +303,9 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
-              <FieldDescription>Select the loading direction.</FieldDescription>
+              <FieldDescription>
+                Select one or more loading directions
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           );

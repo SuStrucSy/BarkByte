@@ -1,5 +1,3 @@
-// ImprovedDashboard.tsx - Production-ready version
-
 import { createFileRoute } from "@tanstack/react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -51,6 +49,7 @@ import { SpecimenSheet } from "@/components/Specimens/SpecimenSheet";
 import { Separator } from "@/components/ui/separator";
 import { DemographyGrid } from "@/components/Dashboard/DemographyGrid";
 import { ExpandableChart } from "@/components/Charts/ExpandableChart";
+import { useChartHeight } from "@/hooks/useChartHeight";
 
 export const Route = createFileRoute("/_layout/dashboard")({
   staticData: {
@@ -106,6 +105,7 @@ function Dashboard() {
   const [selectedSpecimen, setSelectedSpecimen] =
     useState<SpecimenPublic | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const chartHeight = useChartHeight(280, 500);
 
   const handlePointClick = useCallback((specimen: SpecimenPublic) => {
     setSelectedSpecimen(specimen);
@@ -221,35 +221,30 @@ function Dashboard() {
 
   return (
     <div className="space-y-4">
-      {/* Header with loading status */}
+      {/* Header */}
       <Card>
         <CardHeader>
           <CardTitle>Specimen Analysis Dashboard</CardTitle>
-          <CardDescription>
+          <CardDescription className="flex flex-wrap items-center gap-1">
             {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
             specimens
             {isLoadingAll ? (
               <Badge
                 variant="secondary"
-                className="animate-pulse ml-1"
+                className="animate-pulse"
                 aria-live="polite"
-                aria-label={`Loading specimens: ${loadingProgress}% complete`}
               >
                 Loading... {loadingProgress}%
               </Badge>
             ) : (
-              <Badge className="ml-1" aria-label="All specimens loaded">
-                ✓ Complete
-              </Badge>
+              <Badge aria-label="All specimens loaded">✓ Complete</Badge>
             )}
           </CardDescription>
         </CardHeader>
       </Card>
 
-      {/* Two column grid of charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Stiffness vs Ductility */}
-
         <Card>
           <CardHeader className="pb-4">
             <CardTitle>Stiffness vs Ductility</CardTitle>
@@ -269,7 +264,10 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="pb-4">
             <ChartErrorBoundary chartName="Stiffness vs Ductility">
-              <ScatterPlotD3 {...stiffnessDuctilityProps} height={500} />
+              <ScatterPlotD3
+                {...stiffnessDuctilityProps}
+                height={chartHeight}
+              />
             </ChartErrorBoundary>
           </CardContent>
         </Card>
@@ -294,39 +292,43 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="pb-4">
             <ChartErrorBoundary chartName="Stiffness vs Yield Force">
-              <ScatterPlotD3 {...stiffnessYieldProps} height={500} />
+              <ScatterPlotD3 {...stiffnessYieldProps} height={chartHeight} />
             </ChartErrorBoundary>
           </CardContent>
         </Card>
-        <Card className="col-span-full">
+
+        {/* Chart Options */}
+        <Card className="col-span-1 lg:col-span-2">
           <CardHeader>
-            <CardTitle>Chart Options</CardTitle>
-            <CardDescription>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Toggle
-                    aria-label="Toggle violin plot"
-                    variant="outline"
-                    onPressedChange={(pressed) =>
-                      setMirrorPosition(pressed ? 1 : 0)
-                    }
-                  >
-                    <CandlestickChartIcon className="group-data-[state=on]/toggle:fill-foreground" />
-                    {mirrorPosition ? "Violin" : "Boxplot"}
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Toggle between boxplot and violin plot</p>
-                </TooltipContent>
-              </Tooltip>
-            </CardDescription>
-            <CardAction>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <CardTitle>Chart Options</CardTitle>
+                <CardDescription className="mt-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Toggle
+                        aria-label="Toggle violin plot"
+                        variant="outline"
+                        onPressedChange={(pressed) =>
+                          setMirrorPosition(pressed ? 1 : 0)
+                        }
+                      >
+                        <CandlestickChartIcon className="group-data-[state=on]/toggle:fill-foreground" />
+                        {mirrorPosition ? "Violin" : "Boxplot"}
+                      </Toggle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Toggle between boxplot and violin plot</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </CardDescription>
+              </div>
               <Select
-                onValueChange={(value) => setSelectedFastener(value)}
+                onValueChange={setSelectedFastener}
                 defaultValue={selectedFastener}
               >
                 <SelectTrigger
-                  className="w-full max-w-48"
+                  className="w-full sm:w-48"
                   aria-label="Select fastener type"
                 >
                   <SelectValue placeholder="Select a fastener" />
@@ -342,44 +344,44 @@ function Dashboard() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-            </CardAction>
+            </div>
           </CardHeader>
         </Card>
-        {yLabels.map((ylabel) => {
-          return (
-            <Card
-              key={ylabel.key}
-              className="col-span-1 last:col-span-2 odd:last-of-type:col-span-2"
-            >
-              <CardHeader className="pb-4">
-                <CardTitle>Box Plot Distribution</CardTitle>
-                <CardDescription>
-                  Summarizes the distribution of {ylabel.label} grouped by
-                  joinery type
-                  {selectedSpecimens.length > 0 && (
-                    <span className="ml-2 text-xs">
-                      ({selectedSpecimens.length.toLocaleString()} specimens)
-                    </span>
-                  )}
-                </CardDescription>
-                <CardAction></CardAction>
-              </CardHeader>
-              <CardContent className="pb-4 min-w-0">
-                <ChartErrorBoundary chartName="Box Plot">
-                  <BoxPlot
-                    selectedSpecimens={selectedSpecimens}
-                    yKey={ylabel.key}
-                    yLabel={getFullLabel(ylabel.key)}
-                    mirrorPosition={mirrorPosition}
-                    onPointClick={handlePointClick}
-                  />
-                </ChartErrorBoundary>
-              </CardContent>
-              <CardFooter></CardFooter>
-            </Card>
-          );
-        })}
-        <Separator className="col-span-2" />
+
+        {/* Box plots */}
+        {yLabels.map((ylabel) => (
+          <Card
+            key={ylabel.key}
+            className="col-span-1 lg:last:col-span-2 lg:odd:last-of-type:col-span-2"
+          >
+            <CardHeader className="pb-4">
+              <CardTitle>Box Plot Distribution</CardTitle>
+              <CardDescription>
+                Summarizes the distribution of {ylabel.label} grouped by joinery
+                type
+                {selectedSpecimens.length > 0 && (
+                  <span className="ml-2 text-xs">
+                    ({selectedSpecimens.length.toLocaleString()} specimens)
+                  </span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-4 min-w-0">
+              <ChartErrorBoundary chartName="Box Plot">
+                <BoxPlot
+                  selectedSpecimens={selectedSpecimens}
+                  yKey={ylabel.key}
+                  yLabel={getFullLabel(ylabel.key)}
+                  mirrorPosition={mirrorPosition}
+                  onPointClick={handlePointClick}
+                />
+              </ChartErrorBoundary>
+            </CardContent>
+            <CardFooter />
+          </Card>
+        ))}
+
+        <Separator className="col-span-1 lg:col-span-2" />
         <DemographyGrid specimens={allSpecimens} />
       </div>
 
@@ -391,20 +393,22 @@ function Dashboard() {
         />
       )}
 
-      {/* Loading progress indicator */}
       {isLoadingAll && (
         <div className="flex flex-col items-center gap-4">
-          <Item variant="outline">
-            <ItemMedia>
+          <Item variant="outline" className="w-full overflow-hidden">
+            <ItemMedia className="shrink-0">
               <Spinner aria-hidden="true" />
             </ItemMedia>
-            <ItemContent>
-              <ItemTitle className="line-clamp-1">
+            <ItemContent className="min-w-0">
+              <ItemTitle className="truncate">
                 Loading all specimens...
               </ItemTitle>
             </ItemContent>
-            <ItemContent className="flex-none justify-end">
-              <span className="text-sm tabular-nums" aria-live="polite">
+            <ItemContent className="flex-none">
+              <span
+                className="text-sm tabular-nums whitespace-nowrap"
+                aria-live="polite"
+              >
                 {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}
               </span>
             </ItemContent>

@@ -3,13 +3,15 @@ import type { ScaleBand } from "d3";
 
 type AxisBottomProps = {
   xScale: ScaleBand<string>;
+  width?: number;
 };
 
 // tick length
 const TICK_LENGTH = 6;
 
-export const AxisBottom = ({ xScale }: AxisBottomProps) => {
+export const AxisBottom = ({ xScale, width = 600 }: AxisBottomProps) => {
   const [min, max] = xScale.range();
+  const isNarrow = width < 400;
 
   const ticks = useMemo(() => {
     return xScale.domain().map((value) => ({
@@ -35,9 +37,11 @@ export const AxisBottom = ({ xScale }: AxisBottomProps) => {
             fill="currentColor"
             key={value}
             style={{
-              fontSize: "10px",
-              textAnchor: "middle",
-              transform: "translateY(20px)",
+              fontSize: isNarrow ? "8px" : "10px",
+              textAnchor: isNarrow ? "end" : "middle",
+              transform: isNarrow
+                ? "translate(-4px, 10px) rotate(-45deg)"
+                : "translateY(20px)",
             }}
           >
             {value}

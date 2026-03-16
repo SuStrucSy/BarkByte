@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import useAuth from "@/hooks/useAuth";
 import { signupSchema } from "@/lib/schemas";
-import type { UserRegister } from "@/lib/types";
+import type { UserRegister } from "@/api/model";
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,
@@ -61,7 +61,7 @@ function SignUp() {
   });
 
   const onSubmit: SubmitHandler<UserRegisterForm> = (data) => {
-    signUpMutation.mutate(data);
+    signUpMutation.mutate({ data: data });
   };
 
   return (

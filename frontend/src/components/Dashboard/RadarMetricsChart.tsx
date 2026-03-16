@@ -4,21 +4,21 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  ResponsiveContainer
-} from "recharts"
+  ResponsiveContainer,
+} from "recharts";
 
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
 const chartConfig = {
   value: {
     label: "Value",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 /*
 Maybe TODO: need to get real 5th and 95th percentile values from db
@@ -35,7 +35,7 @@ const metricRanges: Record<string, { min: number; max: number }> = {
   "Yield Force": { min: 5, max: 320.5 },
   "Yield Displacement": { min: 1.2, max: 20.2 },
   Ductility: { min: 5.5, max: 336.8 },
-}
+};
 
 const metricUnits: Record<string, string> = {
   "Max Force": "kN",
@@ -46,7 +46,7 @@ const metricUnits: Record<string, string> = {
   "Yield Displacement": "mm",
   Stiffness: "kN/mm",
   Ductility: "",
-}
+};
 
 const tickSymbols: Record<string, string> = {
   Stiffness: "Ks",
@@ -57,65 +57,86 @@ const tickSymbols: Record<string, string> = {
   "Ultimate Displacement": "Δu",
   "Ultimate Force": "Fu",
   Ductility: "μ",
-}
+};
 
 function normalizeMetric(metric: string, rawValue: number) {
-  const range = metricRanges[metric]
-  if (!range || range.max <= range.min) return 0
+  const range = metricRanges[metric];
+  if (!range || range.max <= range.min) return 0;
 
   // Clamp to avoid log(0) or negatives
-  const safeValue = Math.max(rawValue, range.min)
-  const safeMin = Math.max(range.min, 1e-6)
-  const safeMax = Math.max(range.max, safeMin + 1e-6)
+  const safeValue = Math.max(rawValue, range.min);
+  const safeMin = Math.max(range.min, 1e-6);
+  const safeMax = Math.max(range.max, safeMin + 1e-6);
 
-  const logValue = Math.log(safeValue)
-  const logMin = Math.log(safeMin)
-  const logMax = Math.log(safeMax)
+  const logValue = Math.log(safeValue);
+  const logMin = Math.log(safeMin);
+  const logMax = Math.log(safeMax);
 
-  const normalized = (logValue - logMin) / (logMax - logMin)
-  return Math.max(0, Math.min(1, normalized))
+  const normalized = (logValue - logMin) / (logMax - logMin);
+  return Math.max(0, Math.min(1, normalized));
 }
 
-type BarkByteExperimentMetrics = {
-  e_max_force?: number | null
-  e_max_displacement?: number | null
-  e_stiffness?: number | null
-  e_ultimate_force?: number | null
-  e_ultimate_displacement?: number | null
-  e_yield_force?: number | null
-  e_yield_displacement?: number | null
-  e_ductility?: number | null
-}
+type TimverseExperimentMetrics = {
+  e_max_force?: number | null;
+  e_max_displacement?: number | null;
+  e_stiffness?: number | null;
+  e_ultimate_force?: number | null;
+  e_ultimate_displacement?: number | null;
+  e_yield_force?: number | null;
+  e_yield_displacement?: number | null;
+  e_ductility?: number | null;
+};
 
 type RadarMetricsChartProps = {
-  data: BarkByteExperimentMetrics
-  className?: string
-}
+  data: TimverseExperimentMetrics;
+  className?: string;
+};
 
 export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
   const chartData = [
-    { metric: "Max Force", rawValue: Number(data.e_max_force ?? 0)},
-    { metric: "Max Displacement", rawValue: Number(data.e_max_displacement ?? 0)},
-    { metric: "Stiffness", rawValue: Number(data.e_stiffness ?? 0)},
-    { metric: "Ultimate Force", rawValue: Number(data.e_ultimate_force ?? 0)},
-    { metric: "Ultimate Displacement", rawValue: Number(data.e_ultimate_displacement ?? 0)},
-    { metric: "Yield Force", rawValue: Number(data.e_yield_force ?? 0)},
-    { metric: "Yield Displacement", rawValue: Number(data.e_yield_displacement ?? 0)},
-    { metric: "Ductility", rawValue: Number(data.e_ductility ?? 0)}
+    { metric: "Max Force", rawValue: Number(data.e_max_force ?? 0) },
+    {
+      metric: "Max Displacement",
+      rawValue: Number(data.e_max_displacement ?? 0),
+    },
+    { metric: "Stiffness", rawValue: Number(data.e_stiffness ?? 0) },
+    { metric: "Ultimate Force", rawValue: Number(data.e_ultimate_force ?? 0) },
+    {
+      metric: "Ultimate Displacement",
+      rawValue: Number(data.e_ultimate_displacement ?? 0),
+    },
+    { metric: "Yield Force", rawValue: Number(data.e_yield_force ?? 0) },
+    {
+      metric: "Yield Displacement",
+      rawValue: Number(data.e_yield_displacement ?? 0),
+    },
+    { metric: "Ductility", rawValue: Number(data.e_ductility ?? 0) },
   ].map((d) => ({
     ...d,
     value: normalizeMetric(d.metric, d.rawValue),
-  }))
+  }));
 
   return (
     <ChartContainer
       config={chartConfig}
-      className={["w-full min-w-0 aspect-square max-w-[520px] mx-auto", className]
+      className={[
+        "w-full min-w-0 aspect-square max-w-[520px] mx-auto",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
     >
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-        <RadarChart data={chartData} outerRadius="100%" margin={{ top: 22, right: 22, bottom: 22, left: 22 }}>
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        minWidth={0}
+        minHeight={0}
+      >
+        <RadarChart
+          data={chartData}
+          outerRadius="100%"
+          margin={{ top: 22, right: 22, bottom: 22, left: 22 }}
+        >
           <ChartTooltip
             cursor={false}
             content={
@@ -153,5 +174,5 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
         </RadarChart>
       </ResponsiveContainer>
     </ChartContainer>
-  )
+  );
 }
