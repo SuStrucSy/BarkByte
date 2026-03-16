@@ -39,6 +39,22 @@ def get_pending_specimen_by_id(
     pending = session.get(PendingSpecimen, pending_id)
     return pending
 
+def list_pending_by_user(
+    session: Session,
+    *,
+    user_id: uuid.UUID,
+    status: PendingStatus | None = None,
+) -> PendingSpecimensPublic:
+    stmt = select(PendingSpecimen).where(PendingSpecimen.changed_by_user_id == user_id)
+    count_stmt = select(func.count()).select_from(PendingSpecimen).where(PendingSpecimen.changed_by_user_id == user_id)
+    if status is not None:
+        stmt = stmt.where(PendingSpecimen.status == status)
+        count_stmt = count_stmt.where(PendingSpecimen.status == status)
+    
+    rows = session.exec(stmt).all()
+    total = session.exec(count_stmt).one()
+    return PendingSpecimensPublic(pending_specimens=rows, count=total)
+
 def cleanup_old_rejected_pending_specimens(
     session: Session,
     *,
