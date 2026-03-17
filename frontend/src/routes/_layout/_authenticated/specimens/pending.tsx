@@ -109,7 +109,10 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 
   async function onApprove(id: string): Promise<void> {
     try {
-      await approveMutation.mutateAsync({ pendingId: id, data: { comment } });
+      await approveMutation.mutateAsync({
+        pendingId: id,
+        data: { comment_by_reviewer: comment } as never,
+      });
       setActiveAction(null);
       setComment("");
     } catch (err) {
@@ -122,7 +125,10 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 
   async function onReject(id: string): Promise<void> {
     try {
-      await rejectMutation.mutateAsync({ pendingId: id, data: { comment } });
+      await rejectMutation.mutateAsync({
+        pendingId: id,
+        data: { comment_by_reviewer: comment } as never,
+      });
       setActiveAction(null);
       setComment("");
     } catch (err) {

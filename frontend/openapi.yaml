@@ -465,7 +465,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SpecimenCreate"
+              $ref: "#/components/schemas/PendingSpecimenCreate"
       responses:
         "200":
           description: Successful Response
@@ -542,7 +542,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SpecimenUpdate"
+              $ref: "#/components/schemas/PendingSpecimenUpdate"
       responses:
         "200":
           description: Successful Response
@@ -2076,8 +2076,183 @@ components:
         - token
         - new_password
       title: NewPassword
+    PendingSpecimenCreate:
+      properties:
+        comment_by_author:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Comment By Author
+        specimen_reference_id:
+          type: string
+          title: Specimen Reference Id
+        replicate_tests:
+          type: integer
+          title: Replicate Tests
+        note:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Note
+        dowel:
+          type: boolean
+          title: Dowel
+        connector:
+          type: boolean
+          title: Connector
+        assembly_type:
+          $ref: "#/components/schemas/AssemblyType"
+        practice:
+          $ref: "#/components/schemas/Practice"
+        connection_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connection Description
+        element_dimension:
+          type: string
+          maxLength: 1000
+          title: Element Dimension
+        fastener_numbers:
+          type: integer
+          title: Fastener Numbers
+        moisture_percentage:
+          type: string
+          title: Moisture Percentage
+        wood_type:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Wood Type
+        wood_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Wood Mechanical Properties
+        connector_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Connector Mechanical Properties
+        fastener_mechanical_properties:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Fastener Mechanical Properties
+        e_date:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Date
+        e_test_loading_type:
+          anyOf:
+            - $ref: "#/components/schemas/TestLoadingType"
+            - type: "null"
+        e_yield_point_method:
+          anyOf:
+            - $ref: "#/components/schemas/YieldPointMethod"
+            - type: "null"
+        e_stiffness:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Stiffness
+        e_yield_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Displacement
+        e_yield_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Yield Force
+        e_max_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Displacement
+        e_max_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Max Force
+        e_ultimate_displacement:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Displacement
+        e_ultimate_force:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ultimate Force
+        e_ductility:
+          anyOf:
+            - type: number
+            - type: "null"
+          title: E Ductility
+        e_qfm_description:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: E Qfm Description
+        doi_id:
+          type: string
+          format: uuid
+          title: Doi Id
+        e_qualitative_failure_measure:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: E Qualitative Failure Measure
+        fastener_type_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Fastener Type Ids
+        loading_direction_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Loading Direction Ids
+        joinery_type_id:
+          type: string
+          format: uuid
+          title: Joinery Type Id
+        sub_joinery_type_id:
+          type: string
+          format: uuid
+          title: Sub Joinery Type Id
+      type: object
+      required:
+        - specimen_reference_id
+        - replicate_tests
+        - dowel
+        - connector
+        - assembly_type
+        - practice
+        - element_dimension
+        - fastener_numbers
+        - moisture_percentage
+        - doi_id
+        - e_qualitative_failure_measure
+        - fastener_type_ids
+        - loading_direction_ids
+        - joinery_type_id
+        - sub_joinery_type_id
+      title: PendingSpecimenCreate
+      description: Body for submitting a brand new specimen for review.
     PendingSpecimenPublic:
       properties:
+        comment_by_author:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Comment By Author
         specimen_id:
           anyOf:
             - type: string
@@ -2129,16 +2304,21 @@ components:
       title: PendingSpecimenPublic
     PendingSpecimenReview:
       properties:
-        comment:
+        comment_by_reviewer:
           type: string
-          title: Comment
+          title: Comment By Reviewer
       type: object
       required:
-        - comment
+        - comment_by_reviewer
       title: PendingSpecimenReview
       description: Body for approve or reject actions.
     PendingSpecimenUpdate:
       properties:
+        comment_by_author:
+          anyOf:
+            - type: string
+            - type: "null"
+          title: Comment By Author
         specimen_reference_id:
           anyOf:
             - type: string
@@ -2308,7 +2488,7 @@ components:
           title: Sub Joinery Type Id
       type: object
       title: PendingSpecimenUpdate
-      description: Body for updating the pending specimen's changed_data.
+      description: Body for submitting or editing specimen changes under review.
     PendingSpecimensPublic:
       properties:
         pending_specimens:
@@ -2359,170 +2539,6 @@ components:
         - password
         - full_name
       title: PrivateUserCreate
-    SpecimenCreate:
-      properties:
-        specimen_reference_id:
-          type: string
-          title: Specimen Reference Id
-        replicate_tests:
-          type: integer
-          title: Replicate Tests
-        note:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Note
-        dowel:
-          type: boolean
-          title: Dowel
-        connector:
-          type: boolean
-          title: Connector
-        assembly_type:
-          $ref: "#/components/schemas/AssemblyType"
-        practice:
-          $ref: "#/components/schemas/Practice"
-        connection_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connection Description
-        element_dimension:
-          type: string
-          maxLength: 1000
-          title: Element Dimension
-        fastener_numbers:
-          type: integer
-          title: Fastener Numbers
-        moisture_percentage:
-          type: string
-          title: Moisture Percentage
-        wood_type:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Wood Type
-        wood_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Wood Mechanical Properties
-        connector_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connector Mechanical Properties
-        fastener_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Fastener Mechanical Properties
-        e_date:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Date
-        e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
-        e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
-        e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Stiffness
-        e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Displacement
-        e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Force
-        e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Displacement
-        e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Force
-        e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Displacement
-        e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Force
-        e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ductility
-        e_qfm_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Qfm Description
-        doi_id:
-          type: string
-          format: uuid
-          title: Doi Id
-        e_qualitative_failure_measure:
-          items:
-            type: string
-            format: uuid
-          type: array
-          title: E Qualitative Failure Measure
-        fastener_type_ids:
-          items:
-            type: string
-            format: uuid
-          type: array
-          title: Fastener Type Ids
-        loading_direction_ids:
-          items:
-            type: string
-            format: uuid
-          type: array
-          title: Loading Direction Ids
-        joinery_type_id:
-          type: string
-          format: uuid
-          title: Joinery Type Id
-        sub_joinery_type_id:
-          type: string
-          format: uuid
-          title: Sub Joinery Type Id
-      type: object
-      required:
-        - specimen_reference_id
-        - replicate_tests
-        - dowel
-        - connector
-        - assembly_type
-        - practice
-        - element_dimension
-        - fastener_numbers
-        - moisture_percentage
-        - doi_id
-        - e_qualitative_failure_measure
-        - fastener_type_ids
-        - loading_direction_ids
-        - joinery_type_id
-        - sub_joinery_type_id
-      title: SpecimenCreate
     SpecimenFilterOptionsPublic:
       properties:
         assembly_types:
@@ -2735,177 +2751,6 @@ components:
         - fastener_types
         - loading_directions
       title: SpecimenPublic
-    SpecimenUpdate:
-      properties:
-        specimen_reference_id:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Specimen Reference Id
-        replicate_tests:
-          anyOf:
-            - type: integer
-            - type: "null"
-          title: Replicate Tests
-        note:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Note
-        dowel:
-          anyOf:
-            - type: boolean
-            - type: "null"
-          title: Dowel
-        connector:
-          anyOf:
-            - type: boolean
-            - type: "null"
-          title: Connector
-        assembly_type:
-          anyOf:
-            - $ref: "#/components/schemas/AssemblyType"
-            - type: "null"
-        practice:
-          anyOf:
-            - $ref: "#/components/schemas/Practice"
-            - type: "null"
-        connection_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connection Description
-        element_dimension:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Element Dimension
-        fastener_numbers:
-          anyOf:
-            - type: integer
-            - type: "null"
-          title: Fastener Numbers
-        moisture_percentage:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Moisture Percentage
-        wood_type:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Wood Type
-        wood_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Wood Mechanical Properties
-        connector_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Connector Mechanical Properties
-        fastener_mechanical_properties:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: Fastener Mechanical Properties
-        e_date:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Date
-        e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
-        e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
-        e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Stiffness
-        e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Displacement
-        e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Yield Force
-        e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Displacement
-        e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Max Force
-        e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Displacement
-        e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ultimate Force
-        e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
-          title: E Ductility
-        e_qfm_description:
-          anyOf:
-            - type: string
-            - type: "null"
-          title: E Qfm Description
-        e_qualitative_failure_measure:
-          anyOf:
-            - items:
-                type: string
-                format: uuid
-              type: array
-            - type: "null"
-          title: E Qualitative Failure Measure
-        fastener_type_ids:
-          anyOf:
-            - items:
-                type: string
-                format: uuid
-              type: array
-            - type: "null"
-          title: Fastener Type Ids
-        loading_direction_ids:
-          anyOf:
-            - items:
-                type: string
-                format: uuid
-              type: array
-            - type: "null"
-          title: Loading Direction Ids
-        joinery_type_id:
-          anyOf:
-            - type: string
-              format: uuid
-            - type: "null"
-          title: Joinery Type Id
-        sub_joinery_type_id:
-          anyOf:
-            - type: string
-              format: uuid
-            - type: "null"
-          title: Sub Joinery Type Id
-      type: object
-      title: SpecimenUpdate
     SpecimensPublic:
       properties:
         data:

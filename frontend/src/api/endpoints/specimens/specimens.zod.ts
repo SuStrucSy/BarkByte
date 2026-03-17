@@ -164,60 +164,66 @@ export const SpecimensReadSpecimensResponse = zod.object({
  */
 export const specimensCreateSpecimenBodyElementDimensionMax = 1000;
 
-export const SpecimensCreateSpecimenBody = zod.object({
-	specimen_reference_id: zod.string(),
-	replicate_tests: zod.number(),
-	note: zod.union([zod.string(), zod.null()]).optional(),
-	dowel: zod.boolean(),
-	connector: zod.boolean(),
-	assembly_type: zod.enum([
-		"Wall-Floor",
-		"Wall-Wall",
-		"Wall-Floor & Wall-Wall",
-	]),
-	practice: zod.enum(["Conventional", "Research and Development"]),
-	connection_description: zod.union([zod.string(), zod.null()]).optional(),
-	element_dimension: zod
-		.string()
-		.max(specimensCreateSpecimenBodyElementDimensionMax),
-	fastener_numbers: zod.number(),
-	moisture_percentage: zod.string(),
-	wood_type: zod.union([zod.string(), zod.null()]).optional(),
-	wood_mechanical_properties: zod.union([zod.string(), zod.null()]).optional(),
-	connector_mechanical_properties: zod
-		.union([zod.string(), zod.null()])
-		.optional(),
-	fastener_mechanical_properties: zod
-		.union([zod.string(), zod.null()])
-		.optional(),
-	e_date: zod.union([zod.string(), zod.null()]).optional(),
-	e_test_loading_type: zod
-		.union([
-			zod.enum(["Cyclic", "Monotonic", "Monotonic and Cyclic"]),
-			zod.null(),
-		])
-		.optional(),
-	e_yield_point_method: zod
-		.union([zod.enum(["CEN 1/6", "EEEP", "FEMA P795"]), zod.null()])
-		.optional(),
-	e_stiffness: zod.union([zod.number(), zod.null()]).optional(),
-	e_yield_displacement: zod.union([zod.number(), zod.null()]).optional(),
-	e_yield_force: zod.union([zod.number(), zod.null()]).optional(),
-	e_max_displacement: zod.union([zod.number(), zod.null()]).optional(),
-	e_max_force: zod.union([zod.number(), zod.null()]).optional(),
-	e_ultimate_displacement: zod.union([zod.number(), zod.null()]).optional(),
-	e_ultimate_force: zod.union([zod.number(), zod.null()]).optional(),
-	e_ductility: zod.union([zod.number(), zod.null()]).optional(),
-	e_qfm_description: zod.union([zod.string(), zod.null()]).optional(),
-	doi_id: zod.uuid(),
-	e_qualitative_failure_measure: zod.array(zod.uuid()),
-	fastener_type_ids: zod.array(zod.uuid()),
-	loading_direction_ids: zod.array(zod.uuid()),
-	joinery_type_id: zod.uuid(),
-	sub_joinery_type_id: zod.uuid(),
-});
+export const SpecimensCreateSpecimenBody = zod
+	.object({
+		comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
+		specimen_reference_id: zod.string(),
+		replicate_tests: zod.number(),
+		note: zod.union([zod.string(), zod.null()]).optional(),
+		dowel: zod.boolean(),
+		connector: zod.boolean(),
+		assembly_type: zod.enum([
+			"Wall-Floor",
+			"Wall-Wall",
+			"Wall-Floor & Wall-Wall",
+		]),
+		practice: zod.enum(["Conventional", "Research and Development"]),
+		connection_description: zod.union([zod.string(), zod.null()]).optional(),
+		element_dimension: zod
+			.string()
+			.max(specimensCreateSpecimenBodyElementDimensionMax),
+		fastener_numbers: zod.number(),
+		moisture_percentage: zod.string(),
+		wood_type: zod.union([zod.string(), zod.null()]).optional(),
+		wood_mechanical_properties: zod
+			.union([zod.string(), zod.null()])
+			.optional(),
+		connector_mechanical_properties: zod
+			.union([zod.string(), zod.null()])
+			.optional(),
+		fastener_mechanical_properties: zod
+			.union([zod.string(), zod.null()])
+			.optional(),
+		e_date: zod.union([zod.string(), zod.null()]).optional(),
+		e_test_loading_type: zod
+			.union([
+				zod.enum(["Cyclic", "Monotonic", "Monotonic and Cyclic"]),
+				zod.null(),
+			])
+			.optional(),
+		e_yield_point_method: zod
+			.union([zod.enum(["CEN 1/6", "EEEP", "FEMA P795"]), zod.null()])
+			.optional(),
+		e_stiffness: zod.union([zod.number(), zod.null()]).optional(),
+		e_yield_displacement: zod.union([zod.number(), zod.null()]).optional(),
+		e_yield_force: zod.union([zod.number(), zod.null()]).optional(),
+		e_max_displacement: zod.union([zod.number(), zod.null()]).optional(),
+		e_max_force: zod.union([zod.number(), zod.null()]).optional(),
+		e_ultimate_displacement: zod.union([zod.number(), zod.null()]).optional(),
+		e_ultimate_force: zod.union([zod.number(), zod.null()]).optional(),
+		e_ductility: zod.union([zod.number(), zod.null()]).optional(),
+		e_qfm_description: zod.union([zod.string(), zod.null()]).optional(),
+		doi_id: zod.uuid(),
+		e_qualitative_failure_measure: zod.array(zod.uuid()),
+		fastener_type_ids: zod.array(zod.uuid()),
+		loading_direction_ids: zod.array(zod.uuid()),
+		joinery_type_id: zod.uuid(),
+		sub_joinery_type_id: zod.uuid(),
+	})
+	.describe("Body for submitting a brand new specimen for review.");
 
 export const SpecimensCreateSpecimenResponse = zod.object({
+	comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 	specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	changed_by_user_id: zod.uuid(),
 	changed_data: zod.record(zod.string(), zod.unknown()),
@@ -385,64 +391,75 @@ export const SpecimensUpdateSpecimenParams = zod.object({
 	id: zod.uuid(),
 });
 
-export const SpecimensUpdateSpecimenBody = zod.object({
-	specimen_reference_id: zod.union([zod.string(), zod.null()]).optional(),
-	replicate_tests: zod.union([zod.number(), zod.null()]).optional(),
-	note: zod.union([zod.string(), zod.null()]).optional(),
-	dowel: zod.union([zod.boolean(), zod.null()]).optional(),
-	connector: zod.union([zod.boolean(), zod.null()]).optional(),
-	assembly_type: zod
-		.union([
-			zod.enum(["Wall-Floor", "Wall-Wall", "Wall-Floor & Wall-Wall"]),
-			zod.null(),
-		])
-		.optional(),
-	practice: zod
-		.union([zod.enum(["Conventional", "Research and Development"]), zod.null()])
-		.optional(),
-	connection_description: zod.union([zod.string(), zod.null()]).optional(),
-	element_dimension: zod.union([zod.string(), zod.null()]).optional(),
-	fastener_numbers: zod.union([zod.number(), zod.null()]).optional(),
-	moisture_percentage: zod.union([zod.string(), zod.null()]).optional(),
-	wood_type: zod.union([zod.string(), zod.null()]).optional(),
-	wood_mechanical_properties: zod.union([zod.string(), zod.null()]).optional(),
-	connector_mechanical_properties: zod
-		.union([zod.string(), zod.null()])
-		.optional(),
-	fastener_mechanical_properties: zod
-		.union([zod.string(), zod.null()])
-		.optional(),
-	e_date: zod.union([zod.string(), zod.null()]).optional(),
-	e_test_loading_type: zod
-		.union([
-			zod.enum(["Cyclic", "Monotonic", "Monotonic and Cyclic"]),
-			zod.null(),
-		])
-		.optional(),
-	e_yield_point_method: zod
-		.union([zod.enum(["CEN 1/6", "EEEP", "FEMA P795"]), zod.null()])
-		.optional(),
-	e_stiffness: zod.union([zod.number(), zod.null()]).optional(),
-	e_yield_displacement: zod.union([zod.number(), zod.null()]).optional(),
-	e_yield_force: zod.union([zod.number(), zod.null()]).optional(),
-	e_max_displacement: zod.union([zod.number(), zod.null()]).optional(),
-	e_max_force: zod.union([zod.number(), zod.null()]).optional(),
-	e_ultimate_displacement: zod.union([zod.number(), zod.null()]).optional(),
-	e_ultimate_force: zod.union([zod.number(), zod.null()]).optional(),
-	e_ductility: zod.union([zod.number(), zod.null()]).optional(),
-	e_qfm_description: zod.union([zod.string(), zod.null()]).optional(),
-	e_qualitative_failure_measure: zod
-		.union([zod.array(zod.uuid()), zod.null()])
-		.optional(),
-	fastener_type_ids: zod.union([zod.array(zod.uuid()), zod.null()]).optional(),
-	loading_direction_ids: zod
-		.union([zod.array(zod.uuid()), zod.null()])
-		.optional(),
-	joinery_type_id: zod.union([zod.uuid(), zod.null()]).optional(),
-	sub_joinery_type_id: zod.union([zod.uuid(), zod.null()]).optional(),
-});
+export const SpecimensUpdateSpecimenBody = zod
+	.object({
+		comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
+		specimen_reference_id: zod.union([zod.string(), zod.null()]).optional(),
+		replicate_tests: zod.union([zod.number(), zod.null()]).optional(),
+		note: zod.union([zod.string(), zod.null()]).optional(),
+		dowel: zod.union([zod.boolean(), zod.null()]).optional(),
+		connector: zod.union([zod.boolean(), zod.null()]).optional(),
+		assembly_type: zod
+			.union([
+				zod.enum(["Wall-Floor", "Wall-Wall", "Wall-Floor & Wall-Wall"]),
+				zod.null(),
+			])
+			.optional(),
+		practice: zod
+			.union([
+				zod.enum(["Conventional", "Research and Development"]),
+				zod.null(),
+			])
+			.optional(),
+		connection_description: zod.union([zod.string(), zod.null()]).optional(),
+		element_dimension: zod.union([zod.string(), zod.null()]).optional(),
+		fastener_numbers: zod.union([zod.number(), zod.null()]).optional(),
+		moisture_percentage: zod.union([zod.string(), zod.null()]).optional(),
+		wood_type: zod.union([zod.string(), zod.null()]).optional(),
+		wood_mechanical_properties: zod
+			.union([zod.string(), zod.null()])
+			.optional(),
+		connector_mechanical_properties: zod
+			.union([zod.string(), zod.null()])
+			.optional(),
+		fastener_mechanical_properties: zod
+			.union([zod.string(), zod.null()])
+			.optional(),
+		e_date: zod.union([zod.string(), zod.null()]).optional(),
+		e_test_loading_type: zod
+			.union([
+				zod.enum(["Cyclic", "Monotonic", "Monotonic and Cyclic"]),
+				zod.null(),
+			])
+			.optional(),
+		e_yield_point_method: zod
+			.union([zod.enum(["CEN 1/6", "EEEP", "FEMA P795"]), zod.null()])
+			.optional(),
+		e_stiffness: zod.union([zod.number(), zod.null()]).optional(),
+		e_yield_displacement: zod.union([zod.number(), zod.null()]).optional(),
+		e_yield_force: zod.union([zod.number(), zod.null()]).optional(),
+		e_max_displacement: zod.union([zod.number(), zod.null()]).optional(),
+		e_max_force: zod.union([zod.number(), zod.null()]).optional(),
+		e_ultimate_displacement: zod.union([zod.number(), zod.null()]).optional(),
+		e_ultimate_force: zod.union([zod.number(), zod.null()]).optional(),
+		e_ductility: zod.union([zod.number(), zod.null()]).optional(),
+		e_qfm_description: zod.union([zod.string(), zod.null()]).optional(),
+		e_qualitative_failure_measure: zod
+			.union([zod.array(zod.uuid()), zod.null()])
+			.optional(),
+		fastener_type_ids: zod
+			.union([zod.array(zod.uuid()), zod.null()])
+			.optional(),
+		loading_direction_ids: zod
+			.union([zod.array(zod.uuid()), zod.null()])
+			.optional(),
+		joinery_type_id: zod.union([zod.uuid(), zod.null()]).optional(),
+		sub_joinery_type_id: zod.union([zod.uuid(), zod.null()]).optional(),
+	})
+	.describe("Body for submitting or editing specimen changes under review.");
 
 export const SpecimensUpdateSpecimenResponse = zod.object({
+	comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 	specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	changed_by_user_id: zod.uuid(),
 	changed_data: zod.record(zod.string(), zod.unknown()),

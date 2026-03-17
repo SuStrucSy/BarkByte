@@ -8,6 +8,7 @@ import type { PendingSpecimenPublicChangedData } from "./pendingSpecimenPublicCh
 import type { PendingStatus } from "./pendingStatus";
 
 export interface PendingSpecimenPublic {
+	comment_by_author?: string | null;
 	specimen_id?: string | null;
 	changed_by_user_id: string;
 	changed_data: PendingSpecimenPublicChangedData;

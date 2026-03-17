@@ -23,13 +23,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import type {
 	HTTPValidationError,
+	PendingSpecimenCreate,
 	PendingSpecimenPublic,
-	SpecimenCreate,
+	PendingSpecimenUpdate,
 	SpecimenFilterOptionsPublic,
 	SpecimenPublic,
 	SpecimensPublic,
 	SpecimensReadSpecimensParams,
-	SpecimenUpdate,
 } from "../../model";
 import type { ErrorType } from "../../mutator/custom-instance";
 import { customInstance } from "../../mutator/custom-instance";
@@ -199,14 +199,14 @@ export function useSpecimensReadSpecimens<
  * @summary Create Specimen
  */
 export const specimensCreateSpecimen = (
-	specimenCreate: SpecimenCreate,
+	pendingSpecimenCreate: PendingSpecimenCreate,
 	signal?: AbortSignal,
 ) => {
 	return customInstance<PendingSpecimenPublic>({
 		url: `/api/v1/specimens/`,
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		data: specimenCreate,
+		data: pendingSpecimenCreate,
 		signal,
 	});
 };
@@ -218,13 +218,13 @@ export const getSpecimensCreateSpecimenMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof specimensCreateSpecimen>>,
 		TError,
-		{ data: SpecimenCreate },
+		{ data: PendingSpecimenCreate },
 		TContext
 	>;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof specimensCreateSpecimen>>,
 	TError,
-	{ data: SpecimenCreate },
+	{ data: PendingSpecimenCreate },
 	TContext
 > => {
 	const mutationKey = ["specimensCreateSpecimen"];
@@ -238,7 +238,7 @@ export const getSpecimensCreateSpecimenMutationOptions = <
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof specimensCreateSpecimen>>,
-		{ data: SpecimenCreate }
+		{ data: PendingSpecimenCreate }
 	> = (props) => {
 		const { data } = props ?? {};
 
@@ -251,7 +251,7 @@ export const getSpecimensCreateSpecimenMutationOptions = <
 export type SpecimensCreateSpecimenMutationResult = NonNullable<
 	Awaited<ReturnType<typeof specimensCreateSpecimen>>
 >;
-export type SpecimensCreateSpecimenMutationBody = SpecimenCreate;
+export type SpecimensCreateSpecimenMutationBody = PendingSpecimenCreate;
 export type SpecimensCreateSpecimenMutationError =
 	ErrorType<HTTPValidationError>;
 
@@ -266,7 +266,7 @@ export const useSpecimensCreateSpecimen = <
 		mutation?: UseMutationOptions<
 			Awaited<ReturnType<typeof specimensCreateSpecimen>>,
 			TError,
-			{ data: SpecimenCreate },
+			{ data: PendingSpecimenCreate },
 			TContext
 		>;
 	},
@@ -274,7 +274,7 @@ export const useSpecimensCreateSpecimen = <
 ): UseMutationResult<
 	Awaited<ReturnType<typeof specimensCreateSpecimen>>,
 	TError,
-	{ data: SpecimenCreate },
+	{ data: PendingSpecimenCreate },
 	TContext
 > => {
 	return useMutation(
@@ -595,14 +595,14 @@ export function useSpecimensReadSpecimen<
  */
 export const specimensUpdateSpecimen = (
 	id: string,
-	specimenUpdate: SpecimenUpdate,
+	pendingSpecimenUpdate: PendingSpecimenUpdate,
 	signal?: AbortSignal,
 ) => {
 	return customInstance<PendingSpecimenPublic>({
 		url: `/api/v1/specimens/${id}`,
 		method: "PUT",
 		headers: { "Content-Type": "application/json" },
-		data: specimenUpdate,
+		data: pendingSpecimenUpdate,
 		signal,
 	});
 };
@@ -614,13 +614,13 @@ export const getSpecimensUpdateSpecimenMutationOptions = <
 	mutation?: UseMutationOptions<
 		Awaited<ReturnType<typeof specimensUpdateSpecimen>>,
 		TError,
-		{ id: string; data: SpecimenUpdate },
+		{ id: string; data: PendingSpecimenUpdate },
 		TContext
 	>;
 }): UseMutationOptions<
 	Awaited<ReturnType<typeof specimensUpdateSpecimen>>,
 	TError,
-	{ id: string; data: SpecimenUpdate },
+	{ id: string; data: PendingSpecimenUpdate },
 	TContext
 > => {
 	const mutationKey = ["specimensUpdateSpecimen"];
@@ -634,7 +634,7 @@ export const getSpecimensUpdateSpecimenMutationOptions = <
 
 	const mutationFn: MutationFunction<
 		Awaited<ReturnType<typeof specimensUpdateSpecimen>>,
-		{ id: string; data: SpecimenUpdate }
+		{ id: string; data: PendingSpecimenUpdate }
 	> = (props) => {
 		const { id, data } = props ?? {};
 
@@ -647,7 +647,7 @@ export const getSpecimensUpdateSpecimenMutationOptions = <
 export type SpecimensUpdateSpecimenMutationResult = NonNullable<
 	Awaited<ReturnType<typeof specimensUpdateSpecimen>>
 >;
-export type SpecimensUpdateSpecimenMutationBody = SpecimenUpdate;
+export type SpecimensUpdateSpecimenMutationBody = PendingSpecimenUpdate;
 export type SpecimensUpdateSpecimenMutationError =
 	ErrorType<HTTPValidationError>;
 
@@ -662,7 +662,7 @@ export const useSpecimensUpdateSpecimen = <
 		mutation?: UseMutationOptions<
 			Awaited<ReturnType<typeof specimensUpdateSpecimen>>,
 			TError,
-			{ id: string; data: SpecimenUpdate },
+			{ id: string; data: PendingSpecimenUpdate },
 			TContext
 		>;
 	},
@@ -670,7 +670,7 @@ export const useSpecimensUpdateSpecimen = <
 ): UseMutationResult<
 	Awaited<ReturnType<typeof specimensUpdateSpecimen>>,
 	TError,
-	{ id: string; data: SpecimenUpdate },
+	{ id: string; data: PendingSpecimenUpdate },
 	TContext
 > => {
 	return useMutation(

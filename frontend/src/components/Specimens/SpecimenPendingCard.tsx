@@ -1,14 +1,19 @@
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import {
   Item,
   ItemActions,
@@ -18,7 +23,6 @@ import {
 } from "@/components/ui/item";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BookOpenText,
@@ -38,12 +42,16 @@ import type {
   SpecimenPublic,
 } from "@/api/model";
 import { humanizeLabel, renderValue } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 import { Textarea } from "../ui/textarea";
 
 export type ActiveAction = {
   pendingId: string;
   type: "approve" | "reject";
 } | null;
+
+const rejectSecondaryClassName =
+  "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70";
 
 interface PendingCardActionsProps {
   status: SpecimenStatus;
@@ -143,12 +151,8 @@ function PendingCardActions({
           </Button>
           <Button
             type="button"
-            className={[
-              "flex-1",
-              activeAction.type === "reject"
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : "",
-            ].join(" ")}
+            variant={activeAction.type === "reject" ? "secondary" : "default"}
+            className={activeAction.type === "reject" ? `flex-1 ${rejectSecondaryClassName}` : "flex-1"}
             disabled={isBusy}
             onClick={() =>
               activeAction.type === "approve"
@@ -196,9 +200,9 @@ function PendingCardActions({
         Approve
       </Button>
       <Button
-        variant="destructive"
+        variant="secondary"
         type="button"
-        className="w-full"
+        className={`w-full ${rejectSecondaryClassName}`}
         disabled={isBusy}
         onClick={() => {
           setComment("");
@@ -322,12 +326,12 @@ function PendingFieldRow({
   renderNewValue?: () => React.ReactNode;
 }) {
   return (
-    <div className="grid gap-1 rounded-md border border-border/60 p-3">
+    <div className="grid gap-1 rounded-md px-3 py-2">
       <span className="text-[10px] tracking-wide text-muted-foreground uppercase">
         {label}
       </span>
       {isChanged ? (
-        <div className="grid gap-1">
+        <div className="grid min-w-0 gap-1">
           <div className="text-sm text-red-600 line-through decoration-red-400">
             {formatFieldValue(oldValue, unit)}
           </div>
@@ -336,7 +340,7 @@ function PendingFieldRow({
           </div>
         </div>
       ) : (
-        <div className="text-sm">
+        <div className="min-w-0 text-sm">
           {renderNewValue ? renderNewValue() : formatFieldValue(newValue, unit)}
         </div>
       )}
@@ -362,7 +366,7 @@ export function SpecimenPendingCard({
   isNew,
   status,
 }: SpecimenPendingCardProps) {
-  const [showAllAttributes, setShowAllAttributes] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const { data: originalSpecimen } = useSpecimensReadSpecimen(specimenId ?? "", {
     query: {
       enabled: !isNew && !!specimenId,
@@ -391,12 +395,12 @@ export function SpecimenPendingCard({
     return originalSpecimen?.[field];
   };
 
-  const renderSection = (section: keyof typeof sectionFields) => {
-    const fields = sectionFields[section].filter(
-      (field) => showAllAttributes || isFieldChanged(field),
-    );
-
-    if (!fields.length) {
+  const renderFieldGrid = (
+    fields: SpecimenField[],
+    columnsClassName: string,
+    leadingRow?: React.ReactNode,
+  ) => {
+    if (!fields.length && !leadingRow) {
       return (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
           No changed attributes in this section.
@@ -405,7 +409,8 @@ export function SpecimenPendingCard({
     }
 
     return (
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className={columnsClassName}>
+        {leadingRow}
         {fields.map((field) => (
           <PendingFieldRow
             key={field}
@@ -420,10 +425,18 @@ export function SpecimenPendingCard({
     );
   };
 
+  const renderSection = (section: keyof typeof sectionFields) => {
+    const fields = sectionFields[section];
+    return renderFieldGrid(
+      fields,
+      "grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3",
+    );
+  };
+
   const renderChangedOnly = () => {
     const fields = allSectionFields.filter((field) => isFieldChanged(field));
 
-    if (!fields.length) {
+    if (!fields.length && !specimenId) {
       return (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
           No changed attributes.
@@ -431,21 +444,82 @@ export function SpecimenPendingCard({
       );
     }
 
-    return (
-      <div className="grid gap-3 md:grid-cols-2">
-        {fields.map((field) => (
-          <PendingFieldRow
-            key={field}
-            label={getLabel(field)}
-            oldValue={originalSpecimen?.[field]}
-            newValue={getDisplayValue(field)}
-            isChanged={!isNew && isFieldChanged(field)}
-            unit={fieldUnits[field]}
-          />
-        ))}
-      </div>
+    return renderFieldGrid(
+      fields,
+      "grid grid-cols-1 gap-3",
+      specimenId
+        ? (
+            <PendingFieldRow
+              label="Reference Title"
+              oldValue={null}
+              newValue={specimen.specimen_reference_id ?? originalSpecimen?.specimen_reference_id}
+              isChanged={false}
+              renderNewValue={() => (
+                <a
+                  href={`/specimens/${specimenId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {specimen.specimen_reference_id ?? originalSpecimen?.specimen_reference_id ?? specimenId}
+                </a>
+              )}
+            />
+          )
+        : undefined,
     );
   };
+
+  const renderFullDetailsTabs = () => (
+    <Tabs defaultValue="Meta Data" className="grid h-full min-h-0 gap-4">
+      <TabsList className="h-auto flex-wrap justify-start">
+        <TabsTrigger value="Meta Data">
+          <Info /> Meta Data
+        </TabsTrigger>
+        <TabsTrigger value="Structural Data">
+          <Pyramid /> Structural Data
+        </TabsTrigger>
+        <TabsTrigger value="Experimental Data">
+          <RulerDimensionLine />
+          Experimental Data
+        </TabsTrigger>
+        <TabsTrigger value="Reference Details">
+          <BookOpenText />
+          Reference Details
+        </TabsTrigger>
+      </TabsList>
+      <div className="h-[clamp(18rem,42dvh,30rem)] min-h-0">
+        <TabsContent value="Meta Data" className="h-full min-h-0">
+          <ScrollArea className="h-full pr-4">
+            <div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+              <div className="grid gap-3">{renderSection("Meta Data")}</div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+        <TabsContent value="Structural Data" className="h-full min-h-0">
+          <ScrollArea className="h-full pr-4">
+            <div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+              <div className="grid gap-3">{renderSection("Structural Data")}</div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+        <TabsContent value="Experimental Data" className="h-full min-h-0">
+          <ScrollArea className="h-full pr-4">
+            <div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+              <div className="grid gap-3">{renderSection("Experimental Data")}</div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+        <TabsContent value="Reference Details" className="h-full min-h-0">
+          <ScrollArea className="h-full pr-4">
+            <div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+              <div className="grid gap-3">{renderReferenceDetails()}</div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </div>
+    </Tabs>
+  );
 
   const renderReferenceDetails = () => {
     const doi = specimen.doi ?? originalSpecimen?.doi;
@@ -488,109 +562,187 @@ export function SpecimenPendingCard({
   return (
     <Card className="w-full max-w-3xl">
       <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+          <div className="min-w-0 space-y-1">
             <CardTitle>
               {specimen.specimen_reference_id ?? "Pending specimen"}
             </CardTitle>
             <CardDescription>
               Review this specimen submission and compare pending changes.
             </CardDescription>
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <Button variant="link" className="h-auto px-0 text-base font-semibold">
+                {createdAt}
+              </Button>
+              {status === "pending" &&
+                (isNew ? (
+                  <Badge className="shrink-0 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                    <LayersPlus data-icon="inline-start" />
+                    New
+                  </Badge>
+                ) : (
+                  <Badge className="shrink-0 bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                    <Pencil data-icon="inline-start" />
+                    Update
+                  </Badge>
+                ))}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="link">{createdAt}</Button>
-            {status === "pending" &&
-              (isNew ? (
-                <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                  <LayersPlus data-icon="inline-start" />
-                  New
-                </Badge>
-              ) : (
-                <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
-                  <Pencil data-icon="inline-start" />
-                  Update
-                </Badge>
-              ))}
+          <div className="justify-self-start sm:justify-self-end">
+            <div className="flex flex-col items-start gap-2 sm:items-end">
+              {status === "pending" ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    size="sm"
+                    className={`w-auto min-w-28 ${rejectSecondaryClassName}`}
+                    disabled={isBusy}
+                    onClick={() => {
+                      setComment("");
+                      setActiveAction({ pendingId: pendingID, type: "reject" });
+                      setDetailsOpen(true);
+                    }}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="w-auto min-w-28"
+                    disabled={isBusy}
+                    onClick={() => {
+                      setComment("");
+                      setActiveAction({ pendingId: pendingID, type: "approve" });
+                      setDetailsOpen(true);
+                    }}
+                  >
+                    Approve
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
-
         <Card>
           <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
-                <CardTitle className="text-base">Specimen Information</CardTitle>
+                <CardTitle className="text-base">Changed Attributes</CardTitle>
                 <CardDescription>
-                  The specimen data below is separated from review comments and actions.
+                  A compact review of the submitted changes.
                 </CardDescription>
               </div>
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <Switch
-                  checked={showAllAttributes}
-                  onCheckedChange={setShowAllAttributes}
-                  aria-label="Show all attributes"
-                />
-                See All Attributes
-              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDetailsOpen(true)}
+              >
+                More Details
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[28rem] pr-3">
-              {showAllAttributes ? (
-                <Tabs defaultValue="Meta Data">
-                  <TabsList>
-                    <TabsTrigger value="Meta Data">
-                      <Info /> Meta Data
-                    </TabsTrigger>
-                    <TabsTrigger value="Structural Data">
-                      <Pyramid /> Structural Data
-                    </TabsTrigger>
-                    <TabsTrigger value="Experimental Data">
-                      <RulerDimensionLine />
-                      Experimental Data
-                    </TabsTrigger>
-                    <TabsTrigger value="Reference Details">
-                      <BookOpenText />
-                      Reference Details
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="Meta Data">
-                    <div className="grid gap-3">{renderSection("Meta Data")}</div>
-                  </TabsContent>
-                  <TabsContent value="Structural Data">
-                    <div className="grid gap-3">{renderSection("Structural Data")}</div>
-                  </TabsContent>
-                  <TabsContent value="Experimental Data">
-                    <div className="grid gap-3">{renderSection("Experimental Data")}</div>
-                  </TabsContent>
-                  <TabsContent value="Reference Details">
-                    <div className="grid gap-3">{renderReferenceDetails()}</div>
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <div className="grid gap-3">{renderChangedOnly()}</div>
-              )}
+            <ScrollArea className="h-72 pr-3">
+              <div className="grid gap-3">{renderChangedOnly()}</div>
             </ScrollArea>
           </CardContent>
         </Card>
-
-        <div className="grid gap-2">
-          <PendingCardActions
-            status={status}
-            isBusy={isBusy}
-            comment={comment}
-            commentByAuthor={commentByAuthor}
-            commentByReviewer={commentByReviewer}
-            activeAction={activeAction}
-            pendingID={pendingID}
-            setActiveAction={setActiveAction}
-            setComment={setComment}
-            onApprove={onApprove}
-            onReject={onReject}
-          />
-        </div>
+        {status === "rejected" && commentByReviewer?.trim().length ? (
+          <div className="px-1 text-sm">
+            <span className="font-medium">Comment by Reviewer:</span>{" "}
+            <span className="text-muted-foreground italic">"{commentByReviewer}"</span>
+          </div>
+        ) : null}
       </CardContent>
+      <Drawer
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        direction="bottom"
+      >
+        <DrawerContent
+          className="w-screen max-w-none min-h-[24rem] max-h-[85dvh]"
+        >
+          <DrawerHeader className="border-b pb-4">
+            <DrawerTitle>
+              {specimen.specimen_reference_id ?? "Pending specimen"}
+            </DrawerTitle>
+            <DrawerDescription>
+              Review complete specimen information, reference details, and approval actions.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="grid min-h-0 gap-4 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:gap-6 lg:overflow-hidden">
+            <div className="min-h-[18rem] overflow-hidden lg:min-h-0">
+              {renderFullDetailsTabs()}
+            </div>
+            <div className="min-h-0 lg:min-h-0">
+              <ScrollArea className="max-h-[40dvh] lg:max-h-[60dvh]">
+                <div className="grid gap-4 pr-4">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <CardTitle className="text-base">
+                            Pending Submission
+                          </CardTitle>
+                          <CardDescription>
+                            Submission metadata and reviewer actions.
+                          </CardDescription>
+                        </div>
+                        {specimenId ? (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link
+                              to="/specimens/$specimenId"
+                              params={{ specimenId }}
+                            >
+                              Specimen Record
+                            </Link>
+                          </Button>
+                        ) : null}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="grid gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="link" className="px-0">
+                          {createdAt}
+                        </Button>
+                        {status === "pending" &&
+                          (isNew ? (
+                            <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                              <LayersPlus data-icon="inline-start" />
+                              New
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                              <Pencil data-icon="inline-start" />
+                              Update
+                            </Badge>
+                          ))}
+                      </div>
+                      <PendingCardActions
+                        status={status}
+                        isBusy={isBusy}
+                        comment={comment}
+                        commentByAuthor={commentByAuthor}
+                        commentByReviewer={commentByReviewer}
+                        activeAction={activeAction}
+                        pendingID={pendingID}
+                        setActiveAction={setActiveAction}
+                        setComment={setComment}
+                        onApprove={onApprove}
+                        onReject={onReject}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </Card>
   );
 }

@@ -21,6 +21,7 @@ export const PendingSpecimensListPendingSpecimensResponse = zod
 	.object({
 		pending_specimens: zod.array(
 			zod.object({
+				comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 				specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 				changed_by_user_id: zod.uuid(),
 				changed_data: zod.record(zod.string(), zod.unknown()),
@@ -46,11 +47,12 @@ export const PendingSpecimensApprovePendingSpecimenParams = zod.object({
 
 export const PendingSpecimensApprovePendingSpecimenBody = zod
 	.object({
-		comment: zod.string(),
+		comment_by_reviewer: zod.string(),
 	})
 	.describe("Body for approve or reject actions.");
 
 export const PendingSpecimensApprovePendingSpecimenResponse = zod.object({
+	comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 	specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	changed_by_user_id: zod.uuid(),
 	changed_data: zod.record(zod.string(), zod.unknown()),
@@ -72,11 +74,12 @@ export const PendingSpecimensRejectPendingSpecimenRouteParams = zod.object({
 
 export const PendingSpecimensRejectPendingSpecimenRouteBody = zod
 	.object({
-		comment: zod.string(),
+		comment_by_reviewer: zod.string(),
 	})
 	.describe("Body for approve or reject actions.");
 
 export const PendingSpecimensRejectPendingSpecimenRouteResponse = zod.object({
+	comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 	specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	changed_by_user_id: zod.uuid(),
 	changed_data: zod.record(zod.string(), zod.unknown()),
@@ -99,6 +102,7 @@ export const PendingSpecimensUpdatePendingSpecimenParams = zod.object({
 
 export const PendingSpecimensUpdatePendingSpecimenBody = zod
 	.object({
+		comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 		specimen_reference_id: zod.union([zod.string(), zod.null()]).optional(),
 		replicate_tests: zod.union([zod.number(), zod.null()]).optional(),
 		note: zod.union([zod.string(), zod.null()]).optional(),
@@ -161,9 +165,10 @@ export const PendingSpecimensUpdatePendingSpecimenBody = zod
 		joinery_type_id: zod.union([zod.uuid(), zod.null()]).optional(),
 		sub_joinery_type_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	})
-	.describe("Body for updating the pending specimen's changed_data.");
+	.describe("Body for submitting or editing specimen changes under review.");
 
 export const PendingSpecimensUpdatePendingSpecimenResponse = zod.object({
+	comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 	specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	changed_by_user_id: zod.uuid(),
 	changed_data: zod.record(zod.string(), zod.unknown()),
@@ -184,6 +189,7 @@ export const PendingSpecimensDeletePendingSpecimenParams = zod.object({
 });
 
 export const PendingSpecimensDeletePendingSpecimenResponse = zod.object({
+	comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 	specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 	changed_by_user_id: zod.uuid(),
 	changed_data: zod.record(zod.string(), zod.unknown()),
@@ -207,6 +213,7 @@ export const PendingSpecimensListApprovedSpecimenTrailResponse = zod
 	.object({
 		pending_specimens: zod.array(
 			zod.object({
+				comment_by_author: zod.union([zod.string(), zod.null()]).optional(),
 				specimen_id: zod.union([zod.uuid(), zod.null()]).optional(),
 				changed_by_user_id: zod.uuid(),
 				changed_data: zod.record(zod.string(), zod.unknown()),

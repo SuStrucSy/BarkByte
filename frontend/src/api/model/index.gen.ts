@@ -34,6 +34,7 @@ export * from "./loadingdirectionGetLoadingDirectionsParams.gen";
 export * from "./message.gen";
 export * from "./newAccount.gen";
 export * from "./newPassword.gen";
+export * from "./pendingSpecimenCreate.gen";
 export * from "./pendingSpecimenPublic.gen";
 export * from "./pendingSpecimenPublicChangedData.gen";
 export * from "./pendingSpecimenReview.gen";

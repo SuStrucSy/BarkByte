@@ -9,5 +9,5 @@
  * Body for approve or reject actions.
  */
 export interface PendingSpecimenReview {
-	comment: string;
+	comment_by_reviewer: string;
 }

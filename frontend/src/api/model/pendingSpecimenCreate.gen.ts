@@ -10,21 +10,22 @@ import type { TestLoadingType } from "./testLoadingType";
 import type { YieldPointMethod } from "./yieldPointMethod";
 
 /**
- * Body for submitting or editing specimen changes under review.
+ * Body for submitting a brand new specimen for review.
  */
-export interface PendingSpecimenUpdate {
+export interface PendingSpecimenCreate {
 	comment_by_author?: string | null;
-	specimen_reference_id?: string | null;
-	replicate_tests?: number | null;
+	specimen_reference_id: string;
+	replicate_tests: number;
 	note?: string | null;
-	dowel?: boolean | null;
-	connector?: boolean | null;
-	assembly_type?: AssemblyType | null;
-	practice?: Practice | null;
+	dowel: boolean;
+	connector: boolean;
+	assembly_type: AssemblyType;
+	practice: Practice;
 	connection_description?: string | null;
-	element_dimension?: string | null;
-	fastener_numbers?: number | null;
-	moisture_percentage?: string | null;
+	/** @maxLength 1000 */
+	element_dimension: string;
+	fastener_numbers: number;
+	moisture_percentage: string;
 	wood_type?: string | null;
 	wood_mechanical_properties?: string | null;
 	connector_mechanical_properties?: string | null;
@@ -41,9 +42,10 @@ export interface PendingSpecimenUpdate {
 	e_ultimate_force?: number | null;
 	e_ductility?: number | null;
 	e_qfm_description?: string | null;
-	e_qualitative_failure_measure?: string[] | null;
-	fastener_type_ids?: string[] | null;
-	loading_direction_ids?: string[] | null;
-	joinery_type_id?: string | null;
-	sub_joinery_type_id?: string | null;
+	doi_id: string;
+	e_qualitative_failure_measure: string[];
+	fastener_type_ids: string[];
+	loading_direction_ids: string[];
+	joinery_type_id: string;
+	sub_joinery_type_id: string;
 }
