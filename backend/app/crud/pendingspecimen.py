@@ -82,6 +82,7 @@ def create_pending_specimen(
     changed_by_user_id: uuid.UUID,
     changed_data: dict[str, Any],
     specimen_id: uuid.UUID | None = None,
+    comment_by_author: str | None = None,
 ) -> PendingSpecimen:
     """
     Create one pending record.
@@ -95,6 +96,7 @@ def create_pending_specimen(
         specimen_id=specimen_id,
         changed_by_user_id=changed_by_user_id,
         changed_data=json_safe_data,
+        comment_by_author=comment_by_author,
         status=PendingStatus.PENDING,
         created_at=datetime.now(timezone.utc),
     )
@@ -116,6 +118,10 @@ def update_pending_specimen(
     # If nothing was provided, skip everything and just return the original
     if not data:
         return pending_specimen
+
+    comment_by_author = data.pop("comment_by_author", None)
+    if comment_by_author is not None:
+        pending_specimen.comment_by_author = comment_by_author
 
     # strip fields you never want in the diff
     for key in ("id", "uploader_id"):
@@ -167,7 +173,7 @@ def approve_pending_specimen(
     *,
     pending_specimen: PendingSpecimen,
     reviewer_id: uuid.UUID,
-    comment: str | None = None,
+    comment_by_reviewer: str | None = None,
 ) -> PendingSpecimen:
     """
     Atomic approval logic.
@@ -200,8 +206,8 @@ def approve_pending_specimen(
     pending_specimen.status = PendingStatus.APPROVED
     pending_specimen.reviewer_id = reviewer_id
     pending_specimen.reviewed_at = datetime.now(timezone.utc)
-    if comment:
-        pending_specimen.comment_by_reviewer = comment
+    if comment_by_reviewer:
+        pending_specimen.comment_by_reviewer = comment_by_reviewer
 
     session.add(pending_specimen)
     session.commit()
@@ -214,7 +220,7 @@ def reject_pending_specimen(
     *,
     pending_specimen: PendingSpecimen,
     reviewer_id: uuid.UUID,
-    comment: str | None = None,
+    comment_by_reviewer: str | None = None,
 ) -> PendingSpecimen:
     """
     Atomic reject logic. Assumes all checks were already done.
@@ -222,7 +228,7 @@ def reject_pending_specimen(
 
     pending_specimen.status = PendingStatus.REJECTED
     pending_specimen.reviewer_id = reviewer_id
-    pending_specimen.comment_by_reviewer = comment
+    pending_specimen.comment_by_reviewer = comment_by_reviewer
     pending_specimen.reviewed_at = datetime.now(timezone.utc)
 
     session.add(pending_specimen)

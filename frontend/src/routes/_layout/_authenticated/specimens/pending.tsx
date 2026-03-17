@@ -183,62 +183,104 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
     <div className="grid gap-4 grid-cols-2">
       {data.pending_specimens.map((specimen) => {
         const changed: PendingSpecimenPublicChangedData = specimen.changed_data;
+        const changedFastenerIds = Array.isArray(changed["fastener_type_ids"])
+          ? (changed["fastener_type_ids"] as string[])
+          : [];
+        const changedLoadingDirectionIds = Array.isArray(
+          changed["loading_direction_ids"],
+        )
+          ? (changed["loading_direction_ids"] as string[])
+          : [];
+        const changedQfmIds = Array.isArray(
+          changed["e_qualitative_failure_measure"],
+        )
+          ? (changed["e_qualitative_failure_measure"] as string[])
+          : [];
 
         const matchingJoints = joineryData?.data.filter(
           (joint) => changed["joinery_type_id"] === joint.id,
         );
         const matchingFasteners = fastenerData?.data.filter((fastener) =>
-          changed["fastener_type_ids"].includes(fastener.id),
+          changedFastenerIds.includes(fastener.id),
         );
         const matchingLoadingDirection = loadingDirectionData?.data.filter(
           (loadingDir) =>
-            changed["loading_direction_ids"].includes(loadingDir.id),
+            changedLoadingDirectionIds.includes(loadingDir.id),
         );
         const matchingSubJoints = subjoineryData?.data.filter(
           (joint) => changed["sub_joinery_type_id"] === joint.id,
         );
         const matchingQFM = QFMData?.data.filter((qfm) =>
-          changed["e_qualitative_failure_measure"].includes(qfm.id),
+          changedQfmIds.includes(qfm.id),
         );
 
-        const spec: SpecimenPublic = {
-          assembly_type: changed["assembly_type"],
-          connection_description: changed["connection_description"],
-          connector: changed["connector"],
-          connector_mechanical_properties: changed["connection_description"],
-          doi: changed["doi_id"],
-          dowel: changed["dowel"],
-          e_date: changed["e_date"],
-          e_ductility: changed["e_ductility"],
-          e_max_displacement: changed["e_max_displacement"],
-          e_max_force: changed["e_max_force"],
-          e_measurement_unit: changed["e_measurement_unit"],
-          e_qfm_description: changed["e_qfm_description"],
-          e_qualitative_failure_measure: matchingQFM,
-          e_stiffness: changed["e_stiffness"],
-          e_test_loading_type: changed["e_test_loading_type"],
-          e_ultimate_displacement: changed["e_ultimate_displacement"],
-          e_ultimate_force: changed["e_ultimate_force"],
-          e_yield_displacement: changed["e_yield_displacement"],
-          e_yield_force: changed["e_yield_force"],
-          e_yield_point_method: changed["e_yield_point_method"],
-          element_dimension: changed["element_dimension"],
-          fastener_mechanical_properties:
-            changed["fastener_mechanical_properties"],
-          fastener_numbers: changed["fastener_numbers"],
-          fastener_types: matchingFasteners,
-          id: specimen.specimen_id,
-          joinery_type: matchingJoints,
-          loading_directions: matchingLoadingDirection,
-          moisture_percentage: changed["moisture_percentage"],
-          note: changed["note"],
-          practice: changed["practice"],
-          replicate_tests: changed["replicate_tests"],
-          specimen_reference_id: changed["specimen_reference_id"],
-          sub_joinery_type: matchingSubJoints,
-          uploader_id: specimen.changed_by_user_id,
-          wood_mechanical_properties: changed["wood_mechanical_properties"],
-          wood_type: changed["wood_type"],
+        const spec: Partial<SpecimenPublic> = {
+          assembly_type: changed["assembly_type"] as SpecimenPublic["assembly_type"],
+          connection_description: changed["connection_description"] as
+            | SpecimenPublic["connection_description"]
+            | undefined,
+          connector: changed["connector"] as SpecimenPublic["connector"],
+          connector_mechanical_properties: changed[
+            "connector_mechanical_properties"
+          ] as SpecimenPublic["connector_mechanical_properties"],
+          dowel: changed["dowel"] as SpecimenPublic["dowel"],
+          e_date: changed["e_date"] as SpecimenPublic["e_date"],
+          e_ductility: changed["e_ductility"] as SpecimenPublic["e_ductility"],
+          e_max_displacement: changed[
+            "e_max_displacement"
+          ] as SpecimenPublic["e_max_displacement"],
+          e_max_force: changed["e_max_force"] as SpecimenPublic["e_max_force"],
+          e_qfm_description: changed[
+            "e_qfm_description"
+          ] as SpecimenPublic["e_qfm_description"],
+          e_qualitative_failure_measure: matchingQFM ?? [],
+          e_stiffness: changed["e_stiffness"] as SpecimenPublic["e_stiffness"],
+          e_test_loading_type: changed[
+            "e_test_loading_type"
+          ] as SpecimenPublic["e_test_loading_type"],
+          e_ultimate_displacement: changed[
+            "e_ultimate_displacement"
+          ] as SpecimenPublic["e_ultimate_displacement"],
+          e_ultimate_force: changed[
+            "e_ultimate_force"
+          ] as SpecimenPublic["e_ultimate_force"],
+          e_yield_displacement: changed[
+            "e_yield_displacement"
+          ] as SpecimenPublic["e_yield_displacement"],
+          e_yield_force: changed[
+            "e_yield_force"
+          ] as SpecimenPublic["e_yield_force"],
+          e_yield_point_method: changed[
+            "e_yield_point_method"
+          ] as SpecimenPublic["e_yield_point_method"],
+          element_dimension: changed[
+            "element_dimension"
+          ] as SpecimenPublic["element_dimension"],
+          fastener_mechanical_properties: changed[
+            "fastener_mechanical_properties"
+          ] as SpecimenPublic["fastener_mechanical_properties"],
+          fastener_numbers: changed[
+            "fastener_numbers"
+          ] as SpecimenPublic["fastener_numbers"],
+          fastener_types: matchingFasteners ?? [],
+          joinery_type: matchingJoints?.[0],
+          loading_directions: matchingLoadingDirection ?? [],
+          moisture_percentage: changed[
+            "moisture_percentage"
+          ] as SpecimenPublic["moisture_percentage"],
+          note: changed["note"] as SpecimenPublic["note"],
+          practice: changed["practice"] as SpecimenPublic["practice"],
+          replicate_tests: changed[
+            "replicate_tests"
+          ] as SpecimenPublic["replicate_tests"],
+          specimen_reference_id: changed[
+            "specimen_reference_id"
+          ] as SpecimenPublic["specimen_reference_id"],
+          sub_joinery_type: matchingSubJoints?.[0],
+          wood_mechanical_properties: changed[
+            "wood_mechanical_properties"
+          ] as SpecimenPublic["wood_mechanical_properties"],
+          wood_type: changed["wood_type"] as SpecimenPublic["wood_type"],
         };
 
         const isApprovingThis =
@@ -253,8 +295,11 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
             key={specimen.id}
             createdAt={new Date(specimen.created_at).toDateString()}
             specimen={spec}
+            changedData={changed}
+            specimenId={specimen.specimen_id ?? null}
             isBusy={isApprovingThis || isRejectingThis}
             pendingID={specimen.id}
+            commentByAuthor={specimen.comment_by_author}
             commentByReviewer={specimen.comment_by_reviewer}
             comment={comment}
             activeAction={activeAction}

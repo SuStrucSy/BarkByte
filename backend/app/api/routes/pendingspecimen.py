@@ -83,7 +83,7 @@ def approve_pending_specimen(
         session=session,
         pending_specimen=pending,
         reviewer_id=current_user.id,
-        comment=review.comment,
+        comment_by_reviewer=review.comment_by_reviewer,
     )
     return approved
 
@@ -111,7 +111,7 @@ def reject_pending_specimen_route(
         session=session,
         pending_specimen=pending_specimen,
         reviewer_id=current_user.id,
-        comment=review.comment,
+        comment_by_reviewer=review.comment_by_reviewer,
     )
     return rejected
 
