@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ import {
 import useAuth from "@/hooks/useAuth";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getInitials } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 
 export function NavUser() {
   const { data: currentUser } = useCurrentUser();
@@ -76,9 +77,11 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+              <DropdownMenuItem asChild>
+                <Link to="/settings">
+                  <Settings />
+                  Account
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />

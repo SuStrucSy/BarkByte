@@ -19,11 +19,12 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutDoisRouteImport } from './routes/_layout/dois'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
-import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutAuthenticatedRouteImport } from './routes/_layout/_authenticated'
 import { Route as LayoutSpecimensIndexRouteImport } from './routes/_layout/specimens/index'
-import { Route as LayoutSpecimensPendingRouteImport } from './routes/_layout/specimens/pending'
-import { Route as LayoutSpecimensNewRouteImport } from './routes/_layout/specimens/new'
 import { Route as LayoutSpecimensSpecimenIdRouteImport } from './routes/_layout/specimens/$specimenId'
+import { Route as LayoutAuthenticatedAdminRouteImport } from './routes/_layout/_authenticated/admin'
+import { Route as LayoutAuthenticatedSpecimensPendingRouteImport } from './routes/_layout/_authenticated/specimens/pending'
+import { Route as LayoutAuthenticatedSpecimensNewRouteImport } from './routes/_layout/_authenticated/specimens/new'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -74,9 +75,8 @@ const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutAdminRoute = LayoutAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const LayoutAuthenticatedRoute = LayoutAuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSpecimensIndexRoute = LayoutSpecimensIndexRouteImport.update({
@@ -84,21 +84,29 @@ const LayoutSpecimensIndexRoute = LayoutSpecimensIndexRouteImport.update({
   path: '/specimens/',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutSpecimensPendingRoute = LayoutSpecimensPendingRouteImport.update({
-  id: '/specimens/pending',
-  path: '/specimens/pending',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutSpecimensNewRoute = LayoutSpecimensNewRouteImport.update({
-  id: '/specimens/new',
-  path: '/specimens/new',
-  getParentRoute: () => LayoutRoute,
-} as any)
 const LayoutSpecimensSpecimenIdRoute =
   LayoutSpecimensSpecimenIdRouteImport.update({
     id: '/specimens/$specimenId',
     path: '/specimens/$specimenId',
     getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutAuthenticatedAdminRoute =
+  LayoutAuthenticatedAdminRouteImport.update({
+    id: '/admin',
+    path: '/admin',
+    getParentRoute: () => LayoutAuthenticatedRoute,
+  } as any)
+const LayoutAuthenticatedSpecimensPendingRoute =
+  LayoutAuthenticatedSpecimensPendingRouteImport.update({
+    id: '/specimens/pending',
+    path: '/specimens/pending',
+    getParentRoute: () => LayoutAuthenticatedRoute,
+  } as any)
+const LayoutAuthenticatedSpecimensNewRoute =
+  LayoutAuthenticatedSpecimensNewRouteImport.update({
+    id: '/specimens/new',
+    path: '/specimens/new',
+    getParentRoute: () => LayoutAuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -108,14 +116,14 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/admin': typeof LayoutAdminRoute
   '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
+  '/admin': typeof LayoutAuthenticatedAdminRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
-  '/specimens/new': typeof LayoutSpecimensNewRoute
-  '/specimens/pending': typeof LayoutSpecimensPendingRoute
   '/specimens/': typeof LayoutSpecimensIndexRoute
+  '/specimens/new': typeof LayoutAuthenticatedSpecimensNewRoute
+  '/specimens/pending': typeof LayoutAuthenticatedSpecimensPendingRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -123,15 +131,15 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/admin': typeof LayoutAdminRoute
+  '/': typeof LayoutIndexRoute
   '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
-  '/': typeof LayoutIndexRoute
+  '/admin': typeof LayoutAuthenticatedAdminRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
-  '/specimens/new': typeof LayoutSpecimensNewRoute
-  '/specimens/pending': typeof LayoutSpecimensPendingRoute
   '/specimens': typeof LayoutSpecimensIndexRoute
+  '/specimens/new': typeof LayoutAuthenticatedSpecimensNewRoute
+  '/specimens/pending': typeof LayoutAuthenticatedSpecimensPendingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,15 +149,16 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/_authenticated': typeof LayoutAuthenticatedRouteWithChildren
   '/_layout/dashboard': typeof LayoutDashboardRoute
   '/_layout/dois': typeof LayoutDoisRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/_authenticated/admin': typeof LayoutAuthenticatedAdminRoute
   '/_layout/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
-  '/_layout/specimens/new': typeof LayoutSpecimensNewRoute
-  '/_layout/specimens/pending': typeof LayoutSpecimensPendingRoute
   '/_layout/specimens/': typeof LayoutSpecimensIndexRoute
+  '/_layout/_authenticated/specimens/new': typeof LayoutAuthenticatedSpecimensNewRoute
+  '/_layout/_authenticated/specimens/pending': typeof LayoutAuthenticatedSpecimensPendingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,14 +169,14 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/admin'
     | '/dashboard'
     | '/dois'
     | '/settings'
+    | '/admin'
     | '/specimens/$specimenId'
+    | '/specimens/'
     | '/specimens/new'
     | '/specimens/pending'
-    | '/specimens/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -175,15 +184,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/admin'
+    | '/'
     | '/dashboard'
     | '/dois'
     | '/settings'
-    | '/'
+    | '/admin'
     | '/specimens/$specimenId'
+    | '/specimens'
     | '/specimens/new'
     | '/specimens/pending'
-    | '/specimens'
   id:
     | '__root__'
     | '/_layout'
@@ -192,15 +201,16 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/_layout/admin'
+    | '/_layout/_authenticated'
     | '/_layout/dashboard'
     | '/_layout/dois'
     | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/_authenticated/admin'
     | '/_layout/specimens/$specimenId'
-    | '/_layout/specimens/new'
-    | '/_layout/specimens/pending'
     | '/_layout/specimens/'
+    | '/_layout/_authenticated/specimens/new'
+    | '/_layout/_authenticated/specimens/pending'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -284,11 +294,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutDashboardRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/admin': {
-      id: '/_layout/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof LayoutAdminRouteImport
+    '/_layout/_authenticated': {
+      id: '/_layout/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof LayoutAuthenticatedRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/specimens/': {
@@ -298,20 +308,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSpecimensIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/specimens/pending': {
-      id: '/_layout/specimens/pending'
-      path: '/specimens/pending'
-      fullPath: '/specimens/pending'
-      preLoaderRoute: typeof LayoutSpecimensPendingRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/specimens/new': {
-      id: '/_layout/specimens/new'
-      path: '/specimens/new'
-      fullPath: '/specimens/new'
-      preLoaderRoute: typeof LayoutSpecimensNewRouteImport
-      parentRoute: typeof LayoutRoute
-    }
     '/_layout/specimens/$specimenId': {
       id: '/_layout/specimens/$specimenId'
       path: '/specimens/$specimenId'
@@ -319,30 +315,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSpecimensSpecimenIdRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/_authenticated/admin': {
+      id: '/_layout/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof LayoutAuthenticatedAdminRouteImport
+      parentRoute: typeof LayoutAuthenticatedRoute
+    }
+    '/_layout/_authenticated/specimens/pending': {
+      id: '/_layout/_authenticated/specimens/pending'
+      path: '/specimens/pending'
+      fullPath: '/specimens/pending'
+      preLoaderRoute: typeof LayoutAuthenticatedSpecimensPendingRouteImport
+      parentRoute: typeof LayoutAuthenticatedRoute
+    }
+    '/_layout/_authenticated/specimens/new': {
+      id: '/_layout/_authenticated/specimens/new'
+      path: '/specimens/new'
+      fullPath: '/specimens/new'
+      preLoaderRoute: typeof LayoutAuthenticatedSpecimensNewRouteImport
+      parentRoute: typeof LayoutAuthenticatedRoute
+    }
   }
 }
 
+interface LayoutAuthenticatedRouteChildren {
+  LayoutAuthenticatedAdminRoute: typeof LayoutAuthenticatedAdminRoute
+  LayoutAuthenticatedSpecimensNewRoute: typeof LayoutAuthenticatedSpecimensNewRoute
+  LayoutAuthenticatedSpecimensPendingRoute: typeof LayoutAuthenticatedSpecimensPendingRoute
+}
+
+const LayoutAuthenticatedRouteChildren: LayoutAuthenticatedRouteChildren = {
+  LayoutAuthenticatedAdminRoute: LayoutAuthenticatedAdminRoute,
+  LayoutAuthenticatedSpecimensNewRoute: LayoutAuthenticatedSpecimensNewRoute,
+  LayoutAuthenticatedSpecimensPendingRoute:
+    LayoutAuthenticatedSpecimensPendingRoute,
+}
+
+const LayoutAuthenticatedRouteWithChildren =
+  LayoutAuthenticatedRoute._addFileChildren(LayoutAuthenticatedRouteChildren)
+
 interface LayoutRouteChildren {
-  LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutAuthenticatedRoute: typeof LayoutAuthenticatedRouteWithChildren
   LayoutDashboardRoute: typeof LayoutDashboardRoute
   LayoutDoisRoute: typeof LayoutDoisRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSpecimensSpecimenIdRoute: typeof LayoutSpecimensSpecimenIdRoute
-  LayoutSpecimensNewRoute: typeof LayoutSpecimensNewRoute
-  LayoutSpecimensPendingRoute: typeof LayoutSpecimensPendingRoute
   LayoutSpecimensIndexRoute: typeof LayoutSpecimensIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutAdminRoute: LayoutAdminRoute,
+  LayoutAuthenticatedRoute: LayoutAuthenticatedRouteWithChildren,
   LayoutDashboardRoute: LayoutDashboardRoute,
   LayoutDoisRoute: LayoutDoisRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSpecimensSpecimenIdRoute: LayoutSpecimensSpecimenIdRoute,
-  LayoutSpecimensNewRoute: LayoutSpecimensNewRoute,
-  LayoutSpecimensPendingRoute: LayoutSpecimensPendingRoute,
   LayoutSpecimensIndexRoute: LayoutSpecimensIndexRoute,
 }
 

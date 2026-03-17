@@ -8,7 +8,6 @@ import {
   ListTodo,
   type LucideIcon,
   Newspaper,
-  Settings,
   Users,
 } from "lucide-react";
 import {
@@ -23,17 +22,12 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 const items = [
   { icon: Home, title: "Home", path: "/" },
   { icon: ChartSpline, title: "Dashboard", path: "/dashboard" },
-  { icon: Layers, title: "Specimens", path: "/specimens" },
+
   { icon: Newspaper, title: "References", path: "/dois" },
-  { icon: Settings, title: "User Settings", path: "/settings" },
 ];
 
 const groupTwoItems = [
-  { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
-];
-
-const groupThreeItems = [
-  { icon: ListTodo, title: "Pending Specimens", path: "/specimens/pending" },
+  { icon: Layers, title: "Specimens", path: "/specimens" },
 ];
 
 interface Item {
@@ -46,11 +40,23 @@ const SidebarItems = () => {
   const { data: currentUser } = useCurrentUser();
   const { pathname } = useLocation();
 
-  const finalItems: Item[] = currentUser?.is_superuser
-    ? [...items, { icon: Users, title: "Admin", path: "/admin" }]
-    : items;
+  const specimenItems: Item[] = currentUser
+    ? [
+        ...groupTwoItems,
+        { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
+        {
+          icon: ListTodo,
+          title: "Pending Specimens",
+          path: "/specimens/pending",
+        },
+      ]
+    : groupTwoItems;
 
-  const listItems = finalItems.map((item) => (
+  const adminItems: Item[] = currentUser?.is_superuser
+    ? [{ icon: Users, title: "Users Management", path: "/admin" }]
+    : [];
+
+  const listItems = items.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -65,7 +71,7 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
-  const projectItems = groupTwoItems.map((item) => (
+  const specimenMenuItems = specimenItems.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -80,7 +86,7 @@ const SidebarItems = () => {
     </RouterLink>
   ));
 
-  const adminItems = groupThreeItems.map((item) => (
+  const adminMenuItems = adminItems.map((item) => (
     <RouterLink key={item.title} to={item.path}>
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
@@ -102,13 +108,15 @@ const SidebarItems = () => {
         <SidebarMenu>{listItems}</SidebarMenu>
       </SidebarGroup>
       <SidebarGroup>
-        <SidebarGroupLabel>Projects</SidebarGroupLabel>
-        <SidebarMenu>{projectItems}</SidebarMenu>
+        <SidebarGroupLabel>Specimen</SidebarGroupLabel>
+        <SidebarMenu>{specimenMenuItems}</SidebarMenu>
       </SidebarGroup>
-      <SidebarGroup>
-        <SidebarGroupLabel>Admin</SidebarGroupLabel>
-        <SidebarMenu>{adminItems}</SidebarMenu>
-      </SidebarGroup>
+      {currentUser?.is_superuser ? (
+        <SidebarGroup>
+          <SidebarGroupLabel>Admin</SidebarGroupLabel>
+          <SidebarMenu>{adminMenuItems}</SidebarMenu>
+        </SidebarGroup>
+      ) : null}
     </>
   );
 };

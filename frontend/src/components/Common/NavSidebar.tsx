@@ -1,4 +1,4 @@
-import { ArrowUpCircleIcon } from "lucide-react";
+import { ArrowUpCircleIcon, LogIn } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +13,21 @@ import { NavUser } from "./NavUser";
 import SidebarItems from "./SidebarItems";
 import { useIsLoggedIn } from "@/hooks/useIsLoggedIn";
 import ModeToggle from "./ModeToggle";
+import { Link } from "@tanstack/react-router";
+
+const LoginButton = () => {
+  return (
+    <SidebarMenuButton
+      asChild
+      className="data-[slot=sidebar-menu-button]:p-1.5!"
+    >
+      <Link to="/login">
+        <LogIn className="h-5 w-5" />
+        <span className="text-base font-semibold">Login</span>
+      </Link>
+    </SidebarMenuButton>
+  );
+};
 
 const AppSidebar = () => {
   const isLoggedIn = useIsLoggedIn();
@@ -25,10 +40,10 @@ const AppSidebar = () => {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="/">
+              <Link to="/">
                 <ArrowUpCircleIcon className="h-5 w-5" />
                 <span className="text-base font-semibold">Timverse</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -37,7 +52,9 @@ const AppSidebar = () => {
         <SidebarItems />
         <ModeToggle />
       </SidebarContent>
-      <SidebarFooter>{isLoggedIn ? <NavUser /> : null}</SidebarFooter>
+      <SidebarFooter>
+        {isLoggedIn ? <NavUser /> : <LoginButton />}
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

@@ -157,7 +157,7 @@ export function BoxPlot({
   height = 400,
 }: BoxPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height });
+  const [dimensions, setDimensions] = useState({ width: 600, height });
 
   // Filter valid specimens once
   const validSpecimens = useMemo(() => {
@@ -378,32 +378,39 @@ export function BoxPlot({
 
   // Resize handler - only for ongoing resize events
   useEffect(() => {
-    const handleResize = (entries: ResizeObserverEntry[]) => {
+    if (!containerRef.current) return;
+
+    // Set initial size immediately
+    const { width, height: h } = containerRef.current.getBoundingClientRect();
+    setDimensions({ width, height: h });
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (entry) {
+      if (!entry) return;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
         setDimensions({
           width: entry.contentRect.width,
-          height: height,
+          height: entry.contentRect.height,
         });
-      }
-    };
+      }, CHART_CONFIG.resizeDebounceMs);
+    });
 
-    const resizeObserver = new ResizeObserver(handleResize);
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
+    resizeObserver.observe(containerRef.current);
 
     return () => {
+      clearTimeout(timeoutId);
       resizeObserver.disconnect();
     };
-  }, [height]);
+  }, []);
 
   // Empty state
   if (validSpecimens.length === 0) {
     return (
       <div
-        className="flex items-center justify-center text-muted-foreground h-full min-h-[400px]"
+        className="flex items-center justify-center text-muted-foreground h-full min-h-96 w-full"
         role="status"
         aria-live="polite"
       >

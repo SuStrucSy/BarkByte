@@ -32,6 +32,9 @@ import {
 } from "../ui/combobox";
 import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode.gen";
 
+import QFMTypes from "@/assets/failures.svg?react";
+import { FieldHelpHover } from "./FieldHelpHover";
+
 interface SpecimenExperimentalFormProps {
   control: Control<AddNewSpecimenFormValues, any>;
 }
@@ -280,7 +283,10 @@ export function SpecimenExperimentalFields({
           return (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="e_qualitative_failure_measure">
-                QFM
+                QFM{" "}
+                <FieldHelpHover
+                  svg={<QFMTypes className="w-3xl h-auto max-h-96" />}
+                />
               </FieldLabel>
               <Combobox
                 multiple
@@ -290,7 +296,7 @@ export function SpecimenExperimentalFields({
                 }
                 onOpenChange={(isOpen) => {
                   if (isOpen && !QFMList.length) {
-                    // âœ… Trigger fetch when opened AND no data
+                    // Trigger fetch when opened AND no data
                     refetchQFM(); // your query refetch function
                   }
                 }}

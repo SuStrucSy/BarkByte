@@ -48,6 +48,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { Separator } from "@/components/ui/separator";
+import { DemographyGrid } from "@/components/Dashboard/DemographyGrid";
+import { ExpandableChart } from "@/components/Charts/ExpandableChart";
+
 export const Route = createFileRoute("/_layout/dashboard")({
   staticData: {
     title: "Dashboard",
@@ -189,44 +193,63 @@ function Dashboard() {
     key,
     label: getExperimentalLabel(key),
   }));
-  console.log({ yLabels });
+
   const loadingProgress =
     totalCount > 0 ? Math.round((loadedCount / totalCount) * 100) : 0;
+
+  const stiffnessDuctilityProps = {
+    data: stiffnessDuctilityData,
+    fastenerTypesData,
+    xKey: "e_stiffness",
+    yKey: "e_ductility",
+    xLabel: "Stiffness (Ks) [KN/mm]",
+    yLabel: "Ductility",
+    title: "Stiffness vs Ductility",
+    onPointClick: handlePointClick,
+  } as const;
+
+  const stiffnessYieldProps = {
+    data: stiffnessYieldData,
+    fastenerTypesData,
+    xKey: "e_stiffness",
+    yKey: "e_yield_force",
+    xLabel: "Stiffness (Ks) [KN/mm]",
+    yLabel: "Yield Strength (Fy) [KN]",
+    title: "Stiffness vs Yield Force",
+    onPointClick: handlePointClick,
+  } as const;
 
   return (
     <div className="space-y-4">
       {/* Header with loading status */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Specimen Analysis Dashboard</CardTitle>
-              <CardDescription>
-                {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
-                specimens
-                {isLoadingAll ? (
-                  <Badge
-                    variant="secondary"
-                    className="animate-pulse ml-1"
-                    aria-live="polite"
-                    aria-label={`Loading specimens: ${loadingProgress}% complete`}
-                  >
-                    Loading... {loadingProgress}%
-                  </Badge>
-                ) : (
-                  <Badge className="ml-1" aria-label="All specimens loaded">
-                    ✓ Complete
-                  </Badge>
-                )}
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle>Specimen Analysis Dashboard</CardTitle>
+          <CardDescription>
+            {loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
+            specimens
+            {isLoadingAll ? (
+              <Badge
+                variant="secondary"
+                className="animate-pulse ml-1"
+                aria-live="polite"
+                aria-label={`Loading specimens: ${loadingProgress}% complete`}
+              >
+                Loading... {loadingProgress}%
+              </Badge>
+            ) : (
+              <Badge className="ml-1" aria-label="All specimens loaded">
+                ✓ Complete
+              </Badge>
+            )}
+          </CardDescription>
         </CardHeader>
       </Card>
 
       {/* Two column grid of charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Stiffness vs Ductility */}
+
         <Card>
           <CardHeader className="pb-4">
             <CardTitle>Stiffness vs Ductility</CardTitle>
@@ -238,20 +261,15 @@ function Dashboard() {
                 </span>
               )}
             </CardDescription>
+            <CardAction>
+              <ExpandableChart title="Stiffness vs Ductility">
+                {() => <ScatterPlotD3 {...stiffnessDuctilityProps} />}
+              </ExpandableChart>
+            </CardAction>
           </CardHeader>
           <CardContent className="pb-4">
             <ChartErrorBoundary chartName="Stiffness vs Ductility">
-              <ScatterPlotD3
-                data={stiffnessDuctilityData}
-                fastenerTypesData={fastenerTypesData}
-                xKey="e_stiffness"
-                yKey="e_ductility"
-                xLabel="Stiffness (Ks) [KN/mm]"
-                yLabel="Ductility"
-                height={500}
-                title="Stiffness vs Ductility"
-                onPointClick={handlePointClick}
-              />
+              <ScatterPlotD3 {...stiffnessDuctilityProps} height={500} />
             </ChartErrorBoundary>
           </CardContent>
         </Card>
@@ -268,24 +286,19 @@ function Dashboard() {
                 </span>
               )}
             </CardDescription>
+            <CardAction>
+              <ExpandableChart title="Stiffness vs Yield Force">
+                {() => <ScatterPlotD3 {...stiffnessYieldProps} />}
+              </ExpandableChart>
+            </CardAction>
           </CardHeader>
           <CardContent className="pb-4">
             <ChartErrorBoundary chartName="Stiffness vs Yield Force">
-              <ScatterPlotD3
-                data={stiffnessYieldData}
-                fastenerTypesData={fastenerTypesData}
-                xKey="e_stiffness"
-                yKey="e_yield_force"
-                xLabel="Stiffness (Ks) [KN/mm]"
-                yLabel="Yield Strength (Fy) [KN]"
-                height={500}
-                title="Stiffness vs Yield Force"
-                onPointClick={handlePointClick}
-              />
+              <ScatterPlotD3 {...stiffnessYieldProps} height={500} />
             </ChartErrorBoundary>
           </CardContent>
         </Card>
-        <Card className="col-span-2">
+        <Card className="col-span-full">
           <CardHeader>
             <CardTitle>Chart Options</CardTitle>
             <CardDescription>
@@ -299,7 +312,7 @@ function Dashboard() {
                     }
                   >
                     <CandlestickChartIcon className="group-data-[state=on]/toggle:fill-foreground" />
-                    Violin
+                    {mirrorPosition ? "Violin" : "Boxplot"}
                   </Toggle>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -332,7 +345,6 @@ function Dashboard() {
             </CardAction>
           </CardHeader>
         </Card>
-
         {yLabels.map((ylabel) => {
           return (
             <Card
@@ -352,7 +364,7 @@ function Dashboard() {
                 </CardDescription>
                 <CardAction></CardAction>
               </CardHeader>
-              <CardContent className="pb-4">
+              <CardContent className="pb-4 min-w-0">
                 <ChartErrorBoundary chartName="Box Plot">
                   <BoxPlot
                     selectedSpecimens={selectedSpecimens}
@@ -367,6 +379,8 @@ function Dashboard() {
             </Card>
           );
         })}
+        <Separator className="col-span-2" />
+        <DemographyGrid specimens={allSpecimens} />
       </div>
 
       {selectedSpecimen && (

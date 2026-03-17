@@ -122,11 +122,7 @@ export const updatePasswordSchema = z
     }
   });
 
-const positiveOptional = z
-  .number()
-  .positive("Must be positive")
-  .optional()
-  .nullable();
+const positiveRequired = z.number().positive("Must be positive");
 
 export const AddNewSpecimenSchema = z.object({
   // ── Step 1: DOI ────────────────────────────────────────────────────────────
@@ -194,14 +190,14 @@ export const AddNewSpecimenSchema = z.object({
 
   // All experimental measurements are optional/nullable — not every test
   // reports every value. Use valueAsNumber on inputs.
-  e_stiffness: positiveOptional,
-  e_yield_force: positiveOptional,
-  e_yield_displacement: positiveOptional,
-  e_max_force: positiveOptional,
-  e_max_displacement: positiveOptional,
-  e_ultimate_force: positiveOptional,
-  e_ultimate_displacement: positiveOptional,
-  e_ductility: positiveOptional,
+  e_stiffness: positiveRequired,
+  e_yield_force: positiveRequired,
+  e_yield_displacement: positiveRequired,
+  e_max_force: positiveRequired,
+  e_max_displacement: positiveRequired,
+  e_ultimate_force: positiveRequired,
+  e_ultimate_displacement: positiveRequired,
+  e_ductility: positiveRequired,
 
   // Test metadata
   e_test_loading_type: z

@@ -38,6 +38,38 @@ export function groupSpecimensByFastener(
   );
 }
 
+export type ItemCount = {
+  label: string;
+  count: number;
+};
+
+export function countByAttribute(
+  specimens: SpecimenPublic[],
+  getLabel: (specimen: SpecimenPublic) => string,
+): Record<string, ItemCount> {
+  return specimens.reduce<Record<string, ItemCount>>((acc, specimen) => {
+    const label = getLabel(specimen);
+    acc[label] = { label, count: (acc[label]?.count ?? 0) + 1 };
+    return acc;
+  }, {});
+}
+
+export function countByArrayAttribute(
+  specimens: SpecimenPublic[],
+  getLabels: (specimen: SpecimenPublic) => string[],
+  fallback?: string,
+): Record<string, ItemCount> {
+  return specimens.reduce<Record<string, ItemCount>>((acc, specimen) => {
+    const labels = getLabels(specimen);
+    const effective = labels.length > 0 ? labels : fallback ? [fallback] : [];
+
+    for (const label of effective) {
+      acc[label] = { label, count: (acc[label]?.count ?? 0) + 1 };
+    }
+    return acc;
+  }, {});
+}
+
 // Get chart colors from CSS variables - they're in oklch format
 export const getChartColors = () => {
   if (typeof window === "undefined") return [];

@@ -96,7 +96,12 @@ const EditUser = ({ user }: EditUserProps) => {
 									<FormItem>
 										<FormLabel>Email</FormLabel>
 										<FormControl>
-											<Input type="email" placeholder="shadcn" {...field} />
+											<Input
+												type="email"
+												placeholder="shadcn"
+												{...field}
+												value={field.value ?? ""}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -109,7 +114,11 @@ const EditUser = ({ user }: EditUserProps) => {
 									<FormItem>
 										<FormLabel>Full Name</FormLabel>
 										<FormControl>
-											<Input placeholder="shadcn" {...field} />
+											<Input
+												placeholder="shadcn"
+												{...field}
+												value={field.value ?? ""}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -150,7 +159,7 @@ const EditUser = ({ user }: EditUserProps) => {
 											<FormControl>
 												<Checkbox
 													disabled={field.disabled}
-													checked={field.value}
+													checked={field.value ?? false}
 													onCheckedChange={(checked) => field.onChange(checked)}
 												/>
 											</FormControl>
@@ -170,7 +179,7 @@ const EditUser = ({ user }: EditUserProps) => {
 											<FormControl>
 												<Checkbox
 													disabled={field.disabled}
-													checked={field.value}
+													checked={field.value ?? false}
 													onCheckedChange={(checked) => field.onChange(checked)}
 												/>
 											</FormControl>
