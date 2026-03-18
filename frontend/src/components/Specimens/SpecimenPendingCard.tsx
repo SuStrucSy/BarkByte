@@ -1,4 +1,14 @@
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -367,6 +377,9 @@ export function SpecimenPendingCard({
   status,
 }: SpecimenPendingCardProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [dialogAction, setDialogAction] = useState<"approve" | "reject" | null>(
+    null,
+  );
   const { data: originalSpecimen } = useSpecimensReadSpecimen(specimenId ?? "", {
     query: {
       enabled: !isNew && !!specimenId,
@@ -483,9 +496,9 @@ export function SpecimenPendingCard({
           <RulerDimensionLine />
           Experimental Data
         </TabsTrigger>
-        <TabsTrigger value="Reference Details">
+        <TabsTrigger value="Details">
           <BookOpenText />
-          Reference Details
+          Details
         </TabsTrigger>
       </TabsList>
       <div className="h-[clamp(18rem,42dvh,30rem)] min-h-0">
@@ -510,10 +523,10 @@ export function SpecimenPendingCard({
             </div>
           </ScrollArea>
         </TabsContent>
-        <TabsContent value="Reference Details" className="h-full min-h-0">
+        <TabsContent value="Details" className="h-full min-h-0">
           <ScrollArea className="h-full pr-4">
             <div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-              <div className="grid gap-3">{renderReferenceDetails()}</div>
+              <div className="grid gap-3">{renderDetails()}</div>
             </div>
           </ScrollArea>
         </TabsContent>
@@ -521,43 +534,77 @@ export function SpecimenPendingCard({
     </Tabs>
   );
 
-  const renderReferenceDetails = () => {
+  const renderDetails = () => {
     const doi = specimen.doi ?? originalSpecimen?.doi;
 
-    if (!doi) {
+    if (!doi && !specimenId) {
       return (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
-          Reference details are unavailable for this pending specimen.
+          Details are unavailable for this pending specimen.
         </div>
       );
     }
 
     return (
       <div className="grid gap-3">
-        <PendingFieldRow
-          label="DOI Link"
-          oldValue={originalSpecimen?.doi?.link}
-          newValue={doi.link}
-          isChanged={false}
-          renderNewValue={() => (
-            <Item variant="outline" asChild>
-              <a href={doi.link} target="_blank" rel="noopener noreferrer">
-                <ItemContent>
-                  <ItemTitle>{doi.ref_title}</ItemTitle>
-                  <ItemDescription>
-                    {doi.authors} • {doi.pub_year}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <ExternalLinkIcon className="size-4" />
-                </ItemActions>
-              </a>
-            </Item>
-          )}
-        />
+        {specimenId ? (
+          <Item variant="outline" asChild>
+            <Link
+              to="/specimens/$specimenId"
+              params={{ specimenId }}
+              target="_blank"
+            >
+              <ItemContent>
+                <ItemTitle>Specimen Record</ItemTitle>
+                <ItemDescription>
+                  {[
+                    specimen.specimen_reference_id ??
+                      originalSpecimen?.specimen_reference_id ??
+                      specimenId,
+                    renderValue(
+                      specimen.assembly_type ?? originalSpecimen?.assembly_type,
+                    ),
+                    renderValue(
+                      specimen.joinery_type?.label ??
+                        originalSpecimen?.joinery_type?.label,
+                    ),
+                  ].join(" • ")}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <ExternalLinkIcon className="size-4" />
+              </ItemActions>
+            </Link>
+          </Item>
+        ) : null}
+        {doi ? (
+          <Item variant="outline" asChild>
+            <a href={doi.link} target="_blank" rel="noopener noreferrer">
+              <ItemContent>
+                <ItemTitle>{doi.ref_title}</ItemTitle>
+                <ItemDescription>
+                  {doi.authors} • {doi.pub_year}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <ExternalLinkIcon className="size-4" />
+              </ItemActions>
+            </a>
+          </Item>
+        ) : null}
       </div>
     );
   };
+
+  const dialogTitle =
+    dialogAction === "approve"
+      ? "Approve pending specimen?"
+      : "Reject pending specimen?";
+
+  const dialogPlaceholder =
+    dialogAction === "approve"
+      ? "Optional comment for approval..."
+      : "Optional comment for rejection...";
 
   return (
     <Card className="w-full max-w-3xl">
@@ -600,8 +647,7 @@ export function SpecimenPendingCard({
                     disabled={isBusy}
                     onClick={() => {
                       setComment("");
-                      setActiveAction({ pendingId: pendingID, type: "reject" });
-                      setDetailsOpen(true);
+                      setDialogAction("reject");
                     }}
                   >
                     Reject
@@ -613,8 +659,7 @@ export function SpecimenPendingCard({
                     disabled={isBusy}
                     onClick={() => {
                       setComment("");
-                      setActiveAction({ pendingId: pendingID, type: "approve" });
-                      setDetailsOpen(true);
+                      setDialogAction("approve");
                     }}
                   >
                     Approve
@@ -692,16 +737,6 @@ export function SpecimenPendingCard({
                             Submission metadata and reviewer actions.
                           </CardDescription>
                         </div>
-                        {specimenId ? (
-                          <Button variant="outline" size="sm" asChild>
-                            <Link
-                              to="/specimens/$specimenId"
-                              params={{ specimenId }}
-                            >
-                              Specimen Record
-                            </Link>
-                          </Button>
-                        ) : null}
                       </div>
                     </CardHeader>
                     <CardContent className="grid gap-3">
@@ -743,6 +778,89 @@ export function SpecimenPendingCard({
           </div>
         </DrawerContent>
       </Drawer>
+      <AlertDialog
+        open={dialogAction !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDialogAction(null);
+            setComment("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pending Submission</AlertDialogTitle>
+            <AlertDialogDescription>
+              Submission metadata and reviewer actions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="link" className="px-0">
+                {createdAt}
+              </Button>
+              {status === "pending" &&
+                (isNew ? (
+                  <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                    <LayersPlus data-icon="inline-start" />
+                    New
+                  </Badge>
+                ) : (
+                  <Badge className="bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                    <Pencil data-icon="inline-start" />
+                    Update
+                  </Badge>
+                ))}
+            </div>
+            {commentByAuthor?.trim().length ? (
+              <div className="grid gap-2">
+                <span>Comment by Author</span>
+                <Textarea
+                  value={commentByAuthor}
+                  readOnly
+                  disabled
+                  rows={3}
+                  className="w-full text-sm"
+                />
+              </div>
+            ) : null}
+            <div className="grid gap-2">
+              <span>{dialogTitle}</span>
+              <Textarea
+                placeholder={dialogPlaceholder}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={2}
+                className="w-full text-sm"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setDialogAction(null);
+                setComment("");
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (dialogAction === "approve") {
+                  void onApprove(pendingID);
+                } else if (dialogAction === "reject") {
+                  void onReject(pendingID);
+                }
+                setDialogAction(null);
+              }}
+            >
+              {dialogAction === "approve"
+                ? "Confirm Approval"
+                : "Confirm Rejection"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
