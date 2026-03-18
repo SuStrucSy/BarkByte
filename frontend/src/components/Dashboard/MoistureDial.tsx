@@ -1,4 +1,4 @@
-import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
+import { Label, PolarRadiusAxis, RadialBar, RadialBarChart, PolarAngleAxis } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 
 type MoistureDialProps = {
@@ -22,51 +22,48 @@ export function MoistureDial({ value, label = "Moisture", className }: MoistureD
         <ChartContainer config={config} className="mx-auto h-[220px] w-full">
             <RadialBarChart
             data={data}
-            startAngle={0}
-            endAngle={360}
+            startAngle={90}
+            endAngle={-270}
             innerRadius={80}
             outerRadius={110}
             >
-                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                <PolarGrid
-                gridType="circle"
-                radialLines={false}
-                stroke="none"
-                className="first:fill-muted last:fill-background"
-                polarRadius={[86, 74]}
-                />
+                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
                 <RadialBar
-                dataKey="moisture"
-                fill="var(--color-moisture)"
-                background
-                cornerRadius={10}
+              dataKey="moisture"
+              fill="var(--color-moisture)"
+              background
+              cornerRadius={10}
                 />
                 <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                     <Label
-                        content={({ viewBox }) => {
-                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                            return (
-                            <text
-                                x={viewBox.cx}
-                                y={viewBox.cy}
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                            >
-                                <tspan className="fill-foreground text-3xl font-bold">
-                                {Math.round(v)}%
-                                </tspan>
-                                <tspan
-                                x={viewBox.cx}
-                                y={(viewBox.cy || 0) + 22}
-                                className="fill-muted-foreground"
-                                >
-                                {label}
-                                </tspan>
-                            </text>
-                            )
-                        }
-                        return null
-                        }}
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-3xl font-bold"
+                        >
+                          {v}%
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 22}
+                          className="fill-muted-foreground"
+                        >
+                          {label}
+                        </tspan>
+                      </text>
+                    )
+                  }
+                  return null
+                }}
                     />
                 </PolarRadiusAxis>
             </RadialBarChart>

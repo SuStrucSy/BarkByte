@@ -5,15 +5,22 @@ from sqlmodel import Session, select, delete, func, SQLModel
 from sqlalchemy.exc import IntegrityError
 
 from app.models.specimen import Specimen
-from app.schemas.specimen import SpecimenCreate, SpecimensPublic, SpecimenUpdate
+from app.schemas.specimen import (
+    SpecimenCreate,
+    SpecimenFilterOptionsPublic,
+    SpecimensPublic,
+    SpecimenUpdate,
+)
 from app.models.failuremode import FailureMode
 from app.models.specimen_failuremode import SpecimenFailureMode
 from app.models.joinerytype import JoineryType
 from app.models.subjoinerytype import SubJoineryType
+from app.models.user import User
 from app.models.fastenertype import FastenerType
 from app.models.specimen_fastenertype import SpecimenFastenerType
 from app.models.loadingdirection import LoadingDirection
 from app.models.specimen_loadingdirection import SpecimenLoadingDirection
+from app.enums import AssemblyType, Practice, TestLoadingType
 
 def get_specimens_by_uploader(*, session: Session, uploader_id: uuid.UUID, skip: int = 0, limit: int = 100) -> SpecimensPublic:
     count_stmt = (
@@ -53,6 +60,39 @@ def get_specimens_for_doi(*, session: Session, doi_id: uuid.UUID) -> SpecimensPu
     statement = select(Specimen).where(Specimen.doi_id == doi_id)
     specimens = session.exec(statement).all()
     return SpecimensPublic(data=specimens, count=count)
+
+def get_specimen_filter_options(*, session: Session) -> SpecimenFilterOptionsPublic:
+    joinery_types = sorted(
+        set(session.exec(select(JoineryType.label)).all())
+    )
+    sub_joinery_types = sorted(
+        set(session.exec(select(SubJoineryType.label)).all())
+    )
+    failure_modes = sorted(
+        set(session.exec(select(FailureMode.label)).all())
+    )
+    uploader_ids = list(
+        set(session.exec(select(Specimen.uploader_id)).all())
+    )
+    uploader_rows = session.exec(
+        select(User.id, User.full_name, User.email).where(User.id.in_(uploader_ids))
+    ).all()
+    uploader = sorted(
+        (
+            (full_name or email or str(user_id))
+            for user_id, full_name, email in uploader_rows
+        ),
+    )
+
+    return SpecimenFilterOptionsPublic(
+        assembly_types=sorted(item.value for item in AssemblyType),
+        practices=sorted(item.value for item in Practice),
+        joinery_types=joinery_types,
+        sub_joinery_types=sub_joinery_types,
+        loading_types=sorted(item.value for item in TestLoadingType),
+        failure_modes=failure_modes,
+        uploader=uploader,
+    )
 
 def _split_specimen_payload(specimen_in: SQLModel, for_update: bool) -> tuple[dict[str, Any], list[uuid.UUID] | None, list[uuid.UUID] | None, list[uuid.UUID] | None]:
     data = specimen_in.model_dump(

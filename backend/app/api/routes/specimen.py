@@ -7,9 +7,17 @@ from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models.specimen import Specimen
-from app.schemas.specimen import SpecimenCreate, SpecimenPublic, SpecimensPublic, SpecimenUpdate
+from app.schemas.specimen import (
+    SpecimenFilterOptionsPublic,
+    SpecimenPublic,
+    SpecimensPublic,
+)
 from app.schemas.doi import DOICreate
-from app.schemas.pendingspecimen import PendingSpecimenPublic
+from app.schemas.pendingspecimen import (
+    PendingSpecimenCreate,
+    PendingSpecimenPublic,
+    PendingSpecimenUpdate,
+)
 from app.crud import specimen as specimen_crud
 from app.crud import pendingspecimen as pendingspecimen_crud
 from app.crud import doi as doi_crud
@@ -28,6 +36,13 @@ def read_specimens(
     """
     return specimen_crud.get_specimens(session=session, skip=skip, limit=limit)
 
+@router.get("/filter-options", response_model=SpecimenFilterOptionsPublic)
+def read_specimen_filter_options(session: SessionDep) -> SpecimenFilterOptionsPublic:
+    """
+    Retrieve predefined specimen filter options for facet controls.
+    """
+    return specimen_crud.get_specimen_filter_options(session=session)
+
 @router.get("/{id}", response_model=SpecimenPublic)
 def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:
     """
@@ -37,7 +52,10 @@ def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:
 
 @router.post("/", response_model=PendingSpecimenPublic)
 def create_specimen(
-    *, session: SessionDep, current_user: CurrentUser, specimen_in: SpecimenCreate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    specimen_in: PendingSpecimenCreate,
 ) -> Any:
     """
     Submit a new specimen for review.
@@ -58,8 +76,9 @@ def create_specimen(
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
         changed_by_user_id=current_user.id,
-        changed_data=specimen_in.model_dump(exclude_unset=True),
+        changed_data=specimen_in.model_dump(exclude={"comment_by_author"}, exclude_unset=True),
         specimen_id=None,
+        comment_by_author=specimen_in.comment_by_author,
     )
     return pending
 
@@ -70,7 +89,7 @@ def update_specimen(
     session: SessionDep,
     current_user: CurrentUser,
     id: uuid.UUID,
-    specimen_in: SpecimenUpdate,
+    specimen_in: PendingSpecimenUpdate,
 ) -> Any:
     """
     Submit an update for an existing specimen.
@@ -85,8 +104,9 @@ def update_specimen(
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
         changed_by_user_id=current_user.id,
-        changed_data=specimen_in.model_dump(exclude_unset=True),
+        changed_data=specimen_in.model_dump(exclude={"comment_by_author"}, exclude_unset=True),
         specimen_id=id,
+        comment_by_author=specimen_in.comment_by_author,
     )
     return pending
 

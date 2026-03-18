@@ -2,6 +2,7 @@ import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 
 import {
   ChartSpline,
+  Columns3,
   Home,
   Layers,
   LayersPlus,
@@ -22,8 +23,8 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 const items = [
   { icon: Home, title: "Home", path: "/" },
   { icon: ChartSpline, title: "Dashboard", path: "/dashboard" },
-
   { icon: Newspaper, title: "References", path: "/references" },
+  { icon: Columns3, title: "Compare", path: "/compare" },
 ];
 
 const groupTwoItems = [{ icon: Layers, title: "All", path: "/specimens" }];

@@ -35,6 +35,10 @@ class PendingSpecimen(SQLModel, table=True):
         default=None,
         foreign_key="user.id",
     )
+    comment_by_author: str | None = Field(
+        default=None,
+        max_length=500,
+    )
     comment_by_reviewer: str | None = Field(
         default=None,
         max_length=500,

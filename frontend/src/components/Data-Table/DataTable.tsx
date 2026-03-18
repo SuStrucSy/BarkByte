@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "../ui/button";
 import { useState } from "react";
 
@@ -77,16 +78,16 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="grid h-full w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
-      <div className="min-h-0 w-full overflow-auto rounded-md border relative">
-        <Table className="w-full border-separate border-spacing-0">
-          <TableHeader className="sticky top-0 backdrop-blur">
+      <ScrollArea className="min-h-0 w-full rounded-md border relative">
+        <Table className="min-w-max w-full border-separate border-spacing-0">
+          <TableHeader className="sticky top-0 bg-background backdrop-blur">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
-                      className="sticky top-0 z-20 px-3 py-4 text-left text-xs font-medium border-b first:z-30"
+                      className="sticky top-0 z-20 border-b bg-background px-3 py-4 text-left text-xs font-medium first:z-30"
                     >
                       {header.isPlaceholder
                         ? null
@@ -151,6 +152,13 @@ export function DataTable<TData, TValue>({
                               ?.join(", ") || "None"
                           );
                         }
+                        if (meta?.renderAs === "uploader_name") {
+                          return (
+                            (cell.row.original as any).uploader_name ||
+                            cell.getValue() ||
+                            "Unknown"
+                          );
+                        }
 
                         return (
                           flexRender(
@@ -175,7 +183,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
       <div className="shrink-0 flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"

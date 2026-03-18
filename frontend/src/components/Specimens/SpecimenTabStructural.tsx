@@ -34,7 +34,7 @@ export function SpecimenTabStructural({ data }: SpecimenTabStructuralProps) {
             <MoistureDial
               value={moistureChartData[0].moisture}
               label="Moisture Percentage"
-              className="max-w-[200px]"
+              className="m-4"
             />
           </div>
           <Separator orientation="vertical" className="hidden md:block" />

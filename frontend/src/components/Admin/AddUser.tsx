@@ -98,7 +98,12 @@ const AddUser = () => {
 									<FormItem>
 										<FormLabel>Email</FormLabel>
 										<FormControl>
-											<Input type="email" placeholder="shadcn" {...field} />
+											<Input
+												type="email"
+												placeholder="shadcn"
+												{...field}
+												value={field.value ?? ""}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -111,7 +116,11 @@ const AddUser = () => {
 									<FormItem>
 										<FormLabel>Full Name</FormLabel>
 										<FormControl>
-											<Input placeholder="shadcn" {...field} />
+											<Input
+												placeholder="shadcn"
+												{...field}
+												value={field.value ?? ""}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -152,7 +161,7 @@ const AddUser = () => {
 											<FormControl>
 												<Checkbox
 													disabled={field.disabled}
-													checked={field.value}
+													checked={field.value ?? false}
 													onCheckedChange={(checked) => field.onChange(checked)}
 												/>
 											</FormControl>
@@ -172,7 +181,7 @@ const AddUser = () => {
 											<FormControl>
 												<Checkbox
 													disabled={field.disabled}
-													checked={field.value}
+													checked={field.value ?? false}
 													onCheckedChange={(checked) => field.onChange(checked)}
 												/>
 											</FormControl>
