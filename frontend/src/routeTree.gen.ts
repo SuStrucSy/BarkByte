@@ -19,6 +19,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutDoisRouteImport } from './routes/_layout/dois'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
+import { Route as LayoutCompareRouteImport } from './routes/_layout/compare'
 import { Route as LayoutAuthenticatedRouteImport } from './routes/_layout/_authenticated'
 import { Route as LayoutSpecimensIndexRouteImport } from './routes/_layout/specimens/index'
 import { Route as LayoutSpecimensSpecimenIdRouteImport } from './routes/_layout/specimens/$specimenId'
@@ -75,6 +76,11 @@ const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutCompareRoute = LayoutCompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAuthenticatedRoute = LayoutAuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => LayoutRoute,
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/compare': typeof LayoutCompareRoute
   '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/': typeof LayoutIndexRoute
+  '/compare': typeof LayoutCompareRoute
   '/dashboard': typeof LayoutDashboardRoute
   '/dois': typeof LayoutDoisRoute
   '/settings': typeof LayoutSettingsRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_layout/_authenticated': typeof LayoutAuthenticatedRouteWithChildren
+  '/_layout/compare': typeof LayoutCompareRoute
   '/_layout/dashboard': typeof LayoutDashboardRoute
   '/_layout/dois': typeof LayoutDoisRoute
   '/_layout/settings': typeof LayoutSettingsRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
+    | '/compare'
     | '/dashboard'
     | '/dois'
     | '/settings'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/'
+    | '/compare'
     | '/dashboard'
     | '/dois'
     | '/settings'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/_layout/_authenticated'
+    | '/_layout/compare'
     | '/_layout/dashboard'
     | '/_layout/dois'
     | '/_layout/settings'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutDashboardRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/compare': {
+      id: '/_layout/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof LayoutCompareRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/_authenticated': {
       id: '/_layout/_authenticated'
       path: ''
@@ -357,6 +376,7 @@ const LayoutAuthenticatedRouteWithChildren =
 
 interface LayoutRouteChildren {
   LayoutAuthenticatedRoute: typeof LayoutAuthenticatedRouteWithChildren
+  LayoutCompareRoute: typeof LayoutCompareRoute
   LayoutDashboardRoute: typeof LayoutDashboardRoute
   LayoutDoisRoute: typeof LayoutDoisRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
@@ -367,6 +387,7 @@ interface LayoutRouteChildren {
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAuthenticatedRoute: LayoutAuthenticatedRouteWithChildren,
+  LayoutCompareRoute: LayoutCompareRoute,
   LayoutDashboardRoute: LayoutDashboardRoute,
   LayoutDoisRoute: LayoutDoisRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
