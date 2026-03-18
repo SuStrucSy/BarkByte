@@ -91,14 +91,6 @@ export function SpecimensResultsTable({
                         }
                         return value || "None";
                       }
-                      if (meta?.renderAs === "uploader_name") {
-                        return (
-                          (cell.row.original as any).uploader_name ||
-                          cell.getValue() ||
-                          "Unknown"
-                        );
-                      }
-
                       // Default rendering path for all normal columns without special formatting rules.
                       return (
                         flexRender(

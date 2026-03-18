@@ -24,7 +24,7 @@ interface CreateColumnsOptions {
 const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	// Hidden by default
 	id: { header: "ID", hidden: true },
-	uploader_id: { header: "Uploader", hidden: true, meta: { renderAs: "uploader_name" } },
+	uploader_id: { header: "Uploader", hidden: true },
 	note: { header: "Notes", hidden: true },
 	connector_mechanical_properties: { header: "Connector Props", hidden: true },
 	fastener_mechanical_properties: { header: "Fastener Props", hidden: true },
@@ -110,14 +110,6 @@ export const createColumns = <
 					return {
 						...baseColumn,
 						accessorFn: (row) => row.sub_joinery_type?.label ?? "",
-					} satisfies ColumnDef<TData>;
-				case "uploader_name":
-					return {
-						...baseColumn,
-						accessorFn: (row) =>
-							("uploader_name" in row && typeof row.uploader_name === "string"
-								? row.uploader_name
-								: row.uploader_id) ?? "",
 					} satisfies ColumnDef<TData>;
 				case "array_labels":
 					return {
