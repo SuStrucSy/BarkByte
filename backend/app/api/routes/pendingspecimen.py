@@ -29,13 +29,17 @@ public_router = APIRouter(
 @secure_router.get("/", response_model=PendingSpecimensPublic)
 def list_pending_specimens(
     session: SessionDep,
+    current_user: CurrentUser,
     status: PendingStatus | None = None,
 ) -> PendingSpecimensPublic:
     """
     List pending specimens, optionally filtered by status.
     If no status is provided, all pending specimens are returned.
     """
-    pending = pending_crud.list_pending(session=session, status=status)
+    if current_user.is_superuser:
+        pending = pending_crud.list_pending(session=session, status=status)
+    else:
+        pending = pending_crud.list_pending_by_user(session=session, user_id=current_user.id, status=status)
     return pending
 
 @public_router.get("/specimen/{specimen_id}", response_model=PendingSpecimensPublic)
@@ -79,7 +83,7 @@ def approve_pending_specimen(
         session=session,
         pending_specimen=pending,
         reviewer_id=current_user.id,
-        comment=review.comment,
+        comment_by_reviewer=review.comment_by_reviewer,
     )
     return approved
 
@@ -107,7 +111,7 @@ def reject_pending_specimen_route(
         session=session,
         pending_specimen=pending_specimen,
         reviewer_id=current_user.id,
-        comment=review.comment,
+        comment_by_reviewer=review.comment_by_reviewer,
     )
     return rejected
 
@@ -153,7 +157,8 @@ def delete_pending_specimen(
         raise HTTPException(404, "Pending specimen not found")
     if pending_specimen.changed_by_user_id != current_user.id or not current_user.is_superuser:
         raise HTTPException(403, "Not authorized to delete this pending specimen.")
-
+    if pending_specimen.status is not PendingStatus.PENDING:
+        raise HTTPException(400, "Status is not Pending, can't delete.")
     pending = pending_crud.delete_pending_specimen(
         session=session,
         pending_specimen=pending_specimen

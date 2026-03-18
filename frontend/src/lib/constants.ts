@@ -1,4 +1,4 @@
-import type { SpecimenPublic } from "@/api/model/specimenPublic";
+import type { SpecimenPublic } from "@/api/model";
 
 // Extract all e_ keys from SpecimenPublic
 type SpecimenExperimentalKey = Extract<keyof SpecimenPublic, `e_${string}`>;

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { updatePasswordSchema } from "@/lib/schemas";
-import type { UpdatePassword } from "@/lib/types";
+import type { UpdatePassword } from "@/api/model";
 import { handleError } from "@/utils";
 
 interface UpdatePasswordForm extends UpdatePassword {

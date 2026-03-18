@@ -7,7 +7,6 @@ import {
   FieldGroup,
   FieldLabel,
   FieldLegend,
-  FieldSeparator,
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "../ui/input";
@@ -205,7 +204,7 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
                 }
                 onOpenChange={(isOpen) => {
                   if (isOpen && !fastenerTypeList.length) {
-                    // âœ… Trigger fetch when opened AND no data
+                    // Trigger fetch when opened AND no data
                     refetchFasteners(); // your query refetch function
                   }
                 }}
@@ -217,7 +216,7 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
                     {(chips) => (
                       <>
                         {chips.map((chipId) => {
-                          // âœ… Lookup label by ID from your data
+                          //  Lookup label by ID from your data
                           const fastener = fastenerTypeList.find(
                             (f) => f.id === chipId,
                           );
@@ -273,7 +272,7 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
                     {(chips) => (
                       <>
                         {chips.map((chipId) => {
-                          // âœ… Lookup label by ID from your data
+                          //  Lookup label by ID from your data
                           const loading = loadingDirectionList.find(
                             (f) => f.id === chipId,
                           );

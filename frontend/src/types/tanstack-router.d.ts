@@ -1,6 +1,7 @@
-// src/types/tanstack-router.d.ts
+export {};
+
 declare module "@tanstack/react-router" {
-	interface StaticDataRouteOption {
-		title?: string;
-	}
+  interface StaticDataRouteOption {
+    title?: string;
+  }
 }

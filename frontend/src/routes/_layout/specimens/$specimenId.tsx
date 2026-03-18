@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
-import { DOISheet } from "@/components/Specimens/DOISheet";
+import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
 import SkeletonSpecimen from "@/components/Skeleton/SkeletonSpecimen";
 import { useState } from "react";
@@ -48,8 +48,9 @@ function SpecimenDetails() {
   return (
     <div className="flex flex-col gap-6">
       <Specimen data={data} setSheetOpen={setSheetOpen} />
-      <DOISheet
-        doi={data.doi}
+      <SpecimenReferenceSheet
+        specimen={data}
+        mode="doi"
         relatedSpecimens={relatedSpecimens}
         open={sheetOpen}
         onOpenChange={setSheetOpen}

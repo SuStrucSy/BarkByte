@@ -296,7 +296,7 @@ export function SpecimenExperimentalFields({
                 }
                 onOpenChange={(isOpen) => {
                   if (isOpen && !QFMList.length) {
-                    // âœ… Trigger fetch when opened AND no data
+                    // Trigger fetch when opened AND no data
                     refetchQFM(); // your query refetch function
                   }
                 }}

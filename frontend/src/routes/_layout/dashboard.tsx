@@ -40,6 +40,7 @@ import {
 import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { isNumericValue } from "@/lib/typeGuards";
+import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { Toggle } from "@/components/ui/toggle";
 import {
   Tooltip,
@@ -47,7 +48,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { SpecimenSheet } from "@/components/Specimens/SpecimenSheet";
 import { Separator } from "@/components/ui/separator";
 import { DemographyGrid } from "@/components/Dashboard/DemographyGrid";
 import { ExpandableChart } from "@/components/Charts/ExpandableChart";
@@ -384,7 +384,7 @@ function Dashboard() {
       </div>
 
       {selectedSpecimen && (
-        <SpecimenSheet
+        <SpecimenReferenceSheet
           specimen={selectedSpecimen}
           open={sheetOpen}
           onOpenChange={setSheetOpen}

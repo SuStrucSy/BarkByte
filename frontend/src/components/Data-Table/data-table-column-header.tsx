@@ -20,38 +20,65 @@ export function DataTableColumnHeader<TData, TValue>({
 		return <div className={cn(className)}>{title}</div>;
 	}
 
+	const sorted = column.getIsSorted();
+
 	return (
-		<Button
-			variant="ghost"
-			size="sm"
-			onClick={() => {
-				column.toggleSorting(undefined);
-			}}
+		<div
 			className={cn(
-				"py-0 px-0 h-7 hover:bg-transparent hover:text-white/50 flex gap-2 items-center justify-between w-full",
+				"flex h-7 w-full items-center justify-between gap-2",
 				className,
 			)}
-			{...props}
 		>
 			<span>{title}</span>
 			<span className="flex flex-col">
-				<ChevronUp
-					className={cn(
-						"-mb-0.5 h-3 w-3",
-						column.getIsSorted() === "asc"
-							? "text-accent-foreground"
-							: "text-muted-foreground",
-					)}
-				/>
-				<ChevronDown
-					className={cn(
-						"-mt-0.5 h-3 w-3",
-						column.getIsSorted() === "desc"
-							? "text-accent-foreground"
-							: "text-muted-foreground",
-					)}
-				/>
+				<Button
+					variant="ghost"
+					size="icon"
+					type="button"
+					aria-label={`Sort ${title} descending`}
+					onClick={() => {
+						if (sorted === "desc") {
+							column.clearSorting();
+							return;
+						}
+						column.toggleSorting(true);
+					}}
+					className="h-3 w-3 p-0 hover:bg-transparent"
+					{...props}
+				>
+					<ChevronUp
+						className={cn(
+							"h-3 w-3",
+							sorted === "desc"
+								? "text-accent-foreground"
+								: "text-muted-foreground",
+						)}
+					/>
+				</Button>
+				<Button
+					variant="ghost"
+					size="icon"
+					type="button"
+					aria-label={`Sort ${title} ascending`}
+					onClick={() => {
+						if (sorted === "asc") {
+							column.clearSorting();
+							return;
+						}
+						column.toggleSorting(false);
+					}}
+					className="h-3 w-3 p-0 hover:bg-transparent"
+				>
+					<ChevronDown
+						className={cn(
+							"h-3 w-3",
+							sorted === "asc"
+								? "text-accent-foreground"
+								: "text-muted-foreground",
+						)}
+					/>
+				</Button>
 			</span>
-		</Button>
+		</div>
 	);
 }

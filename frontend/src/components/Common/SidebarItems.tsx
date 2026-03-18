@@ -2,6 +2,7 @@ import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 
 import {
   ChartSpline,
+  Columns3,
   Home,
   Layers,
   LayersPlus,
@@ -22,7 +23,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 const items = [
   { icon: Home, title: "Home", path: "/" },
   { icon: ChartSpline, title: "Dashboard", path: "/dashboard" },
-
+  { icon: Columns3, title: "Compare", path: "/compare" },
   { icon: Newspaper, title: "References", path: "/dois" },
 ];
 

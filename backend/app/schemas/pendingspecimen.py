@@ -5,23 +5,30 @@ from typing import Any
 from sqlmodel import SQLModel
 
 from app.enums import PendingStatus
-from app.schemas.specimen import SpecimenUpdate
+from app.schemas.specimen import SpecimenCreate, SpecimenUpdate
 
 class PendingSpecimenBase(SQLModel):
-    specimen_id: uuid.UUID | None = None
-    changed_by_user_id: uuid.UUID
-    changed_data: dict[str, Any] # SpecimenUpdate or SpecimenCreate
+    comment_by_author: str | None = None
 
-class PendingSpecimenCreate(PendingSpecimenBase):
+
+class PendingSpecimenCreate(SpecimenCreate, PendingSpecimenBase):
     """
-    Used internally when we create pending entries from specimen routes.
+    Body for submitting a brand new specimen for review.
+    """
+    pass
 
-    changed_by_user_id is filled from current_user, not from the client.
+
+class PendingSpecimenUpdate(SpecimenUpdate, PendingSpecimenBase):
+    """
+    Body for submitting or editing specimen changes under review.
     """
     pass
 
 
 class PendingSpecimenPublic(PendingSpecimenBase):
+    specimen_id: uuid.UUID | None = None
+    changed_by_user_id: uuid.UUID
+    changed_data: dict[str, Any]  # PendingSpecimenCreate or PendingSpecimenUpdate
     id: uuid.UUID
     status: PendingStatus
     created_at: datetime
@@ -40,11 +47,4 @@ class PendingSpecimenReview(SQLModel):
     """
     Body for approve or reject actions.
     """
-    comment: str
-
-
-class PendingSpecimenUpdate(SpecimenUpdate):
-    """
-    Body for updating the pending specimen's changed_data.
-    """
-    pass
+    comment_by_reviewer: str
