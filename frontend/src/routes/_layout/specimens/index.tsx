@@ -2,7 +2,6 @@ import {
   specimensReadSpecimens,
   useSpecimensReadSpecimenFilterOptions,
 } from "@/api/endpoints/specimens/specimens.gen";
-import { useUsersReadUsers } from "@/api/endpoints/users/users.gen";
 import type { SpecimenPublic } from "@/api/model";
 import { DataTableFilterCommand } from "@/components/Data-Table/DataTableFilterCommand";
 import {
@@ -173,25 +172,9 @@ function useAllSpecimens() {
   });
 }
 
-function useUploaderNameMap() {
-  const { data } = useUsersReadUsers({
-    skip: 0,
-    limit: 1000,
-  });
-
-  return useMemo(() => {
-    const entries = (data?.data ?? []).map((user) => [
-      user.id,
-      user.full_name || user.email || user.id,
-    ]);
-    return Object.fromEntries(entries) as Record<string, string>;
-  }, [data?.data]);
-}
-
 function SpecimensKitTable() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const uploaderNameMap = useUploaderNameMap();
   const initialBrowserQuerySearchTerm = useRef(
     getInitialQuerySearchTerm(search.q),
   ).current;
@@ -311,14 +294,10 @@ function SpecimensKitTable() {
   const { data, isLoading } = useAllSpecimens();
   const { data: filterOptionsData } = useSpecimensReadSpecimenFilterOptions();
 
-  // Normalize row data by attaching uploader display names.
+  // Use the raw specimen rows directly; avoid user-profile enrichment on the client.
   const rows = useMemo<SpecimenRow[]>(
-    () =>
-      (data?.data ?? []).map((row) => ({
-        ...row,
-        uploader_name: uploaderNameMap[row.uploader_id] ?? row.uploader_id,
-      })),
-    [data?.data, uploaderNameMap],
+    () => data?.data ?? [],
+    [data?.data],
   );
 
   // Unique reference IDs used as options in command search.

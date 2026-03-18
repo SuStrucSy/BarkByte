@@ -5,7 +5,7 @@ import type { SpecimenPublic } from "@/api/model";
  * This file keeps filter field names, option configs, and row-matching logic
  * in one place so `index.tsx` stays focused on UI wiring and layout.
  */
-export type SpecimenRow = SpecimenPublic & { uploader_name?: string };
+export type SpecimenRow = SpecimenPublic;
 
 /** Shape returned by the backend facet-options endpoint. */
 export type SpecimenFilterOptionsResponse = {
@@ -15,7 +15,6 @@ export type SpecimenFilterOptionsResponse = {
   sub_joinery_types: string[];
   loading_types: string[];
   failure_modes: string[];
-  uploader: string[];
 };
 
 export type FacetField = keyof SpecimenFilterOptionsResponse;
@@ -54,7 +53,6 @@ const FACET_FIELDS: FacetField[] = [
   "sub_joinery_types",
   "loading_types",
   "failure_modes",
-  "uploader",
 ];
 
 export const isFacetField = (field: CheckboxField): field is FacetField =>
@@ -93,11 +91,6 @@ export const CHECKBOX_FILTER_CONFIG: Array<{
     field: "loading_types",
     label: "Loading Type",
     getValue: (row) => row.e_test_loading_type ?? "",
-  },
-  {
-    field: "uploader",
-    label: "Uploader",
-    getValue: (row) => row.uploader_name ?? row.uploader_id,
   },
   {
     field: "connector",
@@ -225,7 +218,6 @@ export const createEmptySelectedFilters = (): SelectedFilters => ({
   joinery_types: [],
   sub_joinery_types: [],
   loading_types: [],
-  uploader: [],
   connector: [],
   dowel: [],
   failure_modes: [],
@@ -293,8 +285,6 @@ export const getSearchValue = (row: SpecimenRow, field: string) => {
       return row.sub_joinery_type?.label ?? "";
     case "loading_types":
       return row.e_test_loading_type ?? "";
-    case "uploader":
-      return row.uploader_name ?? row.uploader_id;
     case "connector":
       return row.connector ? "true" : "false";
     case "dowel":
@@ -312,7 +302,6 @@ export const getSearchValue = (row: SpecimenRow, field: string) => {
         row.joinery_type?.label ?? "",
         row.sub_joinery_type?.label ?? "",
         row.e_test_loading_type ?? "",
-        row.uploader_name ?? row.uploader_id,
         row.connector ? "true" : "false",
         row.dowel ? "true" : "false",
         row.e_qualitative_failure_measure
