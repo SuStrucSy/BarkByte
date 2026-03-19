@@ -1,4 +1,4 @@
-import { useDoiGetDois } from "@/api/endpoints/doi/doi.gen";
+import { useDoiCreateDoi, useDoiGetDois } from "@/api/endpoints/doi/doi.gen";
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
@@ -44,9 +44,12 @@ import {
 import { SpecimenStructuralFields } from "@/components/Specimens/SpecimenStructuralFields";
 import { SpecimenExperimentalFields } from "@/components/Specimens/SpecimenExperimentalFields";
 import { useSpecimensCreateSpecimen } from "@/api/endpoints/specimens/specimens.gen";
-import { handleError } from "@/utils";
+import { handleError } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/_authenticated/specimens/new")({
+  staticData: {
+    title: "Add Specimen",
+  },
   component: NewSpecimen,
 });
 
@@ -267,10 +270,37 @@ function NewSpecimen() {
     },
   });
 
+  const doiMutation = useDoiCreateDoi({
+    mutation: {
+      onSuccess: () => {},
+      onError: (err: void | HTTPValidationError) => {
+        handleError(err);
+      },
+      onSettled: () => {
+        //
+      },
+    },
+  });
+
   async function onSubmit(values: AddNewSpecimenFormValues) {
     console.log({ values });
     try {
-      mutation.mutateAsync({ data: values });
+      let doi = null;
+      if (!selectedDoi) {
+        doi = await doiMutation.mutateAsync({
+          data: {
+            link: values.link,
+            ref_title: values.ref_title,
+            authors: values.authors,
+            pub_year: values.pub_year,
+          },
+        });
+      }
+      if (doi) {
+        await mutation.mutateAsync({ data: { ...values, doi_id: doi.id } });
+      } else {
+        await mutation.mutateAsync({ data: values });
+      }
     } catch (err) {
       toast.error("Submission failed", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -420,10 +450,12 @@ function NewSpecimen() {
                 {currentStep + 1} / {steps.length}
               </Badge>
             </div>
-            <Progress value={progress} className="h-1.5" />
+            <Progress value={progress} className="h-1.5 mt-2" />
           </CardHeader>
 
-          <CardContent>{renderCurrentStepContent()}</CardContent>
+          <CardContent className="p-6">
+            {renderCurrentStepContent()}
+          </CardContent>
 
           <CardFooter>
             <div className="flex justify-between w-full">

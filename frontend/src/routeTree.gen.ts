@@ -17,7 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutDoisRouteImport } from './routes/_layout/dois'
+import { Route as LayoutReferencesRouteImport } from './routes/_layout/references'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
 import { Route as LayoutCompareRouteImport } from './routes/_layout/compare'
 import { Route as LayoutAuthenticatedRouteImport } from './routes/_layout/_authenticated'
@@ -66,9 +66,9 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutDoisRoute = LayoutDoisRouteImport.update({
-  id: '/dois',
-  path: '/dois',
+const LayoutReferencesRoute = LayoutReferencesRouteImport.update({
+  id: '/references',
+  path: '/references',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
@@ -124,7 +124,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/compare': typeof LayoutCompareRoute
   '/dashboard': typeof LayoutDashboardRoute
-  '/dois': typeof LayoutDoisRoute
+  '/references': typeof LayoutReferencesRoute
   '/settings': typeof LayoutSettingsRoute
   '/admin': typeof LayoutAuthenticatedAdminRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
@@ -141,7 +141,7 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/compare': typeof LayoutCompareRoute
   '/dashboard': typeof LayoutDashboardRoute
-  '/dois': typeof LayoutDoisRoute
+  '/references': typeof LayoutReferencesRoute
   '/settings': typeof LayoutSettingsRoute
   '/admin': typeof LayoutAuthenticatedAdminRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
@@ -160,7 +160,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated': typeof LayoutAuthenticatedRouteWithChildren
   '/_layout/compare': typeof LayoutCompareRoute
   '/_layout/dashboard': typeof LayoutDashboardRoute
-  '/_layout/dois': typeof LayoutDoisRoute
+  '/_layout/references': typeof LayoutReferencesRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/_authenticated/admin': typeof LayoutAuthenticatedAdminRoute
@@ -180,7 +180,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/compare'
     | '/dashboard'
-    | '/dois'
+    | '/references'
     | '/settings'
     | '/admin'
     | '/specimens/$specimenId'
@@ -197,7 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/compare'
     | '/dashboard'
-    | '/dois'
+    | '/references'
     | '/settings'
     | '/admin'
     | '/specimens/$specimenId'
@@ -215,7 +215,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated'
     | '/_layout/compare'
     | '/_layout/dashboard'
-    | '/_layout/dois'
+    | '/_layout/references'
     | '/_layout/settings'
     | '/_layout/'
     | '/_layout/_authenticated/admin'
@@ -292,11 +292,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/dois': {
-      id: '/_layout/dois'
-      path: '/dois'
-      fullPath: '/dois'
-      preLoaderRoute: typeof LayoutDoisRouteImport
+    '/_layout/references': {
+      id: '/_layout/references'
+      path: '/references'
+      fullPath: '/references'
+      preLoaderRoute: typeof LayoutReferencesRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/dashboard': {
@@ -378,7 +378,7 @@ interface LayoutRouteChildren {
   LayoutAuthenticatedRoute: typeof LayoutAuthenticatedRouteWithChildren
   LayoutCompareRoute: typeof LayoutCompareRoute
   LayoutDashboardRoute: typeof LayoutDashboardRoute
-  LayoutDoisRoute: typeof LayoutDoisRoute
+  LayoutReferencesRoute: typeof LayoutReferencesRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSpecimensSpecimenIdRoute: typeof LayoutSpecimensSpecimenIdRoute
@@ -389,7 +389,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAuthenticatedRoute: LayoutAuthenticatedRouteWithChildren,
   LayoutCompareRoute: LayoutCompareRoute,
   LayoutDashboardRoute: LayoutDashboardRoute,
-  LayoutDoisRoute: LayoutDoisRoute,
+  LayoutReferencesRoute: LayoutReferencesRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSpecimensSpecimenIdRoute: LayoutSpecimensSpecimenIdRoute,

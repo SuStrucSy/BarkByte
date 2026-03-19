@@ -23,7 +23,7 @@ export type ThemeProviderState = {
 export function ThemeProvider({
   children,
   defaultMode = "system",
-  defaultTheme = "neutral",
+  defaultTheme = "default",
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
@@ -58,10 +58,28 @@ export function ThemeProvider({
     const root = window.document.documentElement;
 
     // Remove all color theme classes
-    root.classList.remove("neutral", "stone", "zinc", "gray", "slate");
+    // theme-provider.tsx — remove list
+    root.classList.remove(
+      "timber",
+      "stone",
+      "zinc",
+      "gray",
+      "slate",
+      "blueprint",
+      "birch",
+      "concrete",
+      "forest",
+      "charcoal",
+      "nordic",
+      "pacific",
+      "carbon",
+      "macos",
+    );
 
     // Apply color theme
-    root.classList.add(`${theme}`);
+    if (theme !== "default") {
+      root.classList.add(theme);
+    }
   }, [theme]);
 
   const value = {

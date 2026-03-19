@@ -23,13 +23,11 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 const items = [
   { icon: Home, title: "Home", path: "/" },
   { icon: ChartSpline, title: "Dashboard", path: "/dashboard" },
+  { icon: Newspaper, title: "References", path: "/references" },
   { icon: Columns3, title: "Compare", path: "/compare" },
-  { icon: Newspaper, title: "References", path: "/dois" },
 ];
 
-const groupTwoItems = [
-  { icon: Layers, title: "Specimens", path: "/specimens" },
-];
+const groupTwoItems = [{ icon: Layers, title: "All", path: "/specimens" }];
 
 interface Item {
   icon: LucideIcon;
@@ -44,10 +42,10 @@ const SidebarItems = () => {
   const specimenItems: Item[] = currentUser
     ? [
         ...groupTwoItems,
-        { icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
+        { icon: LayersPlus, title: "Add", path: "/specimens/new" },
         {
           icon: ListTodo,
-          title: "Pending Specimens",
+          title: "Pending",
           path: "/specimens/pending",
         },
       ]

@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { resetPasswordSchema } from "@/lib/schemas";
-import { handleError } from "@/utils";
+import { handleError } from "@/lib/utils";
 import { useLoginResetPassword } from "@/api/endpoints/login/login.gen";
 
 interface NewPasswordForm {

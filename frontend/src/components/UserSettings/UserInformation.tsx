@@ -4,7 +4,7 @@ import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
-import { handleError } from "@/utils";
+import { handleError } from "@/lib/utils";
 import { Button } from "../ui/button";
 import {
   Form,

@@ -1,39 +1,36 @@
-import { defineConfig } from 'orval';
-
+import { defineConfig } from "orval";
 
 export default defineConfig({
-  barkbyte: {
+  timverse: {
     input: {
-      target: './openapi.yaml',
+      target: "./openapi.yaml",
     },
     output: {
-      mode: 'tags-split',
-      client: 'react-query',
-      httpClient: 'axios',
-      target: 'src/api/endpoints',
-      schemas: 'src/api/model',
-      fileExtension: '.gen.ts',
+      mode: "tags-split",
+      client: "react-query",
+      httpClient: "axios",
+      target: "src/api/endpoints",
+      schemas: "src/api/model",
+      fileExtension: ".gen.ts",
       biome: true,
       override: {
         mutator: {
-          path: './src/api/mutator/custom-instance.ts',
-          name: 'customInstance',
+          path: "./src/api/mutator/custom-instance.ts",
+          name: "customInstance",
         },
-      }
+      },
     },
   },
-  barkByteZod: {
+  timverseZod: {
     input: {
-      target: './openapi.yaml',
+      target: "./openapi.yaml",
     },
     output: {
-      mode: 'tags-split',
-      client: 'zod',
-      target: 'src/api/endpoints',
-      fileExtension: '.zod.ts',
-      biome: true
+      mode: "tags-split",
+      client: "zod",
+      target: "src/api/endpoints",
+      fileExtension: ".zod.ts",
+      biome: true,
     },
-
   },
-
 });

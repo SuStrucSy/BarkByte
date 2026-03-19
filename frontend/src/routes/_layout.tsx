@@ -3,32 +3,35 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import Navbar from "@/components/Common/Navbar";
 import AppSidebar from "@/components/Common/NavSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ForbiddenBoundary } from "@/components/Common/ForbiddenBoundary";
 
 export const Route = createFileRoute("/_layout")({
-	component: Layout,
-	// beforeLoad: async () => {
-	// 	const token =
-	// 		typeof window !== "undefined"
-	// 			? localStorage.getItem("access_token")
-	// 			: null;
-	// 	if (!token) {
-	// 		throw redirect({ to: "/login" });
-	// 	}
-	// },
+  component: Layout,
+  // beforeLoad: async () => {
+  // 	const token =
+  // 		typeof window !== "undefined"
+  // 			? localStorage.getItem("access_token")
+  // 			: null;
+  // 	if (!token) {
+  // 		throw redirect({ to: "/login" });
+  // 	}
+  // },
 });
 
 function Layout() {
-	return (
-		<SidebarProvider>
-			<AppSidebar />
-			<SidebarInset>
-				<Navbar />
-				<div className="flex flex-col flex-1 p-10 overflow-auto">
-					<Outlet />
-				</div>
-			</SidebarInset>
-		</SidebarProvider>
-	);
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Navbar />
+        <div className="flex flex-col flex-1 p-10 overflow-auto">
+          <ForbiddenBoundary>
+            <Outlet />
+          </ForbiddenBoundary>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
 
 export default Layout;

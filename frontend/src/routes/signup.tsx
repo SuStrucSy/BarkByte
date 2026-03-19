@@ -4,7 +4,7 @@ import {
   Link as RouterLink,
   redirect,
 } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { Loader2, TreePine } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,22 +61,24 @@ function SignUp() {
   });
 
   const onSubmit: SubmitHandler<UserRegisterForm> = (data) => {
-    signUpMutation.mutate({
-      data: {
-        email: data.email,
-        password: data.password,
-        full_name: data.full_name || null,
-      },
-    });
+    signUpMutation.mutate({ data: data });
   };
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <Card>
+          <div className="flex items-center gap-2 p-6">
+            <TreePine size={17} strokeWidth={2.2} className="text-primary" />
+            <span className="font-serif text-base font-bold tracking-wide">
+              Timverse
+            </span>
+          </div>
           <CardHeader>
-            <CardTitle className="text-2xl">Sign Up</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-serif text-2xl font-bold leading-tight tracking-tight">
+              Sign Up
+            </CardTitle>
+            <CardDescription className="mt-1.5 text-sm font-light">
               Enter details below to create a new account
             </CardDescription>
             <CardAction>
@@ -99,7 +101,7 @@ function SignUp() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="shadcn" {...field} />
+                        <Input placeholder="you@example.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -127,7 +129,7 @@ function SignUp() {
                       <FormControl>
                         <Input
                           type="password"
-                          placeholder="shadcn"
+                          placeholder="••••••••"
                           {...field}
                         />
                       </FormControl>
@@ -144,7 +146,7 @@ function SignUp() {
                       <FormControl>
                         <Input
                           type="password"
-                          placeholder="shadcn"
+                          placeholder="••••••••"
                           {...field}
                         />
                       </FormControl>

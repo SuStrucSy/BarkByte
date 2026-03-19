@@ -11,14 +11,14 @@ interface FieldHelpHoverProps {
   title?: string;
   /** Optional explanatory text shown below the SVG */
   description?: string;
-  /** The SVG (or any React node) to render inside the card */
-  svg: ReactNode;
+  /** The content to render inside the card */
+  content: ReactNode;
   /** HoverCard open delay in ms (default: 200) */
   openDelay?: number;
 }
 
 /**
- * A small ❓ icon that, when hovered, opens a HoverCard containing an SVG
+ * A small ❓ icon that, when hovered, opens a HoverCard containing an SVG/PNG
  * diagram and optional title / description text.
  *
  * Usage inside a FieldLabel:
@@ -28,14 +28,14 @@ interface FieldHelpHoverProps {
  *     <FieldHelpHover
  *       title="Assembly Types"
  *       description="Single shear: two members. Double shear: three members."
- *       svg={<AssemblyTypeSvg />}
+ *       content={<AssemblyTypeSvg />}
  *     />
  *   </FieldLabel>
  */
 export function FieldHelpHover({
   title,
   description,
-  svg,
+  content,
   openDelay = 200,
 }: FieldHelpHoverProps) {
   return (
@@ -63,7 +63,7 @@ export function FieldHelpHover({
 
         {/* SVG container – constrains size while preserving aspect ratio */}
         <div className="flex items-center justify-center rounded-md bg-muted/40 p-2">
-          {svg}
+          {content}
         </div>
 
         {description && (

@@ -1,0 +1,131 @@
+/* ── Forest Night theme ───────────────────────────────────────────────────
+   Light mode  →  sun-dappled forest floor: warm parchment, bark browns,
+                  sage greens, amber accents.
+   Dark mode   →  moonlit forest: near-black canopy sky, ember-glow amber,
+                  deep pine greens — mirrors the login page SVG scene.
+   ──────────────────────────────────────────────────────────────────────── */
+
+.forest-night {
+  --radius: 0.5rem;
+
+  /* ── Surfaces ── */
+  --background: oklch(0.97 0.014 75); /* warm parchment        */
+  --foreground: oklch(0.19 0.04 48); /* deep bark brown       */
+
+  --card: oklch(0.96 0.017 72);
+  --card-foreground: oklch(0.19 0.04 48);
+
+  --popover: oklch(0.96 0.017 72);
+  --popover-foreground: oklch(0.19 0.04 48);
+
+  /* ── Brand ── */
+  --primary: oklch(0.44 0.095 52); /* dark amber / bark     */
+  --primary-foreground: oklch(0.97 0.014 75);
+
+  /* ── Secondary ── */
+  --secondary: oklch(0.9 0.03 145); /* light sage            */
+  --secondary-foreground: oklch(0.24 0.05 48);
+
+  /* ── Muted ── */
+  --muted: oklch(0.93 0.018 72);
+  --muted-foreground: oklch(0.53 0.048 58);
+
+  /* ── Accent (forest green) ── */
+  --accent: oklch(0.88 0.055 148);
+  --accent-foreground: oklch(0.22 0.05 140);
+
+  /* ── Utility ── */
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.87 0.028 68);
+  --input: oklch(0.87 0.028 68);
+  --ring: oklch(0.54 0.085 54);
+
+  /* ── Charts ── */
+  --chart-1: oklch(0.54 0.11 52); /* amber                 */
+  --chart-2: oklch(0.5 0.115 148); /* forest green          */
+  --chart-3: oklch(0.6 0.09 78); /* warm gold             */
+  --chart-4: oklch(0.46 0.08 30); /* reddish bark          */
+  --chart-5: oklch(0.55 0.075 170); /* deep teal pine        */
+
+  /* ── Sidebar ── */
+  --sidebar: oklch(0.93 0.022 70);
+  --sidebar-foreground: oklch(0.19 0.04 48);
+  --sidebar-primary: oklch(0.44 0.095 52);
+  --sidebar-primary-foreground: oklch(0.97 0.014 75);
+  --sidebar-accent: oklch(0.88 0.055 148);
+  --sidebar-accent-foreground: oklch(0.22 0.05 140);
+  --sidebar-border: oklch(0.87 0.028 68);
+  --sidebar-ring: oklch(0.54 0.085 54);
+
+  /* ── Badge tokens ── */
+  --badge-bg-l: 0.91;
+  --badge-bg-c: 0.07;
+  --badge-fg-l: 0.27;
+  --badge-fg-c: 0.14;
+  --badge-border-l: 0.74;
+  --badge-border-c: 0.1;
+
+  --theme-hue: 58;
+}
+
+/* ── Dark: moonlit forest ─────────────────────────────────────────────────
+   Mirrors the SVG login scene: deep pine-black, moon-amber glow, sage mist.
+   ──────────────────────────────────────────────────────────────────────── */
+.dark.forest-night {
+  /* ── Surfaces ── */
+  --background: oklch(0.12 0.018 155); /* deep pine-black       */
+  --foreground: oklch(0.93 0.022 75); /* warm cream / moonlight*/
+
+  --card: oklch(0.17 0.022 152); /* slightly lifted dark  */
+  --card-foreground: oklch(0.93 0.022 75);
+
+  --popover: oklch(0.17 0.022 152);
+  --popover-foreground: oklch(0.93 0.022 75);
+
+  /* ── Brand (amber ember) ── */
+  --primary: oklch(0.68 0.12 54); /* warm amber glow       */
+  --primary-foreground: oklch(0.12 0.018 155);
+
+  /* ── Secondary ── */
+  --secondary: oklch(0.23 0.032 150); /* shadowed forest       */
+  --secondary-foreground: oklch(0.93 0.022 75);
+
+  /* ── Muted ── */
+  --muted: oklch(0.21 0.026 150);
+  --muted-foreground: oklch(0.6 0.042 145); /* sage mist             */
+
+  /* ── Accent (moonlit pine green) ── */
+  --accent: oklch(0.32 0.06 148);
+  --accent-foreground: oklch(0.93 0.022 75);
+
+  /* ── Utility ── */
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.65 0.095 54); /* amber focus ring      */
+
+  /* ── Charts ── */
+  --chart-1: oklch(0.68 0.12 54); /* amber ember           */
+  --chart-2: oklch(0.56 0.115 148); /* forest green          */
+  --chart-3: oklch(0.72 0.095 78); /* gold moon             */
+  --chart-4: oklch(0.52 0.08 30); /* dark bark             */
+  --chart-5: oklch(0.6 0.072 170); /* teal pine             */
+
+  /* ── Sidebar ── */
+  --sidebar: oklch(0.15 0.02 152);
+  --sidebar-foreground: oklch(0.93 0.022 75);
+  --sidebar-primary: oklch(0.68 0.12 54);
+  --sidebar-primary-foreground: oklch(0.12 0.018 155);
+  --sidebar-accent: oklch(0.32 0.06 148);
+  --sidebar-accent-foreground: oklch(0.93 0.022 75);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.65 0.095 54);
+
+  /* ── Badge tokens ── */
+  --badge-bg-l: 0.22;
+  --badge-bg-c: 0.06;
+  --badge-fg-l: 0.88;
+  --badge-fg-c: 0.09;
+  --badge-border-l: 0.38;
+  --badge-border-c: 0.08;
+}

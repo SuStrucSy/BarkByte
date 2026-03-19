@@ -16,7 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "../ui/sidebar";
-import { modes, themes } from "@/lib/constants";
+import {
+  modes,
+  THEME_COLORS,
+  THEME_TEXT_COLORS,
+  themes,
+} from "@/lib/constants";
 
 const ModeToggle = () => {
   const {
@@ -30,7 +35,6 @@ const ModeToggle = () => {
   const side = state === "collapsed" && !isMobile ? "right" : "top";
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Theme</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
@@ -73,17 +77,7 @@ const ModeToggle = () => {
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               >
                 <Palette
-                  className={`h-[1.2rem] w-[1.2rem] ${
-                    currentTheme === "neutral"
-                      ? "text-neutral-500"
-                      : currentTheme === "stone"
-                        ? "text-stone-500"
-                        : currentTheme === "zinc"
-                          ? "text-zinc-500"
-                          : currentTheme === "gray"
-                            ? "text-gray-500"
-                            : "text-slate-500"
-                  }`}
+                  className={`h-[1.2rem] w-[1.2rem] ${THEME_TEXT_COLORS[currentTheme] ?? "text-gray-500"}`}
                 />
                 <span className="sr-only">Toggle color theme</span>
                 <span className="truncate text-xs">
@@ -103,7 +97,7 @@ const ModeToggle = () => {
               {themes.map((theme) => (
                 <DropdownMenuItem key={theme} onClick={() => setTheme(theme)}>
                   <div
-                    className={`mr-2 h-4 w-4 rounded-full bg-${theme}-500`}
+                    className={`mr-2 h-4 w-4 rounded-full ${THEME_COLORS[theme] ?? "bg-gray-500"}`}
                   />
                   {theme.charAt(0).toUpperCase() + theme.slice(1)}
                   {currentTheme === theme && <span className="ml-auto">✓</span>}

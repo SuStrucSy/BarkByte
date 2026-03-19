@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 
 const initialState: ThemeProviderState = {
   mode: "system",
-  theme: "neutral",
+  theme: "default",
   setMode: () => null,
   setTheme: () => null,
 };
