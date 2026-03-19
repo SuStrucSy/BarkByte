@@ -4,21 +4,15 @@ import { LabelValue } from "../Common/LabelValue";
 import { Separator } from "../ui/separator";
 import type { SpecimenPublic } from "@/api/model";
 import { MoistureDial } from "../Dashboard/MoistureDial";
+import { parseMoisturePercentage } from "@/lib/utils";
 
 type SpecimenTabStructuralProps = {
   data: SpecimenPublic;
 };
 
 export function SpecimenTabStructural({ data }: SpecimenTabStructuralProps) {
-  const moistureValue = Number(
-    String(data.moisture_percentage ?? "").replace("%", ""),
-  );
-  const moistureChartData = [
-    {
-      name: "Moisture",
-      moisture: Number.isFinite(moistureValue) ? moistureValue : 0,
-    },
-  ];
+  const moistureValue = parseMoisturePercentage(data.moisture_percentage);
+
   return (
     <TabsContent value="Structural Data">
       <Card>
@@ -32,7 +26,7 @@ export function SpecimenTabStructural({ data }: SpecimenTabStructuralProps) {
             </h3>
             <LabelValue property="element_dimension" data={data} />
             <MoistureDial
-              value={moistureChartData[0].moisture}
+              value={moistureValue ?? 0}
               label="Moisture Percentage"
               className="m-4"
             />

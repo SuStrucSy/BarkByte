@@ -154,6 +154,19 @@ export function humanizeLabel(label: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+export function parseMoisturePercentage(
+  value: string | null | undefined,
+): number | null {
+  const normalized = String(value ?? "").trim().replace(/%$/, "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function getInitials(fullName: string): string {
   // Trim, split on spaces, and remove empty parts
   const parts = fullName.trim().split(" ").filter(Boolean);

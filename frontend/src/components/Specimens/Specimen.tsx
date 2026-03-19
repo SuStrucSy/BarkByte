@@ -1,17 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item";
 import { LabelValue } from "@/components/Common/LabelValue";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
-import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import type { SpecimenPublic } from "@/api/model";
 import { SpecimenHeader } from "./SpecimenHeader";
 import { SpecimenFailureModeLinks } from "./SpecimenFailureModeLinks";
@@ -24,15 +14,6 @@ type SpecimenProps = {
 };
 
 export function Specimen({ data, setSheetOpen }: SpecimenProps) {
-  const moistureValue = Number(
-    String(data.moisture_percentage ?? "").replace("%", ""),
-  );
-  const moistureChartData = [
-    {
-      name: "Moisture",
-      moisture: Number.isFinite(moistureValue) ? moistureValue : 0,
-    },
-  ];
   console.log({ data });
   return (
     <>

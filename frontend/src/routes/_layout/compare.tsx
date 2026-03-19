@@ -1,6 +1,5 @@
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens.gen";
 import type { SpecimenPublic } from "@/api/model";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -39,7 +38,7 @@ import {
 } from "@/lib/constants";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
-import { humanizeLabel } from "@/lib/utils";
+import { humanizeLabel, parseMoisturePercentage } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Columns3, X } from "lucide-react";
@@ -286,7 +285,7 @@ function formatInlineCompareValue(
   return { text: formatCompareValue(value), isMissing: false };
 }
 
-function getCompareFields(specimen?: SpecimenPublic): CompareField[] {
+function getCompareFields(): CompareField[] {
   const orderedKeys = [
     ...META_COMPARE_FIELDS,
     ...STRUCTURAL_COMPARE_FIELDS,
@@ -391,8 +390,8 @@ function ComparePage() {
   );
 
   const compareFields = useMemo(
-    () => getCompareFields(selectedSpecimens[0] ?? specimens[0]),
-    [selectedSpecimens, specimens],
+    () => getCompareFields(),
+    [],
   );
   const compareSections = useMemo(
     () => groupCompareFields(compareFields),
@@ -604,8 +603,8 @@ function ComparePage() {
                       {section.title === "Structural Data" ? (
                         <div className="mb-8 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                           {comparisonSlots.map((specimen, index) => {
-                            const moistureValue = Number(
-                              String(specimen?.moisture_percentage ?? "").replace("%", ""),
+                            const moistureValue = parseMoisturePercentage(
+                              specimen?.moisture_percentage,
                             );
 
                             return (
@@ -614,7 +613,7 @@ function ComparePage() {
                                 className={`min-w-0 ${index > 0 ? "border-t pt-4 sm:border-t-0 sm:pt-0 sm:pl-4" : ""}`}
                               >
                                 {specimen ? (
-                                  Number.isFinite(moistureValue) ? (
+                                  moistureValue !== null ? (
                                     <div className="grid min-w-0 gap-2 overflow-hidden">
                                       <MoistureDial
                                         value={moistureValue}
