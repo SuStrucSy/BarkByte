@@ -4,7 +4,7 @@ import {
   Link as RouterLink,
   redirect,
 } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { Loader2, TreePine } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,13 +69,25 @@ function Login() {
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <Card>
+          <div className="flex items-center gap-2 p-6">
+            <TreePine size={17} strokeWidth={2.2} className="text-primary" />
+            <span className="font-serif text-base font-bold tracking-wide">
+              Timverse
+            </span>
+          </div>
           <CardHeader>
-            <CardTitle className="text-xl">Login to your account</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
+            <CardTitle className="font-serif text-2xl font-bold leading-tight tracking-tight">
+              Welcome back
+            </CardTitle>
+            <CardDescription className="mt-1.5 text-sm font-light">
+              Enter your credentials to continue
             </CardDescription>
             <CardAction>
-              <Button variant="link" asChild>
+              <Button
+                variant="link"
+                className="shrink-0 pt-0.5 text-xs no-underline"
+                asChild
+              >
                 <RouterLink to="/signup">Sign Up</RouterLink>
               </Button>
             </CardAction>
@@ -94,7 +106,7 @@ function Login() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="shadcn" {...field} />
+                        <Input placeholder="you@example.com" {...field} />
                       </FormControl>
                       <FormDescription>
                         This is the email that you registered with.
@@ -112,7 +124,7 @@ function Login() {
                       <FormControl>
                         <Input
                           type="password"
-                          placeholder="shadcn"
+                          placeholder="••••••••"
                           {...field}
                         />
                       </FormControl>

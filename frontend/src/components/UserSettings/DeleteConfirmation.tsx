@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import useAuth from "@/hooks/useAuth";
-import { handleError } from "@/utils";
+import { handleError } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Form } from "../ui/form";
 import {

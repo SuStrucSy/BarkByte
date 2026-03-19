@@ -44,7 +44,7 @@ import {
 import { SpecimenStructuralFields } from "@/components/Specimens/SpecimenStructuralFields";
 import { SpecimenExperimentalFields } from "@/components/Specimens/SpecimenExperimentalFields";
 import { useSpecimensCreateSpecimen } from "@/api/endpoints/specimens/specimens.gen";
-import { handleError } from "@/utils";
+import { handleError } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/_authenticated/specimens/new")({
   staticData: {

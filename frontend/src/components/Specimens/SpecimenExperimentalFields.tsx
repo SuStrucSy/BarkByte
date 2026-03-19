@@ -285,7 +285,7 @@ export function SpecimenExperimentalFields({
               <FieldLabel htmlFor="e_qualitative_failure_measure">
                 QFM{" "}
                 <FieldHelpHover
-                  svg={<QFMTypes className="w-3xl h-auto max-h-96" />}
+                  content={<QFMTypes className="w-3xl h-auto max-h-96" />}
                 />
               </FieldLabel>
               <Combobox

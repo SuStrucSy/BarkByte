@@ -1,17 +1,50 @@
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
 import type { ItemCount } from "@/lib/utils";
-import { Pie, PieChart } from "recharts";
+import { Pie, PieChart, type PieLabelRenderProps } from "recharts";
 
 interface DonutProps {
   counts: Record<string, ItemCount>;
 }
+
+const renderCustomLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  name,
+}: PieLabelRenderProps) => {
+  if (
+    cx === null ||
+    cy === null ||
+    innerRadius === null ||
+    outerRadius === null ||
+    midAngle === undefined
+  ) {
+    return null;
+  }
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + outerRadius * 0.7;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#e76034"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+    >
+      {name}
+    </text>
+  );
+};
 
 export function Donut({ counts }: DonutProps) {
   const chartData = Object.entries(counts).map(
@@ -45,21 +78,12 @@ export function Donut({ counts }: DonutProps) {
         <Pie
           data={chartData}
           dataKey="count"
-          label
+          label={renderCustomLabel}
           nameKey="label"
           innerRadius="35%"
           outerRadius="65%"
           cx="50%"
           cy="50%"
-        />
-        <ChartLegend
-          content={({ payload }) => (
-            <ChartLegendContent
-              payload={payload}
-              nameKey="label"
-              className="flex-wrap gap-2 *:basis-1/4 *:justify-center"
-            />
-          )}
         />
       </PieChart>
     </ChartContainer>

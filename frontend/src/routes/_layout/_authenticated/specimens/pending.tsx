@@ -31,16 +31,18 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { handleError } from "@/utils";
+import { handleError } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Layers, RefreshCcwIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_layout/_authenticated/specimens/pending")({
+export const Route = createFileRoute(
+  "/_layout/_authenticated/specimens/pending",
+)({
   staticData: {
-    title: "Pending Specimens",
+    title: "Pending",
   },
   component: PendingSpecimens,
 });
@@ -210,8 +212,7 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
           changedFastenerIds.includes(fastener.id),
         );
         const matchingLoadingDirection = loadingDirectionData?.data.filter(
-          (loadingDir) =>
-            changedLoadingDirectionIds.includes(loadingDir.id),
+          (loadingDir) => changedLoadingDirectionIds.includes(loadingDir.id),
         );
         const matchingSubJoints = subjoineryData?.data.filter(
           (joint) => changed["sub_joinery_type_id"] === joint.id,
@@ -221,7 +222,9 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
         );
 
         const spec: Partial<SpecimenPublic> = {
-          assembly_type: changed["assembly_type"] as SpecimenPublic["assembly_type"],
+          assembly_type: changed[
+            "assembly_type"
+          ] as SpecimenPublic["assembly_type"],
           connection_description: changed["connection_description"] as
             | SpecimenPublic["connection_description"]
             | undefined,

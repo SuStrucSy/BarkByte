@@ -1,4 +1,4 @@
-import { ArrowUpCircleIcon, LogIn } from "lucide-react";
+import { ArrowUpCircleIcon, LogIn, TreePine } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -41,7 +41,7 @@ const AppSidebar = () => {
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link to="/">
-                <ArrowUpCircleIcon className="h-5 w-5" />
+                <TreePine />
                 <span className="text-base font-semibold">Timverse</span>
               </Link>
             </SidebarMenuButton>

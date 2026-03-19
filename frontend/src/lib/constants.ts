@@ -55,6 +55,7 @@ export const themes = [
   "pacific",
   "carbon",
   "macos",
+  "forest-night",
 ] as const;
 
 export const THEME_COLORS: Record<string, string> = {
@@ -73,6 +74,7 @@ export const THEME_COLORS: Record<string, string> = {
   pacific: "bg-teal-600",
   carbon: "bg-neutral-800",
   macos: "bg-blue-500",
+  "forest-night": "bg-green-900",
 };
 
 export const THEME_TEXT_COLORS: Record<string, string> = {
@@ -91,6 +93,7 @@ export const THEME_TEXT_COLORS: Record<string, string> = {
   pacific: "text-teal-600",
   carbon: "text-neutral-500",
   macos: "text-blue-500",
+  "forest-night": "text-green-900",
 };
 
 // ============================================
