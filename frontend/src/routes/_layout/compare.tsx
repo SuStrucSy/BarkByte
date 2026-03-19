@@ -36,6 +36,16 @@ import {
   getExperimentalLabel,
   getExperimentalUnit,
 } from "@/lib/constants";
+import {
+  COMPARE_SECTION_CONFIG,
+  COMPARE_SLOT_COUNT,
+  type CompareSectionTitle,
+  EXPERIMENTAL_COMPARE_FIELDS,
+  META_COMPARE_FIELDS,
+  RADAR_METRIC_FIELDS,
+  STRUCTURAL_CHART_FIELDS,
+  STRUCTURAL_COMPARE_FIELDS,
+} from "@/lib/compare";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import { humanizeLabel, parseMoisturePercentage } from "@/lib/utils";
@@ -59,64 +69,9 @@ type CompareField = {
 };
 
 type CompareSection = {
-  title: "Meta Data" | "Structural Data" | "Experimental Data";
+  title: CompareSectionTitle;
   fields: CompareField[];
 };
-
-const COMPARE_SLOT_COUNT = 3;
-const META_COMPARE_FIELDS: Array<keyof SpecimenPublic> = [
-  "specimen_reference_id",
-  "assembly_type",
-  "joinery_type",
-  "sub_joinery_type",
-  "fastener_types",
-  "loading_directions",
-  "practice",
-  "fastener_numbers",
-  "connector",
-  "dowel",
-  "replicate_tests",
-  "connection_description",
-  "note",
-  "doi",
-];
-const STRUCTURAL_COMPARE_FIELDS: Array<keyof SpecimenPublic> = [
-  "element_dimension",
-  "moisture_percentage",
-  "wood_type",
-  "wood_mechanical_properties",
-  "fastener_mechanical_properties",
-  "connector_mechanical_properties",
-];
-const EXPERIMENTAL_COMPARE_FIELDS: Array<keyof SpecimenPublic> = [
-  "e_date",
-  "e_test_loading_type",
-  "e_yield_point_method",
-  "e_qualitative_failure_measure",
-  "e_qfm_description",
-  
-  "e_yield_force",
-  "e_max_force",
-  "e_yield_displacement",
-  "e_max_displacement",
-  "e_ultimate_force",
-  "e_ultimate_displacement",
-  "e_stiffness",
-  "e_ductility",
-];
-const RADAR_METRIC_FIELDS: Array<keyof SpecimenPublic> = [
-  "e_yield_force",
-  "e_max_force",
-  "e_yield_displacement",
-  "e_max_displacement",
-  "e_ultimate_force",
-  "e_ultimate_displacement",
-  "e_stiffness",
-  "e_ductility",
-];
-const STRUCTURAL_CHART_FIELDS: Array<keyof SpecimenPublic> = [
-  "moisture_percentage",
-];
 
 function isHiddenCompareField(key: keyof SpecimenPublic) {
   return key === "id" || key.endsWith("_id");
@@ -306,22 +261,7 @@ function getCompareFields(): CompareField[] {
 }
 
 function groupCompareFields(fields: CompareField[]): CompareSection[] {
-  const sections = [
-    {
-      title: "Meta Data" as const,
-      keys: META_COMPARE_FIELDS,
-    },
-    {
-      title: "Structural Data" as const,
-      keys: STRUCTURAL_COMPARE_FIELDS,
-    },
-    {
-      title: "Experimental Data" as const,
-      keys: EXPERIMENTAL_COMPARE_FIELDS,
-    },
-  ];
-
-  return sections
+  return COMPARE_SECTION_CONFIG
     .map(({ title, keys }) => {
       const fieldMap = new Map(fields.map((field) => [field.key, field]));
       const sectionKeys =
