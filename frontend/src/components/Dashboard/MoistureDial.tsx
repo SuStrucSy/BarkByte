@@ -5,6 +5,9 @@ type MoistureDialProps = {
   value: number
   label?: string
   className?: string
+  chartClassName?: string
+  innerRadius?: number
+  outerRadius?: number
 }
 
 const config = {
@@ -13,19 +16,29 @@ const config = {
   },
 } satisfies ChartConfig
 
-export function MoistureDial({ value, label = "Moisture", className }: MoistureDialProps) {
+export function MoistureDial({
+  value,
+  label = "Moisture",
+  className,
+  chartClassName,
+  innerRadius = 80,
+  outerRadius = 110,
+}: MoistureDialProps) {
   const v = Math.max(0, Math.min(100, value))
   const data = [{ moisture: v }]
 
   return (
     <div className={["flex flex-col gap-1", className].filter(Boolean).join(" ")}>
-        <ChartContainer config={config} className="mx-auto h-[220px] w-full">
+        <ChartContainer
+          config={config}
+          className={["mx-auto h-[220px] w-full", chartClassName].filter(Boolean).join(" ")}
+        >
             <RadialBarChart
             data={data}
             startAngle={90}
             endAngle={-270}
-            innerRadius={80}
-            outerRadius={110}
+            innerRadius={innerRadius}
+            outerRadius={outerRadius}
             >
                 <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
                 <RadialBar
