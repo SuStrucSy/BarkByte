@@ -1,20 +1,20 @@
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { CircleHelp } from "lucide-react";
 import type { ReactNode } from "react";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface FieldHelpHoverProps {
-  /** Short label shown above the SVG */
-  title?: string;
-  /** Optional explanatory text shown below the SVG */
-  description?: string;
-  /** The content to render inside the card */
-  content: ReactNode;
-  /** HoverCard open delay in ms (default: 200) */
-  openDelay?: number;
+	/** Short label shown above the SVG */
+	title?: string;
+	/** Optional explanatory text shown below the SVG */
+	description?: string;
+	/** The content to render inside the card */
+	content: ReactNode;
+	/** HoverCard open delay in ms (default: 200) */
+	openDelay?: number;
 }
 
 /**
@@ -33,45 +33,45 @@ interface FieldHelpHoverProps {
  *   </FieldLabel>
  */
 export function FieldHelpHover({
-  title,
-  description,
-  content,
-  openDelay = 200,
+	title,
+	description,
+	content,
+	openDelay = 200,
 }: FieldHelpHoverProps) {
-  return (
-    <HoverCard openDelay={openDelay}>
-      <HoverCardTrigger asChild>
-        <button
-          type="button"
-          aria-label="Show help"
-          // Prevent the click from bubbling into form controls / labels
-          onClick={(e) => e.preventDefault()}
-          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm ml-1 align-middle"
-        >
-          <CircleHelp className="h-3.5 w-3.5" />
-        </button>
-      </HoverCardTrigger>
+	return (
+		<HoverCard openDelay={openDelay}>
+			<HoverCardTrigger asChild>
+				<button
+					type="button"
+					aria-label="Show help"
+					// Prevent the click from bubbling into form controls / labels
+					onClick={(e) => e.preventDefault()}
+					className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm ml-1 align-middle"
+				>
+					<CircleHelp className="h-3.5 w-3.5" />
+				</button>
+			</HoverCardTrigger>
 
-      <HoverCardContent
-        side="right"
-        align="start"
-        className="w-auto p-3 space-y-2"
-      >
-        {title && (
-          <p className="text-xs font-semibold text-foreground">{title}</p>
-        )}
+			<HoverCardContent
+				side="right"
+				align="start"
+				className="w-auto p-3 space-y-2"
+			>
+				{title && (
+					<p className="text-xs font-semibold text-foreground">{title}</p>
+				)}
 
-        {/* SVG container – constrains size while preserving aspect ratio */}
-        <div className="flex items-center justify-center rounded-md bg-muted/40 p-2">
-          {content}
-        </div>
+				{/* SVG container – constrains size while preserving aspect ratio */}
+				<div className="flex items-center justify-center rounded-md bg-muted/40 p-2">
+					{content}
+				</div>
 
-        {description && (
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {description}
-          </p>
-        )}
-      </HoverCardContent>
-    </HoverCard>
-  );
+				{description && (
+					<p className="text-xs text-muted-foreground leading-relaxed">
+						{description}
+					</p>
+				)}
+			</HoverCardContent>
+		</HoverCard>
+	);
 }

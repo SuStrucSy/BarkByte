@@ -1,14 +1,14 @@
 import { EllipsisVerticalIcon } from "lucide-react";
+import type { UserPublic } from "@/api/model";
 import DeleteUser from "../Admin/DeleteUser";
 import EditUser from "../Admin/EditUser";
+import { Button } from "../ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import type { UserPublic } from '@/api/model';
-import { Button } from '../ui/button';
 
 interface UserActionsMenuProps {
 	user: UserPublic;

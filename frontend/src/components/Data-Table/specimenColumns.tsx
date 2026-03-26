@@ -1,8 +1,8 @@
 // specimenColumns.ts - Complete updated file
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "./data-table-column-header";
 import type { SpecimenPublic } from "@/api/model";
 import { FailureModeBadge } from "@/components/Common/FailureModeBadge";
+import { DataTableColumnHeader } from "./data-table-column-header";
 
 type SpecimenPublicKey = keyof SpecimenPublic;
 
@@ -82,9 +82,9 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	element_dimension: { header: "Dimensions", hidden: true },
 };
 
-export const createColumns = <
-	TData extends SpecimenPublic,
->(options: CreateColumnsOptions = {}): ColumnDef<TData>[] =>
+export const createColumns = <TData extends SpecimenPublic>(
+	options: CreateColumnsOptions = {},
+): ColumnDef<TData>[] =>
 	Object.entries(columnConfig)
 		.filter(([key]) => key !== "id")
 		.map(([key, config]) => {
@@ -115,7 +115,7 @@ export const createColumns = <
 					return {
 						...baseColumn,
 						accessorFn: (row) =>
-							((row as any)[key] as Array<{ label?: string }> | undefined)
+							(row[key] as Array<{ label?: string }> | undefined)
 								?.map((item) => item?.label ?? "")
 								.filter(Boolean)
 								.join(", ") ?? "",
@@ -124,14 +124,18 @@ export const createColumns = <
 					return {
 						...baseColumn,
 						accessorFn: (row) =>
-							((row as any)[key] as Array<{ label?: string }> | undefined)
+							(row[key] as Array<{ label?: string }> | undefined)
 								?.map((item) => item?.label ?? "")
 								.filter(Boolean)
 								.join(", ") ?? "",
 						cell: ({ row }) => {
-							const items = (((row.original as any)[key] as Array<{
-								label?: string;
-							}> | undefined) ?? [])
+							const items = (
+								(row.original[key] as
+									| Array<{
+											label?: string;
+									  }>
+									| undefined) ?? []
+							)
 								.map((item) => item?.label ?? "")
 								.filter(Boolean);
 
@@ -161,14 +165,12 @@ export const createColumns = <
 					return {
 						...baseColumn,
 						accessorFn: (row) =>
-							(Array.isArray((row as any)[key])
-								? (row as any)[key].join(", ")
-								: (row as any)[key]) ?? "",
+							(Array.isArray(row[key]) ? row[key].join(", ") : row[key]) ?? "",
 					} satisfies ColumnDef<TData>;
 				default:
 					return {
 						...baseColumn,
-						accessorKey: key as any,
+						accessorKey: key,
 					} satisfies ColumnDef<TData>;
 			}
 		});

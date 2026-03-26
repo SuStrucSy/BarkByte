@@ -1,6 +1,26 @@
-import { useDoiCreateDoi, useDoiGetDois } from "@/api/endpoints/doi/doi.gen";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
-
+import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useDoiCreateDoi, useDoiGetDois } from "@/api/endpoints/doi/doi.gen";
+import { useSpecimensCreateSpecimen } from "@/api/endpoints/specimens/specimens.gen";
+import type { DOIPublic, HTTPValidationError } from "@/api/model";
+import { DoiFields } from "@/components/Doi/DoiFields";
+import { SpecimenDetailsFields } from "@/components/Specimens/SpecimenDetailsFields";
+import { SpecimenExperimentalFields } from "@/components/Specimens/SpecimenExperimentalFields";
+import { SpecimenStructuralFields } from "@/components/Specimens/SpecimenStructuralFields";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Combobox,
   ComboboxContent,
@@ -15,35 +35,12 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
-import type { DOIPublic, HTTPValidationError } from "@/api/model";
-import { SpecimenDetailsFields } from "@/components/Specimens/SpecimenDetailsFields";
-import { DoiFields } from "@/components/Doi/DoiFields";
-import { useState, useEffect, useRef } from "react";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-
 import {
-  AddNewSpecimenSchema,
   type AddNewSpecimenFormValues,
+  AddNewSpecimenSchema,
 } from "@/lib/schemas";
-import { SpecimenStructuralFields } from "@/components/Specimens/SpecimenStructuralFields";
-import { SpecimenExperimentalFields } from "@/components/Specimens/SpecimenExperimentalFields";
-import { useSpecimensCreateSpecimen } from "@/api/endpoints/specimens/specimens.gen";
 import { handleError } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/_authenticated/specimens/new")({
@@ -110,7 +107,6 @@ const steps = [
       "e_ductility",
       "e_test_loading_type",
       "e_yield_point_method",
-      "e_measurement_unit",
       "e_date",
       "e_qualitative_failure_measure",
       "e_qfm_description",
@@ -200,7 +196,6 @@ function NewSpecimen() {
       e_ductility: null,
       e_test_loading_type: null,
       e_yield_point_method: null,
-      e_measurement_unit: "",
       e_date: "",
       e_qfm_description: "",
       e_qualitative_failure_measure: [],

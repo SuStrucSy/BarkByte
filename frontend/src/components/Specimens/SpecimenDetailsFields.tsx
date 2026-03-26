@@ -1,5 +1,17 @@
-import { Controller, useWatch, type Control } from "react-hook-form";
-
+import { type Control, Controller, useWatch } from "react-hook-form";
+import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype.gen";
+import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype.gen";
+import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection.gen";
+import { useSubjoinerytypeGetSjtypesForJtype } from "@/api/endpoints/subjoinerytype/subjoinerytype.gen";
+import type { JoineryType } from "@/api/model";
+import buttJoint from "@/assets/joineryTypes/Butt-Joint.png";
+import halfLap from "@/assets/joineryTypes/Half-Lap-Joint.png";
+import holdDown from "@/assets/joineryTypes/Hold-Down.png";
+import plate from "@/assets/joineryTypes/Plate.png";
+import slotJoint from "@/assets/joineryTypes/Slot-Joint.png";
+import splineJoint from "@/assets/joineryTypes/Spline-Joint.png";
+import throughTenon from "@/assets/joineryTypes/Through-Tenon.png";
+import JoineryTypes from "@/assets/joineryTypes.svg?react";
 import {
   Field,
   FieldDescription,
@@ -9,24 +21,9 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
-import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
-import { Textarea } from "../ui/textarea";
-
-import type { AddNewSpecimenFormValues } from "@/lib/schemas";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { ASSEMBLY_TYPES } from "@/lib/constants";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype.gen";
-import type { JoineryType } from "@/api/model";
-import { useSubjoinerytypeGetSjtypesForJtype } from "@/api/endpoints/subjoinerytype/subjoinerytype.gen";
-import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype.gen";
+import type { AddNewSpecimenFormValues } from "@/lib/schemas";
+import { Checkbox } from "../ui/checkbox";
 import {
   Combobox,
   ComboboxChip,
@@ -39,18 +36,17 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "../ui/combobox";
-import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection.gen";
+import { Input } from "../ui/input";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Textarea } from "../ui/textarea";
 import { FieldHelpHover } from "./FieldHelpHover";
-
-import JoineryTypes from "@/assets/joineryTypes.svg?react";
-
-import buttJoint from "@/assets/joineryTypes/Butt-Joint.png";
-import holdDown from "@/assets/joineryTypes/Hold-Down.png";
-import throughTenon from "@/assets/joineryTypes/Through-Tenon.png";
-import halfLap from "@/assets/joineryTypes/Half-Lap-Joint.png";
-import plate from "@/assets/joineryTypes/Plate.png";
-import slotJoint from "@/assets/joineryTypes/Slot-Joint.png";
-import splineJoint from "@/assets/joineryTypes/Spline-Joint.png";
 
 const JOINERY_IMAGES: Record<string, string> = {
   "butt-joint": buttJoint,
@@ -65,7 +61,7 @@ const JOINERY_IMAGES: Record<string, string> = {
 const toImageKey = (label: string) => label.toLowerCase().replace(/\s+/g, "-");
 
 interface AddSpecimenFormProps {
-  control: Control<AddNewSpecimenFormValues, any>;
+  control: Control<AddNewSpecimenFormValues>;
 }
 
 export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
@@ -82,6 +78,11 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
     name: "joinery_type_id",
   });
 
+  const dowel = useWatch({
+    control,
+    name: "dowel",
+  });
+
   const { data: subjoinery } =
     useSubjoinerytypeGetSjtypesForJtype(joineryTypes);
 
@@ -89,6 +90,8 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
   const subJoineryTypeList = subjoinery?.data || [];
   const fastenerTypeList = fastenerData?.data || [];
   const loadingDirectionList = loadingDirectionData?.data || [];
+
+  console.log(joineryData);
 
   return (
     <FieldGroup>
@@ -400,20 +403,6 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
               onCheckedChange={field.onChange}
             />
             <FieldLabel htmlFor="connector">Has Connector</FieldLabel>
-          </Field>
-        )}
-      />
-      <Controller
-        name="dowel"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field orientation="horizontal" data-invalid={fieldState.invalid}>
-            <Checkbox
-              id="dowel"
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-            <FieldLabel htmlFor="dowel">Has Dowel</FieldLabel>
           </Field>
         )}
       />

@@ -175,14 +175,8 @@ export const AddNewSpecimenSchema = z.object({
   note: z.string().trim().optional().nullable(),
 
   // ── Step 3: Structural & Experimental Data ─────────────────────────────────
-  element_dimension: z
-    .string()
-    .trim()
-    .nonempty("Element dimension is required"),
-  moisture_percentage: z
-    .string()
-    .trim()
-    .nonempty("Moisture content is required"),
+  element_dimension: z.string().trim(),
+  moisture_percentage: z.string().trim(),
   wood_type: z.string().trim().optional().nullable(),
   wood_mechanical_properties: z.string().trim().optional().nullable(),
   fastener_mechanical_properties: z.string().trim().optional().nullable(),
@@ -200,15 +194,12 @@ export const AddNewSpecimenSchema = z.object({
   e_ductility: positiveRequired,
 
   // Test metadata
-  e_test_loading_type: z
-    .enum(["Cyclic", "Monotonic", "Monotonic and Cyclic"] as const)
-    .optional()
-    .nullable(),
-  e_yield_point_method: z
-    .enum(["CEN 1/6", "EEEP", "FEMA P795"] as const)
-    .optional()
-    .nullable(),
-  e_measurement_unit: z.string().trim().optional().nullable(),
+  e_test_loading_type: z.enum([
+    "Cyclic",
+    "Monotonic",
+    "Monotonic and Cyclic",
+  ] as const),
+  e_yield_point_method: z.enum(["CEN 1/6", "EEEP", "FEMA P795"] as const),
   e_date: z.string().trim().optional().nullable(),
   e_qfm_description: z.string().trim().optional().nullable(),
   e_qualitative_failure_measure: z.array(z.uuid()).default([]),

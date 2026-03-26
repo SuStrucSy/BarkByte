@@ -1,60 +1,60 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
-import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
-import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
-import SkeletonSpecimen from "@/components/Skeleton/SkeletonSpecimen";
 import { useState } from "react";
+import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
+import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
+import SkeletonSpecimen from "@/components/Skeleton/SkeletonSpecimen";
 import { Specimen } from "@/components/Specimens/Specimen";
+import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
-  staticData: {
-    title: "Specimen Details",
-  },
-  component: SpecimenDetails,
+	staticData: {
+		title: "Specimen Details",
+	},
+	component: SpecimenDetails,
 });
 
 function SpecimenDetails() {
-  const { specimenId } = Route.useParams();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const { data, isLoading, isError, error } =
-    useSpecimensReadSpecimen(specimenId);
+	const { specimenId } = Route.useParams();
+	const [sheetOpen, setSheetOpen] = useState(false);
+	const { data, isLoading, isError, error } =
+		useSpecimensReadSpecimen(specimenId);
 
-  const doiId = data?.doi?.id ?? "";
+	const doiId = data?.doi?.id ?? "";
 
-  const { data: doiData, isLoading: doiLoading } = useDoiGetDoiById(doiId, {
-    query: {
-      enabled: !!doiId,
-    },
-  });
+	const { data: doiData, isLoading: doiLoading } = useDoiGetDoiById(doiId, {
+		query: {
+			enabled: !!doiId,
+		},
+	});
 
-  if (isLoading || doiLoading) {
-    return <SkeletonSpecimen />;
-  }
+	if (isLoading || doiLoading) {
+		return <SkeletonSpecimen />;
+	}
 
-  if (isError) {
-    return (
-      <div>Failed to load specimen: {error?.message ?? "Unknown error"}</div>
-    );
-  }
+	if (isError) {
+		return (
+			<div>Failed to load specimen: {error?.message ?? "Unknown error"}</div>
+		);
+	}
 
-  if (!data) {
-    return <div>Specimen not found.</div>;
-  }
+	if (!data) {
+		return <div>Specimen not found.</div>;
+	}
 
-  const relatedSpecimens = (doiData?.specimens?.data ?? []).filter(
-    (specimen) => (specimenId ? specimen.id !== specimenId : true),
-  );
+	const relatedSpecimens = (doiData?.specimens?.data ?? []).filter(
+		(specimen) => (specimenId ? specimen.id !== specimenId : true),
+	);
 
-  return (
-    <div className="flex flex-col gap-6">
-      <Specimen data={data} setSheetOpen={setSheetOpen} />
-      <SpecimenReferenceSheet
-        specimen={data}
-        mode="doi"
-        relatedSpecimens={relatedSpecimens}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-      />
-    </div>
-  );
+	return (
+		<div className="flex flex-col gap-6">
+			<Specimen data={data} setSheetOpen={setSheetOpen} />
+			<SpecimenReferenceSheet
+				specimen={data}
+				mode="doi"
+				relatedSpecimens={relatedSpecimens}
+				open={sheetOpen}
+				onOpenChange={setSheetOpen}
+			/>
+		</div>
+	);
 }

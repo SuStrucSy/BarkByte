@@ -2,15 +2,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-
-import { handleError } from "@/lib/utils";
+import { useLoginLoginAccessToken } from "@/api/endpoints/login/login.gen";
 import {
   getUsersReadUserMeQueryKey,
   useUsersRegisterUser,
   useUsersVerifyEmail,
 } from "@/api/endpoints/users/users.gen";
-import { useLoginLoginAccessToken } from "@/api/endpoints/login/login.gen";
 import type { HTTPValidationError } from "@/api/model";
+import { handleError } from "@/lib/utils";
 import { dispatchAuthChange } from "./useIsLoggedIn";
 
 const useAuth = () => {
@@ -21,7 +20,7 @@ const useAuth = () => {
   const signUpMutation = useUsersRegisterUser({
     mutation: {
       onSuccess: () => {
-        navigate({ to: "/login" });
+        toast.success("Signed up successfully. Check your email!");
       },
       onError: (err) => {
         handleError(err);
@@ -36,7 +35,6 @@ const useAuth = () => {
     mutation: {
       onSuccess: () => {
         toast.success("Email verified successfully.");
-        navigate({ to: "/login" });
       },
       onError: (err) => {
         handleError(err);
@@ -56,7 +54,7 @@ const useAuth = () => {
           navigate({ to: "/" });
         }
       },
-      onError: (err: void | HTTPValidationError) => {
+      onError: (err: undefined | HTTPValidationError) => {
         console.error(err);
         handleError(err);
       },

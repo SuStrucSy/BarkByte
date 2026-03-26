@@ -1,31 +1,32 @@
 import logging
-from typing import Any
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep
+from app.crud import doi as doi_crud
+from app.crud import pendingspecimen as pendingspecimen_crud
+from app.crud import specimen as specimen_crud
 from app.models.specimen import Specimen
-from app.schemas.specimen import (
-    SpecimenFilterOptionsPublic,
-    SpecimenPublic,
-    SpecimensPublic,
-)
 from app.schemas.doi import DOICreate
 from app.schemas.pendingspecimen import (
     PendingSpecimenCreate,
     PendingSpecimenPublic,
     PendingSpecimenUpdate,
 )
-from app.crud import specimen as specimen_crud
-from app.crud import pendingspecimen as pendingspecimen_crud
-from app.crud import doi as doi_crud
+from app.schemas.specimen import (
+    SpecimenFilterOptionsPublic,
+    SpecimenPublic,
+    SpecimensPublic,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/specimens", tags=["specimens"])
+
 
 @router.get("/", response_model=SpecimensPublic)
 def read_specimens(
@@ -36,6 +37,7 @@ def read_specimens(
     """
     return specimen_crud.get_specimens(session=session, skip=skip, limit=limit)
 
+
 @router.get("/filter-options", response_model=SpecimenFilterOptionsPublic)
 def read_specimen_filter_options(session: SessionDep) -> SpecimenFilterOptionsPublic:
     """
@@ -43,12 +45,14 @@ def read_specimen_filter_options(session: SessionDep) -> SpecimenFilterOptionsPu
     """
     return specimen_crud.get_specimen_filter_options(session=session)
 
+
 @router.get("/{id}", response_model=SpecimenPublic)
 def read_specimen(session: SessionDep, id: uuid.UUID) -> Any:
     """
     Get specimen by ID.
     """
     return specimen_crud.get_specimen_by_id(session=session, id=id)
+
 
 @router.post("/", response_model=PendingSpecimenPublic)
 def create_specimen(
@@ -62,21 +66,20 @@ def create_specimen(
     """
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    
+
     # Run domain validation now, at submission time
     try:
         specimen_crud.validate_specimen_create(session=session, specimen_in=specimen_in)
     except ValueError as e:
         # surface this immediately to the client
-        raise HTTPException(
-            status_code=400,
-            detail=f"Specimen validation failed: {e}"
-        )
-    
+        raise HTTPException(status_code=400, detail=f"Specimen validation failed: {e}")
+
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
         changed_by_user_id=current_user.id,
-        changed_data=specimen_in.model_dump(exclude={"comment_by_author"}, exclude_unset=True),
+        changed_data=specimen_in.model_dump(
+            exclude={"comment_by_author"}, exclude_unset=True
+        ),
         specimen_id=None,
         comment_by_author=specimen_in.comment_by_author,
     )
@@ -104,11 +107,14 @@ def update_specimen(
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
         changed_by_user_id=current_user.id,
-        changed_data=specimen_in.model_dump(exclude={"comment_by_author"}, exclude_unset=True),
+        changed_data=specimen_in.model_dump(
+            exclude={"comment_by_author"}, exclude_unset=True
+        ),
         specimen_id=id,
         comment_by_author=specimen_in.comment_by_author,
     )
     return pending
+
 
 @router.delete("/{id}", response_model=Any)
 def delete_specimen(
@@ -122,8 +128,8 @@ def delete_specimen(
     """
     if not current_user.is_superuser:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    
-    specimen = specimen_crud.get_specimen_by_id(session=session,id=id)
+
+    specimen = specimen_crud.get_specimen_by_id(session=session, id=id)
 
     if specimen is None:
         raise HTTPException(status_code=404, detail="Specimen not found")
@@ -133,7 +139,7 @@ def delete_specimen(
     except IntegrityError:
         raise HTTPException(
             status_code=409,
-            detail="Cannot delete specimen: it is still referenced by one or more tables."
+            detail="Cannot delete specimen: it is still referenced by one or more tables.",
         )
 
     return {"message": "Specimen deleted successfully."}

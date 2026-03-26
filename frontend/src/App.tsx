@@ -4,6 +4,6 @@ import { useCurrentUser } from "./hooks/useCurrentUser";
 import { router } from "./router";
 
 export function App() {
-  const auth = useCurrentUser();
-  return <RouterProvider router={router} context={{ auth }} />;
+	const auth = useCurrentUser();
+	return <RouterProvider router={router} context={{ auth }} />;
 }

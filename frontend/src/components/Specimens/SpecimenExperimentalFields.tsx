@@ -1,6 +1,6 @@
-import { Controller, useWatch, type Control } from "react-hook-form";
-
-import type { AddNewSpecimenFormValues } from "@/lib/schemas";
+import { type Control, Controller, useWatch } from "react-hook-form";
+import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode.gen";
+import QFMTypes from "@/assets/failures.svg?react";
 import {
   Field,
   FieldDescription,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TextField } from "./SpecimenStructuralFields";
+import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import {
   Combobox,
   ComboboxChip,
@@ -30,13 +30,11 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "../ui/combobox";
-import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode.gen";
-
-import QFMTypes from "@/assets/failures.svg?react";
 import { FieldHelpHover } from "./FieldHelpHover";
+import { TextField } from "./SpecimenStructuralFields";
 
 interface SpecimenExperimentalFormProps {
-  control: Control<AddNewSpecimenFormValues, any>;
+  control: Control<AddNewSpecimenFormValues>;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -60,7 +58,7 @@ function NumericField({
   name: keyof AddNewSpecimenFormValues;
   label: string;
   description?: string;
-  control: Control<AddNewSpecimenFormValues, any>;
+  control: Control<AddNewSpecimenFormValues>;
   unit?: string;
 }) {
   return (
@@ -239,14 +237,6 @@ export function SpecimenExperimentalFields({
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
-      />
-
-      <TextField
-        name="e_measurement_unit"
-        label="Measurement Unit"
-        description="Unit system used for experimental data, e.g. SI"
-        control={control}
-        placeholder="SI"
       />
 
       <Controller
