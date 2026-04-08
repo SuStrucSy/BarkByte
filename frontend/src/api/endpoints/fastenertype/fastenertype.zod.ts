@@ -4,7 +4,8 @@
  * Timverse
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * Retrieve all fastener types.
@@ -14,24 +15,21 @@ export const fastenertypeGetFastenerTypesQuerySkipDefault = 0;
 export const fastenertypeGetFastenerTypesQueryLimitDefault = 100;
 
 export const FastenertypeGetFastenerTypesQueryParams = zod.object({
-	skip: zod.number().default(fastenertypeGetFastenerTypesQuerySkipDefault),
-	limit: zod.number().default(fastenertypeGetFastenerTypesQueryLimitDefault),
-});
+  "skip": zod.number().default(fastenertypeGetFastenerTypesQuerySkipDefault),
+  "limit": zod.number().default(fastenertypeGetFastenerTypesQueryLimitDefault)
+})
 
 export const fastenertypeGetFastenerTypesResponseDataItemLabelMax = 255;
 
+
+
 export const FastenertypeGetFastenerTypesResponse = zod.object({
-	data: zod.array(
-		zod.object({
-			id: zod.uuid().optional(),
-			label: zod
-				.string()
-				.min(1)
-				.max(fastenertypeGetFastenerTypesResponseDataItemLabelMax),
-		}),
-	),
-	count: zod.number(),
-});
+  "data": zod.array(zod.object({
+  "id": zod.uuid().optional(),
+  "label": zod.string().min(1).max(fastenertypeGetFastenerTypesResponseDataItemLabelMax)
+})),
+  "count": zod.number()
+})
 
 /**
  * Create fastener type.
@@ -39,50 +37,53 @@ export const FastenertypeGetFastenerTypesResponse = zod.object({
  */
 export const fastenertypeCreateFastenerTypeBodyLabelMax = 255;
 
+
+
 export const FastenertypeCreateFastenerTypeBody = zod.object({
-	label: zod.string().min(1).max(fastenertypeCreateFastenerTypeBodyLabelMax),
-});
+  "label": zod.string().min(1).max(fastenertypeCreateFastenerTypeBodyLabelMax)
+})
 
 export const fastenertypeCreateFastenerTypeResponseLabelMax = 255;
 
+
+
 export const FastenertypeCreateFastenerTypeResponse = zod.object({
-	id: zod.uuid().optional(),
-	label: zod
-		.string()
-		.min(1)
-		.max(fastenertypeCreateFastenerTypeResponseLabelMax),
-});
+  "id": zod.uuid().optional(),
+  "label": zod.string().min(1).max(fastenertypeCreateFastenerTypeResponseLabelMax)
+})
 
 /**
  * Update fastener type.
  * @summary Update Fastener Type
  */
 export const FastenertypeUpdateFastenerTypeParams = zod.object({
-	id: zod.uuid(),
-});
+  "id": zod.uuid()
+})
 
 export const fastenertypeUpdateFastenerTypeBodyLabelMax = 255;
 
+
+
 export const FastenertypeUpdateFastenerTypeBody = zod.object({
-	label: zod.string().min(1).max(fastenertypeUpdateFastenerTypeBodyLabelMax),
-});
+  "label": zod.string().min(1).max(fastenertypeUpdateFastenerTypeBodyLabelMax)
+})
 
 export const fastenertypeUpdateFastenerTypeResponseLabelMax = 255;
 
+
+
 export const FastenertypeUpdateFastenerTypeResponse = zod.object({
-	id: zod.uuid().optional(),
-	label: zod
-		.string()
-		.min(1)
-		.max(fastenertypeUpdateFastenerTypeResponseLabelMax),
-});
+  "id": zod.uuid().optional(),
+  "label": zod.string().min(1).max(fastenertypeUpdateFastenerTypeResponseLabelMax)
+})
 
 /**
  * Delete fastener type ONLY if not in use.
  * @summary Delete Fastener Type
  */
 export const FastenertypeDeleteFastenerTypeParams = zod.object({
-	id: zod.uuid(),
-});
+  "id": zod.uuid()
+})
 
-export const FastenertypeDeleteFastenerTypeResponse = zod.unknown();
+export const FastenertypeDeleteFastenerTypeResponse = zod.unknown()
+

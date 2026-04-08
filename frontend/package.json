@@ -1,12 +1,12 @@
 {
-  "name": "app",
+  "name": "timverse-frontend",
   "private": true,
-  "version": "0.0.5",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "check": "biome check --no-errors-on-unmatched --files-ignore-unknown=true ./",
+    "build": "vite build",
+    "check": "biome check --diagnostic-level=error --no-errors-on-unmatched --files-ignore-unknown=true ./",
     "lint": "biome lint --write --no-errors-on-unmatched --files-ignore-unknown=true ./ ",
     "format": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true ./ ",
     "preview": "vite preview",

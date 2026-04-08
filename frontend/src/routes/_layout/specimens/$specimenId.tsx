@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
-import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
+import { useDoiGetDoiById } from "@/api/endpoints/doi/doi";
+import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens";
 import SkeletonSpecimen from "@/components/Skeleton/SkeletonSpecimen";
 import { Specimen } from "@/components/Specimens/Specimen";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";

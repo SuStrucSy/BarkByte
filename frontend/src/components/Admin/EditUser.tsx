@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
 	getUsersReadUsersQueryKey,
 	useUsersUpdateUser,
-} from "@/api/endpoints/users/users.gen";
+} from "@/api/endpoints/users/users";
 import type { HTTPValidationError, UserPublic, UserUpdate } from "@/api/model";
 import { handleError } from "@/lib/utils";
 import { Button } from "../ui/button";

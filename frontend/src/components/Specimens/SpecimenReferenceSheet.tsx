@@ -1,5 +1,5 @@
 import { ChevronRightIcon, ExternalLinkIcon } from "lucide-react";
-import { useDoiGetDoiById } from "@/api/endpoints/doi/doi.gen";
+import { useDoiGetDoiById } from "@/api/endpoints/doi/doi";
 import type { SpecimenPublic } from "@/api/model";
 import { Button } from "@/components/ui/button";
 import {

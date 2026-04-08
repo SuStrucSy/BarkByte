@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ── Badge partial (must come before theme files so tokens override it) ─── */
 @import "./themes/_badge-tokens.css";
 
@@ -23,6 +21,8 @@
 @import "./themes/zinc.css";
 @import "./themes/gray.css";
 @import "./themes/slate.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
 	--color-background: var(--background);

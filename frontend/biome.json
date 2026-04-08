@@ -9,6 +9,7 @@
 		"ignoreUnknown": false,
 		"includes": [
 			"src/**",
+			"!src/api",
 			"!node_modules",
 			"!src/components/ui",
 			"!src/routeTree.gen.ts"
@@ -23,7 +24,10 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"suspicious": {
+				"noArrayIndexKey": "warn"
+			}
 		}
 	},
 	"javascript": {

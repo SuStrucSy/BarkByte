@@ -4,22 +4,21 @@
  * Timverse
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * Get all users.
  * @summary Get All Users
  */
 export const PrivateGetAllUsersResponseItem = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
-export const PrivateGetAllUsersResponse = zod.array(
-	PrivateGetAllUsersResponseItem,
-);
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
+export const PrivateGetAllUsersResponse = zod.array(PrivateGetAllUsersResponseItem)
 
 /**
  * Create a new user.
@@ -28,16 +27,17 @@ export const PrivateGetAllUsersResponse = zod.array(
 export const privateCreateUserBodyIsVerifiedDefault = false;
 
 export const PrivateCreateUserBody = zod.object({
-	email: zod.string(),
-	password: zod.string(),
-	full_name: zod.string(),
-	is_verified: zod.boolean().default(privateCreateUserBodyIsVerifiedDefault),
-});
+  "email": zod.string(),
+  "password": zod.string(),
+  "full_name": zod.string(),
+  "is_verified": zod.boolean().default(privateCreateUserBodyIsVerifiedDefault)
+})
 
 export const PrivateCreateUserResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
+

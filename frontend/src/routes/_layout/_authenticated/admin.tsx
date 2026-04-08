@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { PaginationState, Row } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { z } from "zod/v4";
-import { useUsersReadUsers } from "@/api/endpoints/users/users.gen";
+import { useUsersReadUsers } from "@/api/endpoints/users/users";
 import type { UserPublic } from "@/api/model";
 import AddUser from "@/components/Admin/AddUser";
 import { createColumns } from "@/components/Data-Table/columns";

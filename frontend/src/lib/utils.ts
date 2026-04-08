@@ -9,6 +9,7 @@ import type {
 	SpecimenPublic,
 	SpecimensPublic,
 } from "@/api/model";
+import type { FastenerType } from "@/api/model/fastenerType";
 import { isNumericValue } from "./typeGuards";
 
 export function cn(...inputs: ClassValue[]) {
@@ -20,18 +21,18 @@ export function groupSpecimensByFastener(
 	fastenerTypes: FastenerTypes | undefined,
 ): Record<string, SpecimenPublic[]> {
 	// Create fastener ID -> label lookup map (id is optional but exists in data)
-	const fastenerMap = new Map(
-		fastenerTypes?.data.map((f) => [f.id!, f.label] as [string, string]),
+	const fastenerMap = new Map<string, string>(
+		fastenerTypes?.data.map(
+			(f: FastenerType) => [f.id, f.label] as [string, string],
+		),
 	);
 
 	return specimensPublic.data.reduce(
-		(acc, specimen) => {
+		(acc: Record<string, SpecimenPublic[]>, specimen: SpecimenPublic) => {
 			// API stores full FastenerType objects OR empty array, never raw IDs
 			const fastenerObj = specimen.fastener_types?.[0];
-			const groupKey =
-				fastenerObj?.id && fastenerMap.has(fastenerObj.id)
-					? fastenerMap.get(fastenerObj.id)!
-					: "Dowel-Free";
+			const groupKey: string =
+				(fastenerObj?.id && fastenerMap.get(fastenerObj.id)) || "Dowel-Free";
 
 			acc[groupKey] ??= [];
 			acc[groupKey].push(specimen);
@@ -225,49 +226,45 @@ export const confirmPasswordRules = (
 	return rules;
 };
 
-export const handleError = (err: void | HTTPValidationError) => {
+export const handleError = (err: unknown) => {
+	// Accept unknown first
 	let title = "Something went wrong.";
 	let description = "Please try again.";
 
-	// Handle AxiosError (HTTP 400, 401, etc.)
+	// Handle orval ErrorType / HTTPValidationError first
+	if (err && typeof err === "object" && "detail" in err) {
+		const errDetail = (err as HTTPValidationError).detail;
+		title = "Validation Error";
+
+		if (Array.isArray(errDetail)) {
+			description = errDetail.map((e: any) => e.msg).join("; ");
+		} else if (typeof errDetail === "string") {
+			description = errDetail;
+		}
+		toast.error(title, { description });
+		return;
+	}
+
+	// Handle AxiosError second (if you're still using raw axios somewhere)
 	if (err && "response" in err && "status" in (err as any).response) {
 		const axiosErr = err as AxiosError;
 		const status = axiosErr.response?.status;
 
-		if (status === 400) {
-			title = "Bad Request";
+		if (status === 400 || status === 422) {
+			title = status === 400 ? "Bad Request" : "Validation Error";
 			if (axiosErr.response?.data?.detail) {
-				description = axiosErr.response.data.detail;
-			} else {
-				description = "Invalid request data. Check your credentials.";
+				const detail = axiosErr.response.data.detail;
+				description = Array.isArray(detail)
+					? detail.map((e: any) => e.msg).join("; ")
+					: detail;
 			}
 		} else if (status === 401) {
 			title = "Unauthorized";
 			description = "Invalid username or password.";
-		} else if (status === 422) {
-			title = "Validation Error";
-			if (axiosErr.response?.data?.detail) {
-				const detail = axiosErr.response.data.detail;
-				if (Array.isArray(detail)) {
-					description = detail.map((e: any) => e.msg).join("; ");
-				} else {
-					description = detail;
-				}
-			}
 		} else {
 			title = `Server Error (${status})`;
 			description =
 				axiosErr.response?.data?.detail || "Server returned an error.";
-		}
-	}
-	// Existing HTTPValidationError handling
-	else if ("detail" in err) {
-		const errDetail = err.detail;
-		if (Array.isArray(errDetail) && errDetail.length > 0) {
-			title = "Validation Error";
-			description = errDetail.map((e: any) => e.msg).join("; ");
-		} else if (typeof errDetail === "string") {
-			description = errDetail;
 		}
 	}
 	// Generic Error

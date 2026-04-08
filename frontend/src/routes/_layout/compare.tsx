@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Columns3, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens.gen";
+import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
 import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";

@@ -3,7 +3,7 @@ import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useUsersDeleteUser } from "@/api/endpoints/users/users.gen";
+import { useUsersDeleteUser } from "@/api/endpoints/users/users";
 import {
 	Dialog,
 	DialogClose,

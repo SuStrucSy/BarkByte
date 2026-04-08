@@ -23,7 +23,7 @@ import z from "zod/v4";
 import {
 	specimensReadSpecimens,
 	useSpecimensReadSpecimenFilterOptions,
-} from "@/api/endpoints/specimens/specimens.gen";
+} from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
 import type { DataTableFilterField } from "@/components/Data-Table/DataTableFilterControls";
 import { DataTablePagination } from "@/components/Data-Table/DataTablePagination";
@@ -350,14 +350,17 @@ function SpecimensKitTable() {
 		[referenceOptions, checkboxOptionsByField],
 	);
 
-	const getBounds = (values: Array<number | null | undefined>) => {
-		const nums = values.filter(
-			(value): value is number =>
-				typeof value === "number" && Number.isFinite(value),
-		);
-		if (!nums.length) return { min: 0, max: 0 };
-		return { min: Math.min(...nums), max: Math.max(...nums) };
-	};
+	const getBounds = useMemo(
+		() => (values: Array<number | null | undefined>) => {
+			const nums = values.filter(
+				(value): value is number =>
+					typeof value === "number" && Number.isFinite(value),
+			);
+			if (!nums.length) return { min: 0, max: 0 };
+			return { min: Math.min(...nums), max: Math.max(...nums) };
+		},
+		[],
+	);
 
 	// Compute min/max bounds for each slider field from current rows.
 	const sliderBoundsByField = useMemo(() => {
@@ -366,7 +369,7 @@ function SpecimensKitTable() {
 			getBounds(rows.map((row) => config.getValue(row))),
 		]);
 		return Object.fromEntries(entries) as Record<SliderField, Bounds>;
-	}, [rows]);
+	}, [rows, getBounds]);
 
 	// Default slider ranges initialized from computed bounds.
 	const sliderDefaults = useMemo(
@@ -410,19 +413,7 @@ function SpecimensKitTable() {
 		setSliderValuesByField((prev) =>
 			areSliderMapsEqual(prev, nextSliderValues) ? prev : nextSliderValues,
 		);
-	}, [
-		search.e_ductility,
-		search.e_max_displacement,
-		search.e_max_force,
-		search.e_stiffness,
-		search.e_ultimate_displacement,
-		search.e_ultimate_force,
-		search.e_yield_displacement,
-		search.e_yield_force,
-		search.fastener_numbers,
-		search.replicate_tests,
-		sliderDefaults,
-	]);
+	}, [search, sliderDefaults]);
 
 	// Convert filter config + bounds/options into UI-ready filter field definitions.
 	const filterFields = useMemo<DataTableFilterField[]>(
@@ -467,6 +458,7 @@ function SpecimensKitTable() {
 	});
 
 	// Resets back to page 1 whenever any search/filter criteria changes.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: deps are triggers, not used in body
 	useEffect(() => {
 		setPagination((prev) =>
 			prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },

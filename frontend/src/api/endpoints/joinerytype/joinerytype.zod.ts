@@ -4,7 +4,8 @@
  * Timverse
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * Retrieve joinery types.
@@ -14,25 +15,22 @@ export const joinerytypeGetJtypesQuerySkipDefault = 0;
 export const joinerytypeGetJtypesQueryLimitDefault = 100;
 
 export const JoinerytypeGetJtypesQueryParams = zod.object({
-	skip: zod.number().default(joinerytypeGetJtypesQuerySkipDefault),
-	limit: zod.number().default(joinerytypeGetJtypesQueryLimitDefault),
-});
+  "skip": zod.number().default(joinerytypeGetJtypesQuerySkipDefault),
+  "limit": zod.number().default(joinerytypeGetJtypesQueryLimitDefault)
+})
 
 export const joinerytypeGetJtypesResponseDataItemLabelMax = 255;
 
+
+
 export const JoinerytypeGetJtypesResponse = zod.object({
-	data: zod.array(
-		zod.object({
-			id: zod.uuid().optional(),
-			label: zod
-				.string()
-				.min(1)
-				.max(joinerytypeGetJtypesResponseDataItemLabelMax),
-			has_dowel: zod.boolean(),
-		}),
-	),
-	count: zod.number(),
-});
+  "data": zod.array(zod.object({
+  "id": zod.uuid().optional(),
+  "label": zod.string().min(1).max(joinerytypeGetJtypesResponseDataItemLabelMax),
+  "has_dowel": zod.boolean()
+})),
+  "count": zod.number()
+})
 
 /**
  * Create joinery type.
@@ -40,48 +38,57 @@ export const JoinerytypeGetJtypesResponse = zod.object({
  */
 export const joinerytypeCreateJtypeBodyLabelMax = 255;
 
+
+
 export const JoinerytypeCreateJtypeBody = zod.object({
-	label: zod.string().min(1).max(joinerytypeCreateJtypeBodyLabelMax),
-	has_dowel: zod.boolean(),
-});
+  "label": zod.string().min(1).max(joinerytypeCreateJtypeBodyLabelMax),
+  "has_dowel": zod.boolean()
+})
 
 export const joinerytypeCreateJtypeResponseLabelMax = 255;
 
+
+
 export const JoinerytypeCreateJtypeResponse = zod.object({
-	id: zod.uuid().optional(),
-	label: zod.string().min(1).max(joinerytypeCreateJtypeResponseLabelMax),
-	has_dowel: zod.boolean(),
-});
+  "id": zod.uuid().optional(),
+  "label": zod.string().min(1).max(joinerytypeCreateJtypeResponseLabelMax),
+  "has_dowel": zod.boolean()
+})
 
 /**
  * Update joinery type.
  * @summary Update Jtype
  */
 export const JoinerytypeUpdateJtypeParams = zod.object({
-	id: zod.uuid(),
-});
+  "id": zod.uuid()
+})
 
 export const joinerytypeUpdateJtypeBodyLabelMax = 255;
 
+
+
 export const JoinerytypeUpdateJtypeBody = zod.object({
-	label: zod.string().min(1).max(joinerytypeUpdateJtypeBodyLabelMax),
-	has_dowel: zod.boolean(),
-});
+  "label": zod.string().min(1).max(joinerytypeUpdateJtypeBodyLabelMax),
+  "has_dowel": zod.boolean()
+})
 
 export const joinerytypeUpdateJtypeResponseLabelMax = 255;
 
+
+
 export const JoinerytypeUpdateJtypeResponse = zod.object({
-	id: zod.uuid().optional(),
-	label: zod.string().min(1).max(joinerytypeUpdateJtypeResponseLabelMax),
-	has_dowel: zod.boolean(),
-});
+  "id": zod.uuid().optional(),
+  "label": zod.string().min(1).max(joinerytypeUpdateJtypeResponseLabelMax),
+  "has_dowel": zod.boolean()
+})
 
 /**
  * Delete joinery type ONLY if not in use.
  * @summary Delete Jtype
  */
 export const JoinerytypeDeleteJtypeParams = zod.object({
-	id: zod.uuid(),
-});
+  "id": zod.uuid()
+})
 
-export const JoinerytypeDeleteJtypeResponse = zod.unknown();
+export const JoinerytypeDeleteJtypeResponse = zod.unknown()
+

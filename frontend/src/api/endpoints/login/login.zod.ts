@@ -4,7 +4,8 @@
  * Timverse
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * OAuth2 compatible token login, get an access token for future requests
@@ -13,35 +14,33 @@ import * as zod from "zod";
 export const loginLoginAccessTokenResponseTokenTypeDefault = `bearer`;
 
 export const LoginLoginAccessTokenResponse = zod.object({
-	access_token: zod.string(),
-	token_type: zod
-		.string()
-		.default(loginLoginAccessTokenResponseTokenTypeDefault),
-});
+  "access_token": zod.string(),
+  "token_type": zod.string().default(loginLoginAccessTokenResponseTokenTypeDefault)
+})
 
 /**
  * Test access token
  * @summary Test Token
  */
 export const LoginTestTokenResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
 
 /**
  * Password Recovery
  * @summary Recover Password
  */
 export const LoginRecoverPasswordParams = zod.object({
-	email: zod.string(),
-});
+  "email": zod.string()
+})
 
 export const LoginRecoverPasswordResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
 
 /**
  * Reset password
@@ -50,14 +49,14 @@ export const LoginRecoverPasswordResponse = zod.object({
 export const loginResetPasswordBodyNewPasswordMin = 8;
 export const loginResetPasswordBodyNewPasswordMax = 64;
 
+
+
 export const LoginResetPasswordBody = zod.object({
-	token: zod.string(),
-	new_password: zod
-		.string()
-		.min(loginResetPasswordBodyNewPasswordMin)
-		.max(loginResetPasswordBodyNewPasswordMax),
-});
+  "token": zod.string(),
+  "new_password": zod.string().min(loginResetPasswordBodyNewPasswordMin).max(loginResetPasswordBodyNewPasswordMax)
+})
 
 export const LoginResetPasswordResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
+

@@ -114,7 +114,11 @@ function SignUp() {
 										<FormItem>
 											<FormLabel>Full Name</FormLabel>
 											<FormControl>
-												<Input placeholder="shadcn" {...field} />
+												<Input
+													placeholder="shadcn"
+													{...field}
+													value={field.value ?? ""}
+												/>
 											</FormControl>
 											<FormMessage />
 										</FormItem>

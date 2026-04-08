@@ -9,7 +9,7 @@ import {
 	RulerDimensionLine,
 } from "lucide-react";
 import { useState } from "react";
-import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens.gen";
+import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens";
 import type {
 	PendingSpecimenPublicChangedData,
 	SpecimenPublic,

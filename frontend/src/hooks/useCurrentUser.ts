@@ -2,7 +2,7 @@
 import {
 	getUsersReadUserMeQueryKey,
 	useUsersReadUserMe,
-} from "@/api/endpoints/users/users.gen";
+} from "@/api/endpoints/users/users";
 import { useIsLoggedIn } from "./useIsLoggedIn";
 
 export function useCurrentUser() {

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
 	getUsersReadUserMeQueryKey,
 	useUsersDeleteUserMe,
-} from "@/api/endpoints/users/users.gen";
+} from "@/api/endpoints/users/users";
 import {
 	Dialog,
 	DialogClose,

@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
-import { useLoginResetPassword } from "@/api/endpoints/login/login.gen";
+import { useLoginResetPassword } from "@/api/endpoints/login/login";
 import { Button } from "@/components/ui/button";
 import {
 	Card,

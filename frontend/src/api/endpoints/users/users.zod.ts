@@ -4,27 +4,28 @@
  * Timverse
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * Get current user.
  * @summary Read User Me
  */
 export const UsersReadUserMeResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
 
 /**
  * Delete own user.
  * @summary Delete User Me
  */
 export const UsersDeleteUserMeResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
 
 /**
  * Update own user.
@@ -34,23 +35,21 @@ export const usersUpdateUserMeBodyFullNameOneMax = 255;
 
 export const usersUpdateUserMeBodyEmailOneMax = 255;
 
+
+
 export const UsersUpdateUserMeBody = zod.object({
-	is_active: zod.union([zod.boolean(), zod.null()]).optional(),
-	full_name: zod
-		.union([zod.string().max(usersUpdateUserMeBodyFullNameOneMax), zod.null()])
-		.optional(),
-	email: zod
-		.union([zod.email().max(usersUpdateUserMeBodyEmailOneMax), zod.null()])
-		.optional(),
-});
+  "is_active": zod.union([zod.boolean(),zod.null()]).optional(),
+  "full_name": zod.union([zod.string().max(usersUpdateUserMeBodyFullNameOneMax),zod.null()]).optional(),
+  "email": zod.union([zod.email().max(usersUpdateUserMeBodyEmailOneMax),zod.null()]).optional()
+})
 
 export const UsersUpdateUserMeResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
 
 /**
  * Update own password.
@@ -62,20 +61,16 @@ export const usersUpdatePasswordMeBodyCurrentPasswordMax = 64;
 export const usersUpdatePasswordMeBodyNewPasswordMin = 8;
 export const usersUpdatePasswordMeBodyNewPasswordMax = 64;
 
+
+
 export const UsersUpdatePasswordMeBody = zod.object({
-	current_password: zod
-		.string()
-		.min(usersUpdatePasswordMeBodyCurrentPasswordMin)
-		.max(usersUpdatePasswordMeBodyCurrentPasswordMax),
-	new_password: zod
-		.string()
-		.min(usersUpdatePasswordMeBodyNewPasswordMin)
-		.max(usersUpdatePasswordMeBodyNewPasswordMax),
-});
+  "current_password": zod.string().min(usersUpdatePasswordMeBodyCurrentPasswordMin).max(usersUpdatePasswordMeBodyCurrentPasswordMax),
+  "new_password": zod.string().min(usersUpdatePasswordMeBodyNewPasswordMin).max(usersUpdatePasswordMeBodyNewPasswordMax)
+})
 
 export const UsersUpdatePasswordMeResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
 
 /**
  * Retrieve users.
@@ -85,22 +80,20 @@ export const usersReadUsersQuerySkipDefault = 0;
 export const usersReadUsersQueryLimitDefault = 100;
 
 export const UsersReadUsersQueryParams = zod.object({
-	skip: zod.number().default(usersReadUsersQuerySkipDefault),
-	limit: zod.number().default(usersReadUsersQueryLimitDefault),
-});
+  "skip": zod.number().default(usersReadUsersQuerySkipDefault),
+  "limit": zod.number().default(usersReadUsersQueryLimitDefault)
+})
 
 export const UsersReadUsersResponse = zod.object({
-	data: zod.array(
-		zod.object({
-			email: zod.email(),
-			is_active: zod.boolean(),
-			is_superuser: zod.boolean(),
-			full_name: zod.union([zod.string(), zod.null()]).optional(),
-			id: zod.uuid(),
-		}),
-	),
-	count: zod.number(),
-});
+  "data": zod.array(zod.object({
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})),
+  "count": zod.number()
+})
 
 /**
  * Create new user.
@@ -109,79 +102,78 @@ export const UsersReadUsersResponse = zod.object({
 export const usersCreateUserBodyPasswordMin = 8;
 export const usersCreateUserBodyPasswordMax = 64;
 
+
+
 export const UsersCreateUserBody = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	password: zod
-		.string()
-		.min(usersCreateUserBodyPasswordMin)
-		.max(usersCreateUserBodyPasswordMax),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "password": zod.string().min(usersCreateUserBodyPasswordMin).max(usersCreateUserBodyPasswordMax)
+})
 
 export const UsersCreateUserResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
 
 /**
  * Get a specific user by id.
  * @summary Read User By Id
  */
 export const UsersReadUserByIdParams = zod.object({
-	user_id: zod.uuid(),
-});
+  "user_id": zod.uuid()
+})
 
 export const UsersReadUserByIdResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
 
 /**
  * Update a user.
  * @summary Update User
  */
 export const UsersUpdateUserParams = zod.object({
-	user_id: zod.uuid(),
-});
+  "user_id": zod.uuid()
+})
 
 export const usersUpdateUserBodyEmailOneMax = 255;
 
+
+
 export const UsersUpdateUserBody = zod.object({
-	is_active: zod.union([zod.boolean(), zod.null()]).optional(),
-	is_superuser: zod.union([zod.boolean(), zod.null()]).optional(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	email: zod
-		.union([zod.email().max(usersUpdateUserBodyEmailOneMax), zod.null()])
-		.optional(),
-});
+  "is_active": zod.union([zod.boolean(),zod.null()]).optional(),
+  "is_superuser": zod.union([zod.boolean(),zod.null()]).optional(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "email": zod.union([zod.email().max(usersUpdateUserBodyEmailOneMax),zod.null()]).optional()
+})
 
 export const UsersUpdateUserResponse = zod.object({
-	email: zod.email(),
-	is_active: zod.boolean(),
-	is_superuser: zod.boolean(),
-	full_name: zod.union([zod.string(), zod.null()]).optional(),
-	id: zod.uuid(),
-});
+  "email": zod.email(),
+  "is_active": zod.boolean(),
+  "is_superuser": zod.boolean(),
+  "full_name": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.uuid()
+})
 
 /**
  * Delete a user.
  * @summary Delete User
  */
 export const UsersDeleteUserParams = zod.object({
-	user_id: zod.uuid(),
-});
+  "user_id": zod.uuid()
+})
 
 export const UsersDeleteUserResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
 
 /**
  * Create new user without the need to be logged in.
@@ -194,29 +186,27 @@ export const usersRegisterUserBodyPasswordMax = 64;
 
 export const usersRegisterUserBodyFullNameOneMax = 255;
 
+
+
 export const UsersRegisterUserBody = zod.object({
-	email: zod.email().max(usersRegisterUserBodyEmailMax),
-	password: zod
-		.string()
-		.min(usersRegisterUserBodyPasswordMin)
-		.max(usersRegisterUserBodyPasswordMax),
-	full_name: zod
-		.union([zod.string().max(usersRegisterUserBodyFullNameOneMax), zod.null()])
-		.optional(),
-});
+  "email": zod.email().max(usersRegisterUserBodyEmailMax),
+  "password": zod.string().min(usersRegisterUserBodyPasswordMin).max(usersRegisterUserBodyPasswordMax),
+  "full_name": zod.union([zod.string().max(usersRegisterUserBodyFullNameOneMax),zod.null()]).optional()
+})
 
 export const UsersRegisterUserResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
 
 /**
  * verify email and reset password.
  * @summary Verify Email
  */
 export const UsersVerifyEmailBody = zod.object({
-	token: zod.string(),
-});
+  "token": zod.string()
+})
 
 export const UsersVerifyEmailResponse = zod.object({
-	message: zod.string(),
-});
+  "message": zod.string()
+})
+

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 
 import { useState } from "react";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
 	getUsersReadUsersQueryKey,
 	useUsersCreateUser,
-} from "@/api/endpoints/users/users.gen";
+} from "@/api/endpoints/users/users";
 import type { HTTPValidationError, UserCreate } from "@/api/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -62,7 +62,7 @@ const AddUser = () => {
 				form.reset();
 				setIsOpen(false);
 			},
-			onError: (err: void | HTTPValidationError) => {
+			onError: (err: undefined | HTTPValidationError) => {
 				handleError(err);
 			},
 			onSettled: () => {

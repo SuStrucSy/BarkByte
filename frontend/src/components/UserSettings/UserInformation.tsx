@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useUsersUpdateUserMe } from "@/api/endpoints/users/users.gen";
+import { useUsersUpdateUserMe } from "@/api/endpoints/users/users";
 import type { UserPublic, UserUpdateMe } from "@/api/model";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { handleError } from "@/lib/utils";

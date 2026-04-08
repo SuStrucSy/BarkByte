@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { SpecimenPublic } from "@/api/model";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { Donut } from "@/components/Charts/Donut";
 import {
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { countByArrayAttribute, countByAttribute } from "@/lib/utils";
 
-export function DemographyGrid({ specimens }) {
+export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 	const joineryCounts = useMemo(
 		() => countByAttribute(specimens, (s) => s.joinery_type.label),
 		[specimens],

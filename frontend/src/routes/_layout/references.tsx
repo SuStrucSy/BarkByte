@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Newspaper } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { doiGetDois } from "@/api/endpoints/doi/doi.gen";
+import { doiGetDois } from "@/api/endpoints/doi/doi";
 import type { DOIPublic } from "@/api/model";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";

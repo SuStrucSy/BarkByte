@@ -36,15 +36,12 @@ interface GroupedDataItem {
 }
 
 const Legend = memo(({ groupedData }: { groupedData: GroupedDataItem[] }) => (
-	<div
-		className="flex flex-wrap justify-center gap-4 pt-2"
-		aria-label="Chart legend"
-	>
+	<div className="flex flex-wrap justify-center gap-4 pt-2">
 		{groupedData.map((group) => (
 			<div key={group.groupName} className="flex items-center gap-2 text-sm">
 				<svg width="20" height="20" aria-hidden="true">
 					<path
-						d={SHAPE_GENERATORS[group.shape](6)}
+						d={SHAPE_GENERATORS[group.shape](6) || undefined}
 						transform="translate(10,10)"
 						fill={group.color}
 						fillOpacity={0.6}

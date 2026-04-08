@@ -4,9 +4,11 @@
  * Timverse
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * @summary Health Check
  */
-export const UtilsHealthCheckResponse = zod.boolean();
+export const UtilsHealthCheckResponse = zod.boolean()
+

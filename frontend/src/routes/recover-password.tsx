@@ -7,7 +7,7 @@ import {
 import { Loader2, TreePine } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useLoginRecoverPassword } from "@/api/endpoints/login/login.gen";
+import { useLoginRecoverPassword } from "@/api/endpoints/login/login";
 import { Button } from "@/components/ui/button";
 import {
 	Card,

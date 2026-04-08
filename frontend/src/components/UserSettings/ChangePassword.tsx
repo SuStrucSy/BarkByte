@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useUsersUpdatePasswordMe } from "@/api/endpoints/users/users.gen";
+import { useUsersUpdatePasswordMe } from "@/api/endpoints/users/users";
 import type { UpdatePassword } from "@/api/model";
 import { Button } from "@/components/ui/button";
 import {
