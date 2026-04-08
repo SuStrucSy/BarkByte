@@ -206,7 +206,9 @@ ssh -i your-key.pem ubuntu@<floating-ip>
 
 # Install Docker
 sudo apt update && sudo apt upgrade -y
-sudo apt install docker.io docker-compose-plugin git -y
+sudo apt install git -y
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 newgrp docker
 
@@ -244,49 +246,91 @@ mkdir ~/traefik && cd ~/traefik
 Create `docker-compose.yml` for Traefik with DNS-01 challenge support:
 
 ```yaml
-version: "3.8"
-
 services:
   traefik:
-    image: traefik:v2.11
-    restart: always
+    image: traefik:3.0
     ports:
-      - "80:80"
-      - "443:443"
+      # Listen on port 80, default for HTTP, necessary to redirect to HTTPS
+      - 80:80
+      # Listen on port 443, default for HTTPS
+      - 443:443
+    restart: always
     environment:
-      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+      # Cloudflare API token for DNS-01 Let's Encrypt challenge.
+      # Requires Zone:DNS:Edit permission for timverse.ca.
+      # Allows Traefik to obtain certificates even behind Cloudflare proxy.
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN?Variable not set}
+    labels:
+      # Enable Traefik for this service, to make it available in the public network
+      - traefik.enable=true
+      # Use the traefik-public network (declared below)
+      - traefik.docker.network=traefik-public
+      # Define the port inside of the Docker service to use
+      - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
+
+      # HTTP router for Traefik dashboard
+      - traefik.http.routers.traefik-dashboard-http.entrypoints=http
+      - traefik.http.routers.traefik-dashboard-http.rule=Host(`traefik.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.traefik-dashboard-http.middlewares=https-redirect
+
+      # HTTPS router for Traefik dashboard
+      - traefik.http.routers.traefik-dashboard-https.entrypoints=https
+      - traefik.http.routers.traefik-dashboard-https.rule=Host(`traefik.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.traefik-dashboard-https.tls=true
+      - traefik.http.routers.traefik-dashboard-https.tls.certresolver=le
+      - traefik.http.routers.traefik-dashboard-https.service=api@internal
+
+      # https-redirect middleware — redirect all HTTP to HTTPS permanently
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+      - traefik.http.routers.traefik-dashboard-http.middlewares=https-redirect
+
+      # Basic auth middleware for Traefik dashboard
+      - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
+      - traefik.http.routers.traefik-dashboard-https.middlewares=admin-auth
+
     volumes:
+      # Mount Docker socket so Traefik can read labels from other services
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik-certificates:/certificates
+      # Mount volume to persist Let's Encrypt certificates
+      - traefik-public-certificates:/certificates
+
     command:
+      # Enable Docker provider
       - --providers.docker
+      # Do not expose all Docker services — only those with traefik.enable=true
       - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.le.acme.email=${EMAIL}
+      # HTTP entrypoint on port 80
+      - --entrypoints.http.address=:80
+      # HTTPS entrypoint on port 443
+      - --entrypoints.https.address=:443
+
+      # Let's Encrypt certificate resolver using DNS-01 challenge via Cloudflare.
+      # DNS-01 is required because our public subdomains are behind Cloudflare proxy
+      # (HTTP-01 challenge cannot reach the server directly when proxied).
+      - --certificatesresolvers.le.acme.email=${EMAIL?Variable not set}
       - --certificatesresolvers.le.acme.storage=/certificates/acme.json
       - --certificatesresolvers.le.acme.dnschallenge=true
       - --certificatesresolvers.le.acme.dnschallenge.provider=cloudflare
+      # Use Cloudflare's public resolvers to verify the DNS challenge record
       - --certificatesresolvers.le.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+
+      # Enable access log and Traefik log
+      - --accesslog
+      - --log
+      # Enable the Traefik Dashboard and API
       - --api
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.timverse.ca`)"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-      - "traefik.http.routers.traefik-dashboard.tls.certresolver=le"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.http.routers.traefik-dashboard.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=${USERNAME}:${HASHED_PASSWORD}"
+
     networks:
       - traefik-public
 
 volumes:
-  traefik-certificates:
+  traefik-public-certificates:
 
 networks:
   traefik-public:
     external: true
+
 ```
 
 Create the Traefik `.env`:
