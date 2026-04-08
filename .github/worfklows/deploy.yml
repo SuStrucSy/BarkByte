@@ -1,0 +1,77 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Backup database before deploy
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            CONTAINER=$(docker ps --filter "name=db" --format "{{.Names}}" | head -n 1)
+            if [ -n "$CONTAINER" ]; then
+              docker exec $CONTAINER pg_dump -U $POSTGRES_USER $POSTGRES_DB \
+                | gzip > /mnt/data/backups/pre_deploy_$TIMESTAMP.sql.gz
+              echo "Pre-deploy backup saved: pre_deploy_$TIMESTAMP.sql.gz"
+            else
+              echo "No DB container running — skipping backup (first deploy?)"
+            fi
+          EOF
+
+      - name: Write .env and deploy
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/timverse-app
+
+            # Pull latest code
+            git pull origin main
+
+            # Write .env from GitHub Secrets
+            cat > .env <<ENVFILE
+          DOMAIN=${{ secrets.DOMAIN }}
+          FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}
+          ENVIRONMENT=production
+          STACK_NAME=${{ secrets.STACK_NAME }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          FIRST_SUPERUSER=${{ secrets.FIRST_SUPERUSER }}
+          FIRST_SUPERUSER_PASSWORD=${{ secrets.FIRST_SUPERUSER_PASSWORD }}
+          BACKEND_CORS_ORIGINS=${{ secrets.BACKEND_CORS_ORIGINS }}
+          VITE_API_URL=${{ secrets.VITE_API_URL }}
+          POSTGRES_SERVER=db
+          POSTGRES_PORT=5432
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          EMAILS_FROM_EMAIL=${{ secrets.EMAILS_FROM_EMAIL }}
+          DOCKER_IMAGE_BACKEND=timverse-backend
+          DOCKER_IMAGE_FRONTEND=timverse-frontend
+          TAG=latest
+          ENVFILE
+
+            # Build and restart
+            docker compose -f docker-compose.yml build
+            docker compose -f docker-compose.yml up -d
+
+          EOF

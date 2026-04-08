@@ -407,11 +407,11 @@ Add each of the following secrets:
 | `FRONTEND_HOST` | `https://timverse.ca` |
 | `SECRET_KEY` | *(run `openssl rand -hex 32`)* |
 | `FIRST_SUPERUSER` | `admin@timverse.ca` |
-| `FIRST_SUPERUSER_PASSWORD` | `changethis` |
+| `FIRST_SUPERUSER_PASSWORD` | *(run `openssl rand -base64 32`)* |
 | `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://api.timverse.ca` |
-| `POSTGRES_DB` | `app` |
-| `POSTGRES_USER` | `postgres` |
-| `POSTGRES_PASSWORD` | `changethis` |
+| `POSTGRES_DB` | `timeversedb` |
+| `POSTGRES_USER` | `timverse` |
+| `POSTGRES_PASSWORD` | *(run `openssl rand -base64 32`)* |
 | `SMTP_HOST` | `smtp.resend.com` |
 | `SMTP_USER` | `resend` |
 | `SMTP_PASSWORD` | `re_xxxxxxxxxxxx` *(Resend API key)* |
@@ -444,6 +444,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout code
@@ -506,8 +507,8 @@ jobs:
           ENVFILE
 
             # Build and restart
-            docker compose build
-            docker compose up -d
+            docker compose -f docker-compose.yml build
+            docker compose -f docker-compose.yml up -d
 
           EOF
 ```
