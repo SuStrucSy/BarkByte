@@ -1,18 +1,18 @@
 .badge-failure-mode {
-  --_blended-hue: calc(var(--badge-hue) * 0.7 + var(--theme-hue, 0) * 0.3);
+	--_blended-hue: calc(var(--badge-hue) * 0.7 + var(--theme-hue, 0) * 0.3);
 
-  background-color: oklch(
-    var(--badge-bg-l) var(--badge-bg-c) var(--_blended-hue)
-  );
-  color: oklch(var(--badge-fg-l) var(--badge-fg-c) var(--_blended-hue));
-  border-color: oklch(
-    var(--badge-border-l) var(--badge-border-c) var(--_blended-hue)
-  );
-  transition: background-color 0.15s ease;
+	background-color: oklch(
+		var(--badge-bg-l) var(--badge-bg-c) var(--_blended-hue)
+	);
+	color: oklch(var(--badge-fg-l) var(--badge-fg-c) var(--_blended-hue));
+	border-color: oklch(
+		var(--badge-border-l) var(--badge-border-c) var(--_blended-hue)
+	);
+	transition: background-color 0.15s ease;
 }
 
 .badge-failure-mode:hover {
-  background-color: oklch(
-    calc(var(--badge-bg-l) - 0.05) var(--badge-bg-c) var(--_blended-hue)
-  );
+	background-color: oklch(
+		calc(var(--badge-bg-l) - 0.05) var(--badge-bg-c) var(--_blended-hue)
+	);
 }

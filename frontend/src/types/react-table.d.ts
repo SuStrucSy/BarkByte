@@ -1,8 +1,8 @@
-import '@tanstack/react-table';
+import "@tanstack/react-table";
 
-declare module '@tanstack/react-table' {
-  interface ColumnMeta<TData, TValue> {
-    label?: string;
-    renderAs?: string;
-  }
+declare module "@tanstack/react-table" {
+	interface ColumnMeta<TData, TValue> {
+		label?: string;
+		renderAs?: string;
+	}
 }

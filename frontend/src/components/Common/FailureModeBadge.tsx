@@ -9,37 +9,37 @@ import { Badge } from "@/components/ui/badge";
 const GOLDEN_ANGLE = 137.508;
 
 export function getFailureModeHue(label: string): number {
-  let hash = 0;
-  for (let i = 0; i < label.length; i += 1) {
-    hash = (hash * 31 + label.charCodeAt(i)) >>> 0;
-  }
-  return (hash * GOLDEN_ANGLE) % 360;
+	let hash = 0;
+	for (let i = 0; i < label.length; i += 1) {
+		hash = (hash * 31 + label.charCodeAt(i)) >>> 0;
+	}
+	return (hash * GOLDEN_ANGLE) % 360;
 }
 
 type FailureModeBadgeProps = React.ComponentProps<typeof Badge> & {
-  label: string;
+	label: string;
 };
 
 export function FailureModeBadge({
-  label,
-  className,
-  children,
-  style,
-  ...props
+	label,
+	className,
+	children,
+	style,
+	...props
 }: FailureModeBadgeProps) {
-  return (
-    <Badge
-      variant="outline"
-      className={["badge-failure-mode", className].filter(Boolean).join(" ")}
-      style={
-        {
-          "--badge-hue": getFailureModeHue(label),
-          ...style,
-        } as React.CSSProperties
-      }
-      {...props}
-    >
-      {children ?? label}
-    </Badge>
-  );
+	return (
+		<Badge
+			variant="outline"
+			className={["badge-failure-mode", className].filter(Boolean).join(" ")}
+			style={
+				{
+					"--badge-hue": getFailureModeHue(label),
+					...style,
+				} as React.CSSProperties
+			}
+			{...props}
+		>
+			{children ?? label}
+		</Badge>
+	);
 }

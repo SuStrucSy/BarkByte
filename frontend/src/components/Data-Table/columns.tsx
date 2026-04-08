@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import type { UserPublic } from "@/api/model";
+import { UserActionsMenu } from "@/components/Common/UserActionsMenu";
 import { Badge } from "@/components/ui/badge";
-import { UserActionsMenu } from '@/components/Common/UserActionsMenu';
-import type { UserPublic } from '@/api/model';
 
 export const createColumns = <TData,>(
 	currentUser: UserPublic | undefined,
@@ -11,7 +11,7 @@ export const createColumns = <TData,>(
 		header: "Full name",
 		cell: ({ row }) => {
 			const name = row.getValue("full_name") ?? "N/A";
-      const user = row.original as UserPublic;
+			const user = row.original as UserPublic;
 			const isYou = currentUser?.id != null && user.id === currentUser.id;
 
 			return (
@@ -48,7 +48,7 @@ export const createColumns = <TData,>(
 	},
 	{
 		id: "actions",
-    enableSorting: false,
+		enableSorting: false,
 		cell: ({ row }) => {
 			const user = row.original as UserPublic;
 

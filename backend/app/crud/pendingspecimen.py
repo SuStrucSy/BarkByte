@@ -1,23 +1,20 @@
-from datetime import datetime, timezone, timedelta
+import logging
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlmodel import Session, delete, select, func
+from sqlmodel import Session, delete, func, select
 
+from app.crud import specimen as specimen_crud
 from app.enums import PendingStatus
 from app.models.pendingspecimen import PendingSpecimen
-from app.schemas.specimen import SpecimenCreate, SpecimenUpdate
 from app.schemas.pendingspecimen import PendingSpecimensPublic, PendingSpecimenUpdate
-from app.crud import specimen as specimen_crud
+from app.schemas.specimen import SpecimenCreate, SpecimenUpdate
 
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 logging.info("Server started")
+
 
 def _to_jsonable(value: Any) -> Any:
     """Recursively convert UUID and datetime etc. into JSON-serializable forms."""
@@ -31,6 +28,20 @@ def _to_jsonable(value: Any) -> Any:
         return {k: _to_jsonable(v) for k, v in value.items()}
     return value
 
+
+def _list_pending_with_filters(
+    session: Session,
+    filters: list,
+) -> PendingSpecimensPublic:
+    stmt = select(PendingSpecimen).where(*filters)
+    count_stmt = select(func.count()).select_from(PendingSpecimen).where(*filters)
+
+    rows = session.exec(stmt).all()
+    total = session.exec(count_stmt).one()
+
+    return PendingSpecimensPublic(pending_specimens=rows, count=total)
+
+
 def get_pending_specimen_by_id(
     session: Session,
     *,
@@ -39,21 +50,20 @@ def get_pending_specimen_by_id(
     pending = session.get(PendingSpecimen, pending_id)
     return pending
 
+
 def list_pending_by_user(
     session: Session,
     *,
     user_id: uuid.UUID,
     status: PendingStatus | None = None,
 ) -> PendingSpecimensPublic:
-    stmt = select(PendingSpecimen).where(PendingSpecimen.changed_by_user_id == user_id)
-    count_stmt = select(func.count()).select_from(PendingSpecimen).where(PendingSpecimen.changed_by_user_id == user_id)
+    filters = [PendingSpecimen.changed_by_user_id == user_id]
+
     if status is not None:
-        stmt = stmt.where(PendingSpecimen.status == status)
-        count_stmt = count_stmt.where(PendingSpecimen.status == status)
-    
-    rows = session.exec(stmt).all()
-    total = session.exec(count_stmt).one()
-    return PendingSpecimensPublic(pending_specimens=rows, count=total)
+        filters.append(PendingSpecimen.status == status)
+
+    return _list_pending_with_filters(session, filters)
+
 
 def cleanup_old_rejected_pending_specimens(
     session: Session,
@@ -75,6 +85,7 @@ def cleanup_old_rejected_pending_specimens(
     session.commit()
     # result.rowcount works on most dialects, but may be None depending on settings
     return result.rowcount or 0
+
 
 def create_pending_specimen(
     session: Session,
@@ -135,10 +146,9 @@ def update_pending_specimen(
     session.refresh(pending_specimen)
     return pending_specimen
 
+
 def delete_pending_specimen(
-    session: Session,
-    *,
-    pending_specimen: PendingSpecimen
+    session: Session, *, pending_specimen: PendingSpecimen
 ) -> PendingSpecimen:
 
     session.delete(pending_specimen)
@@ -146,27 +156,31 @@ def delete_pending_specimen(
 
     return pending_specimen
 
-def list_pending(session: Session, status: PendingStatus | None = None) -> PendingSpecimensPublic:
-    stmt = select(PendingSpecimen)
-    count_stmt = select(func.count()).select_from(PendingSpecimen)
-    if status is not None:
-        stmt = stmt.where(PendingSpecimen.status == status)
-        count_stmt = count_stmt.where(PendingSpecimen.status == status)
-    
-    rows = session.exec(stmt).all()
-    total = session.exec(count_stmt).one()
-    return PendingSpecimensPublic(pending_specimens=rows, count=total)
 
-def list_approved_specific_specimen(session: Session, id: uuid.UUID) -> PendingSpecimensPublic:
+def list_pending(
+    session: Session,
+    status: PendingStatus | None = None,
+) -> PendingSpecimensPublic:
+    filters = []
+
+    if status is not None:
+        filters.append(PendingSpecimen.status == status)
+
+    return _list_pending_with_filters(session, filters)
+
+
+def list_approved_specific_specimen(
+    session: Session, id: uuid.UUID
+) -> PendingSpecimensPublic:
     rows = session.exec(
-        select(PendingSpecimen)
-            .where(
-                PendingSpecimen.status == PendingStatus.APPROVED,
-                PendingSpecimen.specimen_id == id,
-            )
-        ).all()
+        select(PendingSpecimen).where(
+            PendingSpecimen.status == PendingStatus.APPROVED,
+            PendingSpecimen.specimen_id == id,
+        )
+    ).all()
     total = len(rows)
     return PendingSpecimensPublic(pending_specimens=rows, count=total)
+
 
 def approve_pending_specimen(
     session: Session,

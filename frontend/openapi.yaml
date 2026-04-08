@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: BarkByte
+  title: Timverse
   version: 0.1.0
 paths:
   /api/v1/login/access-token:
@@ -262,6 +262,8 @@ paths:
       summary: Read User By Id
       description: Get a specific user by id.
       operationId: users-read_user_by_id
+      security:
+        - OAuth2PasswordBearer: []
       parameters:
         - name: user_id
           in: path
@@ -1281,39 +1283,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
-  /api/v1/pending-specimens/:
-    get:
-      tags:
-        - pending-specimens
-      summary: List Pending Specimens
-      description: |-
-        List pending specimens, optionally filtered by status.
-        If no status is provided, all pending specimens are returned.
-      operationId: pending-specimens-list_pending_specimens
-      security:
-        - OAuth2PasswordBearer: []
-      parameters:
-        - name: status
-          in: query
-          required: false
-          schema:
-            anyOf:
-              - $ref: "#/components/schemas/PendingStatus"
-              - type: "null"
-            title: Status
-      responses:
-        "200":
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PendingSpecimensPublic"
-        "422":
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/pending-specimens/{pending_id}/approve:
     post:
       tags:
@@ -1447,6 +1416,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PendingSpecimenPublic"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/pending-specimens/:
+    get:
+      tags:
+        - pending-specimens
+      summary: List Pending Specimens
+      description: |-
+        List pending specimens, optionally filtered by status.
+        If no status is provided, all pending specimens are returned.
+      operationId: pending-specimens-list_pending_specimens
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - $ref: "#/components/schemas/PendingStatus"
+              - type: "null"
+            title: Status
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingSpecimensPublic"
         "422":
           description: Validation Error
           content:

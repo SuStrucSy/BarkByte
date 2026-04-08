@@ -85,7 +85,7 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Delete own user.
     """
-    user_in = UserUpdateMe(is_activate=False)
+    user_in = UserUpdateMe(is_active=False)
     user_crud.update_user(session=session, user_in=user_in, db_user=current_user)
 
     return Message(message="User deleted successfully")
@@ -107,7 +107,11 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> UserPubl
     return user_crud.get_all_users(session=session, skip=skip, limit=limit)
 
 
-@router.get("/{user_id}", response_model=UserPublic)
+@router.get(
+    "/{user_id}",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserPublic,
+)
 def read_user_by_id(user_id: uuid.UUID, session: SessionDep) -> UserPublic:
     """
     Get a specific user by id.

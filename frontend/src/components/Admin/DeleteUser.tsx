@@ -3,6 +3,7 @@ import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useUsersDeleteUser } from "@/api/endpoints/users/users";
 import {
 	Dialog,
 	DialogClose,
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
 import { Form } from "../ui/form";
-import { useUsersDeleteUser } from '@/api/endpoints/users/users.gen';
 
 const DeleteUser = ({ id }: { id: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -23,23 +23,22 @@ const DeleteUser = ({ id }: { id: string }) => {
 	const form = useForm();
 
 	const mutation = useUsersDeleteUser({
-    mutation:{
-      onSuccess: () => {
-        toast.success("The user was deleted successfully");
-        setIsOpen(false);
-      },
-      onError: () => {
-        toast.error("An error occurred while deleting the user");
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries();
-      },
-    }
-
+		mutation: {
+			onSuccess: () => {
+				toast.success("The user was deleted successfully");
+				setIsOpen(false);
+			},
+			onError: () => {
+				toast.error("An error occurred while deleting the user");
+			},
+			onSettled: () => {
+				queryClient.invalidateQueries();
+			},
+		},
 	});
 
 	const onSubmit = async () => {
-		mutation.mutate({userId: id});
+		mutation.mutate({ userId: id });
 	};
 
 	return (
