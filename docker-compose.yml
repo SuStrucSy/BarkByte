@@ -148,6 +148,11 @@ services:
 
 volumes:
   app-db-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/data/postgres
 
 networks:
   traefik-public:
