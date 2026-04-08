@@ -104,7 +104,7 @@ services:
     tty: true
     volumes:
       - ./frontend:/app
-    user: "node" # Run as the 'node' user
+    user: "node"
 
 networks:
   traefik-public:
