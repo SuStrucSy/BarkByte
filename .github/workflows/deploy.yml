@@ -79,19 +79,15 @@ jobs:
           TAG='latest'
           ENVFILE
 
-          # 2️⃣ Ensure DB password matches .env
-          DB_CONTAINER=$(docker ps --filter "name=db" --format "{{.Names}}" | head -n1)
-          if [ -n "$DB_CONTAINER" ]; then
-            echo "Updating Postgres password for ${POSTGRES_USER}"
-            docker exec -i "$DB_CONTAINER" psql -U postgres -c \
-              "ALTER USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';"
-          fi
+          # Build images without cache
+          docker compose -f docker-compose.yml build --no-cache
 
-          # 3️⃣ Build images
-          docker compose -f docker-compose.yml build
-
-          # 4️⃣ Bring up containers in order
+          # Start DB first
           docker compose -f docker-compose.yml up -d db
-          docker compose -f docker-compose.yml up -d prestart
+
+          # Run prestart as a one-off
+          docker compose -f docker-compose.yml run --rm prestart
+
+          # Start prestart, backend, and frontend in order
           docker compose -f docker-compose.yml up -d backend frontend
           EOF

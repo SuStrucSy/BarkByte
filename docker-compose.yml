@@ -27,7 +27,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-        restart: true
     command: bash scripts/prestart.sh
     env_file:
       - .env
@@ -61,7 +60,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-        restart: true
       prestart:
         condition: service_completed_successfully
     env_file:
@@ -121,11 +119,8 @@ services:
       - traefik-public
       - default
     depends_on:
-      prestart:
-        condition: service_completed_successfully
       backend:
         condition: service_healthy
-        restart: true
     build:
       context: ./frontend
       args:
