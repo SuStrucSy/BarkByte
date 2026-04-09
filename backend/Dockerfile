@@ -15,18 +15,19 @@ ENV UV_COMPILE_BYTECODE=1
 # Use copy link mode for uv cache
 ENV UV_LINK_MODE=copy
 
-# Install dependencies only (not the project itself) — separate layer for caching
+# ✅ Copy dependency files (MUST include uv.lock)
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies only (cached layer)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project
 
-ENV PYTHONPATH=/app
-
-# Copy app source
+# Copy application code
 COPY ./scripts /app/scripts
-COPY ./pyproject.toml ./alembic.ini /app/
 COPY ./app /app/app
+COPY ./alembic.ini /app/
+
+ENV PYTHONPATH=/app
 
 # Sync the full project
 RUN --mount=type=cache,target=/root/.cache/uv \
