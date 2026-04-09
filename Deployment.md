@@ -62,7 +62,7 @@ Also set **SSL/TLS mode** in Cloudflare → **SSL/TLS → Overview** to **Full (
 
 ---
 
-### 3 — Set Up Resend for Auth Emails
+### 4 — Set Up Resend for Auth Emails
 
 Resend handles password reset, email verification, and other auth flow emails. The free tier (3,000 emails/month) is more than enough for a research project.
 
@@ -110,28 +110,38 @@ EMAILS_FROM_EMAIL = noreply@timverse.ca
 ## Architecture Overview
 
 ```
-Git push to main
+feat/fix commits pushed to main
       │
       ▼
-GitHub Actions
+Release Please Action
       │
-      ├── SSH into VM
-      ├── Write .env from GitHub Secrets
-      ├── git pull latest code
-      ├── docker compose build
-      └── docker compose up -d
-                  │
-                  ▼
-        Cloudflare (proxy, DDoS protection, CDN)
-                  │
-                  ▼
-         Traefik (ports 80/443, Let's Encrypt DNS-01 TLS via Cloudflare API)
-            ├── timverse.ca / www.timverse.ca  → frontend:80
-            ├── api.timverse.ca                → backend:8000
-            ├── docs.timverse.ca               → backend:8000
-            └── traefik.timverse.ca            → Traefik dashboard (DNS-only)
-                              │
-                              └── PostgreSQL (internal only)
+      ├── docs/chore/ci commits → no release PR, nothing deploys
+      │
+      └── feat/fix commits → creates/updates Release PR
+                                    │
+                                    └── you merge the Release PR
+                                              │
+                                              ▼
+                                    Deploy workflow triggers
+                                              │
+                                              ├── SSH keep-alive configured
+                                              ├── DB backup taken
+                                              ├── .env written from GitHub Secrets
+                                              ├── git pull latest code
+                                              ├── docker compose -f docker-compose.yml build
+                                              └── docker compose -f docker-compose.yml up -d
+                                                          │
+                                                          ▼
+                                              Cloudflare (proxy, DDoS protection, CDN)
+                                                          │
+                                                          ▼
+                                              Traefik v2.11 (ports 80/443, Let's Encrypt DNS-01 via Cloudflare API)
+                                                 ├── timverse.ca / www.timverse.ca  → frontend (nginx):80
+                                                 ├── api.timverse.ca                → backend:8000
+                                                 ├── docs.timverse.ca               → backend:8000
+                                                 └── traefik.timverse.ca            → Traefik dashboard (DNS-only)
+                                                                   │
+                                                                   └── PostgreSQL → /mnt/data/postgres
 ```
 
 ---
@@ -204,13 +214,21 @@ SSH into your VM and run:
 ```bash
 ssh -i your-key.pem ubuntu@<floating-ip>
 
-# Install Docker
-sudo apt update && sudo apt upgrade -y
-sudo apt install git -y
+# Install Docker via official convenience script
+# (do NOT use apt install docker.io — it installs an outdated version)
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
+
+# Add your user to the docker group
 sudo usermod -aG docker $USER
 newgrp docker
+
+# Verify
+docker --version
+docker compose version
+
+# Install git
+sudo apt install git -y
 
 # Mount the data volume (find device name first)
 lsblk
@@ -229,8 +247,14 @@ sudo chown -R ubuntu:ubuntu /mnt/data
 # Create the shared Traefik network
 docker network create traefik-public
 
-# Clone your repo
-git clone https://github.com/your-org/your-repo.git ~/timverse-app
+# Generate a deploy SSH key for GitHub (no passphrase — required for CI/CD)
+ssh-keygen -t ed25519 -C "timverse-prod-server" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
+# Copy this output → GitHub repo → Settings → Deploy keys → Add deploy key
+# Title: timverse-prod-server, Allow write access: No
+
+# Clone your repo using SSH (not HTTPS)
+git clone git@github.com:your-org/your-repo.git ~/timverse-app
 ```
 
 ---
@@ -248,79 +272,45 @@ Create `docker-compose.yml` for Traefik with DNS-01 challenge support:
 ```yaml
 services:
   traefik:
-    image: traefik:3.0
-    ports:
-      # Listen on port 80, default for HTTP, necessary to redirect to HTTPS
-      - 80:80
-      # Listen on port 443, default for HTTPS
-      - 443:443
+    image: traefik:v2.11
     restart: always
+    ports:
+      - "80:80"
+      - "443:443"
     environment:
-      # Cloudflare API token for DNS-01 Let's Encrypt challenge.
-      # Requires Zone:DNS:Edit permission for timverse.ca.
-      # Allows Traefik to obtain certificates even behind Cloudflare proxy.
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN?Variable not set}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-public-certificates:/certificates
+    command:
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --certificatesresolvers.le.acme.email=${EMAIL?Variable not set}
+      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+      - --certificatesresolvers.le.acme.dnschallenge=true
+      - --certificatesresolvers.le.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.le.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+      - --accesslog
+      - --log
+      - --api
     labels:
-      # Enable Traefik for this service, to make it available in the public network
       - traefik.enable=true
-      # Use the traefik-public network (declared below)
       - traefik.docker.network=traefik-public
-      # Define the port inside of the Docker service to use
       - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
-
-      # HTTP router for Traefik dashboard
       - traefik.http.routers.traefik-dashboard-http.entrypoints=http
       - traefik.http.routers.traefik-dashboard-http.rule=Host(`traefik.${DOMAIN?Variable not set}`)
       - traefik.http.routers.traefik-dashboard-http.middlewares=https-redirect
-
-      # HTTPS router for Traefik dashboard
       - traefik.http.routers.traefik-dashboard-https.entrypoints=https
       - traefik.http.routers.traefik-dashboard-https.rule=Host(`traefik.${DOMAIN?Variable not set}`)
       - traefik.http.routers.traefik-dashboard-https.tls=true
       - traefik.http.routers.traefik-dashboard-https.tls.certresolver=le
       - traefik.http.routers.traefik-dashboard-https.service=api@internal
-
-      # https-redirect middleware — redirect all HTTP to HTTPS permanently
       - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
-      - traefik.http.routers.traefik-dashboard-http.middlewares=https-redirect
-
-      # Basic auth middleware for Traefik dashboard
       - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
       - traefik.http.routers.traefik-dashboard-https.middlewares=admin-auth
-
-    volumes:
-      # Mount Docker socket so Traefik can read labels from other services
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Mount volume to persist Let's Encrypt certificates
-      - traefik-public-certificates:/certificates
-
-    command:
-      # Enable Docker provider
-      - --providers.docker
-      # Do not expose all Docker services — only those with traefik.enable=true
-      - --providers.docker.exposedbydefault=false
-      # HTTP entrypoint on port 80
-      - --entrypoints.http.address=:80
-      # HTTPS entrypoint on port 443
-      - --entrypoints.https.address=:443
-
-      # Let's Encrypt certificate resolver using DNS-01 challenge via Cloudflare.
-      # DNS-01 is required because our public subdomains are behind Cloudflare proxy
-      # (HTTP-01 challenge cannot reach the server directly when proxied).
-      - --certificatesresolvers.le.acme.email=${EMAIL?Variable not set}
-      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
-      - --certificatesresolvers.le.acme.dnschallenge=true
-      - --certificatesresolvers.le.acme.dnschallenge.provider=cloudflare
-      # Use Cloudflare's public resolvers to verify the DNS challenge record
-      - --certificatesresolvers.le.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
-
-      # Enable access log and Traefik log
-      - --accesslog
-      - --log
-      # Enable the Traefik Dashboard and API
-      - --api
-
     networks:
       - traefik-public
 
@@ -330,21 +320,28 @@ volumes:
 networks:
   traefik-public:
     external: true
-
 ```
+
+> ⚠️ Use `traefik:v2.11` not v3 — Traefik v3 has a Docker API compatibility issue on Béluga Cloud VMs.
 
 Create the Traefik `.env`:
 
 ```bash
-HASHED_PASSWORD=$(openssl passwd -apr1 yourpassword)
+# Generate a secure password
+openssl rand -base64 32
+# Copy the output, then generate the hash with it:
+openssl passwd -apr1 'your-generated-password'
 
 cat > .env <<EOF
 EMAIL=you@email.com
 USERNAME=admin
 HASHED_PASSWORD=<paste-hashed-password-here>
 CF_DNS_API_TOKEN=<your-cloudflare-api-token>
+DOMAIN=timverse.ca
 EOF
 ```
+
+> ⚠️ Every `$` in `HASHED_PASSWORD` must be doubled (`$$`) in the `.env` file — otherwise Docker Compose interprets them as variable references. A hash like `$apr1$xyz$abc` becomes `$$apr1$$xyz$$abc`.
 
 Start Traefik:
 
@@ -399,6 +396,8 @@ volumes:
 
 Go to your GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**
 
+> Use **environment secrets** scoped to a `production` environment for better access control (Settings → Environments → New environment → `production`).
+
 Add each of the following secrets:
 
 | Secret Name | Value |
@@ -407,10 +406,10 @@ Add each of the following secrets:
 | `FRONTEND_HOST` | `https://timverse.ca` |
 | `SECRET_KEY` | *(run `openssl rand -hex 32`)* |
 | `FIRST_SUPERUSER` | `admin@timverse.ca` |
-| `FIRST_SUPERUSER_PASSWORD` | *(run `openssl rand -base64 32`)* |
+| `FIRST_SUPERUSER_PASSWORD` | *(strong password)* |
 | `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://api.timverse.ca` |
-| `POSTGRES_DB` | `timeversedb` |
-| `POSTGRES_USER` | `timverse` |
+| `POSTGRES_DB` | *(your db name)* |
+| `POSTGRES_USER` | *(your db user)* |
 | `POSTGRES_PASSWORD` | *(run `openssl rand -base64 32`)* |
 | `SMTP_HOST` | `smtp.resend.com` |
 | `SMTP_USER` | `resend` |
@@ -421,25 +420,94 @@ Add each of the following secrets:
 | `STACK_NAME` | `timverse` |
 | `SSH_HOST` | `<your-floating-ip>` |
 | `SSH_USER` | `ubuntu` |
-| `SSH_PRIVATE_KEY` | *(contents of your `.pem` key)* |
+| `SSH_PRIVATE_KEY` | *(contents of the passphrase-free deploy key)* |
 | `VITE_API_URL` | `https://api.timverse.ca` |
 | `CF_DNS_API_TOKEN` | *(your Cloudflare API token)* |
 
 > ⚠️ Never commit secrets or `.env` files to your repository. Add `.env` to `.gitignore`.
+> ⚠️ The `SSH_PRIVATE_KEY` must be a **passphrase-free** key — GitHub Actions cannot interactively enter a passphrase.
 
 ---
 
-## Step 9 — Create the GitHub Actions Workflow
+## Step 9 — Set Up Conventional Commits and Automated Versioning
 
-Create `.github/workflows/deploy.yml` in your repo:
+Deployments are triggered by releases, not every push. This means a `docs:` or `chore:` commit never deploys — only `feat:` and `fix:` commits accumulate into a release that you then merge to deploy.
+
+### Commit message format
+
+| Prefix | Effect |
+|---|---|
+| `feat: add search` | Release PR updated, minor version bump |
+| `fix: login crash` | Release PR updated, patch version bump |
+| `feat!: redesign API` | Release PR updated, major version bump |
+| `docs: update readme` | No release, no deploy |
+| `chore: bump deps` | No release, no deploy |
+| `ci: fix workflow` | No release, no deploy |
+
+### Files to add to your repo root
+
+**`release-please-config.json`:**
+```json
+{
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "bump-minor-pre-major": true,
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance" },
+        { "type": "revert", "section": "Reverts" }
+      ]
+    }
+  }
+}
+```
+
+**`.release-please-manifest.json`:**
+```json
+{
+  ".": "0.1.0"
+}
+```
+
+### `.github/workflows/release.yml`
 
 ```yaml
-name: Deploy to Server
+name: Release Please
 
 on:
   push:
     branches:
       - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: simple
+```
+
+### `.github/workflows/deploy.yml`
+
+```yaml
+name: Deploy to Server
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -449,6 +517,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Configure SSH keep-alive
+        run: |
+          mkdir -p ~/.ssh
+          echo "ServerAliveInterval 60" >> ~/.ssh/config
+          echo "ServerAliveCountMax 10" >> ~/.ssh/config
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -478,10 +552,8 @@ jobs:
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/timverse-app
 
-            # Pull latest code
             git pull origin main
 
-            # Write .env from GitHub Secrets
             cat > .env <<ENVFILE
           DOMAIN=${{ secrets.DOMAIN }}
           FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}
@@ -506,14 +578,15 @@ jobs:
           TAG=latest
           ENVFILE
 
-            # Build and restart
             docker compose -f docker-compose.yml build
             docker compose -f docker-compose.yml up -d
 
           EOF
 ```
 
-Commit and push this file to `main`. Every subsequent push to `main` will trigger an automatic deploy.
+> `workflow_dispatch` allows manually triggering a deploy from GitHub → Actions → Deploy to Server → Run workflow, without needing a new release.
+
+
 
 ---
 
@@ -534,15 +607,17 @@ Commit and push this file to `main`. Every subsequent push to `main` will trigge
 After a GitHub Actions run completes, SSH into the server to verify:
 
 ```bash
+cd ~/timverse-app
+
 # Check all container statuses
-docker compose ps
+docker compose -f docker-compose.yml ps
 
 # Stream logs
-docker compose logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Check a specific service
-docker compose logs backend
-docker compose logs frontend
+docker compose -f docker-compose.yml logs backend
+docker compose -f docker-compose.yml logs frontend
 ```
 
 Expected states:
@@ -625,6 +700,12 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 | `traefik-public network not found` | Network not created | Run `docker network create traefik-public` on the server |
 | Let's Encrypt DNS-01 challenge fails | Invalid or missing CF token | Check `CF_DNS_API_TOKEN` in Traefik `.env`, verify token has `Zone:DNS:Edit` |
 | Certificate issued but browser shows error | Cloudflare SSL mode wrong | Set Cloudflare SSL/TLS → Overview to **Full (strict)** |
+| Traefik Docker API version error | Traefik v3 incompatible on Béluga | Use `traefik:v2.11` — v3 has a Docker API issue on this platform |
+| `HASHED_PASSWORD` variable warnings | `$` signs in hash not escaped | Double every `$` in `HASHED_PASSWORD` in `~/traefik/.env` |
+| SSH passphrase prompt in Actions | Deploy key has a passphrase | Generate a new key with `-N ""` (no passphrase) |
+| Actions workflow not appearing | Wrong file path | Must be at exactly `.github/workflows/deploy.yml` |
+| Actions triggers but doesn't deploy | Using push trigger | Deploy only triggers on published release — merge the Release PR first |
+| SSH connection drops during build | Long build times out | Add `ServerAliveInterval 60` to SSH config step in workflow |
 | `prestart` keeps restarting | DB not healthy yet | Check `docker compose logs db` |
 | Frontend can't reach API | `VITE_API_URL` wrong | It's a **build-time** arg — ensure secret is `https://api.timverse.ca` and rebuild |
 | DB data lost after reboot | `/mnt/data` not remounted | Check `/etc/fstab` entry and run `sudo mount -a` |
@@ -637,19 +718,22 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 
 ```bash
 # Restart a single service
-docker compose restart backend
+docker compose -f docker-compose.yml restart backend
 
 # Rebuild and restart after manual changes
-docker compose build backend && docker compose up -d backend
+docker compose -f docker-compose.yml build backend && docker compose -f docker-compose.yml up -d backend
 
 # View real-time logs
-docker compose logs -f
+docker compose -f docker-compose.yml logs -f
+
+# Check all container statuses
+docker compose -f docker-compose.yml ps
 
 # Stop everything
-docker compose down
+docker compose -f docker-compose.yml down
 
 # Stop and remove volumes (⚠️ deletes database)
-docker compose down -v
+docker compose -f docker-compose.yml down -v
 ```
 
 ---
@@ -722,7 +806,9 @@ sudo systemctl is-enabled docker
 
 - [Digital Alliance Canada — Cloud Docs](https://docs.alliancecan.ca/wiki/Cloud)
 - [Arbutus Cloud](https://docs.alliancecan.ca/wiki/Arbutus_Cloud)
-- [Traefik Documentation](https://doc.traefik.io/traefik/)
+- [Traefik v2.11 Documentation](https://doc.traefik.io/traefik/v2.11/)
 - [FastAPI Full Stack Template](https://github.com/fastapi/full-stack-fastapi-template)
 - [GitHub Actions — Encrypted Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
+- [Release Please Action](https://github.com/googleapis/release-please-action)
+- [Conventional Commits](https://www.conventionalcommits.org/)
 - [Alliance System Status](https://status.alliancecan.ca/)
