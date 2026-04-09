@@ -26,24 +26,9 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add server to known hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Backup database before deploy
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            CONTAINER=$(docker ps --filter "name=db" --format "{{.Names}}" | head -n 1)
-            if [ -n "$CONTAINER" ]; then
-              docker exec $CONTAINER pg_dump -U $POSTGRES_USER $POSTGRES_DB \
-                | gzip > /mnt/data/backups/pre_deploy_$TIMESTAMP.sql.gz
-              echo "Pre-deploy backup saved: pre_deploy_$TIMESTAMP.sql.gz"
-            else
-              echo "No DB container running — skipping backup (first deploy?)"
-            fi
-          EOF
-
-      - name: Write .env and deploy
+      - name: Deploy
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -64,35 +49,50 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
         run: |
-          ssh $SSH_USER@$SSH_HOST 'bash -s' <<EOF
-          cd ~/timverse-app
-          git pull origin main
+          ssh $SSH_USER@$SSH_HOST 'bash -s' <<'EOF'
+            set -e
+            cd ~/timverse-app
+            git pull origin main
 
-          cat > .env <<ENVFILE
-          DOMAIN='${DOMAIN}'
-          FRONTEND_HOST='${FRONTEND_HOST}'
-          ENVIRONMENT='production'
-          STACK_NAME='${STACK_NAME}'
-          PROJECT_NAME='${PROJECT_NAME}'
-          SECRET_KEY='${SECRET_KEY}'
-          FIRST_SUPERUSER='${FIRST_SUPERUSER}'
-          FIRST_SUPERUSER_PASSWORD='${FIRST_SUPERUSER_PASSWORD}'
-          BACKEND_CORS_ORIGINS='${BACKEND_CORS_ORIGINS}'
-          VITE_API_URL='${VITE_API_URL}'
-          POSTGRES_SERVER='db'
-          POSTGRES_PORT='5432'
-          POSTGRES_DB='${POSTGRES_DB}'
-          POSTGRES_USER='${POSTGRES_USER}'
-          POSTGRES_PASSWORD='${POSTGRES_PASSWORD}'
-          SMTP_HOST='${SMTP_HOST}'
-          SMTP_USER='${SMTP_USER}'
-          SMTP_PASSWORD='${SMTP_PASSWORD}'
-          EMAILS_FROM_EMAIL='${EMAILS_FROM_EMAIL}'
-          DOCKER_IMAGE_BACKEND='timverse-backend'
-          DOCKER_IMAGE_FRONTEND='timverse-frontend'
-          TAG='latest'
-          ENVFILE
+            # 1️⃣ Write .env safely
+            cat > .env <<ENVFILE
+              DOMAIN='${DOMAIN}'
+              FRONTEND_HOST='${FRONTEND_HOST}'
+              ENVIRONMENT='production'
+              STACK_NAME='${STACK_NAME}'
+              PROJECT_NAME='${PROJECT_NAME}'
+              SECRET_KEY='${SECRET_KEY}'
+              FIRST_SUPERUSER='${FIRST_SUPERUSER}'
+              FIRST_SUPERUSER_PASSWORD='${FIRST_SUPERUSER_PASSWORD}'
+              BACKEND_CORS_ORIGINS='${BACKEND_CORS_ORIGINS}'
+              VITE_API_URL='${VITE_API_URL}'
+              POSTGRES_SERVER='db'
+              POSTGRES_PORT='5432'
+              POSTGRES_DB='${POSTGRES_DB}'
+              POSTGRES_USER='${POSTGRES_USER}'
+              POSTGRES_PASSWORD='${POSTGRES_PASSWORD}'
+              SMTP_HOST='${SMTP_HOST}'
+              SMTP_USER='${SMTP_USER}'
+              SMTP_PASSWORD='${SMTP_PASSWORD}'
+              EMAILS_FROM_EMAIL='${EMAILS_FROM_EMAIL}'
+              DOCKER_IMAGE_BACKEND='timverse-backend'
+              DOCKER_IMAGE_FRONTEND='timverse-frontend'
+              TAG='latest'
+              ENVFILE
 
-          docker compose -f docker-compose.yml build
-          docker compose -f docker-compose.yml up -d
+            # 2️⃣ Ensure DB password matches .env
+            DB_CONTAINER=$(docker ps --filter "name=db" --format "{{.Names}}" | head -n1)
+            if [ -n "$DB_CONTAINER" ]; then
+              echo "Updating Postgres password for ${POSTGRES_USER}"
+              docker exec -i "$DB_CONTAINER" psql -U postgres -c \
+                "ALTER USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';"
+            fi
+
+            # 3️⃣ Build images
+            docker compose -f docker-compose.yml build
+
+            # 4️⃣ Bring up containers in order
+            docker compose -f docker-compose.yml up -d db
+            docker compose -f docker-compose.yml up -d prestart
+            docker compose -f docker-compose.yml up -d backend frontend
           EOF
