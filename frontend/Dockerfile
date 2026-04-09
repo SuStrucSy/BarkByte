@@ -5,28 +5,28 @@ FROM base AS deps
 
 WORKDIR /app
 
-# Update npm and install globals as root before switching user
+# Install globals as root
 RUN npm install -g npm@latest npm-check-updates
 
-# Copy package files and install deps as root into /app
-COPY package.json package-lock.json ./
-RUN npm install
+# Chown the empty /app dir before any files land in it — instant
+RUN chown node:node /app
 
-# Fix ownership once on the populated directory
-RUN chown -R node:node /app
+# Switch to node user before installing dependencies
+USER node
+
+# Copy package files and install as node user — no chown needed after
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm install
 
 # ── build stage: compile the app ──────────────────────────────────────────────
 FROM base AS build
 
 WORKDIR /app
 
-# Copy node_modules from deps stage (already correct ownership)
 COPY --from=deps --chown=node:node /app/node_modules ./node_modules
 
-# Switch to node user before copying source
 USER node
 
-# Copy source and build
 COPY --chown=node:node . .
 
 ARG VITE_API_URL
@@ -39,7 +39,6 @@ RUN npm run build
 # ── production stage: serve with nginx ────────────────────────────────────────
 FROM nginx:alpine AS production
 
-# Copy built files to nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
