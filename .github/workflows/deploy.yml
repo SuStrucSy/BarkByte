@@ -50,6 +50,7 @@ jobs:
           DOMAIN: ${{ secrets.DOMAIN }}
           FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
           STACK_NAME: ${{ secrets.STACK_NAME }}
+          PROJECT_NAME: ${{ secrets.PROJECT_NAME }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           FIRST_SUPERUSER: ${{ secrets.FIRST_SUPERUSER }}
           FIRST_SUPERUSER_PASSWORD: ${{ secrets.FIRST_SUPERUSER_PASSWORD }}
@@ -72,6 +73,7 @@ jobs:
           FRONTEND_HOST='${FRONTEND_HOST}'
           ENVIRONMENT='production'
           STACK_NAME='${STACK_NAME}'
+          PROJECT_NAME='${PROJECT_NAME}'
           SECRET_KEY='${SECRET_KEY}'
           FIRST_SUPERUSER='${FIRST_SUPERUSER}'
           FIRST_SUPERUSER_PASSWORD='${FIRST_SUPERUSER_PASSWORD}'
