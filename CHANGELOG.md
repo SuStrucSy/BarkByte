@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/SuStrucSy/BarkByte/compare/v1.0.0...v1.0.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* issue with url builder for db to handle special characters ([2e92b68](https://github.com/SuStrucSy/BarkByte/commit/2e92b68262df1e0071021f4ceb65f87d80c16705))
+
 ## 1.0.0 (2026-04-09)
 
 
