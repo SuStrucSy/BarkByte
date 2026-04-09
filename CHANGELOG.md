@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/SuStrucSy/BarkByte/compare/v1.0.1...v1.0.2) (2026-04-09)
+
+
+### Bug Fixes
+
+* bug with chart not showing ([425c206](https://github.com/SuStrucSy/BarkByte/commit/425c2069d49a8171e58baaa516426398b8fe396a))
+
 ## [1.0.1](https://github.com/SuStrucSy/BarkByte/compare/v1.0.0...v1.0.1) (2026-04-09)
 
 
