@@ -95,4 +95,4 @@ jobs:
             docker compose -f docker-compose.yml up -d db
             docker compose -f docker-compose.yml up -d prestart
             docker compose -f docker-compose.yml up -d backend frontend
-          EOF
+            EOF
