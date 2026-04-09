@@ -44,40 +44,53 @@ jobs:
           EOF
 
       - name: Write .env and deploy
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
+          STACK_NAME: ${{ secrets.STACK_NAME }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          FIRST_SUPERUSER: ${{ secrets.FIRST_SUPERUSER }}
+          FIRST_SUPERUSER_PASSWORD: ${{ secrets.FIRST_SUPERUSER_PASSWORD }}
+          BACKEND_CORS_ORIGINS: ${{ secrets.BACKEND_CORS_ORIGINS }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd ~/timverse-app
+          ssh "$SSH_USER@$SSH_HOST" 'bash -s' <<EOF
+          cd ~/timverse-app
+          git pull origin main
 
-            # Pull latest code
-            git pull origin main
-
-            # Write .env from GitHub Secrets
-            cat > .env <<ENVFILE
-          DOMAIN=${{ secrets.DOMAIN }}
-          FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}
-          ENVIRONMENT=production
-          STACK_NAME=${{ secrets.STACK_NAME }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          FIRST_SUPERUSER=${{ secrets.FIRST_SUPERUSER }}
-          FIRST_SUPERUSER_PASSWORD=${{ secrets.FIRST_SUPERUSER_PASSWORD }}
-          BACKEND_CORS_ORIGINS=${{ secrets.BACKEND_CORS_ORIGINS }}
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
-          POSTGRES_SERVER=db
-          POSTGRES_PORT=5432
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
-          EMAILS_FROM_EMAIL=${{ secrets.EMAILS_FROM_EMAIL }}
-          DOCKER_IMAGE_BACKEND=timverse-backend
-          DOCKER_IMAGE_FRONTEND=timverse-frontend
-          TAG=latest
+          cat > .env <<ENVFILE
+          DOMAIN='${DOMAIN}'
+          FRONTEND_HOST='${FRONTEND_HOST}'
+          ENVIRONMENT='production'
+          STACK_NAME='${STACK_NAME}'
+          SECRET_KEY='${SECRET_KEY}'
+          FIRST_SUPERUSER='${FIRST_SUPERUSER}'
+          FIRST_SUPERUSER_PASSWORD='${FIRST_SUPERUSER_PASSWORD}'
+          BACKEND_CORS_ORIGINS='${BACKEND_CORS_ORIGINS}'
+          VITE_API_URL='${VITE_API_URL}'
+          POSTGRES_SERVER='db'
+          POSTGRES_PORT='5432'
+          POSTGRES_DB='${POSTGRES_DB}'
+          POSTGRES_USER='${POSTGRES_USER}'
+          POSTGRES_PASSWORD='${POSTGRES_PASSWORD}'
+          SMTP_HOST='${SMTP_HOST}'
+          SMTP_USER='${SMTP_USER}'
+          SMTP_PASSWORD='${SMTP_PASSWORD}'
+          EMAILS_FROM_EMAIL='${EMAILS_FROM_EMAIL}'
+          DOCKER_IMAGE_BACKEND='timverse-backend'
+          DOCKER_IMAGE_FRONTEND='timverse-frontend'
+          TAG='latest'
           ENVFILE
 
-            # Build and restart
-            docker compose -f docker-compose.yml build
-            docker compose -f docker-compose.yml up -d
-
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml up -d
           EOF
