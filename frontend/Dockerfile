@@ -23,6 +23,9 @@ FROM base AS build
 
 WORKDIR /app
 
+# Create /app and give node user ownership before switching
+RUN chown node:node /app
+
 COPY --from=deps --chown=node:node /app/node_modules ./node_modules
 
 USER node
