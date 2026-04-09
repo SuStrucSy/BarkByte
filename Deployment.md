@@ -410,7 +410,7 @@ Add each of the following secrets:
 | `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://api.timverse.ca` |
 | `POSTGRES_DB` | *(your db name)* |
 | `POSTGRES_USER` | *(your db user)* |
-| `POSTGRES_PASSWORD` | *(run `openssl rand -base64 32`)* |
+| `POSTGRES_PASSWORD` | *(run `openssl rand -hex 32`)* |
 | `SMTP_HOST` | `smtp.resend.com` |
 | `SMTP_USER` | `resend` |
 | `SMTP_PASSWORD` | `re_xxxxxxxxxxxx` *(Resend API key)* |
