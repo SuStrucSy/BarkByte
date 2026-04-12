@@ -4,13 +4,13 @@ import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype
 import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection";
 import { useSubjoinerytypeGetSjtypesForJtype } from "@/api/endpoints/subjoinerytype/subjoinerytype";
 import type { JoineryType } from "@/api/model";
-import buttJoint from "@/assets/joineryTypes/Butt-Joint.png";
-import halfLap from "@/assets/joineryTypes/Half-Lap-Joint.png";
-import holdDown from "@/assets/joineryTypes/Hold-Down.png";
-import plate from "@/assets/joineryTypes/Plate.png";
-import slotJoint from "@/assets/joineryTypes/Slot-Joint.png";
-import splineJoint from "@/assets/joineryTypes/Spline-Joint.png";
-import throughTenon from "@/assets/joineryTypes/Through-Tenon.png";
+import buttJoint from "@/assets/joinerytypes/Butt-Joint.png";
+import halfLap from "@/assets/joinerytypes/Half-Lap-Joint.png";
+import holdDown from "@/assets/joinerytypes/Hold-Down.png";
+import plate from "@/assets/joinerytypes/Plate.png";
+import slotJoint from "@/assets/joinerytypes/Slot-Joint.png";
+import splineJoint from "@/assets/joinerytypes/Spline-Joint.png";
+import throughTenon from "@/assets/joinerytypes/Through-Tenon.png";
 import JoineryTypes from "@/assets/joineryTypes.svg?react";
 import {
 	Field,

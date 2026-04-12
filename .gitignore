@@ -19,3 +19,4 @@ node_modules/
 data/
 
 docker-compose.traefik.yml
+docker-compose.local.yml
