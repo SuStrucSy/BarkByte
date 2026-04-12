@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Info, Mail, Users } from "lucide-react";
+import { Mail, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -16,10 +16,7 @@ function Home() {
 			<Card className="mx-auto w-full max-w-4xl">
 				<CardContent className="p-8 text-center md:p-12">
 					<h1 className="text-4xl font-bold leading-tight text-gray-600 md:text-6xl">
-						Welcome to Timverse{" "}
-						<span role="img" aria-label="waving hand">
-							🪵🪐
-						</span>
+						Timverse{" "}
 					</h1>
 					<p className="mt-4 text-sm leading-relaxed text-gray-600 md:text-base">
 						Timverse is a platform that helps civil engineers record, organize,
@@ -33,10 +30,6 @@ function Home() {
 						making.
 					</p>
 					<div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-						<Button type="button">
-							<Info className="h-4 w-4" />
-							About
-						</Button>
 						<Button type="button" variant="secondary">
 							<Users className="h-4 w-4" />
 							Team
