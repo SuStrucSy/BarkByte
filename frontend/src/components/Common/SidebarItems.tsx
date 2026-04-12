@@ -22,6 +22,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const items = [
 	{ icon: Home, title: "Home", path: "/" },
+	{ icon: Users, title: "Team", path: "/team" },
 	{ icon: ChartSpline, title: "Dashboard", path: "/dashboard" },
 	{ icon: Newspaper, title: "References", path: "/references" },
 	{ icon: Columns3, title: "Compare", path: "/compare" },

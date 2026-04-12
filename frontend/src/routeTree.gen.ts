@@ -16,6 +16,7 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutTeamRouteImport } from './routes/_layout/team'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutReferencesRouteImport } from './routes/_layout/references'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
@@ -59,6 +60,11 @@ const LayoutRoute = LayoutRouteImport.update({
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutTeamRoute = LayoutTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof LayoutDashboardRoute
   '/references': typeof LayoutReferencesRoute
   '/settings': typeof LayoutSettingsRoute
+  '/team': typeof LayoutTeamRoute
   '/admin': typeof LayoutAuthenticatedAdminRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
   '/specimens/': typeof LayoutSpecimensIndexRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof LayoutDashboardRoute
   '/references': typeof LayoutReferencesRoute
   '/settings': typeof LayoutSettingsRoute
+  '/team': typeof LayoutTeamRoute
   '/admin': typeof LayoutAuthenticatedAdminRoute
   '/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
   '/specimens': typeof LayoutSpecimensIndexRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/_layout/dashboard': typeof LayoutDashboardRoute
   '/_layout/references': typeof LayoutReferencesRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/team': typeof LayoutTeamRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/_authenticated/admin': typeof LayoutAuthenticatedAdminRoute
   '/_layout/specimens/$specimenId': typeof LayoutSpecimensSpecimenIdRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/references'
     | '/settings'
+    | '/team'
     | '/admin'
     | '/specimens/$specimenId'
     | '/specimens/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/references'
     | '/settings'
+    | '/team'
     | '/admin'
     | '/specimens/$specimenId'
     | '/specimens'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/_layout/dashboard'
     | '/_layout/references'
     | '/_layout/settings'
+    | '/_layout/team'
     | '/_layout/'
     | '/_layout/_authenticated/admin'
     | '/_layout/specimens/$specimenId'
@@ -283,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof LayoutIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/team': {
+      id: '/_layout/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof LayoutTeamRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings': {
@@ -380,6 +399,7 @@ interface LayoutRouteChildren {
   LayoutDashboardRoute: typeof LayoutDashboardRoute
   LayoutReferencesRoute: typeof LayoutReferencesRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutTeamRoute: typeof LayoutTeamRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
   LayoutSpecimensSpecimenIdRoute: typeof LayoutSpecimensSpecimenIdRoute
   LayoutSpecimensIndexRoute: typeof LayoutSpecimensIndexRoute
@@ -391,6 +411,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutDashboardRoute: LayoutDashboardRoute,
   LayoutReferencesRoute: LayoutReferencesRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutTeamRoute: LayoutTeamRoute,
   LayoutIndexRoute: LayoutIndexRoute,
   LayoutSpecimensSpecimenIdRoute: LayoutSpecimensSpecimenIdRoute,
   LayoutSpecimensIndexRoute: LayoutSpecimensIndexRoute,
