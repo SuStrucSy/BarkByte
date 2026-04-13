@@ -47,6 +47,7 @@ jobs:
 
       - name: Deploy
         env:
+          TAG: ${{ github.sha }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           DOMAIN: ${{ secrets.DOMAIN }}
@@ -66,7 +67,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
         run: |
-          ssh $SSH_USER@$SSH_HOST 'bash -s' <<EOF
+          ssh $SSH_USER@$SSH_HOST 'TAG=${TAG} bash -s' <<EOF
             cd ~/timverse-app
 
             git pull origin main
@@ -93,11 +94,11 @@ jobs:
           EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
           DOCKER_IMAGE_BACKEND=timverse-backend
           DOCKER_IMAGE_FRONTEND=timverse-frontend
-          TAG=latest
+          TAG=${TAG}
           ENVFILE
 
             # Build images (with layer caching)
-            docker compose -f docker-compose.yml build
+            docker compose -f docker-compose.yml build --no-cache
 
             # Start DB first and wait for healthy
             docker compose -f docker-compose.yml up -d db
@@ -106,6 +107,6 @@ jobs:
             docker compose -f docker-compose.yml run --rm prestart
 
             # Start remaining services
-            docker compose -f docker-compose.yml up -d backend frontend
+            docker compose -f docker-compose.yml up -d --force-recreate backend frontend
 
           EOF
