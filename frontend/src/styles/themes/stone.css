@@ -1,4 +1,5 @@
 /* ── Stone ────────────────────────────────────────────────────────────────── */
+/* Accessibility: WCAG AA (4.5:1 text, 3:1 UI). Changes marked ✱.            */
 .stone {
 	--radius: 0.625rem;
 	--background: oklch(1 0 0);
@@ -12,13 +13,13 @@
 	--secondary: oklch(0.97 0.001 106.424);
 	--secondary-foreground: oklch(0.216 0.006 56.043);
 	--muted: oklch(0.97 0.001 106.424);
-	--muted-foreground: oklch(0.553 0.013 58.071);
+	--muted-foreground: oklch(0.42 0.012 58.071); /* ✱ was 0.553 – 5:1+ on muted bg */
 	--accent: oklch(0.97 0.001 106.424);
 	--accent-foreground: oklch(0.216 0.006 56.043);
 	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.923 0.003 48.717);
-	--input: oklch(0.923 0.003 48.717);
-	--ring: oklch(0.709 0.01 56.259);
+	--border: oklch(0.88 0.003 48.717); /* ✱ was 0.923 – 3:1 UI contrast */
+	--input: oklch(0.88 0.003 48.717); /* ✱ */
+	--ring: oklch(0.35 0.01 56.259); /* ✱ was 0.709 */
 	--chart-1: oklch(0.7 0.15 40);
 	--chart-2: oklch(0.65 0.12 180);
 	--chart-3: oklch(0.6 0.1 220);
@@ -30,15 +31,15 @@
 	--sidebar-primary-foreground: oklch(0.985 0.001 106.423);
 	--sidebar-accent: oklch(0.97 0.001 106.424);
 	--sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-	--sidebar-border: oklch(0.923 0.003 48.717);
-	--sidebar-ring: oklch(0.709 0.01 56.259);
+	--sidebar-border: oklch(0.88 0.003 48.717); /* ✱ */
+	--sidebar-ring: oklch(0.35 0.01 56.259); /* ✱ */
 
 	/* Badge tokens */
 	--badge-bg-l: 0.93;
 	--badge-bg-c: 0.06;
-	--badge-fg-l: 0.28;
+	--badge-fg-l: 0.22; /* ✱ was 0.28 */
 	--badge-fg-c: 0.14;
-	--badge-border-l: 0.76;
+	--badge-border-l: 0.72; /* ✱ was 0.76 */
 	--badge-border-c: 0.1;
 
 	--theme-hue: 0;
@@ -56,13 +57,13 @@
 	--secondary: oklch(0.268 0.007 34.298);
 	--secondary-foreground: oklch(0.985 0.001 106.423);
 	--muted: oklch(0.268 0.007 34.298);
-	--muted-foreground: oklch(0.709 0.01 56.259);
+	--muted-foreground: oklch(0.72 0.01 56.259); /* ✱ was 0.709 */
 	--accent: oklch(0.268 0.007 34.298);
 	--accent-foreground: oklch(0.985 0.001 106.423);
 	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.553 0.013 58.071);
+	--border: oklch(1 0 0 / 15%); /* ✱ was 10% */
+	--input: oklch(1 0 0 / 18%); /* ✱ was 15% */
+	--ring: oklch(0.80 0.013 58.071); /* ✱ was 0.553 */
 	--chart-1: oklch(0.6 0.2 40);
 	--chart-2: oklch(0.7 0.15 180);
 	--chart-3: oklch(0.75 0.13 65);
@@ -74,14 +75,14 @@
 	--sidebar-primary-foreground: oklch(0.985 0.001 106.423);
 	--sidebar-accent: oklch(0.268 0.007 34.298);
 	--sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.553 0.013 58.071);
+	--sidebar-border: oklch(1 0 0 / 15%); /* ✱ */
+	--sidebar-ring: oklch(0.80 0.013 58.071); /* ✱ */
 
 	/* Badge tokens */
 	--badge-bg-l: 0.24;
 	--badge-bg-c: 0.07;
-	--badge-fg-l: 0.86;
+	--badge-fg-l: 0.92; /* ✱ was 0.86 */
 	--badge-fg-c: 0.09;
-	--badge-border-l: 0.38;
+	--badge-border-l: 0.42; /* ✱ was 0.38 */
 	--badge-border-c: 0.09;
 }

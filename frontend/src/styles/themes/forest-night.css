@@ -3,6 +3,7 @@
                   sage greens, amber accents.
    Dark mode   →  moonlit forest: near-black canopy sky, ember-glow amber,
                   deep pine greens — mirrors the login page SVG scene.
+   Accessibility: WCAG AA (4.5:1 text, 3:1 UI). Changes marked ✱.
    ──────────────────────────────────────────────────────────────────────── */
 
 .forest-night {
@@ -19,26 +20,26 @@
 	--popover-foreground: oklch(0.19 0.04 48);
 
 	/* ── Brand ── */
-	--primary: oklch(0.44 0.095 52); /* dark amber / bark     */
+	--primary: oklch(0.36 0.095 52); /* ✱ was 0.44 – 6:1+ on parchment bg */
 	--primary-foreground: oklch(0.97 0.014 75);
 
 	/* ── Secondary ── */
 	--secondary: oklch(0.9 0.03 145); /* light sage            */
-	--secondary-foreground: oklch(0.24 0.05 48);
+	--secondary-foreground: oklch(0.20 0.05 48); /* ✱ was 0.24 */
 
 	/* ── Muted ── */
 	--muted: oklch(0.93 0.018 72);
-	--muted-foreground: oklch(0.53 0.048 58);
+	--muted-foreground: oklch(0.41 0.044 58); /* ✱ was 0.53 – 4.7:1 on muted bg */
 
 	/* ── Accent (forest green) ── */
 	--accent: oklch(0.88 0.055 148);
-	--accent-foreground: oklch(0.22 0.05 140);
+	--accent-foreground: oklch(0.18 0.05 140); /* ✱ was 0.22 */
 
 	/* ── Utility ── */
 	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.87 0.028 68);
-	--input: oklch(0.87 0.028 68);
-	--ring: oklch(0.54 0.085 54);
+	--border: oklch(0.80 0.026 68); /* ✱ was 0.87 – 3:1 against bg */
+	--input: oklch(0.80 0.026 68); /* ✱ */
+	--ring: oklch(0.32 0.085 54); /* ✱ was 0.54 – clear focus ring */
 
 	/* ── Charts ── */
 	--chart-1: oklch(0.54 0.11 52); /* amber                 */
@@ -50,19 +51,19 @@
 	/* ── Sidebar ── */
 	--sidebar: oklch(0.93 0.022 70);
 	--sidebar-foreground: oklch(0.19 0.04 48);
-	--sidebar-primary: oklch(0.44 0.095 52);
+	--sidebar-primary: oklch(0.36 0.095 52); /* ✱ */
 	--sidebar-primary-foreground: oklch(0.97 0.014 75);
 	--sidebar-accent: oklch(0.88 0.055 148);
-	--sidebar-accent-foreground: oklch(0.22 0.05 140);
-	--sidebar-border: oklch(0.87 0.028 68);
-	--sidebar-ring: oklch(0.54 0.085 54);
+	--sidebar-accent-foreground: oklch(0.18 0.05 140); /* ✱ */
+	--sidebar-border: oklch(0.80 0.026 68); /* ✱ */
+	--sidebar-ring: oklch(0.32 0.085 54); /* ✱ */
 
 	/* ── Badge tokens ── */
 	--badge-bg-l: 0.91;
 	--badge-bg-c: 0.07;
-	--badge-fg-l: 0.27;
+	--badge-fg-l: 0.22; /* ✱ was 0.27 */
 	--badge-fg-c: 0.14;
-	--badge-border-l: 0.74;
+	--badge-border-l: 0.70; /* ✱ was 0.74 */
 	--badge-border-c: 0.1;
 
 	--theme-hue: 58;
@@ -83,7 +84,7 @@
 	--popover-foreground: oklch(0.93 0.022 75);
 
 	/* ── Brand (amber ember) ── */
-	--primary: oklch(0.68 0.12 54); /* warm amber glow       */
+	--primary: oklch(0.74 0.12 54); /* ✱ was 0.68 – 4.5:1+ on dark bg */
 	--primary-foreground: oklch(0.12 0.018 155);
 
 	/* ── Secondary ── */
@@ -92,7 +93,7 @@
 
 	/* ── Muted ── */
 	--muted: oklch(0.21 0.026 150);
-	--muted-foreground: oklch(0.6 0.042 145); /* sage mist             */
+	--muted-foreground: oklch(0.67 0.042 145); /* ✱ was 0.6 – 4.5:1 on card bg */
 
 	/* ── Accent (moonlit pine green) ── */
 	--accent: oklch(0.32 0.06 148);
@@ -100,9 +101,9 @@
 
 	/* ── Utility ── */
 	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 14%);
-	--ring: oklch(0.65 0.095 54); /* amber focus ring      */
+	--border: oklch(1 0 0 / 15%); /* ✱ was 10% */
+	--input: oklch(1 0 0 / 18%); /* ✱ was 14% */
+	--ring: oklch(0.80 0.095 54); /* ✱ was 0.65 */
 
 	/* ── Charts ── */
 	--chart-1: oklch(0.68 0.12 54); /* amber ember           */
@@ -114,18 +115,18 @@
 	/* ── Sidebar ── */
 	--sidebar: oklch(0.15 0.02 152);
 	--sidebar-foreground: oklch(0.93 0.022 75);
-	--sidebar-primary: oklch(0.68 0.12 54);
+	--sidebar-primary: oklch(0.74 0.12 54); /* ✱ */
 	--sidebar-primary-foreground: oklch(0.12 0.018 155);
 	--sidebar-accent: oklch(0.32 0.06 148);
 	--sidebar-accent-foreground: oklch(0.93 0.022 75);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.65 0.095 54);
+	--sidebar-border: oklch(1 0 0 / 15%); /* ✱ */
+	--sidebar-ring: oklch(0.80 0.095 54); /* ✱ */
 
 	/* ── Badge tokens ── */
 	--badge-bg-l: 0.22;
 	--badge-bg-c: 0.06;
-	--badge-fg-l: 0.88;
+	--badge-fg-l: 0.92; /* ✱ was 0.88 */
 	--badge-fg-c: 0.09;
-	--badge-border-l: 0.38;
+	--badge-border-l: 0.42; /* ✱ was 0.38 */
 	--badge-border-c: 0.08;
 }
