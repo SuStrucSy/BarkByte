@@ -234,6 +234,7 @@ interface SpecimenPendingCardProps {
 	specimenId: string | null;
 	pendingID: string;
 	createdAt: string;
+	requestedBy: string;
 	isBusy: boolean;
 	comment: string;
 	commentByAuthor?: string | null;
@@ -369,6 +370,7 @@ export function SpecimenPendingCard({
 	specimenId,
 	pendingID,
 	createdAt,
+	requestedBy,
 	isBusy,
 	comment,
 	commentByAuthor,
@@ -621,17 +623,43 @@ export function SpecimenPendingCard({
 			? "Optional comment for approval..."
 			: "Optional comment for rejection...";
 
+	const cardTitleFallback =
+		status === "approved"
+			? "Approved specimen"
+			: status === "rejected"
+				? "Rejected specimen"
+				: "Pending specimen";
+
+	const cardDescription =
+		status === "approved"
+			? "Review this approved specimen submission and compare the applied changes."
+			: status === "rejected"
+				? "Review this rejected specimen submission and compare the proposed changes."
+				: "Review this specimen submission and compare pending changes.";
+
+	const submissionPanelTitle =
+		status === "approved"
+			? "Approved Submission"
+			: status === "rejected"
+				? "Rejected Submission"
+				: "Pending Submission";
+
+	const submissionPanelDescription =
+		status === "approved"
+			? "Approval metadata and reviewer actions."
+			: status === "rejected"
+				? "Rejection metadata and reviewer actions."
+				: "Submission metadata and reviewer actions.";
+
 	return (
 		<Card className="w-full max-w-3xl">
 			<CardHeader>
 				<div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 					<div className="min-w-0 space-y-1">
 						<CardTitle>
-							{specimen.specimen_reference_id ?? "Pending specimen"}
+							{specimen.specimen_reference_id ?? cardTitleFallback}
 						</CardTitle>
-						<CardDescription>
-							Review this specimen submission and compare pending changes.
-						</CardDescription>
+						<CardDescription>{cardDescription}</CardDescription>
 						<div className="flex flex-wrap items-center gap-2 pt-2">
 							<Button
 								variant="link"
@@ -651,6 +679,10 @@ export function SpecimenPendingCard({
 										Update
 									</Badge>
 								))}
+						</div>
+						<div className="text-sm text-muted-foreground">
+							Requested by{" "}
+							<span className="font-medium text-foreground">{requestedBy}</span>
 						</div>
 					</div>
 					<div className="justify-self-start sm:justify-self-end">
@@ -731,7 +763,7 @@ export function SpecimenPendingCard({
 				<DrawerContent className="w-screen max-w-none min-h-[24rem] max-h-[85dvh]">
 					<DrawerHeader className="border-b pb-4">
 						<DrawerTitle>
-							{specimen.specimen_reference_id ?? "Pending specimen"}
+							{specimen.specimen_reference_id ?? cardTitleFallback}
 						</DrawerTitle>
 						<DrawerDescription>
 							Review complete specimen information, reference details, and
@@ -750,10 +782,10 @@ export function SpecimenPendingCard({
 											<div className="flex items-start justify-between gap-3">
 												<div className="space-y-1">
 													<CardTitle className="text-base">
-														Pending Submission
+														{submissionPanelTitle}
 													</CardTitle>
 													<CardDescription>
-														Submission metadata and reviewer actions.
+														{submissionPanelDescription}
 													</CardDescription>
 												</div>
 											</div>
@@ -775,6 +807,12 @@ export function SpecimenPendingCard({
 															Update
 														</Badge>
 													))}
+											</div>
+											<div className="text-sm text-muted-foreground">
+												Requested by{" "}
+												<span className="font-medium text-foreground">
+													{requestedBy}
+												</span>
 											</div>
 											<PendingCardActions
 												status={status}
@@ -808,9 +846,9 @@ export function SpecimenPendingCard({
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Pending Submission</AlertDialogTitle>
+						<AlertDialogTitle>{submissionPanelTitle}</AlertDialogTitle>
 						<AlertDialogDescription>
-							Submission metadata and reviewer actions.
+							{submissionPanelDescription}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<div className="grid gap-4">

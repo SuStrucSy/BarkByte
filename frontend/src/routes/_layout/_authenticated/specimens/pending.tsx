@@ -1,6 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Layers, RefreshCcwIcon } from "lucide-react";
+import {
+	ChevronDown,
+	ChevronRight,
+	Layers,
+	RefreshCcwIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode";
@@ -12,7 +17,12 @@ import {
 	usePendingSpecimensListPendingSpecimens,
 	usePendingSpecimensRejectPendingSpecimenRoute,
 } from "@/api/endpoints/pending-specimens/pending-specimens";
+import {
+	useSpecimensReadSpecimen,
+	useSpecimensReadSpecimens,
+} from "@/api/endpoints/specimens/specimens";
 import { useSubjoinerytypeGetSjtypes } from "@/api/endpoints/subjoinerytype/subjoinerytype";
+import { useUsersReadUsers } from "@/api/endpoints/users/users";
 import type {
 	HTTPValidationError,
 	PendingSpecimenPublicChangedData,
@@ -29,6 +39,13 @@ import {
 } from "@/components/Specimens/SpecimenStatusFilter";
 import { Button } from "@/components/ui/button";
 import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
 	Empty,
 	EmptyContent,
 	EmptyDescription,
@@ -36,7 +53,8 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { handleError } from "@/lib/utils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { cn, handleError, renderValue } from "@/lib/utils";
 
 export const Route = createFileRoute(
 	"/_layout/_authenticated/specimens/pending",
@@ -50,7 +68,9 @@ export const Route = createFileRoute(
 function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 	const [activeAction, setActiveAction] = useState<ActiveAction>(null);
 	const [comment, setComment] = useState("");
+	const [openStacks, setOpenStacks] = useState<string[]>([]);
 	const queryClient = useQueryClient();
+	const { data: currentUser } = useCurrentUser();
 
 	const { data, isLoading } = usePendingSpecimensListPendingSpecimens(
 		{ status },
@@ -73,6 +93,19 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 	const { data: QFMData, isLoading: isLoadingQFM } = useFailuremodeGetModes(
 		{ dowel: true, connector: true },
 		{ query: { queryKey: ["QFMTypes"] } },
+	);
+	const { data: specimenListData } = useSpecimensReadSpecimens(
+		{ skip: 0, limit: 500 },
+		{ query: { queryKey: ["pendingSpecimenLookup", "specimens"] } },
+	);
+	const { data: usersData } = useUsersReadUsers(
+		{ skip: 0, limit: 500 },
+		{
+			query: {
+				queryKey: ["pendingSpecimenLookup", "users"],
+				enabled: Boolean(currentUser?.is_superuser),
+			},
+		},
 	);
 
 	const approveMutation = usePendingSpecimensApprovePendingSpecimen({
@@ -187,126 +220,161 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 		);
 	}
 
-	return (
-		<div className="grid gap-4 grid-cols-2">
-			{data.pending_specimens.map((specimen) => {
-				const changed: PendingSpecimenPublicChangedData = specimen.changed_data;
-				const changedFastenerIds = Array.isArray(changed["fastener_type_ids"])
-					? (changed["fastener_type_ids"] as string[])
-					: [];
-				const changedLoadingDirectionIds = Array.isArray(
-					changed["loading_direction_ids"],
-				)
-					? (changed["loading_direction_ids"] as string[])
-					: [];
-				const changedQfmIds = Array.isArray(
-					changed["e_qualitative_failure_measure"],
-				)
-					? (changed["e_qualitative_failure_measure"] as string[])
-					: [];
+	type PendingCardData = {
+		id: string;
+		stackId: string;
+		specimenId: string | null;
+		stackTitle: string;
+		stackSubtitle: string;
+		createdAtLabel: string;
+		createdAtMs: number;
+		card: React.ReactNode;
+	};
 
-				const matchingJoints = joineryData?.data.filter(
-					(joint) => changed["joinery_type_id"] === joint.id,
-				);
-				const matchingFasteners = fastenerData?.data.filter((fastener) =>
-					changedFastenerIds.includes(fastener.id ?? ""),
-				);
-				const matchingLoadingDirection = loadingDirectionData?.data.filter(
-					(loadingDir) =>
-						changedLoadingDirectionIds.includes(loadingDir.id ?? ""),
-				);
-				const matchingSubJoints = subjoineryData?.data.filter(
-					(joint) => changed["sub_joinery_type_id"] === joint.id,
-				);
-				const matchingQFM = QFMData?.data.filter((qfm) =>
-					changedQfmIds.includes(qfm.id ?? ""),
-				);
+	const specimenLookup = new Map(
+		(specimenListData?.data ?? []).map((specimen) => [specimen.id, specimen]),
+	);
+	const userLookup = new Map(
+		[...(usersData?.data ?? []), ...(currentUser ? [currentUser] : [])].map(
+			(user) => [user.id, user],
+		),
+	);
 
-				const spec: Partial<SpecimenPublic> = {
-					assembly_type: changed[
-						"assembly_type"
-					] as SpecimenPublic["assembly_type"],
-					connection_description: changed["connection_description"] as
-						| SpecimenPublic["connection_description"]
-						| undefined,
-					connector: changed["connector"] as SpecimenPublic["connector"],
-					connector_mechanical_properties: changed[
-						"connector_mechanical_properties"
-					] as SpecimenPublic["connector_mechanical_properties"],
-					dowel: changed["dowel"] as SpecimenPublic["dowel"],
-					e_date: changed["e_date"] as SpecimenPublic["e_date"],
-					e_ductility: changed["e_ductility"] as SpecimenPublic["e_ductility"],
-					e_max_displacement: changed[
-						"e_max_displacement"
-					] as SpecimenPublic["e_max_displacement"],
-					e_max_force: changed["e_max_force"] as SpecimenPublic["e_max_force"],
-					e_qfm_description: changed[
-						"e_qfm_description"
-					] as SpecimenPublic["e_qfm_description"],
-					e_qualitative_failure_measure: matchingQFM ?? [],
-					e_stiffness: changed["e_stiffness"] as SpecimenPublic["e_stiffness"],
-					e_test_loading_type: changed[
-						"e_test_loading_type"
-					] as SpecimenPublic["e_test_loading_type"],
-					e_ultimate_displacement: changed[
-						"e_ultimate_displacement"
-					] as SpecimenPublic["e_ultimate_displacement"],
-					e_ultimate_force: changed[
-						"e_ultimate_force"
-					] as SpecimenPublic["e_ultimate_force"],
-					e_yield_displacement: changed[
-						"e_yield_displacement"
-					] as SpecimenPublic["e_yield_displacement"],
-					e_yield_force: changed[
-						"e_yield_force"
-					] as SpecimenPublic["e_yield_force"],
-					e_yield_point_method: changed[
-						"e_yield_point_method"
-					] as SpecimenPublic["e_yield_point_method"],
-					element_dimension: changed[
-						"element_dimension"
-					] as SpecimenPublic["element_dimension"],
-					fastener_mechanical_properties: changed[
-						"fastener_mechanical_properties"
-					] as SpecimenPublic["fastener_mechanical_properties"],
-					fastener_numbers: changed[
-						"fastener_numbers"
-					] as SpecimenPublic["fastener_numbers"],
-					fastener_types: matchingFasteners ?? [],
-					joinery_type: matchingJoints?.[0],
-					loading_directions: matchingLoadingDirection ?? [],
-					moisture_percentage: changed[
-						"moisture_percentage"
-					] as SpecimenPublic["moisture_percentage"],
-					note: changed["note"] as SpecimenPublic["note"],
-					practice: changed["practice"] as SpecimenPublic["practice"],
-					replicate_tests: changed[
-						"replicate_tests"
-					] as SpecimenPublic["replicate_tests"],
-					specimen_reference_id: changed[
-						"specimen_reference_id"
-					] as SpecimenPublic["specimen_reference_id"],
-					sub_joinery_type: matchingSubJoints?.[0],
-					wood_mechanical_properties: changed[
-						"wood_mechanical_properties"
-					] as SpecimenPublic["wood_mechanical_properties"],
-					wood_type: changed["wood_type"] as SpecimenPublic["wood_type"],
-				};
+	const pendingCards: PendingCardData[] = data.pending_specimens.map(
+		(specimen) => {
+			const changed: PendingSpecimenPublicChangedData = specimen.changed_data;
+			const changedFastenerIds = Array.isArray(changed.fastener_type_ids)
+				? (changed.fastener_type_ids as string[])
+				: [];
+			const changedLoadingDirectionIds = Array.isArray(
+				changed.loading_direction_ids,
+			)
+				? (changed.loading_direction_ids as string[])
+				: [];
+			const changedQfmIds = Array.isArray(changed.e_qualitative_failure_measure)
+				? (changed.e_qualitative_failure_measure as string[])
+				: [];
 
-				const isApprovingThis =
-					approveMutation.isPending &&
-					approveMutation.variables?.pendingId === specimen.id;
-				const isRejectingThis =
-					rejectMutation.isPending &&
-					rejectMutation.variables?.pendingId === specimen.id;
+			const matchingJoints = joineryData?.data.filter(
+				(joint) => changed.joinery_type_id === joint.id,
+			);
+			const matchingFasteners = fastenerData?.data.filter((fastener) =>
+				changedFastenerIds.includes(fastener.id ?? ""),
+			);
+			const matchingLoadingDirection = loadingDirectionData?.data.filter(
+				(loadingDir) =>
+					changedLoadingDirectionIds.includes(loadingDir.id ?? ""),
+			);
+			const matchingSubJoints = subjoineryData?.data.filter(
+				(joint) => changed.sub_joinery_type_id === joint.id,
+			);
+			const matchingQFM = QFMData?.data.filter((qfm) =>
+				changedQfmIds.includes(qfm.id ?? ""),
+			);
 
-				return (
+			const spec: Partial<SpecimenPublic> = {
+				assembly_type: changed.assembly_type as SpecimenPublic["assembly_type"],
+				connection_description: changed.connection_description as
+					| SpecimenPublic["connection_description"]
+					| undefined,
+				connector: changed.connector as SpecimenPublic["connector"],
+				connector_mechanical_properties:
+					changed.connector_mechanical_properties as SpecimenPublic["connector_mechanical_properties"],
+				dowel: changed.dowel as SpecimenPublic["dowel"],
+				e_date: changed.e_date as SpecimenPublic["e_date"],
+				e_ductility: changed.e_ductility as SpecimenPublic["e_ductility"],
+				e_max_displacement:
+					changed.e_max_displacement as SpecimenPublic["e_max_displacement"],
+				e_max_force: changed.e_max_force as SpecimenPublic["e_max_force"],
+				e_qfm_description:
+					changed.e_qfm_description as SpecimenPublic["e_qfm_description"],
+				e_qualitative_failure_measure: matchingQFM ?? [],
+				e_stiffness: changed.e_stiffness as SpecimenPublic["e_stiffness"],
+				e_test_loading_type:
+					changed.e_test_loading_type as SpecimenPublic["e_test_loading_type"],
+				e_ultimate_displacement:
+					changed.e_ultimate_displacement as SpecimenPublic["e_ultimate_displacement"],
+				e_ultimate_force:
+					changed.e_ultimate_force as SpecimenPublic["e_ultimate_force"],
+				e_yield_displacement:
+					changed.e_yield_displacement as SpecimenPublic["e_yield_displacement"],
+				e_yield_force: changed.e_yield_force as SpecimenPublic["e_yield_force"],
+				e_yield_point_method:
+					changed.e_yield_point_method as SpecimenPublic["e_yield_point_method"],
+				element_dimension:
+					changed.element_dimension as SpecimenPublic["element_dimension"],
+				fastener_mechanical_properties:
+					changed.fastener_mechanical_properties as SpecimenPublic["fastener_mechanical_properties"],
+				fastener_numbers:
+					changed.fastener_numbers as SpecimenPublic["fastener_numbers"],
+				fastener_types: matchingFasteners ?? [],
+				joinery_type: matchingJoints?.[0],
+				loading_directions: matchingLoadingDirection ?? [],
+				moisture_percentage:
+					changed.moisture_percentage as SpecimenPublic["moisture_percentage"],
+				note: changed.note as SpecimenPublic["note"],
+				practice: changed.practice as SpecimenPublic["practice"],
+				replicate_tests:
+					changed.replicate_tests as SpecimenPublic["replicate_tests"],
+				specimen_reference_id:
+					changed.specimen_reference_id as SpecimenPublic["specimen_reference_id"],
+				sub_joinery_type: matchingSubJoints?.[0],
+				wood_mechanical_properties:
+					changed.wood_mechanical_properties as SpecimenPublic["wood_mechanical_properties"],
+				wood_type: changed.wood_type as SpecimenPublic["wood_type"],
+			};
+
+			const isApprovingThis =
+				approveMutation.isPending &&
+				approveMutation.variables?.pendingId === specimen.id;
+			const isRejectingThis =
+				rejectMutation.isPending &&
+				rejectMutation.variables?.pendingId === specimen.id;
+
+			const createdAt = new Date(specimen.created_at);
+			const stackId = specimen.specimen_id ?? `new-${specimen.id}`;
+			const existingSpecimen = specimen.specimen_id
+				? specimenLookup.get(specimen.specimen_id)
+				: undefined;
+			const requester = userLookup.get(specimen.changed_by_user_id);
+			const requestedBy =
+				requester?.full_name?.trim() ||
+				requester?.email ||
+				specimen.changed_by_user_id;
+			const stackTitle =
+				spec.specimen_reference_id ??
+				existingSpecimen?.specimen_reference_id ??
+				(specimen.specimen_id
+					? specimen.specimen_id
+					: "New specimen submission");
+			const stackSubtitle = [
+				specimen.specimen_id
+					? "Pending updates for this specimen"
+					: "New specimen request",
+				existingSpecimen?.doi?.ref_title ?? null,
+				renderValue(spec.assembly_type),
+				renderValue(spec.joinery_type?.label),
+				renderValue(spec.sub_joinery_type?.label),
+			]
+				.filter((value) => value && value !== "—")
+				.join(" • ");
+
+			return {
+				id: specimen.id,
+				stackId,
+				specimenId: specimen.specimen_id ?? null,
+				stackTitle,
+				stackSubtitle,
+				createdAtLabel: createdAt.toDateString(),
+				createdAtMs: createdAt.getTime(),
+				card: (
 					<SpecimenPendingCard
 						key={specimen.id}
-						createdAt={new Date(specimen.created_at).toDateString()}
+						createdAt={createdAt.toDateString()}
 						specimen={spec}
 						changedData={changed}
 						specimenId={specimen.specimen_id ?? null}
+						requestedBy={requestedBy}
 						isBusy={isApprovingThis || isRejectingThis}
 						pendingID={specimen.id}
 						commentByAuthor={specimen.comment_by_author}
@@ -320,9 +388,175 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 						isNew={specimen.specimen_id === null}
 						status={status}
 					/>
+				),
+			};
+		},
+	);
+
+	const groupedStacks = Object.values(
+		pendingCards.reduce<Record<string, PendingCardData[]>>(
+			(acc, pendingCard) => {
+				acc[pendingCard.stackId] ??= [];
+				acc[pendingCard.stackId].push(pendingCard);
+				return acc;
+			},
+			{},
+		),
+	)
+		.map((group) => [...group].sort((a, b) => b.createdAtMs - a.createdAtMs))
+		.sort((a, b) => b[0].createdAtMs - a[0].createdAtMs);
+
+	const toggleStack = (stackId: string) => {
+		setOpenStacks((current) =>
+			current.includes(stackId)
+				? current.filter((id) => id !== stackId)
+				: [...current, stackId],
+		);
+	};
+
+	return (
+		<div className="grid gap-6 xl:grid-cols-2">
+			{groupedStacks.map((stack) => {
+				const lead = stack[0];
+				const isOpen = openStacks.includes(lead.stackId);
+				const hasMultiple = stack.length > 1;
+
+				if (!hasMultiple) {
+					return (
+						<div key={lead.stackId} className="min-w-0">
+							{lead.card}
+						</div>
+					);
+				}
+
+				return (
+					<div key={lead.stackId} className="min-w-0">
+						<PendingSpecimenStackPreview
+							lead={lead}
+							stack={stack}
+							isOpen={isOpen}
+							onToggle={() => toggleStack(lead.stackId)}
+						/>
+						<div
+							className={cn(
+								"overflow-hidden transition-[max-height,opacity,margin] duration-500 ease-out",
+								isOpen
+									? "mt-4 max-h-[240rem] opacity-100"
+									: "mt-0 max-h-0 opacity-0",
+							)}
+						>
+							<div className="grid gap-4">
+								{stack.map((entry, index) => (
+									<div
+										key={entry.id}
+										className={cn(
+											"min-w-0 transition-[opacity,transform] duration-500 ease-out",
+											isOpen
+												? "translate-y-0 scale-100 opacity-100"
+												: "-translate-y-8 scale-[0.985] opacity-0",
+										)}
+										style={{
+											transitionDelay: isOpen ? `${index * 85}ms` : "0ms",
+										}}
+									>
+										{entry.card}
+									</div>
+								))}
+							</div>
+						</div>
+					</div>
 				);
 			})}
 		</div>
+	);
+}
+
+function PendingSpecimenStackPreview({
+	lead,
+	stack,
+	isOpen,
+	onToggle,
+}: {
+	lead: {
+		id: string;
+		specimenId: string | null;
+		stackTitle: string;
+		stackSubtitle: string;
+		createdAtLabel: string;
+	};
+	stack: Array<{
+		id: string;
+		createdAtLabel: string;
+	}>;
+	isOpen: boolean;
+	onToggle: () => void;
+}) {
+	const { data: exactSpecimen } = useSpecimensReadSpecimen(
+		lead.specimenId ?? "",
+		{
+			query: {
+				enabled: Boolean(lead.specimenId),
+			},
+		},
+	);
+
+	const resolvedTitle = exactSpecimen?.specimen_reference_id ?? lead.stackTitle;
+
+	return (
+		<button
+			type="button"
+			className="block w-full text-left"
+			onClick={onToggle}
+			aria-expanded={isOpen}
+		>
+			<div className="relative pb-4">
+				<div className="pointer-events-none absolute inset-x-3 top-2 bottom-0.5 rounded-[1.35rem] border bg-muted/45 shadow-sm" />
+				<Card className="relative gap-4 border-border/80 transition-colors hover:border-foreground/20">
+					<CardHeader className="pb-0">
+						<div className="flex items-start justify-between gap-4">
+							<div className="min-w-0 space-y-1">
+								<CardDescription className="text-xs uppercase tracking-[0.18em]">
+									Specimen Reference
+								</CardDescription>
+								<CardTitle className="truncate">{resolvedTitle}</CardTitle>
+								<CardDescription className="line-clamp-2">
+									{lead.stackSubtitle || "Pending specimen updates"}
+								</CardDescription>
+							</div>
+							<div className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
+								<Layers className="size-4" />
+								<span>
+									{stack.length} submission{stack.length === 1 ? "" : "s"}
+								</span>
+								{isOpen ? (
+									<ChevronDown className="size-4" />
+								) : (
+									<ChevronRight className="size-4" />
+								)}
+							</div>
+						</div>
+					</CardHeader>
+					<CardContent className="grid gap-3">
+						<div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+							<span>Latest submission: {lead.createdAtLabel}</span>
+							<span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+								Click to {isOpen ? "collapse" : "expand"} this stack
+							</span>
+						</div>
+						<div className="grid gap-2">
+							{stack.slice(0, Math.min(stack.length, 3)).map((entry, index) => (
+								<div
+									key={entry.id}
+									className="rounded-xl border border-dashed bg-muted/35 px-3 py-2 text-sm text-muted-foreground"
+								>
+									Revision {stack.length - index} • {entry.createdAtLabel}
+								</div>
+							))}
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		</button>
 	);
 }
 

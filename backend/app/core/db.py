@@ -1,13 +1,9 @@
 import logging
-from datetime import datetime, timedelta, timezone
 
 from sqlmodel import Session, create_engine, select
 
-from app.models.specimen import Specimen
-from app.models.pendingspecimen import PendingSpecimen
 from app.crud import user as user_crud
 from app.crud import doi as doi_crud
-from app.crud import pendingspecimen as pending_specimen_crud
 from app.crud import specimen as specimen_crud
 from app.core.config import settings
 from app.models.user import User
@@ -17,7 +13,6 @@ from app.models.joinerytype import JoineryType
 from app.models.subjoinerytype import SubJoineryType
 from app.models.fastenertype import FastenerType
 from app.models.loadingdirection import LoadingDirection
-from app.enums import PendingStatus
 
 from app.schemas.user import UserCreate
 from app.schemas.specimen import SpecimenCreate
@@ -52,104 +47,9 @@ def init_db(session: Session) -> None:
     init_subjoinery_types(session)
     init_fasteners(session)
     init_loading_directions(session)
-    # init_example_specimen(session, admin_user)
-
-
-# For QA and testing purposes, we create some pending specimen records with different states (pending, approved, rejected)
-def init_pending_specimens(session: Session, admin_user: User | None) -> None:
-    existing_pending = session.exec(select(PendingSpecimen)).first()
-    if existing_pending:
-        return
-
-    user = admin_user or session.exec(
-        select(User).where(User.email == settings.FIRST_SUPERUSER)
-    ).first()
-    if not user:
-        return
-
-    specimens = session.exec(select(Specimen).limit(5)).all()
-    if len(specimens) < 5:
-        return
-
-    pending_payloads = [
-        {
-            "note": "Pending review: updated note for QA testing.",
-            "moisture_percentage": "11.5%",
-        },
-        {
-            "practice": "Research and Development",
-            "connection_description": "Pending review: updated connection description.",
-        },
-        {
-            "fastener_numbers": 12,
-            "replicate_tests": 4,
-        },
-        {
-            "wood_type": "Spruce-Pine-Fir",
-            "wood_mechanical_properties": "Pending review: revised mechanical properties.",
-        },
-        {
-            "e_stiffness": 1625.0,
-            "e_qfm_description": "Pending review: updated qualitative failure notes.",
-        },
-    ]
-    pending_states = [
-        {
-            "status": PendingStatus.PENDING,
-            "comment_by_author": "Updated the note and moisture percentage after re-checking the source material.",
-            "comment_by_reviewer": None,
-            "reviewed_at": None,
-        },
-        {
-            "status": PendingStatus.PENDING,
-            "comment_by_author": "Clarifying the connection details to better match the original paper.",
-            "comment_by_reviewer": None,
-            "reviewed_at": None,
-        },
-        {
-            "status": PendingStatus.APPROVED,
-            "comment_by_author": "Corrected the fastener count and replicate total based on the lab sheet.",
-            "comment_by_reviewer": "Approved seed record for reviewer flow testing.",
-            "reviewed_at": datetime.now(timezone.utc) - timedelta(days=2),
-        },
-        {
-            "status": PendingStatus.REJECTED,
-            "comment_by_author": "Proposed a wood type update after comparing notes from a secondary source.",
-            "comment_by_reviewer": "Rejected seed record for reviewer flow testing.",
-            "reviewed_at": datetime.now(timezone.utc) - timedelta(days=1),
-        },
-        {
-            "status": PendingStatus.APPROVED,
-            "comment_by_author": "Added revised experimental stiffness and failure notes from the latest review.",
-            "comment_by_reviewer": "Approved seed record with experimental field changes.",
-            "reviewed_at": datetime.now(timezone.utc) - timedelta(hours=6),
-        },
-    ]
-
-    for specimen, changed_data, state in zip(specimens, pending_payloads, pending_states):
-        pending = pending_specimen_crud.create_pending_specimen(
-            session=session,
-            changed_by_user_id=user.id,
-            specimen_id=specimen.id,
-            changed_data=changed_data,
-        )
-        if state["status"] is not PendingStatus.PENDING:
-            pending.status = state["status"]
-            pending.reviewer_id = user.id
-            pending.comment_by_author = state["comment_by_author"]
-            pending.comment_by_reviewer = state["comment_by_reviewer"]
-            pending.reviewed_at = state["reviewed_at"]
-            session.add(pending)
-            session.commit()
-        else:
-            pending.comment_by_author = state["comment_by_author"]
-            session.add(pending)
-            session.commit()
-
 def init_example_specimen(session: Session, admin_user: User) -> None:
     # This function is called to create an example specimen
     # It should be called only once, when the database is initialized
-
     doi_in = DOICreate(
         link="https://doi.org/10.1234/exampledoi",
         ref_title="Example DOI Reference Title",
