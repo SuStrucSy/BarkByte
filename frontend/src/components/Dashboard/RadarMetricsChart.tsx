@@ -90,9 +90,14 @@ type TimverseExperimentMetrics = {
 type RadarMetricsChartProps = {
 	data: TimverseExperimentMetrics;
 	className?: string;
+	syncId?: string;
 };
 
-export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
+export function RadarMetricsChart({
+	data,
+	className,
+	syncId,
+}: RadarMetricsChartProps) {
 	const chartData = [
 		{ metric: "Max Force", rawValue: Number(data.e_max_force ?? 0) },
 		{
@@ -134,6 +139,7 @@ export function RadarMetricsChart({ data, className }: RadarMetricsChartProps) {
 			>
 				<RadarChart
 					data={chartData}
+					syncId={syncId}
 					outerRadius="100%"
 					margin={{ top: 22, right: 22, bottom: 22, left: 22 }}
 				>

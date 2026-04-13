@@ -531,6 +531,7 @@ function ComparePage() {
 																	<RadarMetricsChart
 																		data={specimen}
 																		className="max-w-[320px]"
+																		syncId="compare-radar-metrics"
 																	/>
 																</div>
 															) : null}
