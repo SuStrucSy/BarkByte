@@ -1,62 +1,56 @@
-name: Deploy to Server
-
-on:
-  push:
-    tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to deploy (e.g. v1.2.0)"
-        required: true
-
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/frontend:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            NODE_ENV=production
+
   deploy:
     runs-on: ubuntu-latest
+    needs: build-and-push
     environment: production
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure SSH keep-alive
-        run: |
-          mkdir -p ~/.ssh
-          echo "ServerAliveInterval 60" >> ~/.ssh/config
-          echo "ServerAliveCountMax 10" >> ~/.ssh/config
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add server to known hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Backup database before deploy
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          ssh $SSH_USER@$SSH_HOST 'bash -s' <<EOF
-            set -e
-
-            cd ~/timverse-app
-            source .env
-
-            TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
-
-            docker compose exec -T db \
-              pg_dump -U \$POSTGRES_USER \$POSTGRES_DB \
-              | gzip > /mnt/data/backups/pre_deploy_\$TIMESTAMP.sql.gz
-
-            echo "Pre-deploy backup saved: pre_deploy_\$TIMESTAMP.sql.gz"
-          EOF
+      # ... your SSH setup steps stay the same ...
 
       - name: Deploy
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
           DOMAIN: ${{ secrets.DOMAIN }}
           FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
           STACK_NAME: ${{ secrets.STACK_NAME }}
@@ -73,11 +67,11 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
         run: |
-          ssh $SSH_USER@$SSH_HOST "TAG=$TAG bash -s" <<EOF
+          ssh $SSH_USER@$SSH_HOST "TAG=$TAG REPO=$REPO bash -s" <<EOF
             set -e
-
             cd ~/timverse-app
 
             echo "Deploying \$TAG"
@@ -85,14 +79,8 @@ jobs:
             git fetch --tags
             git checkout \$TAG
 
-            # Save current commit for rollback
             CURRENT_COMMIT=\$(git rev-parse HEAD)
             echo \$CURRENT_COMMIT > .last_deploy
-
-            echo "Current commit saved: \$CURRENT_COMMIT"
-
-
-
 
             cat > .env <<ENVFILE
           DOMAIN=${DOMAIN}
@@ -114,28 +102,23 @@ jobs:
           SMTP_USER=${SMTP_USER}
           SMTP_PASSWORD=${SMTP_PASSWORD}
           EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-          DOCKER_IMAGE_BACKEND=timverse-backend
-          DOCKER_IMAGE_FRONTEND=timverse-frontend
+          DOCKER_IMAGE_BACKEND=ghcr.io/\$REPO/backend:\$TAG
+          DOCKER_IMAGE_FRONTEND=ghcr.io/\$REPO/frontend:\$TAG
           ENVFILE
 
-            # Build images (with layer caching)
-            docker compose -f docker-compose.yml build --no-cache
+            # Log in to pull the pre-built images
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
 
-            # Start DB first and wait for healthy
+            # Just pull — no build on server
+            docker compose -f docker-compose.yml pull backend frontend
+
             docker compose -f docker-compose.yml up -d db
-
-            # Run migrations and pre-start checks
             docker compose -f docker-compose.yml run --rm prestart
 
-            # Start remaining services
-            if ! docker compose -f docker-compose.yml up -d --force-recreate backend frontend; then
-              echo "Deploy failed — rolling back..."
-
+            if ! docker compose -f docker-compose.yml up -d --force-recreate --no-deps backend frontend; then
+              echo "Rolling back..."
               git checkout \$(cat .last_deploy)
-
-              docker compose -f docker-compose.yml build --no-cache
               docker compose -f docker-compose.yml up -d
-
               exit 1
             fi
 

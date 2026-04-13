@@ -16,9 +16,7 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
 
   prestart:
-    image: "${DOCKER_IMAGE_BACKEND?Variable not set}"
-    build:
-      context: ./backend
+    image: "${DOCKER_IMAGE_BACKEND}"
     networks:
       - default
     depends_on:
@@ -32,7 +30,7 @@ services:
       - ./backend/data:/app/data
 
   backend:
-    image: "${DOCKER_IMAGE_BACKEND?Variable not set}"
+    image: "${DOCKER_IMAGE_BACKEND}"
     restart: always
     networks:
       - traefik-public
@@ -58,8 +56,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    build:
-      context: ./backend
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
@@ -78,7 +74,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
 
   frontend:
-    image: "${DOCKER_IMAGE_FRONTEND?Variable not set}"
+    image: "${DOCKER_IMAGE_FRONTEND}"
     restart: always
     networks:
       - traefik-public
@@ -86,11 +82,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    build:
-      context: ./frontend
-      args:
-        - VITE_API_URL=https://api.${DOMAIN?Variable not set}
-        - NODE_ENV=production
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
