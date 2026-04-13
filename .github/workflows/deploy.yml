@@ -83,14 +83,14 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          ssh $SSH_USER@$SSH_HOST "DEPLOY_TAG=$DEPLOY_TAG bash -s" <<'EOF'
+          ssh $SSH_USER@$SSH_HOST "DEPLOY_TAG=$DEPLOY_TAG bash -s" <<EOF
             set -e
 
             cd ~/timverse-app
             source .env
 
             # Silence Compose warnings about TAG not being set
-            export TAG=$DEPLOY_TAG
+            export TAG=\$DEPLOY_TAG
 
             TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
 
