@@ -287,8 +287,14 @@ function SpecimensKitTable() {
 						const nextFailureModes = currentFailureModes.includes(
 							sluggedFailureMode,
 						)
-							? currentFailureModes
+							? currentFailureModes.filter(
+									(value) => value !== sluggedFailureMode,
+								)
 							: [...currentFailureModes, sluggedFailureMode];
+
+						if (nextFailureModes.length === 0) {
+							return serializeStructuredFilterQuery(nonCheckboxClauses);
+						}
 
 						return serializeStructuredFilterQuery([
 							...nonCheckboxClauses,
