@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.0](https://github.com/SuStrucSy/BarkByte/compare/v1.0.2...v1.1.0) (2026-04-13)
+
+
+### Features
+
+* add google analytics and favicon ([df9d9ad](https://github.com/SuStrucSy/BarkByte/commit/df9d9adc7c985b494b241d204b288bb6160d4b0b))
+* add joinery overview with interactive hotspots and tooltips ([b0ea77c](https://github.com/SuStrucSy/BarkByte/commit/b0ea77cdc9c68eaf1549bb092f68111044f628b6))
+* implement and improve google analytics ([cb58d66](https://github.com/SuStrucSy/BarkByte/commit/cb58d6691654a6722e6be21c52239e68b6bbe4dd))
+
+
+### Bug Fixes
+
+* favicon size ([b76ea09](https://github.com/SuStrucSy/BarkByte/commit/b76ea0994fa89cbb789411afed086390fd0da3dc))
+* **frontend:** correct SPA analytics tracking and lazy-load GA ([90d2ea2](https://github.com/SuStrucSy/BarkByte/commit/90d2ea27d2aaf3a74a3b0f7300f28e1f5011c5e5))
+* improve theme color contrast ([9c3ae48](https://github.com/SuStrucSy/BarkByte/commit/9c3ae48c6128064a16100802f61c183718ccab76))
+* issue with default error ([54eb8e9](https://github.com/SuStrucSy/BarkByte/commit/54eb8e9324833336b84b7da4a1ae2f42564a9844))
+* issue with default error with analytics ([6884bee](https://github.com/SuStrucSy/BarkByte/commit/6884beef6f75173ae68d72a52ef327b9f4c32ee0))
+* removing about button and updating the title. ([a5d91c9](https://github.com/SuStrucSy/BarkByte/commit/a5d91c9a6d43de6014d6d6144af1e41db2f7b3a9))
+* update asset import paths to make things work on my machine. ([76318ab](https://github.com/SuStrucSy/BarkByte/commit/76318ab644d318cb735e55d66fd4faec65a9c603))
+
 ## [1.0.2](https://github.com/SuStrucSy/BarkByte/compare/v1.0.1...v1.0.2) (2026-04-09)
 
 
