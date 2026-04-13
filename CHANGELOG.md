@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/SuStrucSy/BarkByte/compare/v1.1.0...v1.1.1) (2026-04-13)
+
+
+### Bug Fixes
+
+* but with path subfolder incorrect capitalization ([6fbc5c0](https://github.com/SuStrucSy/BarkByte/commit/6fbc5c04d73743a7cd38dc49b4aec9ce87b2d8cf))
+
 ## [1.1.0](https://github.com/SuStrucSy/BarkByte/compare/v1.0.2...v1.1.0) (2026-04-13)
 
 
