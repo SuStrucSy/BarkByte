@@ -1,11 +1,34 @@
-export function track(event: string, params?: Record<string, unknown>) {
-  if (import.meta.env.DEV) return;
-  if (typeof gtag !== "function") return;
-  gtag("event", event, params);
+// src/lib/analytics.ts
+
+const GA_ID = "G-KEPTYEN92T";
+
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
 }
 
-export function trackPageView(path: string) {
-  if (import.meta.env.DEV) return;
-  if (typeof gtag !== "function") return;
-  gtag("event", "page_view", { page_path: path });
+const isProd = import.meta.env.PROD;
+
+let lastPath = "";
+
+export function pageview(path: string) {
+  if (!isProd) return;
+  if (typeof window === "undefined") return;
+  if (!window.gtag) return;
+  if (lastPath === path) return;
+
+  lastPath = path;
+
+  window.gtag("config", GA_ID, {
+    page_path: path,
+  });
+}
+
+export function event(action: string, params?: Record<string, unknown>) {
+  if (!isProd) return;
+  if (typeof window === "undefined") return;
+  if (!window.gtag) return;
+
+  window.gtag("event", action, params);
 }
