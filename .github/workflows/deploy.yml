@@ -71,7 +71,7 @@ jobs:
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
           TAG: ${{ github.ref_name }}
         run: |
-          ssh $SSH_USER@$SSH_HOST <<EOF
+          ssh $SSH_USER@$SSH_HOST "TAG=$TAG bash -s" <<'EOF'
             set -e
 
             cd ~/timverse-app
