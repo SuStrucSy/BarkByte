@@ -9,6 +9,8 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarRail,
+	SidebarTrigger,
+	useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsLoggedIn } from "@/hooks/useIsLoggedIn";
 import ModeToggle from "./ModeToggle";
@@ -31,22 +33,45 @@ const LoginButton = () => {
 
 const AppSidebar = () => {
 	const isLoggedIn = useIsLoggedIn();
+	const { state } = useSidebar();
+
 	return (
 		<Sidebar collapsible="icon" variant="floating">
 			<SidebarHeader>
-				<SidebarMenu>
-					<SidebarMenuItem>
-						<SidebarMenuButton
-							asChild
-							className="data-[slot=sidebar-menu-button]:p-1.5!"
-						>
-							<Link to="/">
-								<TreePine />
-								<span className="text-base font-semibold">Timverse</span>
-							</Link>
-						</SidebarMenuButton>
-					</SidebarMenuItem>
-				</SidebarMenu>
+				<div className="relative min-h-8">
+					<div
+						className={[
+							"transition-all duration-200 ease-linear",
+							state === "expanded"
+								? "translate-y-0 opacity-100"
+								: "pointer-events-none absolute inset-0 -translate-y-1 opacity-0",
+						].join(" ")}
+					>
+						<SidebarMenu>
+							<SidebarMenuItem>
+								<SidebarMenuButton
+									asChild
+									className="data-[slot=sidebar-menu-button]:p-1.5!"
+								>
+									<Link to="/">
+										<TreePine />
+										<span className="text-base font-semibold">Timverse</span>
+									</Link>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						</SidebarMenu>
+					</div>
+					<div
+						className={[
+							"flex justify-center transition-all duration-200 ease-linear",
+							state === "collapsed"
+								? "scale-100 opacity-100"
+								: "pointer-events-none absolute inset-0 scale-95 opacity-0",
+						].join(" ")}
+					>
+						<SidebarTrigger className="size-8 rounded-md border border-sidebar-border/70" />
+					</div>
+				</div>
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarItems />

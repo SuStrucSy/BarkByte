@@ -116,7 +116,10 @@ export function Donut({
 	}, {}) satisfies ChartConfig;
 
 	return (
-		<ChartContainer config={chartConfig} className="w-full max-h-87.5">
+		<ChartContainer
+			config={chartConfig}
+			className="mx-auto aspect-square w-full max-w-[320px]"
+		>
 			<PieChart responsive>
 				<ChartTooltip
 					content={
@@ -170,7 +173,7 @@ export function Donut({
 					labelLine
 					nameKey="label"
 					innerRadius="42%"
-					outerRadius="78%"
+					outerRadius="72%"
 					cx="50%"
 					cy="50%"
 				/>

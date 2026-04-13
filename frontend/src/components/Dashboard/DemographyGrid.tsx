@@ -56,7 +56,7 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 						Summarizes the Distribution of Specimens by Joinery
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
+				<CardContent className="flex items-center justify-center px-0 pb-0">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={joineryCounts} />
 					</ChartErrorBoundary>
@@ -71,7 +71,7 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 						Summarizes the Distribution of Specimens by Fastener
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
+				<CardContent className="flex items-center justify-center px-0 pb-0">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={fastenerCounts} />
 					</ChartErrorBoundary>
@@ -86,7 +86,7 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 						Summarizes the Distribution of Specimens by Loading Direction
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
+				<CardContent className="flex items-center justify-center px-0 pb-0">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={loadingDirectionCounts} />
 					</ChartErrorBoundary>
@@ -101,7 +101,7 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 						Summarizes the Distribution of Specimens by Assembly
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
+				<CardContent className="flex items-center justify-center px-0 pb-0">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={assemblyCounts} />
 					</ChartErrorBoundary>
@@ -116,7 +116,7 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 						Summarizes the Distribution of Specimens by Sub-Joinery
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
+				<CardContent className="flex items-center justify-center px-0 pb-0">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={subjoineryCounts} />
 					</ChartErrorBoundary>

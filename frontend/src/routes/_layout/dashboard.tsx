@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic, SpecimensReadSpecimensParams } from "@/api/model";
+import joineryTypesReference from "@/assets/joineryTypes.svg";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { ExpandableChart } from "@/components/Charts/ExpandableChart";
 import { BoxPlot } from "@/components/Dashboard/BoxPlot";
@@ -398,6 +399,38 @@ function Dashboard() {
 
 				<Separator className="col-span-1 lg:col-span-2" />
 				<DemographyGrid specimens={allSpecimens} />
+
+				<Card>
+					<CardHeader className="pb-4">
+						<CardTitle>Joinery Types Reference</CardTitle>
+						<CardDescription>
+							Quick visual guide to the timber joinery and connection details
+							used throughout the specimen dataset.
+						</CardDescription>
+						<CardAction>
+							<ExpandableChart title="Joinery Types Reference">
+								{() => (
+									<div className="flex h-full items-center justify-center overflow-auto rounded-xl border border-border/70 bg-muted/20 p-4">
+										<img
+											src={joineryTypesReference}
+											alt="Reference sheet showing timber joinery and connection types"
+											className="h-auto max-h-full w-full object-contain"
+										/>
+									</div>
+								)}
+							</ExpandableChart>
+						</CardAction>
+					</CardHeader>
+					<CardContent className="pb-4">
+						<div className="flex items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-3">
+							<img
+								src={joineryTypesReference}
+								alt="Reference sheet showing timber joinery and connection types"
+								className="h-auto max-h-[320px] w-full object-contain"
+							/>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 
 			{selectedSpecimen && (
