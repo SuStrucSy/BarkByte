@@ -71,9 +71,15 @@ jobs:
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
           TAG: ${{ github.ref_name }}
         run: |
-          ssh $SSH_USER@$SSH_HOST TAG="$TAG" bash -s <<'EOF'
+          ssh $SSH_USER@$SSH_HOST <<EOF
             set -e
+
             cd ~/timverse-app
+
+            echo "Deploying $TAG"
+
+            git fetch --tags
+            git checkout $TAG
 
             # Save current commit for rollback
             CURRENT_COMMIT=\$(git rev-parse HEAD)
@@ -81,10 +87,7 @@ jobs:
 
             echo "Current commit saved: \$CURRENT_COMMIT"
 
-            echo "Deploying $TAG"
 
-            git fetch --tags
-            git checkout $TAG
 
 
             cat > .env <<ENVFILE
