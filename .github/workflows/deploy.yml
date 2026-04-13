@@ -102,7 +102,7 @@ jobs:
           REPO: ${{ env.REPO }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
           DOMAIN: ${{ secrets.DOMAIN }}
           FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
           STACK_NAME: ${{ secrets.STACK_NAME }}
@@ -126,10 +126,10 @@ jobs:
             set -e
             cd ~/timverse-app
 
-            echo "Deploying \$TAG"
+            echo "Deploying \$DEPLOY_TAG"
 
             git fetch --tags
-            git checkout \$TAG
+            git checkout \$DEPLOY_TAG
 
             CURRENT_COMMIT=\$(git rev-parse HEAD)
             echo \$CURRENT_COMMIT > .last_deploy
@@ -154,8 +154,8 @@ jobs:
           SMTP_USER=${SMTP_USER}
           SMTP_PASSWORD=${SMTP_PASSWORD}
           EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
-          DOCKER_IMAGE_BACKEND=ghcr.io/\$REPO/backend:\$TAG
-          DOCKER_IMAGE_FRONTEND=ghcr.io/\$REPO/frontend:\$TAG
+          DOCKER_IMAGE_BACKEND=ghcr.io/\$REPO/backend:\$DEPLOY_TAG
+          DOCKER_IMAGE_FRONTEND=ghcr.io/\$REPO/frontend:\$DEPLOY_TAG
           ENVFILE
 
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
@@ -172,5 +172,21 @@ jobs:
               exit 1
             fi
 
-            echo "Deploy complete: \$TAG"
+            echo "Deploy complete: \$DEPLOY_TAG"
           EOF
+
+      - name: Clean up old backend images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: barkbyte/backend
+          package-type: container
+          min-versions-to-keep: 5
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up old frontend images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: barkbyte/frontend
+          package-type: container
+          min-versions-to-keep: 5
+          token: ${{ secrets.GITHUB_TOKEN }}
