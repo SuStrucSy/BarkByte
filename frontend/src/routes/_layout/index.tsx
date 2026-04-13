@@ -83,11 +83,12 @@ function Home() {
 								Timverse
 							</h1>
 							<p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-								Timverse helps civil engineers record, organize, and understand
-								data from timber and structural experiments in one place. It
-								keeps specimens, materials, setups, and results connected so
-								teams can compare experiments, spot patterns, and revisit
-								findings without chasing scattered spreadsheets and notes.
+								Timverse gives civil engineers a structured way to move from
+								connection detail to evidence. The visual map on the right acts
+								as an entry point into the dataset, helping teams identify
+								joinery types, jump into related specimens, and compare how
+								different materials, setups, and failure patterns behave
+								without digging through disconnected notes and spreadsheets.
 							</p>
 							<div className="mt-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
 								<Button asChild variant="secondary">
@@ -159,8 +160,9 @@ function Home() {
 										))}
 									</div>
 									<p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
-										Joinery reference overview used as a visual index for timber
-										connection types.
+										Each hotspot points to a connection family so researchers can
+										start from a timber detail and trace the experiments,
+										conditions, and outcomes tied to it.
 									</p>
 								</div>
 							</div>
