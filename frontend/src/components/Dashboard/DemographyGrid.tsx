@@ -40,11 +40,6 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 		[specimens],
 	);
 
-	const loadingTypeCounts = useMemo(
-		() => countByAttribute(specimens, (s) => s.e_test_loading_type || ""),
-		[specimens],
-	);
-
 	const yieldPointCounts = useMemo(
 		() => countByAttribute(specimens, (s) => s.e_yield_point_method || ""),
 		[specimens],
@@ -121,21 +116,6 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 				<CardContent className="flex items-center justify-center px-2 pb-4">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={assemblyCounts} />
-					</ChartErrorBoundary>
-				</CardContent>
-			</Card>
-			<Card className="col-span-1">
-				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
-					<CardDescription>
-						Summarizes the Distribution of Specimens by Test Loading Type
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
-					<ChartErrorBoundary chartName="Donut">
-						<Donut counts={loadingTypeCounts} />
 					</ChartErrorBoundary>
 				</CardContent>
 			</Card>
