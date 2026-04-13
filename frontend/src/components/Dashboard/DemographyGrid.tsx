@@ -45,13 +45,6 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 		[specimens],
 	);
 
-	const qfmCounts = useMemo(
-		() =>
-			countByArrayAttribute(specimens, (s) =>
-				s.e_qualitative_failure_measure.map((q) => q.label),
-			),
-		[specimens],
-	);
 	return (
 		<>
 			<Card className="col-span-1">
@@ -126,22 +119,6 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 				<CardContent className="flex items-center justify-center px-2 pb-4">
 					<ChartErrorBoundary chartName="Donut">
 						<Donut counts={subjoineryCounts} />
-					</ChartErrorBoundary>
-				</CardContent>
-			</Card>
-			<Card className="col-span-1">
-				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
-					<CardDescription>
-						Summarizes the Distribution of Specimens by Quantitative Failure
-						Modes
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="flex items-center justify-center px-2 pb-4">
-					<ChartErrorBoundary chartName="Donut">
-						<Donut counts={qfmCounts} />
 					</ChartErrorBoundary>
 				</CardContent>
 			</Card>
