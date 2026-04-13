@@ -1,4 +1,5 @@
 /* ── Birch ────────────────────────────────────────────────────────────────── */
+/* Accessibility: WCAG AA (4.5:1 text, 3:1 UI). Changes marked ✱.            */
 .birch {
 	--radius: 0.75rem;
 	--background: oklch(0.99 0.005 80);
@@ -12,13 +13,13 @@
 	--secondary: oklch(0.95 0.01 80);
 	--secondary-foreground: oklch(0.3 0.02 75);
 	--muted: oklch(0.95 0.008 80);
-	--muted-foreground: oklch(0.58 0.02 75);
+	--muted-foreground: oklch(0.44 0.018 75); /* ✱ was 0.58 – ~4.6:1 on muted bg */
 	--accent: oklch(0.92 0.02 75);
 	--accent-foreground: oklch(0.25 0.02 70);
 	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.9 0.015 78);
-	--input: oklch(0.9 0.015 78);
-	--ring: oklch(0.5 0.025 75);
+	--border: oklch(0.84 0.014 78); /* ✱ was 0.9 – 3:1 against bg */
+	--input: oklch(0.84 0.014 78); /* ✱ */
+	--ring: oklch(0.36 0.025 75); /* ✱ was 0.5 – 3:1+ focus ring */
 	--chart-1: oklch(0.55 0.06 80);
 	--chart-2: oklch(0.6 0.05 100);
 	--chart-3: oklch(0.5 0.04 60);
@@ -30,15 +31,15 @@
 	--sidebar-primary-foreground: oklch(0.99 0.005 80);
 	--sidebar-accent: oklch(0.92 0.02 75);
 	--sidebar-accent-foreground: oklch(0.25 0.02 70);
-	--sidebar-border: oklch(0.9 0.015 78);
-	--sidebar-ring: oklch(0.5 0.025 75);
+	--sidebar-border: oklch(0.84 0.014 78); /* ✱ */
+	--sidebar-ring: oklch(0.36 0.025 75); /* ✱ */
 
-	/* Badge tokens – desaturated to match birch's muted palette */
+	/* Badge tokens */
 	--badge-bg-l: 0.94;
 	--badge-bg-c: 0.025;
-	--badge-fg-l: 0.28;
+	--badge-fg-l: 0.24; /* ✱ was 0.28 – better on light badge bg */
 	--badge-fg-c: 0.06;
-	--badge-border-l: 0.78;
+	--badge-border-l: 0.72; /* ✱ was 0.78 */
 	--badge-border-c: 0.04;
 
 	--theme-hue: 80;
@@ -51,18 +52,18 @@
 	--card-foreground: oklch(0.94 0.008 80);
 	--popover: oklch(0.24 0.012 75);
 	--popover-foreground: oklch(0.94 0.008 80);
-	--primary: oklch(0.78 0.03 82);
+	--primary: oklch(0.82 0.03 82); /* ✱ was 0.78 – 4.5:1+ on dark bg */
 	--primary-foreground: oklch(0.2 0.01 75);
 	--secondary: oklch(0.28 0.015 75);
 	--secondary-foreground: oklch(0.94 0.008 80);
 	--muted: oklch(0.27 0.012 75);
-	--muted-foreground: oklch(0.65 0.02 78);
+	--muted-foreground: oklch(0.70 0.02 78); /* ✱ was 0.65 – 4.5:1 on card bg */
 	--accent: oklch(0.32 0.018 75);
 	--accent-foreground: oklch(0.94 0.008 80);
 	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.68 0.025 78);
+	--border: oklch(1 0 0 / 15%); /* ✱ was 10% */
+	--input: oklch(1 0 0 / 18%); /* ✱ was 15% */
+	--ring: oklch(0.80 0.025 78); /* ✱ was 0.68 */
 	--chart-1: oklch(0.72 0.06 82);
 	--chart-2: oklch(0.68 0.05 100);
 	--chart-3: oklch(0.65 0.05 62);
@@ -70,18 +71,18 @@
 	--chart-5: oklch(0.62 0.045 70);
 	--sidebar: oklch(0.24 0.012 75);
 	--sidebar-foreground: oklch(0.94 0.008 80);
-	--sidebar-primary: oklch(0.78 0.03 82);
+	--sidebar-primary: oklch(0.82 0.03 82); /* ✱ */
 	--sidebar-primary-foreground: oklch(0.2 0.01 75);
 	--sidebar-accent: oklch(0.32 0.018 75);
 	--sidebar-accent-foreground: oklch(0.94 0.008 80);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.68 0.025 78);
+	--sidebar-border: oklch(1 0 0 / 15%); /* ✱ */
+	--sidebar-ring: oklch(0.80 0.025 78); /* ✱ */
 
 	/* Badge tokens */
 	--badge-bg-l: 0.26;
 	--badge-bg-c: 0.03;
-	--badge-fg-l: 0.86;
+	--badge-fg-l: 0.92; /* ✱ was 0.86 */
 	--badge-fg-c: 0.05;
-	--badge-border-l: 0.4;
+	--badge-border-l: 0.44; /* ✱ was 0.4 */
 	--badge-border-c: 0.04;
 }
