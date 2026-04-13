@@ -1,5 +1,6 @@
 # Full Stack Timverse
 
+
 ## Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
@@ -74,4 +75,4 @@ Check the file [CHANGELOG.md](./CHANGELOG.md).
 
 ## License
 
-The Full Stack Timverse ports is licensed under the terms of the GNU GPLv3 [LICENSE](./LICENSE.md).
+The Full Stack Timverse ports is licensed under the terms of the GNU GPLv3 license.
