@@ -1,8 +1,9 @@
 name: Deploy to Server
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -68,8 +69,9 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
+          TAG: ${{ github.ref_name }}
         run: |
-          ssh $SSH_USER@$SSH_HOST "bash -s" <<EOF
+          ssh $SSH_USER@$SSH_HOST "TAG=$TAG bash -s" <<EOF
             set -e
             cd ~/timverse-app
 
@@ -79,7 +81,10 @@ jobs:
 
             echo "Current commit saved: \$CURRENT_COMMIT"
 
-            git pull origin main
+            echo "Deploying $TAG"
+
+            git fetch --tags
+            git checkout $TAG
 
 
             cat > .env <<ENVFILE
@@ -89,7 +94,7 @@ jobs:
           STACK_NAME=${STACK_NAME}
           PROJECT_NAME=${PROJECT_NAME}
           SECRET_KEY=${SECRET_KEY}
-          FIRST_SUPERUSER=${FIRST_SUPERUSER}source .env
+          FIRST_SUPERUSER=${FIRST_SUPERUSER}
           FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
           BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
           VITE_API_URL=${VITE_API_URL}
@@ -127,5 +132,5 @@ jobs:
               exit 1
             fi
 
-            echo "Deploy successful!"
+            echo "Deploy complete: $TAG"
           EOF
