@@ -16,7 +16,7 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
 
   prestart:
-    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG}"
+    image: "${DOCKER_IMAGE_BACKEND?Variable not set}"
     build:
       context: ./backend
     networks:
@@ -32,7 +32,7 @@ services:
       - ./backend/data:/app/data
 
   backend:
-    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG}"
+    image: "${DOCKER_IMAGE_BACKEND?Variable not set}"
     restart: always
     networks:
       - traefik-public
@@ -78,7 +78,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
 
   frontend:
-    image: "${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG}"
+    image: "${DOCKER_IMAGE_FRONTEND?Variable not set}"
     restart: always
     networks:
       - traefik-public

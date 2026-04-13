@@ -34,20 +34,22 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
           ssh $SSH_USER@$SSH_HOST 'bash -s' <<EOF
+            set -e
+
+            cd ~/timverse-app
+            source .env
+
             TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
-            CONTAINER=\$(docker ps --filter "name=db" --format "{{.Names}}" | head -n 1)
-            if [ -n "\$CONTAINER" ]; then
-              docker exec \$CONTAINER pg_dump -U \$POSTGRES_USER \$POSTGRES_DB \
-                | gzip > /mnt/data/backups/pre_deploy_\$TIMESTAMP.sql.gz
-              echo "Pre-deploy backup saved: pre_deploy_\$TIMESTAMP.sql.gz"
-            else
-              echo "No DB container running — skipping backup (first deploy?)"
-            fi
+
+            docker compose exec -T db \
+              pg_dump -U \$POSTGRES_USER \$POSTGRES_DB \
+              | gzip > /mnt/data/backups/pre_deploy_\$TIMESTAMP.sql.gz
+
+            echo "Pre-deploy backup saved: pre_deploy_\$TIMESTAMP.sql.gz"
           EOF
 
       - name: Deploy
         env:
-          TAG: ${{ github.sha }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           DOMAIN: ${{ secrets.DOMAIN }}
@@ -67,13 +69,18 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
         run: |
-          ssh $SSH_USER@$SSH_HOST "TAG=${TAG} bash -s" <<EOF
+          ssh $SSH_USER@$SSH_HOST "bash -s" <<EOF
             set -e
             cd ~/timverse-app
 
+            # Save current commit for rollback
+            CURRENT_COMMIT=\$(git rev-parse HEAD)
+            echo \$CURRENT_COMMIT > .last_deploy
+
+            echo "Current commit saved: \$CURRENT_COMMIT"
+
             git pull origin main
 
-            echo "Deploying tag: $TAG"
 
             cat > .env <<ENVFILE
           DOMAIN=${DOMAIN}
@@ -82,7 +89,7 @@ jobs:
           STACK_NAME=${STACK_NAME}
           PROJECT_NAME=${PROJECT_NAME}
           SECRET_KEY=${SECRET_KEY}
-          FIRST_SUPERUSER=${FIRST_SUPERUSER}
+          FIRST_SUPERUSER=${FIRST_SUPERUSER}source .env
           FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
           BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
           VITE_API_URL=${VITE_API_URL}
@@ -97,7 +104,6 @@ jobs:
           EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
           DOCKER_IMAGE_BACKEND=timverse-backend
           DOCKER_IMAGE_FRONTEND=timverse-frontend
-          TAG=$TAG
           ENVFILE
 
             # Build images (with layer caching)
@@ -110,6 +116,16 @@ jobs:
             docker compose -f docker-compose.yml run --rm prestart
 
             # Start remaining services
-            docker compose -f docker-compose.yml up -d --force-recreate backend frontend
+            if ! docker compose -f docker-compose.yml up -d --force-recreate backend frontend; then
+              echo "Deploy failed — rolling back..."
 
+              git checkout \$(cat .last_deploy)
+
+              docker compose -f docker-compose.yml build --no-cache
+              docker compose -f docker-compose.yml up -d
+
+              exit 1
+            fi
+
+            echo "Deploy successful!"
           EOF
