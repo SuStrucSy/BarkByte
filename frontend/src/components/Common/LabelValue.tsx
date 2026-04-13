@@ -34,8 +34,6 @@ export function LabelValue({ property, data, unit }: LabelValueProps) {
 	const label = getLabel(property);
 	const value = renderYesNoValue(renderValue(data[property]));
 
-	console.log(`${label}: ${value}`);
-
 	if (Array.isArray(data[property])) {
 		return (
 			<div className="flex flex-col gap-1">

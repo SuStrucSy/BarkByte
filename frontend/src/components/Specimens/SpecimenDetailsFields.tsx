@@ -86,8 +86,6 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 	const fastenerTypeList = fastenerData?.data || [];
 	const loadingDirectionList = loadingDirectionData?.data || [];
 
-	console.log(joineryData);
-
 	return (
 		<FieldGroup>
 			<Controller

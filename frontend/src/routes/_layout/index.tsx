@@ -32,7 +32,7 @@ const joineryHotspots = [
 		top: "58%",
 	},
 	{
-		id: "plate",
+		id: "plate-floor",
 		label: "Plate Connection",
 		description:
 			"Base plate detail connecting the timber element to the floor.",
@@ -40,7 +40,7 @@ const joineryHotspots = [
 		top: "70%",
 	},
 	{
-		id: "plate",
+		id: "plate-wall",
 		label: "Plate Connection",
 		description: "Base plate detail connecting the timber element to another wall.",
 		left: "42%",

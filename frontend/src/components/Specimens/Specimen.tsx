@@ -14,7 +14,6 @@ type SpecimenProps = {
 };
 
 export function Specimen({ data, setSheetOpen }: SpecimenProps) {
-	console.log({ data });
 	return (
 		<>
 			<SpecimenHeader id={data.specimen_reference_id ?? data.id} />

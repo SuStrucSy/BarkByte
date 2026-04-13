@@ -36,8 +36,6 @@ def list_pending_specimens(
     If no status is provided, all pending specimens are returned.
     """
 
-    print(current_user)
-
     if current_user.is_superuser:
         return pending_crud.list_pending(session=session, status=status)
 

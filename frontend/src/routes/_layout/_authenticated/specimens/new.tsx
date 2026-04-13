@@ -278,8 +278,7 @@ function NewSpecimen() {
 	});
 
 	async function onSubmit(values: AddNewSpecimenFormValues) {
-		console.log({ values });
-		try {
+			try {
 			let doi = null;
 			if (!selectedDoi) {
 				doi = await doiMutation.mutateAsync({
