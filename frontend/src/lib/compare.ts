@@ -60,10 +60,6 @@ export const RADAR_METRIC_FIELDS: Array<keyof SpecimenPublic> = [
 	"e_ductility",
 ];
 
-export const STRUCTURAL_CHART_FIELDS: Array<keyof SpecimenPublic> = [
-	"moisture_percentage",
-];
-
 export const COMPARE_SECTION_CONFIG: Array<{
 	title: CompareSectionTitle;
 	keys: Array<keyof SpecimenPublic>;

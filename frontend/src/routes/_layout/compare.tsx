@@ -4,7 +4,6 @@ import { Columns3, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
-import { MoistureDial } from "@/components/Dashboard/MoistureDial";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import {
 	Card,
@@ -44,7 +43,6 @@ import {
 	EXPERIMENTAL_COMPARE_FIELDS,
 	META_COMPARE_FIELDS,
 	RADAR_METRIC_FIELDS,
-	STRUCTURAL_CHART_FIELDS,
 	STRUCTURAL_COMPARE_FIELDS,
 } from "@/lib/compare";
 import {
@@ -52,7 +50,7 @@ import {
 	getExperimentalLabel,
 	getExperimentalUnit,
 } from "@/lib/constants";
-import { humanizeLabel, parseMoisturePercentage } from "@/lib/utils";
+import { humanizeLabel } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/compare")({
 	staticData: {
@@ -274,9 +272,7 @@ function groupCompareFields(fields: CompareField[]): CompareSection[] {
 		const sectionKeys =
 			title === "Experimental Data"
 				? keys.filter((key) => !RADAR_METRIC_FIELDS.includes(key))
-				: title === "Structural Data"
-					? keys.filter((key) => !STRUCTURAL_CHART_FIELDS.includes(key))
-					: keys;
+				: keys;
 
 		return {
 			title,
@@ -540,41 +536,6 @@ function ComparePage() {
 															) : null}
 														</div>
 													))}
-												</div>
-											) : null}
-											{section.title === "Structural Data" ? (
-												<div className="mb-8 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-													{comparisonSlots.map((specimen, index) => {
-														const moistureValue = parseMoisturePercentage(
-															specimen?.moisture_percentage,
-														);
-
-														return (
-															<div
-																key={`compare-moisture-${specimen?.id ?? `empty-${index}`}`}
-																className={`min-w-0 ${index > 0 ? "border-t pt-4 sm:border-t-0 sm:pt-0 sm:pl-4" : ""}`}
-															>
-																{specimen ? (
-																	moistureValue !== null ? (
-																		<div className="grid min-w-0 gap-2 overflow-hidden">
-																			<MoistureDial
-																				value={moistureValue}
-																				label="Moisture"
-																				className="mx-auto max-w-[180px]"
-																				chartClassName="h-[160px] w-[160px]"
-																				innerRadius={52}
-																				outerRadius={72}
-																			/>
-																		</div>
-																	) : (
-																		<div className="pt-6 text-center text-sm italic text-muted-foreground">
-																			No moisture percentage information
-																		</div>
-																	)
-																) : null}
-															</div>
-														);
-													})}
 												</div>
 											) : null}
 											<div className="flex flex-col gap-4">
