@@ -67,10 +67,13 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
         run: |
-          ssh $SSH_USER@$SSH_HOST 'TAG=${TAG} bash -s' <<EOF
+          ssh $SSH_USER@$SSH_HOST "TAG=${TAG} bash -s" <<'EOF'
+            set -e
             cd ~/timverse-app
 
             git pull origin main
+
+            echo "Deploying tag: $TAG"
 
             cat > .env <<ENVFILE
           DOMAIN=${DOMAIN}
@@ -94,7 +97,7 @@ jobs:
           EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
           DOCKER_IMAGE_BACKEND=timverse-backend
           DOCKER_IMAGE_FRONTEND=timverse-frontend
-          TAG=${TAG}
+          TAG=$TAG
           ENVFILE
 
             # Build images (with layer caching)
