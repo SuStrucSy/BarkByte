@@ -5,6 +5,10 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.2.0)"
+        required: true
 
 jobs:
   deploy:
@@ -69,17 +73,17 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          ssh $SSH_USER@$SSH_HOST "TAG=$TAG bash -s" <<'EOF'
+          ssh $SSH_USER@$SSH_HOST "TAG=$TAG bash -s" <<EOF
             set -e
 
             cd ~/timverse-app
 
-            echo "Deploying $TAG"
+            echo "Deploying \$TAG"
 
             git fetch --tags
-            git checkout $TAG
+            git checkout \$TAG
 
             # Save current commit for rollback
             CURRENT_COMMIT=\$(git rev-parse HEAD)
@@ -135,5 +139,5 @@ jobs:
               exit 1
             fi
 
-            echo "Deploy complete: $TAG"
+            echo "Deploy complete: \$TAG"
           EOF
