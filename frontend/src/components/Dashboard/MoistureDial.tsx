@@ -19,6 +19,7 @@ type MoistureDialProps = {
 const config = {
 	moisture: {
 		label: "Moisture",
+		color: "var(--viz-radial)",
 	},
 } satisfies ChartConfig;
 

@@ -17,6 +17,7 @@ import {
 const chartConfig = {
 	value: {
 		label: "Value",
+		color: "var(--viz-radar)",
 	},
 } satisfies ChartConfig;
 

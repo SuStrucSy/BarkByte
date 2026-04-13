@@ -74,17 +74,18 @@ export function countByArrayAttribute(
 	}, {});
 }
 
-// Get chart colors from CSS variables - they're in oklch format
+// Get chart colors from the shared visualization theme tokens.
 export const getChartColors = () => {
 	if (typeof window === "undefined") return [];
 	const style = getComputedStyle(document.documentElement);
 	return [
-		style.getPropertyValue("--chart-1").trim(),
-		style.getPropertyValue("--chart-2").trim(),
-		style.getPropertyValue("--chart-3").trim(),
-		style.getPropertyValue("--chart-4").trim(),
-		style.getPropertyValue("--chart-5").trim(),
-	].map((color) => (color.startsWith("oklch") ? color : `oklch(${color})`));
+		style.getPropertyValue("--viz-1").trim(),
+		style.getPropertyValue("--viz-2").trim(),
+		style.getPropertyValue("--viz-3").trim(),
+		style.getPropertyValue("--viz-4").trim(),
+		style.getPropertyValue("--viz-5").trim(),
+		style.getPropertyValue("--viz-6").trim(),
+	];
 };
 
 export interface SummaryStats {

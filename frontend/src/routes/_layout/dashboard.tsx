@@ -148,6 +148,23 @@ function Dashboard() {
 		[groupsByFastenerType],
 	);
 
+	useEffect(() => {
+		if (selectedFastener || fastenerTypes.length === 0) {
+			return;
+		}
+
+		const defaultFastener =
+			fastenerTypes.find((fastener) => fastener.toLowerCase() === "screw") ||
+			fastenerTypes.find((fastener) =>
+				fastener.toLowerCase().includes("screw"),
+			) ||
+			fastenerTypes[0];
+
+		if (defaultFastener) {
+			setSelectedFastener(defaultFastener);
+		}
+	}, [fastenerTypes, selectedFastener]);
+
 	const selectedSpecimens = useMemo(
 		() => groupsByFastenerType[selectedFastener] || [],
 		[groupsByFastenerType, selectedFastener],
@@ -323,7 +340,7 @@ function Dashboard() {
 							</div>
 							<Select
 								onValueChange={setSelectedFastener}
-								defaultValue={selectedFastener}
+								value={selectedFastener}
 							>
 								<SelectTrigger
 									className="w-full sm:w-48"

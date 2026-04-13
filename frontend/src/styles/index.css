@@ -24,6 +24,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+	/* viz-h = visualization hue angle. Examples: 0 = red, 30 = orange, 60 = yellow, 120 = green, 220 = blue, 280 = purple. */
+	--viz-h: 270;
+	/* viz-c = visualization chroma/saturation. Lower = grayer/more muted, higher = more vivid. Rough guide: 0.04 subtle, 0.10 moderate, 0.16 vivid. */
+	--viz-c: 0.4;
+	--viz-1: oklch(0.88 var(--viz-c) var(--viz-h));
+	--viz-2: oklch(0.8 var(--viz-c) var(--viz-h));
+	--viz-3: oklch(0.72 var(--viz-c) var(--viz-h));
+	--viz-4: oklch(0.64 var(--viz-c) var(--viz-h));
+	--viz-5: oklch(0.56 var(--viz-c) var(--viz-h));
+	--viz-6: oklch(0.48 var(--viz-c) var(--viz-h));
+	--viz-radar: var(--viz-3);
+	--viz-radial: var(--viz-2);
+	--failure-badge-bg: color-mix(in srgb, var(--viz-1) 18%, white);
+	--failure-badge-border: color-mix(in srgb, var(--viz-3) 28%, white);
+	--failure-badge-text: color-mix(in srgb, var(--viz-6) 82%, black);
+}
+
+.dark {
+	/* viz-h = visualization hue angle. Examples: 0 = red, 30 = orange, 60 = yellow, 120 = green, 220 = blue, 280 = purple. */
+	--viz-h: 270;
+	/* viz-c = visualization chroma/saturation. Lower = grayer/more muted, higher = more vivid. Rough guide: 0.04 subtle, 0.10 moderate, 0.14 vivid-but-safe on dark backgrounds. */
+	--viz-c: 0.14;
+	--viz-1: oklch(0.8 var(--viz-c) var(--viz-h));
+	--viz-2: oklch(0.73 var(--viz-c) var(--viz-h));
+	--viz-3: oklch(0.66 var(--viz-c) var(--viz-h));
+	--viz-4: oklch(0.59 var(--viz-c) var(--viz-h));
+	--viz-5: oklch(0.52 var(--viz-c) var(--viz-h));
+	--viz-6: oklch(0.45 var(--viz-c) var(--viz-h));
+	--viz-radar: var(--viz-2);
+	--viz-radial: var(--viz-1);
+	--failure-badge-bg: color-mix(in srgb, var(--viz-6) 36%, black);
+	--failure-badge-border: color-mix(in srgb, var(--viz-2) 42%, black);
+	--failure-badge-text: color-mix(in srgb, var(--viz-1) 82%, white);
+}
+
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
@@ -48,6 +84,12 @@
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
+	--color-viz-1: var(--viz-1);
+	--color-viz-2: var(--viz-2);
+	--color-viz-3: var(--viz-3);
+	--color-viz-4: var(--viz-4);
+	--color-viz-5: var(--viz-5);
+	--color-viz-6: var(--viz-6);
 	--color-sidebar: var(--sidebar);
 	--color-sidebar-foreground: var(--sidebar-foreground);
 	--color-sidebar-primary: var(--sidebar-primary);
