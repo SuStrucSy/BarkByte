@@ -67,7 +67,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
         run: |
-          ssh $SSH_USER@$SSH_HOST "TAG=${TAG} bash -s" <<'EOF'
+          ssh $SSH_USER@$SSH_HOST "TAG=${TAG} bash -s" <<EOF
             set -e
             cd ~/timverse-app
 
