@@ -4,23 +4,8 @@
 /* ── Badge partial (must come before theme files so tokens override it) ─── */
 @import "./themes/_badge-tokens.css";
 
-/* ── Themes ──────────────────────────────────────────────────────────────── */
+/* ── Base Theme ──────────────────────────────────────────────────────────── */
 @import "./themes/default.css";
-@import "./themes/forest-night.css";
-@import "./themes/timber.css";
-@import "./themes/blueprint.css";
-@import "./themes/birch.css";
-@import "./themes/concrete.css";
-@import "./themes/forest.css";
-@import "./themes/charcoal.css";
-@import "./themes/nordic.css";
-@import "./themes/pacific.css";
-@import "./themes/carbon.css";
-@import "./themes/macos.css";
-@import "./themes/stone.css";
-@import "./themes/zinc.css";
-@import "./themes/gray.css";
-@import "./themes/slate.css";
 
 @custom-variant dark (&:is(.dark *));
 

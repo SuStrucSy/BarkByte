@@ -1,39 +1,28 @@
 import { useEffect, useState } from "react";
 import { ThemeProviderContext } from "@/hooks/useTheme";
-import type { modes, themes } from "@/lib/constants";
+import type { modes } from "@/lib/constants";
 
 type Mode = (typeof modes)[number];
-
-type Theme = (typeof themes)[number];
 
 type ThemeProviderProps = {
 	children: React.ReactNode;
 	defaultMode?: Mode;
-	defaultTheme?: Theme;
 	storageKey?: string;
 };
 
 export type ThemeProviderState = {
 	mode: Mode;
-	theme: Theme;
 	setMode: (mode: Mode) => void;
-	setTheme: (theme: Theme) => void;
 };
 
 export function ThemeProvider({
 	children,
 	defaultMode = "system",
-	defaultTheme = "default",
 	storageKey = "vite-ui-theme",
 	...props
 }: ThemeProviderProps) {
 	const [mode, setMode] = useState<Mode>(
 		() => (localStorage.getItem(storageKey) as Mode) || defaultMode,
-	);
-
-	const [theme, setTheme] = useState<Theme>(
-		() =>
-			(localStorage.getItem(`${storageKey}-color`) as Theme) || defaultTheme,
 	);
 
 	useEffect(() => {
@@ -54,44 +43,11 @@ export function ThemeProvider({
 		root.classList.add(mode);
 	}, [mode]);
 
-	useEffect(() => {
-		const root = window.document.documentElement;
-
-		// Remove all color theme classes
-		// theme-provider.tsx — remove list
-		root.classList.remove(
-			"timber",
-			"stone",
-			"zinc",
-			"gray",
-			"slate",
-			"blueprint",
-			"birch",
-			"concrete",
-			"forest",
-			"charcoal",
-			"nordic",
-			"pacific",
-			"carbon",
-			"macos",
-		);
-
-		// Apply color theme
-		if (theme !== "default") {
-			root.classList.add(theme);
-		}
-	}, [theme]);
-
 	const value = {
 		mode,
-		theme,
 		setMode: (mode: Mode) => {
 			localStorage.setItem(storageKey, mode);
 			setMode(mode);
-		},
-		setTheme: (newTheme: Theme) => {
-			localStorage.setItem(`${storageKey}-color`, newTheme);
-			setTheme(newTheme);
 		},
 	};
 

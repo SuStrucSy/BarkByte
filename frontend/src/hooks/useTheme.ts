@@ -3,9 +3,7 @@ import type { ThemeProviderState } from "@/components/theme-provider";
 
 const initialState: ThemeProviderState = {
 	mode: "system",
-	theme: "default",
 	setMode: () => null,
-	setTheme: () => null,
 };
 
 export const ThemeProviderContext =

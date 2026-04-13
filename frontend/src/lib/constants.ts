@@ -36,65 +36,7 @@ export const getFullLabel = (key: ExperimentalKey) => {
 // ============================================
 // THEME PROVIDER CONSTANTS
 // ============================================
-//
 export const modes = ["light", "dark", "system"] as const;
-// constants.ts
-export const themes = [
-	"default",
-	"timber",
-	"stone",
-	"zinc",
-	"gray",
-	"slate",
-	"blueprint",
-	"birch",
-	"concrete",
-	"forest",
-	"charcoal",
-	"nordic",
-	"pacific",
-	"carbon",
-	"macos",
-	"forest-night",
-] as const;
-
-export const THEME_COLORS: Record<string, string> = {
-	default: "bg-neutral-400",
-	timber: "bg-amber-700",
-	stone: "bg-stone-500",
-	zinc: "bg-zinc-500",
-	gray: "bg-gray-500",
-	slate: "bg-slate-500",
-	blueprint: "bg-blue-700",
-	birch: "bg-yellow-100 border border-yellow-300",
-	concrete: "bg-slate-400",
-	forest: "bg-green-700",
-	charcoal: "bg-neutral-600",
-	nordic: "bg-sky-300",
-	pacific: "bg-teal-600",
-	carbon: "bg-neutral-800",
-	macos: "bg-blue-500",
-	"forest-night": "bg-green-900",
-};
-
-export const THEME_TEXT_COLORS: Record<string, string> = {
-	default: "text-neutral-400",
-	timber: "text-yellow-800",
-	stone: "text-stone-500",
-	zinc: "text-zinc-500",
-	gray: "text-gray-500",
-	slate: "text-slate-500",
-	blueprint: "text-blue-700",
-	birch: "text-yellow-600",
-	concrete: "text-slate-400",
-	forest: "text-green-700",
-	charcoal: "text-neutral-600",
-	nordic: "text-sky-400",
-	pacific: "text-teal-600",
-	carbon: "text-neutral-500",
-	macos: "text-blue-500",
-	"forest-night": "text-green-900",
-};
 
 // ============================================
 // SPECIMEN CONSTANTS
