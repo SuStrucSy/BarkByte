@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/SuStrucSy/BarkByte/compare/v1.1.3...v1.1.4) (2026-04-14)
+
+
+### Bug Fixes
+
+* bug in building frontend docker image ([4ddd089](https://github.com/SuStrucSy/BarkByte/commit/4ddd0894039661da41d8e0d0bedf70f6aa1eba45))
+
 ## [1.1.3](https://github.com/SuStrucSy/BarkByte/compare/v1.1.2...v1.1.3) (2026-04-14)
 
 
