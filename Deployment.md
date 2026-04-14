@@ -502,7 +502,7 @@ Add each of the following secrets:
 | `SECRET_KEY` | *(run `openssl rand -hex 32`)* |
 | `FIRST_SUPERUSER` | `admin@timverse.ca` |
 | `FIRST_SUPERUSER_PASSWORD` | *(strong password)* |
-| `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://api.timverse.ca` |
+| `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://timverse.ca` |
 | `POSTGRES_DB` | *(your db name)* |
 | `POSTGRES_USER` | *(your db user)* |
 | `POSTGRES_PASSWORD` | *(run `openssl rand -hex 32`)* |
