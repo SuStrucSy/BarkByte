@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/SuStrucSy/BarkByte/compare/v1.1.2...v1.1.3) (2026-04-14)
+
+
+### Bug Fixes
+
+* backup db script to run correctly ([8ea0145](https://github.com/SuStrucSy/BarkByte/commit/8ea0145f75c1e6f2b4f5a880b8fb71256ce55922))
+
 ## [1.1.2](https://github.com/SuStrucSy/BarkByte/compare/v1.1.1...v1.1.2) (2026-04-14)
 
 
