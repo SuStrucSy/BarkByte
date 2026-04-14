@@ -1,6 +1,6 @@
 # Deploying Full-Stack App to Béluga / Arbutus Cloud (Digital Alliance Canada)
 
-This guide covers deploying a FastAPI + React (Vite) + PostgreSQL stack with Traefik as a reverse proxy on the Digital Alliance Canada OpenStack cloud (Béluga or Arbutus), using **GitHub Actions** for automated CI/CD. Secrets are managed via GitHub and never stored in the repository.
+This guide covers deploying a FastAPI + React (Vite) + PostgreSQL stack with Traefik as a reverse proxy on the Digital Alliance Canada OpenStack cloud (Béluga or Arbutus), using **GitHub Actions** for automated CI/CD. Docker images are built in CI and pushed to GitHub Container Registry (GHCR), then pulled on the server at deploy time. Secrets are managed via GitHub and never stored in the repository.
 
 ---
 
@@ -79,7 +79,7 @@ Resend handles password reset, email verification, and other auth flow emails. T
 4. Click **Verify** in Resend — takes a few minutes
 5. Go to **API Keys → Create API Key** and copy it
 
-Add these to your GitHub Secrets (see Step 6):
+Add these to your GitHub Secrets (see Step 8):
 
 ```
 SMTP_HOST         = smtp.resend.com
@@ -122,14 +122,21 @@ Release Please Action
                                     └── you merge the Release PR
                                               │
                                               ▼
+                                    release-please pushes a v* tag
+                                              │
+                                              ▼
                                     Deploy workflow triggers
                                               │
+                                              ├── [CI] Build backend image → push to GHCR
+                                              ├── [CI] Build frontend image (VITE_API_URL baked in) → push to GHCR
                                               ├── SSH keep-alive configured
-                                              ├── DB backup taken
+                                              ├── DB backup taken from running container
+                                              ├── git checkout <tag> (detached HEAD — intentional)
                                               ├── .env written from GitHub Secrets
-                                              ├── git pull latest code
-                                              ├── docker compose -f docker-compose.yml build
-                                              └── docker compose -f docker-compose.yml up -d
+                                              ├── docker pull backend + frontend from GHCR
+                                              ├── docker compose up -d db
+                                              ├── docker compose run --rm prestart (migrations)
+                                              └── docker compose up -d --no-deps backend frontend
                                                           │
                                                           ▼
                                               Cloudflare (proxy, DDoS protection, CDN)
@@ -143,6 +150,10 @@ Release Please Action
                                                                    │
                                                                    └── PostgreSQL → /mnt/data/postgres
 ```
+
+> **Why build in CI and not on the server?** Building on the server over SSH is slow, has no layer caching, and risks timing out. Building in GitHub Actions with `--cache-from type=gha` means incremental builds take seconds. The server only runs `docker pull` at deploy time, which is fast and reliable.
+
+> **Why is the server in detached HEAD state?** The server repo is not a development environment — it exists only to provide `docker-compose.yml` at the correct version. Detached HEAD is intentional and preferable: the server is pinned to exactly what was tagged, with no risk of accidental branch updates.
 
 ---
 
@@ -355,32 +366,108 @@ Verify it's running at `https://traefik.timverse.ca`.
 
 ---
 
-## Step 7 — Configure Traefik Labels in docker-compose.yml
+## Step 7 — Configure docker-compose.yml
 
-Update your app's `docker-compose.yml` Traefik labels to use subdomain routing:
+Your app's `docker-compose.yml` must use image references from environment variables — **no `build:` blocks**. Images are built in CI and pulled from GHCR at deploy time.
 
-**Frontend service:**
 ```yaml
-labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.frontend.rule=Host(`timverse.ca`) || Host(`www.timverse.ca`)"
-  - "traefik.http.routers.frontend.entrypoints=websecure"
-  - "traefik.http.routers.frontend.tls.certresolver=le"
-  - "traefik.http.services.frontend.loadbalancer.server.port=80"
-```
+services:
+  db:
+    image: postgres:18
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
 
-**Backend service:**
-```yaml
-labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.backend.rule=Host(`api.timverse.ca`) || Host(`docs.timverse.ca`)"
-  - "traefik.http.routers.backend.entrypoints=websecure"
-  - "traefik.http.routers.backend.tls.certresolver=le"
-  - "traefik.http.services.backend.loadbalancer.server.port=8000"
-```
+  prestart:
+    image: "${DOCKER_IMAGE_BACKEND}"
+    # No build: block — image comes from GHCR
+    networks:
+      - default
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    command: bash scripts/prestart.sh
+    env_file:
+      - .env
+    volumes:
+      - ./backend/data:/app/data
 
-Also update your PostgreSQL volume path to use the mounted data volume:
-```yaml
+  backend:
+    image: "${DOCKER_IMAGE_BACKEND}"
+    # No build: block — image comes from GHCR
+    restart: always
+    networks:
+      - traefik-public
+      - default
+    depends_on:
+      db:
+        condition: service_healthy
+      prestart:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    volumes:
+      - ./backend/data:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/utils/health-check/')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.services.${STACK_NAME?Variable not set}-backend.loadbalancer.server.port=8000
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.rule=Host(`api.${DOMAIN?Variable not set}`) || Host(`docs.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.rule=Host(`api.${DOMAIN?Variable not set}`) || Host(`docs.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls.certresolver=le
+
+  frontend:
+    image: "${DOCKER_IMAGE_FRONTEND}"
+    # No build: block — image comes from GHCR
+    # VITE_API_URL is a build-time arg baked into the image in CI, not here
+    restart: always
+    networks:
+      - traefik-public
+      - default
+    depends_on:
+      backend:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.services.${STACK_NAME?Variable not set}-frontend.loadbalancer.server.port=80
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.rule=Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.rule=Host(`${DOMAIN?Variable not set}`) || Host(`www.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls.certresolver=le
+
 volumes:
   app-db-data:
     driver: local
@@ -388,7 +475,15 @@ volumes:
       type: none
       o: bind
       device: /mnt/data/postgres
+
+networks:
+  traefik-public:
+    external: true
 ```
+
+> ⚠️ **Never add `build:` blocks to the production compose file.** If anyone runs `docker compose up` without the env vars set, Docker would attempt to build locally instead of pulling from GHCR. Keep `build:` sections in a separate `docker-compose.override.yml` for local development only.
+
+> ⚠️ **Do not add `:${TAG}` to image references.** The full image reference including the tag is already baked into `DOCKER_IMAGE_BACKEND` and `DOCKER_IMAGE_FRONTEND` by the deploy workflow. Adding `:${TAG}` produces a malformed reference like `image:v1.1.1:v1.1.1`.
 
 ---
 
@@ -427,6 +522,7 @@ Add each of the following secrets:
 
 > ⚠️ Never commit secrets or `.env` files to your repository. Add `.env` to `.gitignore`.
 > ⚠️ The `SSH_PRIVATE_KEY` must be a **passphrase-free** key — GitHub Actions cannot interactively enter a passphrase.
+> ⚠️ `VITE_API_URL` is a **build-time** argument baked into the frontend bundle by Vite during the CI build step. Changing it requires a new build and deploy — it cannot be updated at runtime.
 
 ---
 
@@ -472,7 +568,13 @@ Deployments are triggered by releases, not every push. This means a `docs:` or `
 }
 ```
 
+---
+
+## Step 10 — GitHub Actions Workflows
+
 ### `.github/workflows/release.yml`
+
+Runs on every push to `main`. Creates or updates a Release PR. When you merge the Release PR, release-please pushes a `v*` tag which triggers the deploy workflow.
 
 ```yaml
 name: Release Please
@@ -489,35 +591,92 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
-        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: simple
+          release-type: python
 ```
 
+---
+
 ### `.github/workflows/deploy.yml`
+
+Triggered automatically when release-please pushes a `v*` tag, or manually via `workflow_dispatch` with an explicit tag input.
+
+**Two jobs run in sequence:**
+1. `build-and-push` — builds Docker images in CI with layer caching, pushes to GHCR
+2. `deploy` — SSHes to the server, pulls the pre-built images, runs migrations, starts services
 
 ```yaml
 name: Deploy to Server
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.2.0)"
+        required: true
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - name: Lowercase repository name
+        # GHCR requires all image names to be lowercase.
+        # github.repository preserves original casing (e.g. SuStrucSy/BarkByte)
+        # so we lowercase it here and export it for subsequent steps.
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ env.REPO }}/backend:${{ github.event.inputs.tag || github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/${{ env.REPO }}/frontend:${{ github.event.inputs.tag || github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            NODE_ENV=production
+
   deploy:
     runs-on: ubuntu-latest
+    needs: build-and-push
     environment: production
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Lowercase repository name
+        # env context does not carry across jobs — must be set again here
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Configure SSH keep-alive
         run: |
@@ -531,27 +690,38 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add server to known hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Backup database before deploy
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            CONTAINER=$(docker ps --filter "name=db" --format "{{.Names}}" | head -n 1)
-            if [ -n "$CONTAINER" ]; then
-              docker exec $CONTAINER pg_dump -U $POSTGRES_USER $POSTGRES_DB \
-                | gzip > /mnt/data/backups/pre_deploy_$TIMESTAMP.sql.gz
-              echo "Pre-deploy backup saved: pre_deploy_$TIMESTAMP.sql.gz"
-            else
-              echo "No DB container running — skipping backup (first deploy?)"
-            fi
-          EOF
-
-      - name: Write .env and deploy
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          ssh $SSH_USER@$SSH_HOST "DEPLOY_TAG=$DEPLOY_TAG bash -s" <<EOF
+            set -e
+
+            cd ~/timverse-app
+            source .env
+
+            # Silence Docker Compose warnings about TAG not being set
+            export TAG=\$DEPLOY_TAG
+
+            TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
+
+            docker compose exec -T db \
+              pg_dump -U \$POSTGRES_USER \$POSTGRES_DB \
+              | gzip > /mnt/data/backups/pre_deploy_\$TIMESTAMP.sql.gz
+
+            echo "Pre-deploy backup saved: pre_deploy_\$TIMESTAMP.sql.gz"
+          EOF
+
+      - name: Deploy
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          REPO: ${{ env.REPO }}
           DOMAIN: ${{ secrets.DOMAIN }}
           FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
           STACK_NAME: ${{ secrets.STACK_NAME }}
@@ -568,44 +738,93 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
         run: |
-          ssh $SSH_USER@$SSH_HOST 'bash -s' <<EOF
-          cd ~/timverse-app
-          git pull origin main
+          ssh $SSH_USER@$SSH_HOST "DEPLOY_TAG=$DEPLOY_TAG REPO=$REPO bash -s" <<EOF
+            set -e
+            cd ~/timverse-app
 
-          cat > .env <<ENVFILE
-          DOMAIN='${DOMAIN}'
-          FRONTEND_HOST='${FRONTEND_HOST}'
-          ENVIRONMENT='production'
-          STACK_NAME='${STACK_NAME}'
-          PROJECT_NAME='${PROJECT_NAME}'
-          SECRET_KEY='${SECRET_KEY}'
-          FIRST_SUPERUSER='${FIRST_SUPERUSER}'
-          FIRST_SUPERUSER_PASSWORD='${FIRST_SUPERUSER_PASSWORD}'
-          BACKEND_CORS_ORIGINS='${BACKEND_CORS_ORIGINS}'
-          VITE_API_URL='${VITE_API_URL}'
-          POSTGRES_SERVER='db'
-          POSTGRES_PORT='5432'
-          POSTGRES_DB='${POSTGRES_DB}'
-          POSTGRES_USER='${POSTGRES_USER}'
-          POSTGRES_PASSWORD='${POSTGRES_PASSWORD}'
-          SMTP_HOST='${SMTP_HOST}'
-          SMTP_USER='${SMTP_USER}'
-          SMTP_PASSWORD='${SMTP_PASSWORD}'
-          EMAILS_FROM_EMAIL='${EMAILS_FROM_EMAIL}'
-          DOCKER_IMAGE_BACKEND='timverse-backend'
-          DOCKER_IMAGE_FRONTEND='timverse-frontend'
-          TAG='latest'
+            echo "Deploying \$DEPLOY_TAG"
+
+            git fetch --tags
+            git checkout \$DEPLOY_TAG
+            # Server will be in detached HEAD state — this is intentional.
+            # The server repo exists only to serve docker-compose.yml at the correct version.
+
+            CURRENT_COMMIT=\$(git rev-parse HEAD)
+            echo \$CURRENT_COMMIT > .last_deploy
+
+            cat > .env <<ENVFILE
+          DOMAIN=${DOMAIN}
+          FRONTEND_HOST=${FRONTEND_HOST}
+          ENVIRONMENT=production
+          STACK_NAME=${STACK_NAME}
+          PROJECT_NAME=${PROJECT_NAME}
+          SECRET_KEY=${SECRET_KEY}
+          FIRST_SUPERUSER=${FIRST_SUPERUSER}
+          FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
+          BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+          VITE_API_URL=${VITE_API_URL}
+          POSTGRES_SERVER=db
+          POSTGRES_PORT=5432
+          POSTGRES_DB=${POSTGRES_DB}
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          SMTP_HOST=${SMTP_HOST}
+          SMTP_USER=${SMTP_USER}
+          SMTP_PASSWORD=${SMTP_PASSWORD}
+          EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+          DOCKER_IMAGE_BACKEND=ghcr.io/\$REPO/backend:\$DEPLOY_TAG
+          DOCKER_IMAGE_FRONTEND=ghcr.io/\$REPO/frontend:\$DEPLOY_TAG
           ENVFILE
 
-          docker compose -f docker-compose.yml build
-          docker compose -f docker-compose.yml up -d
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
+
+            docker compose -f docker-compose.yml pull backend frontend
+
+            docker compose -f docker-compose.yml up -d db
+            docker compose -f docker-compose.yml run --rm prestart
+
+            # --no-deps prevents Compose from re-running prestart when bringing up
+            # backend (which declares depends_on: prestart: condition: service_completed_successfully)
+            if ! docker compose -f docker-compose.yml up -d --force-recreate --no-deps backend frontend; then
+              echo "Deploy failed — rolling back..."
+              git checkout \$(cat .last_deploy)
+              docker compose -f docker-compose.yml up -d
+              exit 1
+            fi
+
+            echo "Deploy complete: \$DEPLOY_TAG"
           EOF
+
+      - name: Clean up old backend images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: barkbyte/backend
+          package-type: container
+          min-versions-to-keep: 5
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up old frontend images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: barkbyte/frontend
+          package-type: container
+          min-versions-to-keep: 5
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-> `workflow_dispatch` allows manually triggering a deploy from GitHub → Actions → Deploy to Server → Run workflow, without needing a new release.
+#### Key design decisions in the deploy workflow
 
-
+| Decision | Reason |
+|---|---|
+| `DEPLOY_TAG` not `TAG` | `TAG` is a reserved variable in Docker Compose — using it causes the image reference to be doubled (e.g. `image:v1.1.1:v1.1.1`) |
+| Unquoted `<<EOF` with `\$` escapes | Single-quoted `<<'EOF'` sends backslashes literally to the remote, breaking `$(...)` subshell syntax. Unquoted `<<EOF` lets the local shell strip the backslash so a bare `$` reaches the remote |
+| `GH_TOKEN` / `GH_ACTOR` as env vars | Raw `${{ }}` expressions inside a heredoc are expanded before SSH sends it, bypassing Actions' secret masking. Env vars are masked properly |
+| `--no-deps` on final `up` | Without it, Compose re-runs `prestart` when bringing up `backend` (due to `depends_on: prestart: condition: service_completed_successfully`), causing duplicate migration runs |
+| Cleanup after deploy, not before | If the deploy fails and rolls back, you don't accidentally delete the image you just rolled back to |
+| Lowercase repo name step | GHCR requires all image names to be lowercase; `github.repository` preserves original casing |
 
 ---
 
@@ -640,7 +859,7 @@ docker compose -f docker-compose.yml logs frontend
 ```
 
 Expected states:
-- `db`, `backend`, `frontend`, `adminer` → `running`
+- `db`, `backend`, `frontend` → `running`
 - `prestart` → `exited (0)` — this is normal, it runs once for DB migrations
 
 ---
@@ -710,6 +929,10 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 | Object storage | 30 days (configure lifecycle rules in your bucket) |
 | Pre-deploy snapshots | Keep last 5 manually |
 
+### GHCR Image Retention
+
+GHCR has no hard limit on versions, and container image storage is currently free. The deploy workflow automatically keeps only the last 5 versions of each image via `actions/delete-package-versions`. Note that pulls from outside GitHub Actions (i.e. your server pulling images at deploy time) count against your account's free data transfer quota (1 GB/month on the free plan).
+
 ---
 
 ## Common Issues & Fixes
@@ -723,13 +946,18 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 | `HASHED_PASSWORD` variable warnings | `$` signs in hash not escaped | Double every `$` in `HASHED_PASSWORD` in `~/traefik/.env` |
 | SSH passphrase prompt in Actions | Deploy key has a passphrase | Generate a new key with `-N ""` (no passphrase) |
 | Actions workflow not appearing | Wrong file path | Must be at exactly `.github/workflows/deploy.yml` |
-| Actions triggers but doesn't deploy | Using push trigger | Deploy only triggers on published release — merge the Release PR first |
+| Actions triggers but doesn't deploy | Wrong trigger type | Deploy triggers on `push: tags: v*` — merge the Release PR first |
 | SSH connection drops during build | Long build times out | Add `ServerAliveInterval 60` to SSH config step in workflow |
 | `prestart` keeps restarting | DB not healthy yet | Check `docker compose logs db` |
-| Frontend can't reach API | `VITE_API_URL` wrong | It's a **build-time** arg — ensure secret is `https://api.timverse.ca` and rebuild |
+| Frontend can't reach API | `VITE_API_URL` wrong | It's a **build-time** arg — ensure secret is `https://api.timverse.ca` and trigger a new deploy |
 | DB data lost after reboot | `/mnt/data` not remounted | Check `/etc/fstab` entry and run `sudo mount -a` |
 | 502 Bad Gateway | Backend not ready | Wait for health check, check `docker compose logs backend` |
 | GitHub Actions SSH fails | Wrong key or host | Double-check `SSH_PRIVATE_KEY`, `SSH_HOST`, and `SSH_USER` secrets |
+| Image name uppercase error | `github.repository` preserves casing | Ensure `Lowercase repository name` step is present in both jobs |
+| Image reference format error (`image:v1.1.1:v1.1.1`) | `TAG` env var conflicts with Docker Compose | Use `DEPLOY_TAG` throughout — never use `TAG` as a variable name |
+| `syntax error near unexpected token '('` | Heredoc uses `<<'EOF'` | Use unquoted `<<EOF` with `\$` to escape remote variables |
+| Docker Compose `TAG` variable warning | `TAG` is set in the shell env | Use `DEPLOY_TAG` and export `TAG=\$DEPLOY_TAG` only where Compose needs it |
+| `prestart` runs twice on deploy | Missing `--no-deps` | Add `--no-deps` to `docker compose up` for backend and frontend |
 
 ---
 
@@ -740,7 +968,7 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 docker compose -f docker-compose.yml restart backend
 
 # Rebuild and restart after manual changes
-docker compose -f docker-compose.yml build backend && docker compose -f docker-compose.yml up -d backend
+docker compose -f docker-compose.yml up -d --no-deps backend
 
 # View real-time logs
 docker compose -f docker-compose.yml logs -f
@@ -766,6 +994,7 @@ docker compose -f docker-compose.yml down -v
 | Use GitHub Environments | Add approval gates before production deploys |
 | Rotate `SECRET_KEY` carefully | Changing it invalidates all active user sessions |
 | Restrict security group rules | Only open ports 22, 80, 443 |
+| Keep `build:` out of production compose | Prevents accidental local builds if env vars are missing |
 
 ---
 
@@ -830,4 +1059,5 @@ sudo systemctl is-enabled docker
 - [GitHub Actions — Encrypted Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [Release Please Action](https://github.com/googleapis/release-please-action)
 - [Conventional Commits](https://www.conventionalcommits.org/)
+- [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 - [Alliance System Status](https://status.alliancecan.ca/)
