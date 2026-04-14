@@ -921,14 +921,6 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
   | docker exec -i timverse-db-1 psql -U $POSTGRES_USER $POSTGRES_DB
 ```
 
-### Auto deleting pre deploy backups via cron job
-```bash
-crontab -e
-
-# Add this line:
-0 3 * * * find /mnt/data/backups -type f -name "*.sql.gz" -mtime +7 -delete
-```
-
 ### Backup Retention Strategy
 
 | Location | Retention |

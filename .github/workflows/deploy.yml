@@ -99,6 +99,16 @@ jobs:
               | gzip > /mnt/data/backups/pre_deploy_\$TIMESTAMP.sql.gz
 
             echo "Pre-deploy backup saved: pre_deploy_\$TIMESTAMP.sql.gz"
+
+            echo "Keep only last 5 backups"
+
+            BACKUP_DIR=/mnt/data/backups
+
+            find "$BACKUP_DIR" -name "pre_deploy_*.sql.gz" -printf '%T@ %p\n' \
+              | sort -nr \
+              | tail -n +6 \
+              | awk '{print $2}' \
+              | xargs -r rm -f
           EOF
 
       - name: Deploy
@@ -164,14 +174,18 @@ jobs:
 
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
 
-            docker compose --env-file .env -f docker-compose.yml pull backend frontend
+            echo "Pulling backend and frontend docker images"
 
-            docker compose --env-file .env -f docker-compose.yml up -d db
-            docker compose --env-file .env -f docker-compose.yml run --rm prestart
+            docker compose -f docker-compose.yml pull backend frontend
 
-            docker compose -f docker-compose.yml rm -sf backend frontend
+            echo "Staring up db container"
 
-            docker compose --env-file .env -f docker-compose.yml up -d backend frontend
+            docker compose -f docker-compose.yml up -d db
+            docker compose  -f docker-compose.yml run --rm prestart
+
+            echo "Staring up backend and frontend containers"
+
+            docker compose -f docker-compose.yml up -d --force-recreate backend frontend
 
             # ✅ real validation
             sleep 10
