@@ -143,11 +143,14 @@ jobs:
 
             echo "Deploying \$DEPLOY_TAG"
 
+            PREVIOUS_COMMIT=\$(git rev-parse HEAD)
+            echo \$PREVIOUS_COMMIT > .last_deploy
+            if [ -f .env ]; then
+              cp .env .env.rollback
+            fi
+
             git fetch --tags
             git checkout \$DEPLOY_TAG
-
-            CURRENT_COMMIT=\$(git rev-parse HEAD)
-            echo \$CURRENT_COMMIT > .last_deploy
 
             cat > .env <<ENVFILE
           DOMAIN=${DOMAIN}
@@ -182,7 +185,6 @@ jobs:
             echo "Staring up db container"
 
             docker compose -f docker-compose.yml up -d db
-            docker compose  -f docker-compose.yml run --rm prestart
 
             echo "Staring up backend and frontend containers"
 
@@ -193,10 +195,15 @@ jobs:
 
             if ! docker compose ps backend | grep -q "Up"; then
               echo "Rolling back..."
-              git checkout $(cat .last_deploy)
-              docker compose up -d
+              git checkout \$(cat .last_deploy)
+              if [ -f .env.rollback ]; then
+                mv .env.rollback .env
+              fi
+              docker compose -f docker-compose.yml up -d --force-recreate backend frontend
               exit 1
             fi
+
+            rm -f .env.rollback
 
             echo "Deploy complete: \$DEPLOY_TAG"
           EOF

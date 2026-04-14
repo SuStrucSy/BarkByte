@@ -427,6 +427,7 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/utils/health-check/')",
         ]
+        
       interval: 10s
       timeout: 5s
       retries: 5

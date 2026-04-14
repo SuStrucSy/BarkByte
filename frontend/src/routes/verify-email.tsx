@@ -1,65 +1,75 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { z } from "zod/v4";
 import ErrorComponent from "@/components/Common/Error";
 import { VerifyEmailComponent } from "@/components/Common/VerifyEmail";
-import useAuth from "@/hooks/useAuth";
+import { usersVerifyEmail } from "@/api/endpoints/users/users";
 
 const verifyEmailSearchSchema = z.object({
-	token: z.string().min(1).optional(),
+  token: z.string().min(1).optional(),
 });
 
 type VerifyEmailSearch = z.infer<typeof verifyEmailSearchSchema>;
 
 export const Route = createFileRoute("/verify-email")({
-	validateSearch: (search): VerifyEmailSearch =>
-		verifyEmailSearchSchema.parse(search),
-	component: VerifyEmail,
+  validateSearch: (search): VerifyEmailSearch =>
+    verifyEmailSearchSchema.parse(search),
+
+  loaderDeps: ({ search }) => ({
+    token: search.token,
+  }),
+
+  loader: async ({ deps }) => {
+    const token = deps.token;
+
+    if (!token) {
+      return {
+        status: "error",
+        error: new Error("Missing verification token."),
+      };
+    }
+
+    try {
+      const res = await usersVerifyEmail({
+        token,
+      });
+
+      return {
+        status: "success",
+        message: res.message ?? "Email verified successfully.",
+      };
+    } catch (err) {
+      return {
+        status: "error",
+        error: err,
+      };
+    }
+  },
+  component: VerifyEmail,
 });
 
 function VerifyEmail() {
-	const { verifyEmailMutation } = useAuth();
-	const { token } = Route.useSearch();
+  const data = Route.useLoaderData();
 
-	useEffect(() => {
-		if (
-			token &&
-			!verifyEmailMutation.isPending &&
-			!verifyEmailMutation.isSuccess &&
-			!verifyEmailMutation.isError
-		) {
-			verifyEmailMutation.mutate({ data: { token } });
-		}
-	}, [token, verifyEmailMutation]);
+  if (data.status === "error") {
+    return <ErrorComponent error={data.error} />;
+  }
 
-	if (!token) {
-		return <ErrorComponent error={new Error("Missing verification token.")} />;
-	}
+  if (data.status === "success") {
+    return (
+      <VerifyEmailComponent
+        icon="success"
+        title="Email verified"
+        message={data.message}
+        action={{ label: "Continue to sign in", to: "/login" }}
+      />
+    );
+  }
 
-	if (verifyEmailMutation.isPending) {
-		return (
-			<VerifyEmailComponent
-				icon="loading"
-				title="Verifying your email"
-				message="This should only take a moment."
-			/>
-		);
-	}
-
-	if (verifyEmailMutation.isError) {
-		return <ErrorComponent error={verifyEmailMutation.error} />;
-	}
-
-	if (verifyEmailMutation.isSuccess) {
-		return (
-			<VerifyEmailComponent
-				icon="success"
-				title="Email verified"
-				message={verifyEmailMutation.data.message}
-				action={{ label: "Continue to sign in", to: "/login" }}
-			/>
-		);
-	}
-
-	return null;
+  return (
+    <VerifyEmailComponent
+      icon="loading"
+      title="Verifying your email"
+      message="Please wait..."
+    />
+  );
 }
