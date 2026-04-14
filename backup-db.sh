@@ -11,50 +11,51 @@
 # Place this file on your server at ~/backup-db.sh
 # Run: chmod +x ~/backup-db.sh
 # =============================================================================
-
 set -euo pipefail
 
-# --- Configuration -----------------------------------------------------------
 BACKUP_DIR=~/backups
 RETENTION_DAYS=7
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql.gz"
 
-# Load database credentials from .env file in app directory
-APP_DIR=~/your-app-repo
+APP_DIR=~/timverse-app
+
+# ✅ safer env loading
 if [ -f "$APP_DIR/.env" ]; then
-  export $(grep -E '^POSTGRES_(USER|PASSWORD|DB)' "$APP_DIR/.env" | xargs)
+  set -o allexport
+  source "$APP_DIR/.env"
+  set +o allexport
 fi
 
-# Auto-detect the running postgres container
-CONTAINER=$(docker ps --filter "name=db" --format "{{.Names}}" | head -n 1)
+# ✅ better container detection
+CONTAINER=$(docker compose -f "$APP_DIR/docker-compose.yml" ps -q db)
 
-# --- Validation --------------------------------------------------------------
 if [ -z "$CONTAINER" ]; then
-  echo "[ERROR] $(date): No running database container found. Is docker compose up?"
+  echo "[ERROR] $(date): No running database container found."
   exit 1
 fi
 
 if [ -z "${POSTGRES_USER:-}" ] || [ -z "${POSTGRES_DB:-}" ]; then
-  echo "[ERROR] $(date): POSTGRES_USER or POSTGRES_DB not set. Check your .env file."
+  echo "[ERROR] $(date): POSTGRES_USER or POSTGRES_DB not set."
   exit 1
 fi
 
-# --- Backup ------------------------------------------------------------------
 mkdir -p "$BACKUP_DIR"
 
-echo "[INFO] $(date): Starting backup of database '$POSTGRES_DB' from container '$CONTAINER'..."
+echo "[INFO] $(date): Starting backup of '$POSTGRES_DB'..."
 
-docker exec "$CONTAINER" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
-  | gzip > "$BACKUP_FILE"
+# ✅ safer exec + failure handling
+if ! docker exec -T "$CONTAINER" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "$BACKUP_FILE"; then
+  echo "[ERROR] $(date): Backup failed!"
+  exit 1
+fi
 
 BACKUP_SIZE=$(du -sh "$BACKUP_FILE" | cut -f1)
 echo "[INFO] $(date): Backup complete — $BACKUP_FILE ($BACKUP_SIZE)"
 
-# --- Cleanup: delete backups older than RETENTION_DAYS -----------------------
-echo "[INFO] $(date): Removing backups older than $RETENTION_DAYS days..."
-find "$BACKUP_DIR" -name "backup_*.sql.gz" -mtime +$RETENTION_DAYS -delete
-echo "[INFO] $(date): Cleanup complete."
+echo "[INFO] $(date): Cleaning old backups..."
+find "$BACKUP_DIR" -type f -name "backup_*.sql.gz" -mtime +$RETENTION_DAYS -print -delete
+
 
 # --- Optional: sync to Alliance S3 object storage ---------------------------
 # Uncomment and configure after running: aws configure --profile alliance
