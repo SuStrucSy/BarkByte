@@ -125,7 +125,7 @@ Release Please Action
                                     release-please pushes a v* tag
                                               │
                                               ▼
-                                    Deploy workflow triggers
+                                    Build and push triggers on release created
                                               │
                                               ├── [CI] Build backend image → push to GHCR
                                               ├── [CI] Build frontend image (VITE_API_URL baked in) → push to GHCR
