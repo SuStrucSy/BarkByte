@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { Loader2, TreePine } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
+import { z } from "zod/v4";
 import type { BodyLoginLoginAccessToken } from "@/api/model";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,9 @@ import useAuth from "@/hooks/useAuth";
 import { loginSchema } from "@/lib/schemas";
 
 export const Route = createFileRoute("/login")({
+	validateSearch: z.object({
+		redirect: z.string().optional(),
+	}),
 	component: Login,
 	beforeLoad: async () => {
 		const token =
@@ -44,7 +48,8 @@ export const Route = createFileRoute("/login")({
 });
 
 function Login() {
-	const { loginMutation, resetError } = useAuth();
+	const { redirect } = Route.useSearch();
+	const { loginMutation, resetError } = useAuth({ redirectTo: redirect });
 	const form = useForm<BodyLoginLoginAccessToken>({
 		resolver: zodResolver(loginSchema),
 		mode: "onBlur",

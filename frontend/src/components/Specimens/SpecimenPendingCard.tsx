@@ -330,6 +330,7 @@ function PendingFieldRow({
 	newValue,
 	isChanged,
 	unit,
+	renderOldValue,
 	renderNewValue,
 }: {
 	label: string;
@@ -337,6 +338,7 @@ function PendingFieldRow({
 	newValue: unknown;
 	isChanged: boolean;
 	unit?: string;
+	renderOldValue?: () => React.ReactNode;
 	renderNewValue?: () => React.ReactNode;
 }) {
 	return (
@@ -347,7 +349,9 @@ function PendingFieldRow({
 			{isChanged ? (
 				<div className="grid min-w-0 gap-1">
 					<div className="text-sm text-red-600 line-through decoration-red-400">
-						{formatFieldValue(oldValue, unit)}
+						{renderOldValue
+							? renderOldValue()
+							: formatFieldValue(oldValue, unit)}
 					</div>
 					<div className="text-sm text-green-700 dark:text-green-400">
 						{renderNewValue
@@ -418,6 +422,12 @@ export function SpecimenPendingCard({
 		return originalSpecimen?.[field];
 	};
 
+	const formatQfmLabels = (
+		failureModes: SpecimenPublic["e_qualitative_failure_measure"] | undefined,
+	) => (
+		<span className="font-medium">{renderValue(failureModes ?? [])}</span>
+	);
+
 	const renderFieldGrid = (
 		fields: SpecimenField[],
 		columnsClassName: string,
@@ -442,6 +452,20 @@ export function SpecimenPendingCard({
 						newValue={getDisplayValue(field)}
 						isChanged={!isNew && isFieldChanged(field)}
 						unit={fieldUnits[field]}
+						renderOldValue={
+							field === "e_qualitative_failure_measure"
+								? () =>
+										formatQfmLabels(
+											originalSpecimen?.e_qualitative_failure_measure,
+										)
+								: undefined
+						}
+						renderNewValue={
+							field === "e_qualitative_failure_measure"
+								? () =>
+										formatQfmLabels(specimen.e_qualitative_failure_measure)
+								: undefined
+						}
 					/>
 				))}
 			</div>

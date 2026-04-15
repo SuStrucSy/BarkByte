@@ -13,15 +13,19 @@ import { SpecimenTabStructural } from "./SpecimenTabStructural";
 type SpecimenProps = {
 	data: SpecimenPublic;
 	setSheetOpen: (open: boolean) => void;
+	onEditClick: () => void;
 };
 
-export function Specimen({ data, setSheetOpen }: SpecimenProps) {
+export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 	// Build the chart model once from this specimen's experimental values.
 	const backboneModel = buildSpecimenBackboneModel(data);
 
 	return (
 		<>
-			<SpecimenHeader id={data.specimen_reference_id ?? data.id} />
+			<SpecimenHeader
+				id={data.specimen_reference_id ?? data.id}
+				onEditClick={onEditClick}
+			/>
 
 			<div className="grid gap-6 text-sm">
 				<Tabs defaultValue="Meta Data">

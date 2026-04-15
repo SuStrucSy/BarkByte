@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/item";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
+import { getEmptySpecimenFormValues } from "@/components/Specimens/specimenForm.utils";
 import {
 	type AddNewSpecimenFormValues,
 	AddNewSpecimenSchema,
@@ -162,44 +163,7 @@ function NewSpecimen() {
 
 	const form = useForm<AddNewSpecimenFormValues>({
 		resolver: zodResolver(AddNewSpecimenSchema),
-		defaultValues: {
-			authors: "",
-			link: "",
-			pub_year: new Date().getFullYear(),
-			ref_title: "",
-			specimen_reference_id: "",
-			assembly_type: undefined as any,
-			joinery_type_id: "",
-			sub_joinery_type_id: "",
-			fastener_type_ids: [],
-			loading_direction_ids: [],
-			practice: undefined as any,
-			fastener_numbers: 1,
-			connector: false,
-			dowel: false,
-			replicate_tests: 1,
-			connection_description: "",
-			note: "",
-			element_dimension: "",
-			moisture_percentage: "",
-			wood_type: "",
-			wood_mechanical_properties: "",
-			fastener_mechanical_properties: "",
-			connector_mechanical_properties: "",
-			e_stiffness: null,
-			e_yield_force: null,
-			e_yield_displacement: null,
-			e_max_force: null,
-			e_max_displacement: null,
-			e_ultimate_force: null,
-			e_ultimate_displacement: null,
-			e_ductility: null,
-			e_test_loading_type: null,
-			e_yield_point_method: null,
-			e_date: "",
-			e_qfm_description: "",
-			e_qualitative_failure_measure: [],
-		} as AddNewSpecimenFormValues,
+		defaultValues: getEmptySpecimenFormValues(),
 		mode: "onChange",
 	});
 

@@ -1,6 +1,10 @@
 import { type Control, Controller, useWatch } from "react-hook-form";
+import { format, parseISO } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode";
 import QFMTypes from "@/assets/failures.svg?react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
 	Field,
 	FieldDescription,
@@ -10,6 +14,7 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -245,14 +250,33 @@ export function SpecimenExperimentalFields({
 				render={({ field, fieldState }) => (
 					<Field data-invalid={fieldState.invalid}>
 						<FieldLabel htmlFor="e_date">Test Date</FieldLabel>
-						<Input
-							{...field}
-							id="e_date"
-							type="date"
-							value={(field.value as string) ?? ""}
-							aria-invalid={fieldState.invalid}
-							className="w-full max-w-48"
-						/>
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button
+									id="e_date"
+									type="button"
+									variant="outline"
+									aria-invalid={fieldState.invalid}
+									className="w-full max-w-64 justify-between font-normal"
+								>
+									{field.value
+										? format(parseISO(field.value), "PPP")
+										: "Select test date"}
+									<CalendarIcon className="h-4 w-4 text-muted-foreground" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-auto p-0" align="start">
+								<Calendar
+									mode="single"
+									selected={
+										field.value ? parseISO(field.value as string) : undefined
+									}
+									onSelect={(date) =>
+										field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+									}
+								/>
+							</PopoverContent>
+						</Popover>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				)}

@@ -101,15 +101,43 @@ def update_specimen(
     if not specimen:
         raise HTTPException(status_code=404, detail="Specimen not found")
 
-    if not current_user.is_superuser and (specimen.uploader_id != current_user.id):
+    if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    changed_data = specimen_in.model_dump(
+        exclude={"comment_by_author"},
+        exclude_unset=True,
+    )
+    if not changed_data:
+        raise HTTPException(status_code=400, detail="No specimen changes submitted")
+
+    try:
+        complete = specimen_crud._build_complete_specimen_for_update(
+            session=session,
+            specimen=specimen,
+            patch=specimen_in,
+        )
+        data, failure_mode_ids, fastener_type_ids, _loading_direction_ids = (
+            specimen_crud._split_specimen_payload(complete, for_update=False)
+        )
+        specimen_crud._validate_joinery_and_dowel(session, data)
+        specimen_crud._validate_failure_modes_against_toggles(
+            session=session,
+            failure_mode_ids=failure_mode_ids,
+            connector=data.get("connector"),
+            dowel=data.get("dowel"),
+        )
+        specimen_crud._validate_fasteners_against_dowel(
+            fastener_type_ids=fastener_type_ids,
+            dowel=data.get("dowel"),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Specimen validation failed: {e}")
 
     pending = pendingspecimen_crud.create_pending_specimen(
         session=session,
         changed_by_user_id=current_user.id,
-        changed_data=specimen_in.model_dump(
-            exclude={"comment_by_author"}, exclude_unset=True
-        ),
+        changed_data=changed_data,
         specimen_id=id,
         comment_by_author=specimen_in.comment_by_author,
     )
