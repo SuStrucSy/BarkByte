@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
-from app.crud import specimen as specimen_crud
 from app.crud import user as user_crud
 from app.models.user import User
 from app.schemas.user import (
@@ -22,11 +21,12 @@ from app.schemas.user import (
     UserUpdateMe,
 )
 from app.utils import (
+    generate_email_verification_token,
     generate_new_account_email,
     generate_password_reset_token,
     generate_signup_email,
     send_email,
-    verify_password_reset_token,
+    verify_token,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -140,14 +140,20 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic:
 
     user = user_crud.create_user(session=session, user_create=user_in)
     if settings.emails_enabled and user_in.email:
-        email_data = generate_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
-        send_email(
-            email_to=user_in.email,
-            subject=email_data.subject,
-            html_content=email_data.html_content,
-        )
+        try:
+            token = generate_password_reset_token(email=user.email)
+            email_data = generate_new_account_email(
+                email_to=user.email,
+                username=user.email,
+                token=token,
+            )
+            send_email(
+                email_to=user.email,
+                subject=email_data.subject,
+                html_content=email_data.html_content,
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to send create user email: {e}")
     return user
 
 
@@ -247,7 +253,7 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
     user_crud.create_user(session=session, user_create=user_create)
 
     if settings.emails_enabled and user_in.email:
-        register_user_token = generate_password_reset_token(email=user_in.email)
+        register_user_token = generate_email_verification_token(email=user_in.email)
         email_data = generate_signup_email(
             email_to=user_in.email, email=user_in.email, token=register_user_token
         )
@@ -271,7 +277,7 @@ def verify_email(session: SessionDep, body: NewAccount) -> Message:
     """
     verify email and reset password.
     """
-    email = verify_password_reset_token(token=body.token)
+    email = verify_token(body.token, "email_verification")
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
     user = user_crud.get_user_by_email(session=session, email=email)

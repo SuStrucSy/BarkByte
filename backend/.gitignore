@@ -8,3 +8,5 @@ htmlcov
 .venv
 data/
 openapi.json
+
+Dockerfile.dev

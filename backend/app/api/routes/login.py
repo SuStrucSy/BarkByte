@@ -1,21 +1,21 @@
-from datetime import timedelta
-from typing import Annotated, Any
 import logging
+from datetime import timedelta
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.crud import user as user_crud
 from app.api.deps import CurrentUser, SessionDep
 from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash
+from app.crud import user as user_crud
 from app.schemas.user import Message, NewPassword, Token, UserPublic
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
     send_email,
-    verify_password_reset_token,
+    verify_token,
 )
 
 router = APIRouter(tags=["login"])
@@ -23,9 +23,7 @@ router = APIRouter(tags=["login"])
 
 @router.post(
     "/login/access-token",
-    responses={
-        400: {"description": "Incorrect email or password"}
-    }
+    responses={400: {"description": "Incorrect email or password"}},
 )
 def login_access_token(
     session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
@@ -59,20 +57,22 @@ def test_token(current_user: CurrentUser) -> UserPublic:
 @router.post(
     "/password-recovery/{email}",
     responses={
-        200: {"description": "If an account exists with that email, you'll receive recovery instructions."}
-    }
+        200: {
+            "description": "If an account exists with that email, you'll receive recovery instructions."
+        }
+    },
 )
 def recover_password(email: str, session: SessionDep) -> Message:
     """
     Password Recovery
     """
     user = user_crud.get_user_by_email(session=session, email=email)
-    
+
     if user and user.is_active:
         try:
             password_reset_token = generate_password_reset_token(email=email)
             email_data = generate_reset_password_email(
-                email_to=user.email, email=email, token=password_reset_token
+                email=user.email, username=user.email, token=password_reset_token
             )
             send_email(
                 email_to=user.email,
@@ -82,21 +82,23 @@ def recover_password(email: str, session: SessionDep) -> Message:
         except Exception:
             logging.exception("Failed to send password recovery email")
 
-    return Message(message="If an account exists with that email, you'll receive recovery instructions.")
+    return Message(
+        message="If an account exists with that email, you'll receive recovery instructions."
+    )
 
 
 @router.post(
     "/reset-password/",
     responses={
         400: {"description": "Invalid token or inactive user"},
-        404: {"description": "The user with this email does not exist in the system."}
-    }
+        404: {"description": "The user with this email does not exist in the system."},
+    },
 )
 def reset_password(session: SessionDep, body: NewPassword) -> Message:
     """
     Reset password
     """
-    email = verify_password_reset_token(token=body.token)
+    email = verify_token(body.token, "password_reset")
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
     user = user_crud.get_user_by_email(session=session, email=email)
@@ -112,3 +114,41 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
     session.add(user)
     session.commit()
     return Message(message="Password updated successfully")
+
+
+@router.post(
+    "/set-password",
+    responses={
+        400: {"description": "Invalid token or inactive user"},
+        404: {"description": "The user with this email does not exist in the system."},
+    },
+)
+def set_password(session: SessionDep, body: NewPassword) -> Token:
+    email = verify_token(
+        token=body.token,
+        expected_type="password_reset",
+    )
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    user = user_crud.get_user_by_email(session=session, email=email)
+
+    if not user:
+        raise HTTPException(status_code=404)
+
+    # activate user if admin-created
+    user.is_active = True
+
+    user.hashed_password = get_password_hash(body.new_password)
+
+    session.add(user)
+    session.commit()
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    return Token(
+        access_token=security.create_access_token(
+            user.id,
+            expires_delta=access_token_expires,
+        )
+    )

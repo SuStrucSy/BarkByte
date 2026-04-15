@@ -3,10 +3,13 @@ import {
   createFileRoute,
   Link as RouterLink,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router";
 import { Loader2, TreePine } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import type { BodyLoginLoginAccessToken } from "@/api/model";
+import { toast } from "sonner";
+import z from "zod/v4";
+import { useLoginSetPassword } from "@/api/endpoints/login/login";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,110 +23,122 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import useAuth from "@/hooks/useAuth";
-import { loginSchema } from "@/lib/schemas";
+import { resetPasswordSchema } from "@/lib/schemas";
+import { handleError } from "@/lib/utils";
 
-export const Route = createFileRoute("/login")({
-  component: Login,
-  beforeLoad: async () => {
+interface SetPasswordForm {
+  new_password: string;
+  confirm_password: string;
+}
+
+const passwordSchema = z.object({
+  token: z.string().min(1),
+});
+
+export const Route = createFileRoute("/set-password")({
+  validateSearch: passwordSchema,
+  component: SetPasswordPage,
+  beforeLoad: async ({ search }) => {
+    // ✅ Direct localStorage check (SSR-safe)
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("access_token")
         : null;
+
     if (token) {
       throw redirect({ to: "/" });
+    }
+
+    if (!search.token) {
+      throw redirect({ to: "/login" });
     }
   },
 });
 
-function Login() {
-  const { loginMutation, resetError } = useAuth();
-  const form = useForm<BodyLoginLoginAccessToken>({
-    resolver: zodResolver(loginSchema),
+function SetPasswordPage() {
+  const { token } = Route.useSearch();
+  const form = useForm<SetPasswordForm>({
+    resolver: zodResolver(resetPasswordSchema),
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      username: "",
-      password: "",
+      new_password: "",
+      confirm_password: "",
     },
   });
 
-  const onSubmit: SubmitHandler<BodyLoginLoginAccessToken> = async (data) => {
-    resetError();
+  const navigate = useNavigate();
+  const mutation = useLoginSetPassword({
+    mutation: {
+      onSuccess: (data) => {
+        toast.success("Password set successfully.");
+        form.reset();
+        localStorage.setItem("access_token", data.access_token);
+        navigate({ to: "/" });
+      },
+      onError: (err) => {
+        handleError(err);
+      },
+    },
+  });
 
-    try {
-      await loginMutation.mutateAsync({ data: data });
-    } catch {
-      // error is handled by useAuth hook
-    }
+  const onSubmit: SubmitHandler<SetPasswordForm> = async (data) => {
+    mutation.mutateAsync({
+      data: { new_password: data.new_password, token: token },
+    });
   };
-
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <Card>
-          <RouterLink
-            to="/"
-            className="flex items-center gap-2 p-6 transition-transform duration-150 hover:scale-[1.02] hover:text-green-800 dark:hover:text-green-300"
-          >
-            <TreePine size={17} strokeWidth={2.2} />
-            <span className="font-serif text-base font-bold tracking-wide">
-              Timverse
-            </span>
-          </RouterLink>
           <CardHeader>
-            <CardTitle className="font-serif text-2xl font-bold leading-tight tracking-tight">
-              Welcome back
-            </CardTitle>
-            <CardDescription className="mt-1.5 text-sm font-light">
-              Enter your credentials to continue
+            <CardTitle className="text-2xl">Set Password</CardTitle>
+            <CardDescription>
+              Please enter your new password and confirm it to set your
+              password.
             </CardDescription>
             <CardAction>
-              <Button
-                variant="link"
-                className="shrink-0 pt-0.5 text-xs no-underline"
-                asChild
-              >
-                <RouterLink to="/signup">Sign Up</RouterLink>
+              <Button variant="link" asChild>
+                <RouterLink to="/login">Log In</RouterLink>
               </Button>
             </CardAction>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form
-                id="loginForm"
+                id="setPasswordForm"
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
               >
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="new_password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>New Password</FormLabel>
                       <FormControl>
-                        <Input placeholder="you@example.com" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormDescription>
-                        This is the email that you registered with.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="password"
+                  name="confirm_password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
                         <Input
                           type="password"
@@ -141,19 +156,14 @@ function Login() {
           <CardFooter className="flex-col gap-2">
             <Button
               type="submit"
-              form="loginForm"
+              form="setPasswordForm"
               className="w-full"
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting && (
                 <Loader2 className="animate-spin" />
               )}
-              Login
-            </Button>
-            <Button variant="link" asChild>
-              <RouterLink to="/recover-password">
-                Forgot your password?
-              </RouterLink>
+              Set Password
             </Button>
           </CardFooter>
         </Card>

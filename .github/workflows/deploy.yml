@@ -105,10 +105,10 @@ jobs:
 
             BACKUP_DIR=/mnt/data/backups
 
-            find "$BACKUP_DIR" -name "pre_deploy_*.sql.gz" -printf '%T@ %p\n' \
-              | sort -nr \
+            cd "$BACKUP_DIR"
+
+            ls -1t pre_deploy_*.sql.gz \
               | tail -n +6 \
-              | awk '{print $2}' \
               | xargs -r rm -f
           EOF
 
@@ -206,6 +206,9 @@ jobs:
             rm -f .env.rollback
 
             echo "Deploy complete: \$DEPLOY_TAG"
+
+            echo "Cleaning unused Docker images..."
+            docker image prune -a -f
           EOF
 
       - name: Clean up old backend images
