@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.5](https://github.com/SuStrucSy/BarkByte/compare/v2.0.4...v2.0.5) (2026-04-15)
+
+
+### Bug Fixes
+
+* permission error with deleting old image versions ([843e0be](https://github.com/SuStrucSy/BarkByte/commit/843e0be1d9791893ae22423a59e8db13b5c69227))
+
 ## [2.0.4](https://github.com/SuStrucSy/BarkByte/compare/v2.0.3...v2.0.4) (2026-04-15)
 
 
