@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/SuStrucSy/BarkByte/compare/v2.0.0...v2.0.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* bug in backup as well as workflow ([8f1386e](https://github.com/SuStrucSy/BarkByte/commit/8f1386eb54039b433ddb57d8be7ed7b4b834882d))
+* bug related to email security scanners consuming token ([8dfe381](https://github.com/SuStrucSy/BarkByte/commit/8dfe381d581f57dc2d2d9181ecbe12a2c69813ca))
+
 ## [2.0.0](https://github.com/SuStrucSy/BarkByte/compare/v1.1.5...v2.0.0) (2026-04-15)
 
 
