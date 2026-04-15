@@ -44,8 +44,14 @@ mkdir -p "$BACKUP_DIR"
 
 echo "[INFO] $(date): Starting backup of '$POSTGRES_DB'..."
 
+if docker exec --help 2>&1 | grep -q -- '-T'; then
+  DOCKER_EXEC_OPTS="-T"
+else
+  DOCKER_EXEC_OPTS=""
+fi
+
 # ✅ safer exec + failure handling
-if ! docker exec -T "$CONTAINER" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "$BACKUP_FILE"; then
+if ! docker exec $DOCKER_EXEC_OPTS "$CONTAINER" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "$BACKUP_FILE"; then
   echo "[ERROR] $(date): Backup failed!"
   exit 1
 fi

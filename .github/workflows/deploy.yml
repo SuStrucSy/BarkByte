@@ -103,9 +103,7 @@ jobs:
 
             echo "Keep only last 5 backups"
 
-            BACKUP_DIR=/mnt/data/backups
-
-            cd "$BACKUP_DIR"
+            cd /mnt/data/backups
 
             ls -1t pre_deploy_*.sql.gz \
               | tail -n +6 \
