@@ -292,11 +292,13 @@ function Dashboard() {
 						className="flex w-full items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4 transition hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 						aria-label="Expand joinery types reference image"
 					>
-						<img
-							src={joineryTypesReference}
-							alt="Reference sheet showing timber joinery and connection types"
-							className="h-auto max-h-[620px] w-full object-contain"
-						/>
+						<div className="w-full rounded-lg bg-white p-3 shadow-sm">
+							<img
+								src={joineryTypesReference}
+								alt="Reference sheet showing timber joinery and connection types"
+								className="h-auto max-h-[620px] w-full object-contain"
+							/>
+						</div>
 					</button>
 				</CardContent>
 			</Card>
@@ -458,11 +460,13 @@ function Dashboard() {
 						<DialogTitle>Joinery Types Reference</DialogTitle>
 					</DialogHeader>
 					<div className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-xl border border-border/70 bg-muted/20 p-4">
-						<img
-							src={joineryTypesReference}
-							alt="Reference sheet showing timber joinery and connection types"
-							className="h-auto max-h-full w-full object-contain"
-						/>
+						<div className="w-full rounded-lg bg-white p-4 shadow-sm">
+							<img
+								src={joineryTypesReference}
+								alt="Reference sheet showing timber joinery and connection types"
+								className="h-auto max-h-full w-full object-contain"
+							/>
+						</div>
 					</div>
 				</DialogContent>
 			</Dialog>
