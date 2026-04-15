@@ -1,19 +1,24 @@
 import type { SpecimenPublic } from "@/api/model";
 import { LabelValue } from "@/components/Common/LabelValue";
-import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BackboneChart } from "./BackboneChart";
+import { buildSpecimenBackboneModel } from "./buildSpecimenBackboneModel";
 import { SpecimenFailureModeLinks } from "./SpecimenFailureModeLinks";
 import { SpecimenHeader } from "./SpecimenHeader";
 import { SpecimenTabMeta } from "./SpecimenTabMeta";
 import { SpecimenTabStructural } from "./SpecimenTabStructural";
 
+// Page component for the specimen detail view.
 type SpecimenProps = {
 	data: SpecimenPublic;
 	setSheetOpen: (open: boolean) => void;
 };
 
 export function Specimen({ data, setSheetOpen }: SpecimenProps) {
+	// Build the chart model once from this specimen's experimental values.
+	const backboneModel = buildSpecimenBackboneModel(data);
+
 	return (
 		<>
 			<SpecimenHeader id={data.specimen_reference_id ?? data.id} />
@@ -58,7 +63,7 @@ export function Specimen({ data, setSheetOpen }: SpecimenProps) {
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">
 											Quantitative Mechanical Measures
 										</h3>
-										<RadarMetricsChart data={data} />
+										<BackboneChart model={backboneModel} />
 									</div>
 								</div>
 							</CardContent>
