@@ -19,16 +19,16 @@ export const Route = createFileRoute("/_layout/team")({
 const teamMembers = [
 	{
 		name: "Aryan Rezaei Rad",
-		title: "Group Lead and Domain Lead",
+		title: "Assistant Professor, Group Lead",
 		description:
-			"Main guide for the development team, translating timber engineering concepts, joints, and specimen behavior into practical product direction.",
+			"Main supervisor for the development team and Principal Investigator, translating timber engineering concepts, joints, and specimen behavior into practical product direction.",
 		initials: "AR",
 	},
 	{
-		name: "Amir Heidari",
-		title: "PhD Research and Experimental Logic",
+		name: "Amirhossein Heidari",
+		title: "PhD Candidate, Research Assistant",
 		description:
-			"Contributed the experimental and research perspective behind Timverse, helping shape how timber systems, test results, and structural ideas should be represented.",
+			"Led the logic design behind Timverse, including database architecture and the organization of test data.",
 		initials: "AM",
 	},
 	{
