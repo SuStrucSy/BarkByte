@@ -130,6 +130,9 @@ jobs:
           EOF
 
       - name: Deploy
+        permissions:
+          contents: read
+          packages: read
         env:
           REPO: ${{ env.REPO }}
           SSH_USER: ${{ secrets.SSH_USER }}
