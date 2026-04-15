@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/SuStrucSy/BarkByte/compare/v2.0.1...v2.0.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* issue with deploy not auto firing ([35d215d](https://github.com/SuStrucSy/BarkByte/commit/35d215dd4f33de2824ddc61ecde8d5fee69ea8ab))
+
 ## [2.0.1](https://github.com/SuStrucSy/BarkByte/compare/v2.0.0...v2.0.1) (2026-04-15)
 
 
