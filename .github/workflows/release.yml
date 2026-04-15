@@ -79,6 +79,9 @@ jobs:
     needs: [release, build-and-push]
     if: ${{ needs.release.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch' }}
     environment: production
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Lowercase repository name
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
