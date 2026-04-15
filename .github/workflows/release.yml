@@ -81,7 +81,7 @@ jobs:
     environment: production
     permissions:
       contents: read
-      packages: read
+      packages: write
     steps:
       - name: Lowercase repository name
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
