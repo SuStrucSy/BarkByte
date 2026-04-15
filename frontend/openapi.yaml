@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Timverse
-  version: 0.1.0
+  version: 1.0.0
 paths:
   /api/v1/login/access-token:
     post:
@@ -95,6 +95,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Message"
+        "400":
+          description: Invalid token or inactive user
+        "404":
+          description: The user with this email does not exist in the system.
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/set-password:
+    post:
+      tags:
+        - login
+      summary: Set Password
+      operationId: login-set_password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPassword"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
         "400":
           description: Invalid token or inactive user
         "404":
@@ -1697,7 +1726,7 @@ components:
         grant_type:
           anyOf:
             - type: string
-              pattern: ^password$
+              pattern: password
             - type: "null"
           title: Grant Type
         username:
@@ -1705,7 +1734,6 @@ components:
           title: Username
         password:
           type: string
-          format: password
           title: Password
         scope:
           type: string
@@ -1720,7 +1748,6 @@ components:
           anyOf:
             - type: string
             - type: "null"
-          format: password
           title: Client Secret
       type: object
       required:
@@ -2119,7 +2146,9 @@ components:
           type: integer
           title: Fastener Numbers
         moisture_percentage:
-          type: string
+          anyOf:
+            - type: string
+            - type: "null"
           title: Moisture Percentage
         wood_type:
           anyOf:
@@ -2147,52 +2176,32 @@ components:
             - type: "null"
           title: E Date
         e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
+          $ref: "#/components/schemas/TestLoadingType"
         e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
+          $ref: "#/components/schemas/YieldPointMethod"
         e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Stiffness
         e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Yield Displacement
         e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Yield Force
         e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Max Displacement
         e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Max Force
         e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Ultimate Displacement
         e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Ultimate Force
         e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Ductility
         e_qfm_description:
           anyOf:
@@ -2239,7 +2248,16 @@ components:
         - practice
         - element_dimension
         - fastener_numbers
-        - moisture_percentage
+        - e_test_loading_type
+        - e_yield_point_method
+        - e_stiffness
+        - e_yield_displacement
+        - e_yield_force
+        - e_max_displacement
+        - e_max_force
+        - e_ultimate_displacement
+        - e_ultimate_force
+        - e_ductility
         - doi_id
         - e_qualitative_failure_measure
         - fastener_type_ids
@@ -2266,7 +2284,6 @@ components:
           format: uuid
           title: Changed By User Id
         changed_data:
-          additionalProperties: true
           type: object
           title: Changed Data
         id:
@@ -2624,7 +2641,9 @@ components:
           type: integer
           title: Fastener Numbers
         moisture_percentage:
-          type: string
+          anyOf:
+            - type: string
+            - type: "null"
           title: Moisture Percentage
         wood_type:
           anyOf:
@@ -2652,52 +2671,32 @@ components:
             - type: "null"
           title: E Date
         e_test_loading_type:
-          anyOf:
-            - $ref: "#/components/schemas/TestLoadingType"
-            - type: "null"
+          $ref: "#/components/schemas/TestLoadingType"
         e_yield_point_method:
-          anyOf:
-            - $ref: "#/components/schemas/YieldPointMethod"
-            - type: "null"
+          $ref: "#/components/schemas/YieldPointMethod"
         e_stiffness:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Stiffness
         e_yield_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Yield Displacement
         e_yield_force:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Yield Force
         e_max_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Max Displacement
         e_max_force:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Max Force
         e_ultimate_displacement:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Ultimate Displacement
         e_ultimate_force:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Ultimate Force
         e_ductility:
-          anyOf:
-            - type: number
-            - type: "null"
+          type: number
           title: E Ductility
         e_qfm_description:
           anyOf:
@@ -2743,7 +2742,16 @@ components:
         - practice
         - element_dimension
         - fastener_numbers
-        - moisture_percentage
+        - e_test_loading_type
+        - e_yield_point_method
+        - e_stiffness
+        - e_yield_displacement
+        - e_yield_force
+        - e_max_displacement
+        - e_max_force
+        - e_ultimate_displacement
+        - e_ultimate_force
+        - e_ductility
         - id
         - uploader_id
         - doi
@@ -3014,11 +3022,6 @@ components:
         type:
           type: string
           title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
       type: object
       required:
         - loc

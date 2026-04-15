@@ -1,6 +1,6 @@
 <mjml>
   <mj-head>
-    <mj-title>{{ project_name }} - Password Recovery</mj-title>
+    <mj-title>{{ project_name }}</mj-title>
     <mj-attributes>
       <mj-all font-family="Inter, Arial, Helvetica, sans-serif" />
       <mj-text
@@ -9,13 +9,10 @@
         line-height="1.6"
       />
       <mj-button
-        background-color="#18181b"
-        color="#ffffff"
         border-radius="8px"
         font-size="15px"
         font-weight="600"
         inner-padding="12px 24px"
-        align="center"
       />
     </mj-attributes>
     <mj-style>
@@ -26,7 +23,7 @@
   </mj-head>
   <mj-body background-color="#f4f5f7">
 
-    <!-- Card wrapper -->
+    <!-- Card wrapper — must be a direct child of mj-body -->
     <mj-wrapper
       css-class="card"
       background-color="#ffffff"
@@ -37,7 +34,7 @@
       <mj-section padding="40px 16px 28px">
         <mj-column width="100%">
 
-            <!-- Logo -->
+          <!-- Logo -->
           <mj-image
             src="{{ logo_url }}"
             alt="{{ project_name }}"
@@ -52,31 +49,36 @@
             font-size="20px"
             font-weight="700"
             color="#18181b"
-            padding-bottom="10px"
           >
-            {{ project_name }} - Password Recovery
+            {{ project_name }}
           </mj-text>
 
           <mj-divider border-color="#e4e4e7" />
 
           <!-- Greeting -->
           <mj-text align="center">
-            Hello {{ username }},
+            Hi {{ username }},
           </mj-text>
 
           <!-- Message -->
           <mj-text align="center">
-            We received a request to reset your password. Click the button below to proceed:
+            Thanks for signing up for {{ project_name }}.
+            Please verify your email to activate your account.
           </mj-text>
 
-          <!-- CTA -->
-          <mj-button href="{{ link }}" padding="10px 0">
-            Reset Password
+          <!-- Button -->
+          <mj-button
+            align="center"
+            background-color="#18181b"
+            color="#ffffff"
+            href="{{ link }}"
+          >
+            {{ button_text }}
           </mj-button>
 
           <!-- Fallback label -->
           <mj-text align="center" font-size="13px" color="#a1a1aa">
-            Or copy and paste this link into your browser:
+            If the button doesn't work, copy this link:
           </mj-text>
 
           <!-- Fallback link -->
@@ -95,14 +97,14 @@
 
           <!-- Footer note -->
           <mj-text align="center" font-size="12px" color="#a1a1aa">
-            If you didn't request a password reset, you can safely ignore this email.
+            If you didn't request this email, you can safely ignore it.
           </mj-text>
 
         </mj-column>
       </mj-section>
     </mj-wrapper>
 
-    <!-- Copyright -->
+    <!-- Copyright below card -->
     <mj-section padding="16px 16px 40px">
       <mj-column>
         <mj-text

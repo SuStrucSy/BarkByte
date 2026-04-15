@@ -15,44 +15,69 @@ from app.core.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class EmailData:
     html_content: str
     subject: str
 
-def generate_password_reset_token(email: str) -> str:
+
+def generate_token(email: str, token_type: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.now(timezone.utc)
     expires = now + delta
     exp = expires.timestamp()
-    encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email},
+
+    return jwt.encode(
+        {
+            "sub": email,
+            "type": token_type,  # 👈 key difference
+            "nbf": now,
+            "exp": exp,
+        },
         settings.SECRET_KEY,
         algorithm=security.ALGORITHM,
     )
-    return encoded_jwt
 
-def verify_password_reset_token(token: str) -> str | None:
+
+def generate_password_reset_token(email: str) -> str:
+    return generate_token(email=email, token_type="password_reset")
+
+
+def generate_email_verification_token(email: str) -> str:
+    return generate_token(email=email, token_type="email_verification")
+
+
+def verify_token(token: str, expected_type: str) -> str | None:
     try:
-        decoded_token = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        decoded = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[security.ALGORITHM],
         )
-        return str(decoded_token["sub"])
+
+        if decoded.get("type") != expected_type:
+            return None
+
+        return str(decoded["sub"])
     except InvalidTokenError:
         return None
 
-def generate_reset_password_email(email_to: str, email: str, token: str) -> EmailData:
+
+def generate_reset_password_email(email: str, username: str, token: str) -> EmailData:
     project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Password recovery for user {email}"
+    subject = f"{project_name} - Password recovery for user {username}"
     link = f"{settings.FRONTEND_HOST}/reset-password?token={token}"
     html_content = render_email_template(
         template_name="reset_password.html",
         context={
             "project_name": settings.PROJECT_NAME,
-            "username": email,
-            "email": email_to,
+            "username": username,
+            "email": email,
             "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
             "link": link,
+            "button_text": "Reset Password",
+            "logo_url": f"{settings.FRONTEND_HOST}/logo.png",
         },
     )
     return EmailData(html_content=html_content, subject=subject)
@@ -62,24 +87,29 @@ def generate_signup_email(email_to: str, email: str, token: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Welcome {email}!"
     link = f"{settings.FRONTEND_HOST}/verify-email?token={token}"
+    print(f"{settings.FRONTEND_HOST}/logo.png")
     html_content = render_email_template(
-        template_name="verify-email.html",      # TODO: need verify-email.html to be updated also!
+        template_name="verify_email.html",  # TODO: need verify-email.html to be updated also!
         context={
             "project_name": settings.PROJECT_NAME,
             "username": email,
             "email": email_to,
             "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
             "link": link,
+            "button_text": "Verify Email",
+            "logo_url": f"{settings.FRONTEND_HOST}/logo.png",
         },
     )
     return EmailData(html_content=html_content, subject=subject)
 
+
 def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:
     template_str = (
         Path(__file__).parent / "email-templates" / "build" / template_name
-    ).read_text()
-    html_content = Template(template_str).render(context)
+    ).read_text(encoding="utf-8")
+    html_content = Template(template_str).render(**context)
     return html_content
+
 
 def send_email(
     *,
@@ -105,19 +135,20 @@ def send_email(
     response = message.send(to=email_to, smtp=smtp_options)
     logger.info(f"send email result: {response}")
 
-def generate_new_account_email(
-    email_to: str, username: str, password: str
-) -> EmailData:
+
+def generate_new_account_email(email_to: str, username: str, token: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - New account for user {username}"
+    link = f"{settings.FRONTEND_HOST}/set-password?token={token}"
     html_content = render_email_template(
         template_name="new_account.html",
         context={
             "project_name": settings.PROJECT_NAME,
             "username": username,
-            "password": password,
             "email": email_to,
-            "link": settings.FRONTEND_HOST,
+            "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
+            "link": link,
+            "logo_url": f"{settings.FRONTEND_HOST}/logo.png",
         },
     )
     return EmailData(html_content=html_content, subject=subject)

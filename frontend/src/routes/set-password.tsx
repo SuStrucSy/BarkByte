@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
-import { useLoginResetPassword } from "@/api/endpoints/login/login";
+import { useLoginSetPassword } from "@/api/endpoints/login/login";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { resetPasswordSchema } from "@/lib/schemas";
 import { handleError } from "@/lib/utils";
 
-interface NewPasswordForm {
+interface SetPasswordForm {
   new_password: string;
   confirm_password: string;
 }
@@ -41,9 +41,9 @@ const passwordSchema = z.object({
   token: z.string().min(1),
 });
 
-export const Route = createFileRoute("/reset-password")({
+export const Route = createFileRoute("/set-password")({
   validateSearch: passwordSchema,
-  component: ResetPassword,
+  component: SetPasswordPage,
   beforeLoad: async ({ search }) => {
     // ✅ Direct localStorage check (SSR-safe)
     const token =
@@ -61,9 +61,9 @@ export const Route = createFileRoute("/reset-password")({
   },
 });
 
-function ResetPassword() {
+function SetPasswordPage() {
   const { token } = Route.useSearch();
-  const form = useForm<NewPasswordForm>({
+  const form = useForm<SetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
     mode: "onBlur",
     criteriaMode: "all",
@@ -72,13 +72,15 @@ function ResetPassword() {
       confirm_password: "",
     },
   });
+
   const navigate = useNavigate();
-  const mutation = useLoginResetPassword({
+  const mutation = useLoginSetPassword({
     mutation: {
-      onSuccess: () => {
-        toast.success("Password updated successfully.");
+      onSuccess: (data) => {
+        toast.success("Password set successfully.");
         form.reset();
-        navigate({ to: "/login" });
+        localStorage.setItem("access_token", data.access_token);
+        navigate({ to: "/" });
       },
       onError: (err) => {
         handleError(err);
@@ -86,20 +88,19 @@ function ResetPassword() {
     },
   });
 
-  const onSubmit: SubmitHandler<NewPasswordForm> = async (data) => {
+  const onSubmit: SubmitHandler<SetPasswordForm> = async (data) => {
     mutation.mutateAsync({
       data: { new_password: data.new_password, token: token },
     });
   };
-
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Reset Password</CardTitle>
+            <CardTitle className="text-2xl">Set Password</CardTitle>
             <CardDescription>
-              Please enter your new password and confirm it to reset your
+              Please enter your new password and confirm it to set your
               password.
             </CardDescription>
             <CardAction>
@@ -111,7 +112,7 @@ function ResetPassword() {
           <CardContent>
             <Form {...form}>
               <form
-                id="resetPasswordForm"
+                id="setPasswordForm"
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
               >
@@ -155,14 +156,14 @@ function ResetPassword() {
           <CardFooter className="flex-col gap-2">
             <Button
               type="submit"
-              form="resetPasswordForm"
+              form="setPasswordForm"
               className="w-full"
               disabled={form.formState.isSubmitting}
             >
               {form.formState.isSubmitting && (
                 <Loader2 className="animate-spin" />
               )}
-              Reset Password
+              Set Password
             </Button>
           </CardFooter>
         </Card>

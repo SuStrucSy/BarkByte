@@ -1,14 +1,111 @@
 <mjml>
-  <mj-body background-color="#fafbfc">
-    <mj-section background-color="#fff" padding="40px 20px">
-      <mj-column vertical-align="middle" width="100%">
-        <mj-text align="center" padding="35px" font-size="20px" color="#333">{{ project_name }} - New Account</mj-text>
-        <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555"><span>Welcome to your new account!</span></mj-text>
-        <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">Here are your account details:</mj-text>
-        <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">Username: {{ username }}</mj-text>
-        <mj-text align="center" font-size="16px" padding-left="25px" padding-right="25px" font-family="Arial, Helvetica, sans-serif" color="#555">Password: {{ password }}</mj-text>
-        <mj-button align="center" font-size="18px" background-color="#009688" border-radius="8px" color="#fff" href="{{ link }}" padding="15px 30px">Go to Dashboard</mj-button>
-        <mj-divider border-color="#ccc" border-width="2px"></mj-divider>
+  <mj-head>
+    <mj-title>{{ project_name }} - New Account</mj-title>
+
+    <mj-attributes>
+      <mj-all font-family="Inter, Arial, Helvetica, sans-serif" />
+      <mj-text
+        color="#52525b"
+        font-size="15px"
+        line-height="1.6"
+      />
+      <mj-button
+        background-color="#18181b"
+        color="#ffffff"
+        border-radius="8px"
+        font-size="15px"
+        font-weight="600"
+        inner-padding="12px 24px"
+        align="center"
+      />
+    </mj-attributes>
+    <mj-style>
+      .card {
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#f4f5f7">
+    <!-- Card wrapper -->
+    <mj-wrapper
+      css-class="card"
+      background-color="#ffffff"
+      border-radius="12px"
+      padding="0"
+      border="none"
+    >
+
+     <mj-section padding="40px 16px 28px">
+        <mj-column width="100%">
+
+                  <!-- Logo -->
+          <mj-image
+            src="{{ logo_url }}"
+            alt="{{ project_name }}"
+            width="100px"
+            align="left"
+            padding-bottom="10px"
+          />
+
+        <!-- Title -->
+          <mj-text
+            align="center"
+            font-size="20px"
+            font-weight="700"
+            color="#18181b"
+            padding-bottom="10px"
+          >
+          {{ project_name }} - New Account
+        </mj-text>
+
+        <mj-divider border-color="#e4e4e7" />
+
+        <!-- Message -->
+        <mj-text align="center">
+          Welcome to your new account! A user account has been created for you by an admin user.
+        </mj-text>
+
+
+        <mj-text align="center">
+          Here are your account details:
+        </mj-text>
+
+        <mj-text align="center">
+          Username: {{ username }}
+        </mj-text>
+
+        <!-- Message -->
+          <mj-text align="center">
+            Click the button below to proceed to set your password and activate your account:
+          </mj-text>
+
+           <!-- CTA -->
+          <mj-button href="{{ link }}" padding="10px 0">
+            Set Password
+          </mj-button>
+
+
+        <mj-divider border-color="#e4e4e7" />
+
+        <!-- Footer note -->
+        <mj-text align="center" font-size="12px" color="#a1a1aa">
+            If you didn't expect an account to be created on your behalf, you can safely ignore it.
+          </mj-text>
+
+      </mj-column>
+    </mj-section>
+</mj-wrapper>
+        <!-- Copyright -->
+    <mj-section padding="16px 16px 40px">
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="11px"
+          color="#d4d4d8"
+        >
+          © {{ project_name }}
+        </mj-text>
       </mj-column>
     </mj-section>
   </mj-body>

@@ -1,57 +1,25 @@
-const GA_ID = "G-KEPTYEN92T";
-const isAnalyticsEnabled = import.meta.env.PROD;
-const GTAG_SCRIPT_ID = "google-analytics";
-
 declare global {
-	interface Window {
-		dataLayer?: unknown[][];
-		gtag?: (...args: unknown[]) => void;
-	}
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
 }
 
-let isInitialized = false;
-let lastPath = "";
+const isProd = import.meta.env.PROD;
 
-function ensureAnalytics() {
-	if (!isAnalyticsEnabled) return false;
-	if (typeof window === "undefined") return false;
-
-	window.dataLayer ??= [];
-	window.gtag ??= (...args: unknown[]) => {
-		window.dataLayer?.push(args);
-	};
-
-	if (isInitialized) return true;
-
-	if (!document.getElementById(GTAG_SCRIPT_ID)) {
-		const script = document.createElement("script");
-		script.id = GTAG_SCRIPT_ID;
-		script.async = true;
-		script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-		document.head.appendChild(script);
-	}
-
-	window.gtag("js", new Date());
-	window.gtag("config", GA_ID, { send_page_view: false });
-	isInitialized = true;
-	return true;
+export function pageview(url: string) {
+  if (!isProd) {
+    console.log("[GA event]", "page_view", url);
+  }
+  window.gtag?.("event", "page_view", {
+    page_path: url,
+    page_location: window.location.origin + url,
+    page_title: document.title,
+  });
 }
 
-export function pageview(path: string) {
-	if (!ensureAnalytics()) return;
-	if (lastPath === path) return;
-
-	lastPath = path;
-
-	window.gtag?.("event", "page_view", {
-		page_location: new URL(path, window.location.origin).toString(),
-		page_path: path,
-		page_title: document.title,
-	});
-}
-
-export function event(action: string, params?: Record<string, unknown>) {
-	if (!ensureAnalytics()) return;
-
-	window.gtag?.("event", action, params);
+export function event(name: string, params?: Record<string, any>) {
+  if (!isProd) {
+    console.log("[GA event]", name, params);
+  }
+  window.gtag?.("event", name, params);
 }

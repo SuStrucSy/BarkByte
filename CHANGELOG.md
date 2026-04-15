@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.0.3](https://github.com/SuStrucSy/BarkByte/compare/v2.0.2...v2.0.3) (2026-04-15)
+
+
+### Bug Fixes
+
+* merge release and deploy into on workflow ([4584ca5](https://github.com/SuStrucSy/BarkByte/commit/4584ca5af6f04a5973e9b9e2b3e5e2407ab6fff8))
+
+## [2.0.2](https://github.com/SuStrucSy/BarkByte/compare/v2.0.1...v2.0.2) (2026-04-15)
+
+
+### Bug Fixes
+
+* issue with deploy not auto firing ([35d215d](https://github.com/SuStrucSy/BarkByte/commit/35d215dd4f33de2824ddc61ecde8d5fee69ea8ab))
+
+## [2.0.1](https://github.com/SuStrucSy/BarkByte/compare/v2.0.0...v2.0.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* bug in backup as well as workflow ([8f1386e](https://github.com/SuStrucSy/BarkByte/commit/8f1386eb54039b433ddb57d8be7ed7b4b834882d))
+* bug related to email security scanners consuming token ([8dfe381](https://github.com/SuStrucSy/BarkByte/commit/8dfe381d581f57dc2d2d9181ecbe12a2c69813ca))
+
+## [2.0.0](https://github.com/SuStrucSy/BarkByte/compare/v1.1.5...v2.0.0) (2026-04-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* fix and redesign auth flow API
+
+### Features
+
+* fix and redesign auth flow API ([fa3d70e](https://github.com/SuStrucSy/BarkByte/commit/fa3d70e5b10773238edaff8890a2d60252ebaa38))
+
+
+### Bug Fixes
+
+* fix issue with google analytics not firing events ([9ae51c7](https://github.com/SuStrucSy/BarkByte/commit/9ae51c7d1fdcfc4ea9f620a85a64c93db67e8023))
+
 ## [1.1.5](https://github.com/SuStrucSy/BarkByte/compare/v1.1.4...v1.1.5) (2026-04-14)
 
 

@@ -1,13 +1,15 @@
-import { useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { pageview } from "@/lib/analytics";
 
 export function AnalyticsListener() {
-	const href = useRouterState({ select: (state) => state.location.href });
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
 
-	useEffect(() => {
-		pageview(href);
-	}, [href]);
+  useEffect(() => {
+    pageview(pathname);
+  }, [pathname]);
 
-	return null;
+  return null;
 }
