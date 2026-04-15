@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/SuStrucSy/BarkByte/compare/v1.1.5...v2.0.0) (2026-04-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* fix and redesign auth flow API
+
+### Features
+
+* fix and redesign auth flow API ([fa3d70e](https://github.com/SuStrucSy/BarkByte/commit/fa3d70e5b10773238edaff8890a2d60252ebaa38))
+
+
+### Bug Fixes
+
+* fix issue with google analytics not firing events ([9ae51c7](https://github.com/SuStrucSy/BarkByte/commit/9ae51c7d1fdcfc4ea9f620a85a64c93db67e8023))
+
 ## [1.1.5](https://github.com/SuStrucSy/BarkByte/compare/v1.1.4...v1.1.5) (2026-04-14)
 
 
