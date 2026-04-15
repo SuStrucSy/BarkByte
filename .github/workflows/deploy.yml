@@ -1,9 +1,8 @@
 name: Deploy to Server
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -20,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref_name }}
+          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
 
       - name: Lowercase repository name
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
@@ -40,7 +39,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ghcr.io/${{ env.REPO }}/backend:${{ github.event.inputs.tag || github.ref_name }}
+          tags: ghcr.io/${{ env.REPO }}/backend:${{ github.event.inputs.tag || github.event.release.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -49,7 +48,7 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/${{ env.REPO }}/frontend:${{ github.event.inputs.tag || github.ref_name }}
+          tags: ghcr.io/${{ env.REPO }}/frontend:${{ github.event.inputs.tag || github.event.release.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -82,7 +81,7 @@ jobs:
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
         run: |
           ssh $SSH_USER@$SSH_HOST "DEPLOY_TAG=$DEPLOY_TAG bash -s" <<EOF
             set -e
@@ -115,7 +114,7 @@ jobs:
           REPO: ${{ env.REPO }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
           DOMAIN: ${{ secrets.DOMAIN }}
           FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
           STACK_NAME: ${{ secrets.STACK_NAME }}

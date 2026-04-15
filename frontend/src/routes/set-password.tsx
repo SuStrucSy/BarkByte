@@ -5,7 +5,7 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { Loader2, TreePine } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
