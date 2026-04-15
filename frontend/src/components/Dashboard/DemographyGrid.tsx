@@ -49,11 +49,9 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 		<>
 			<Card className="col-span-1">
 				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
+					<CardTitle>Specimens by Joinery Type</CardTitle>
 					<CardDescription>
-						Summarizes the Distribution of Specimens by Joinery
+						How specimens are distributed across joinery types
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-center px-0 pb-0">
@@ -64,11 +62,9 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 			</Card>
 			<Card className="col-span-1">
 				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
+					<CardTitle>Specimens by Fastener Type</CardTitle>
 					<CardDescription>
-						Summarizes the Distribution of Specimens by Fastener
+						How specimens are distributed across fastener types
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-center px-0 pb-0">
@@ -79,11 +75,9 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 			</Card>
 			<Card className="col-span-1">
 				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
+					<CardTitle>Specimens by Loading Direction</CardTitle>
 					<CardDescription>
-						Summarizes the Distribution of Specimens by Loading Direction
+						How specimens are distributed across loading directions
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-center px-0 pb-0">
@@ -94,11 +88,9 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 			</Card>
 			<Card className="col-span-1">
 				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
+					<CardTitle>Specimens by Assembly Type</CardTitle>
 					<CardDescription>
-						Summarizes the Distribution of Specimens by Assembly
+						How specimens are distributed across assembly types
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-center px-0 pb-0">
@@ -109,11 +101,9 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 			</Card>
 			<Card className="col-span-1">
 				<CardHeader className="pb-4">
-					<CardTitle>
-						Demography based on determinative records of specimens
-					</CardTitle>
+					<CardTitle>Specimens by Sub-Joinery Type</CardTitle>
 					<CardDescription>
-						Summarizes the Distribution of Specimens by Sub-Joinery
+						How specimens are distributed across sub-joinery types
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-center px-0 pb-0">
