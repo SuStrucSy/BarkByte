@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CandlestickChartIcon } from "lucide-react";
+import { CandlestickChartIcon, Maximize2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
@@ -14,6 +14,7 @@ import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardAction,
@@ -23,6 +24,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import {
 	Select,
@@ -104,6 +111,7 @@ function Dashboard() {
 	const [selectedSpecimen, setSelectedSpecimen] =
 		useState<SpecimenPublic | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
+	const [joineryReferenceOpen, setJoineryReferenceOpen] = useState(false);
 	const chartHeight = useChartHeight(280, 500);
 
 	const handlePointClick = useCallback((specimen: SpecimenPublic) => {
@@ -259,6 +267,40 @@ function Dashboard() {
 				</CardHeader>
 			</Card>
 
+			<Card>
+				<CardHeader className="pb-4">
+					<CardTitle>Joinery Types Reference</CardTitle>
+					<CardDescription>
+						Quick visual guide to the timber joinery and connection details used
+						throughout the specimen dataset.
+					</CardDescription>
+					<CardAction>
+						<Button
+							size="icon"
+							variant="ghost"
+							onClick={() => setJoineryReferenceOpen(true)}
+							aria-label="Expand joinery types reference"
+						>
+							<Maximize2 className="h-4 w-4" />
+						</Button>
+					</CardAction>
+				</CardHeader>
+				<CardContent className="pb-4">
+					<button
+						type="button"
+						onClick={() => setJoineryReferenceOpen(true)}
+						className="flex w-full items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4 transition hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+						aria-label="Expand joinery types reference image"
+					>
+						<img
+							src={joineryTypesReference}
+							alt="Reference sheet showing timber joinery and connection types"
+							className="h-auto max-h-[620px] w-full object-contain"
+						/>
+					</button>
+				</CardContent>
+			</Card>
+
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 				{/* Stiffness vs Ductility */}
 				<Card>
@@ -400,37 +442,6 @@ function Dashboard() {
 				<Separator className="col-span-1 lg:col-span-2" />
 				<DemographyGrid specimens={allSpecimens} />
 
-				<Card>
-					<CardHeader className="pb-4">
-						<CardTitle>Joinery Types Reference</CardTitle>
-						<CardDescription>
-							Quick visual guide to the timber joinery and connection details
-							used throughout the specimen dataset.
-						</CardDescription>
-						<CardAction>
-							<ExpandableChart title="Joinery Types Reference">
-								{() => (
-									<div className="flex h-full items-center justify-center overflow-auto rounded-xl border border-border/70 bg-muted/20 p-4">
-										<img
-											src={joineryTypesReference}
-											alt="Reference sheet showing timber joinery and connection types"
-											className="h-auto max-h-full w-full object-contain"
-										/>
-									</div>
-								)}
-							</ExpandableChart>
-						</CardAction>
-					</CardHeader>
-					<CardContent className="pb-4">
-						<div className="flex items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-3">
-							<img
-								src={joineryTypesReference}
-								alt="Reference sheet showing timber joinery and connection types"
-								className="h-auto max-h-[320px] w-full object-contain"
-							/>
-						</div>
-					</CardContent>
-				</Card>
 			</div>
 
 			{selectedSpecimen && (
@@ -440,6 +451,21 @@ function Dashboard() {
 					onOpenChange={setSheetOpen}
 				/>
 			)}
+
+			<Dialog open={joineryReferenceOpen} onOpenChange={setJoineryReferenceOpen}>
+				<DialogContent className="max-w-none! h-screen w-11/12 flex flex-col rounded-none p-6">
+					<DialogHeader>
+						<DialogTitle>Joinery Types Reference</DialogTitle>
+					</DialogHeader>
+					<div className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-xl border border-border/70 bg-muted/20 p-4">
+						<img
+							src={joineryTypesReference}
+							alt="Reference sheet showing timber joinery and connection types"
+							className="h-auto max-h-full w-full object-contain"
+						/>
+					</div>
+				</DialogContent>
+			</Dialog>
 
 			{isLoadingAll && (
 				<div className="flex flex-col items-center gap-4">
