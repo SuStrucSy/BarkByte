@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: BarkByte
-  version: 1.1.0
+  title: Timverse
+  version: 1.2.0
 paths:
   /api/v1/login/access-token:
     post:
@@ -2711,6 +2711,14 @@ components:
           type: string
           format: uuid
           title: Uploader Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
         doi:
           $ref: "#/components/schemas/DOI"
         joinery_type:
@@ -2754,6 +2762,8 @@ components:
         - e_ductility
         - id
         - uploader_id
+        - created_at
+        - updated_at
         - doi
         - joinery_type
         - sub_joinery_type
