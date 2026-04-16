@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.1.0](https://github.com/SuStrucSy/BarkByte/compare/v2.0.6...v2.1.0) (2026-04-16)
+
+
+### Features
+
+* add BoxPlotOptionsToolbar component for chart type and fastener selection ([d8ddfb7](https://github.com/SuStrucSy/BarkByte/commit/d8ddfb74207c9b09e756c6d7b41b3ff1bf03e808))
+* add created at and updated at to specimen for indexing ([4bc3534](https://github.com/SuStrucSy/BarkByte/commit/4bc3534d1b1fc14589eff4c4c1059e7fe9ae25ae))
+* update homepage and team sponsor branding ([ca6a8c2](https://github.com/SuStrucSy/BarkByte/commit/ca6a8c2cd904d19bf4395b30fc621739e8908fa2))
+
+
+### Bug Fixes
+
+* add generated updated api types to frontend ([4c95bb5](https://github.com/SuStrucSy/BarkByte/commit/4c95bb59cb9b43ebc5955b873a20032f508327dc))
+* but with created at and updated now its working correctly ([b1e46bd](https://github.com/SuStrucSy/BarkByte/commit/b1e46bd16a68c0b524fd8f3fd6d9ec0336c4dc80))
+* **frontend:** remove illustrative dashed line from backbone chart ([6f89d69](https://github.com/SuStrucSy/BarkByte/commit/6f89d694c90d0f5132124aafe0318ac49e05eaba))
+* improve sponsor logo contrast in dark mode ([14745dd](https://github.com/SuStrucSy/BarkByte/commit/14745dd84a3f014f12c05d564d10360f16281897))
+* remove FEMA P795 yield method support p2. ([ede52a0](https://github.com/SuStrucSy/BarkByte/commit/ede52a062281f22c56ed2bb47f19fd8ff82d7a12))
+* removing FEMAP975 ([d377cee](https://github.com/SuStrucSy/BarkByte/commit/d377ceedf09234f2bd224977bdb94418faf0eb86))
+
 ## [2.0.6](https://github.com/SuStrucSy/BarkByte/compare/v2.0.5...v2.0.6) (2026-04-16)
 
 
