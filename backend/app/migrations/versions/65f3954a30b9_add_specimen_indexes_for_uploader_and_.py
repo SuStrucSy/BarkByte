@@ -21,20 +21,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.create_index(
-        "idx_specimen_uploader_id",
-        "specimen",
-        ["uploader_id"],
-    )
+    op.execute("""
+    CREATE INDEX IF NOT EXISTS idx_specimen_uploader_id
+    ON specimen (uploader_id)
+    """)
 
-    op.create_index(
-        "idx_specimen_doi_id",
-        "specimen",
-        ["doi_id"],
-    )
+    op.execute("""
+    CREATE INDEX IF NOT EXISTS idx_specimen_doi_id
+    ON specimen (doi_id)
+    """)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_index("idx_specimen_uploader_id", table_name="specimen")
-    op.drop_index("idx_specimen_doi_id", table_name="specimen")
+    pass
