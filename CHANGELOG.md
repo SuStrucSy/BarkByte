@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/SuStrucSy/BarkByte/compare/v2.1.0...v2.1.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* duplicate index migration ([38007a6](https://github.com/SuStrucSy/BarkByte/commit/38007a6bac8135c712e850ed04abe04517c95206))
+
 ## [2.1.0](https://github.com/SuStrucSy/BarkByte/compare/v2.0.6...v2.1.0) (2026-04-16)
 
 
