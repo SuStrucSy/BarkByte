@@ -22,7 +22,7 @@ type BackboneChartDatum = {
 	y: number;
 	key: string;
 	label: string;
-	series: "backbone" | "illustrative";
+	series: "backbone";
 };
 
 const chartConfig = {
@@ -131,85 +131,6 @@ function buildBackbonePathData(model: BackboneChartReadyModel) {
 	return path;
 }
 
-// Builds a softer curved overlay to suggest possible real behavior.
-function buildIllustrativeResponseData(model: BackboneChartReadyModel) {
-	if (model.segments.length === 0) {
-		return [];
-	}
-
-	const overallMaxY = Math.max(
-		...model.segments.flatMap((segment) => [segment.from.y, segment.to.y]),
-		1,
-	);
-	const data: BackboneChartDatum[] = [
-		{
-			x: model.segments[0].from.x,
-			y: model.segments[0].from.y,
-			key: "origin",
-			label: "Illustrative response",
-			series: "illustrative",
-		},
-	];
-
-	for (const segment of model.segments) {
-		const firstQuarterX =
-			segment.from.x + (segment.to.x - segment.from.x) * 0.35;
-		const thirdQuarterX =
-			segment.from.x + (segment.to.x - segment.from.x) * 0.75;
-		const firstQuarterLinearY =
-			segment.from.y + (segment.to.y - segment.from.y) * 0.35;
-		const thirdQuarterLinearY =
-			segment.from.y + (segment.to.y - segment.from.y) * 0.75;
-		const segmentRangeY = Math.abs(segment.to.y - segment.from.y);
-		const offsetBase = Math.max(segmentRangeY * 0.16, overallMaxY * 0.06);
-		let firstQuarterY = firstQuarterLinearY;
-		let thirdQuarterY = thirdQuarterLinearY;
-
-		switch (segment.kind) {
-			case "elastic":
-				firstQuarterY = firstQuarterLinearY * 0.9;
-				thirdQuarterY = thirdQuarterLinearY * 1.04;
-				break;
-			case "hardening":
-				firstQuarterY = firstQuarterLinearY + offsetBase * 0.55;
-				thirdQuarterY = thirdQuarterLinearY + offsetBase;
-				break;
-			case "plateau":
-				firstQuarterY = firstQuarterLinearY + offsetBase * 0.7;
-				thirdQuarterY = thirdQuarterLinearY + offsetBase * 0.45;
-				break;
-			case "softening":
-				firstQuarterY = firstQuarterLinearY + offsetBase * 0.95;
-				thirdQuarterY = thirdQuarterLinearY + offsetBase * 0.35;
-				break;
-		}
-
-		data.push({
-			x: firstQuarterX,
-			y: firstQuarterY,
-			key: `${segment.kind}-curve-1`,
-			label: "Illustrative response",
-			series: "illustrative",
-		});
-		data.push({
-			x: thirdQuarterX,
-			y: thirdQuarterY,
-			key: `${segment.kind}-curve-2`,
-			label: "Illustrative response",
-			series: "illustrative",
-		});
-		data.push({
-			x: segment.to.x,
-			y: segment.to.y,
-			key: segment.kind,
-			label: "Illustrative response",
-			series: "illustrative",
-		});
-	}
-
-	return data;
-}
-
 // Tooltip content for the backbone chart.
 function BackboneTooltipContent({
 	datum,
@@ -270,7 +191,6 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 	}
 
 	const chartData = buildBackbonePathData(model);
-	const illustrativeData = buildIllustrativeResponseData(model);
 	const xScale = buildAxisScale(
 		Math.max(...chartData.map((point) => point.x), 1) * 1.05,
 	);
@@ -341,18 +261,6 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 						}}
 					/>
 					<Line
-						data={illustrativeData}
-						dataKey="y"
-						type="basis"
-						stroke="var(--color-backbone)"
-						strokeOpacity={0.22}
-						strokeWidth={1.5}
-						strokeDasharray="3 4"
-						dot={false}
-						activeDot={false}
-						isAnimationActive={false}
-					/>
-					<Line
 						dataKey="y"
 						type="linear"
 						stroke="var(--color-backbone)"
@@ -371,10 +279,6 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 					/>
 				</LineChart>
 			</ChartContainer>
-			<p className="text-center text-xs text-muted-foreground">
-				The curved dashed line is an illustrative response curve, not measured
-				experimental data.
-			</p>
 		</div>
 	);
 }
