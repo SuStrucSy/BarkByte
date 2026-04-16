@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Timverse
-  version: 1.0.0
+  title: BarkByte
+  version: 1.1.0
 paths:
   /api/v1/login/access-token:
     post:
@@ -3033,7 +3033,6 @@ components:
       enum:
         - CEN 1/6
         - EEEP
-        - FEMA P795
       title: YieldPointMethod
   securitySchemes:
     OAuth2PasswordBearer:
