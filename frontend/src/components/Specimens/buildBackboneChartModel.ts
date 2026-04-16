@@ -411,31 +411,6 @@ function buildEeepModel(
 	);
 }
 
-// FEMA P795 stays as its own branch even though it currently reuses direct logic.
-function buildFemaModel(
-	mode: BackboneChartMode,
-	method: BackboneChartInput["method"],
-	axes: AxisSet,
-): BackboneChartModel {
-	if (
-		!isFiniteNumber(axes.xYield) ||
-		!isFiniteNumber(axes.yYield) ||
-		!isFiniteNumber(axes.xMax) ||
-		!isFiniteNumber(axes.yMax) ||
-		!isFiniteNumber(axes.xUltimate) ||
-		!isFiniteNumber(axes.yUltimate)
-	) {
-		return createEmptyModel(
-			mode,
-			method,
-			"FEMA P795 backbone unavailable",
-			"The current specimen is missing the method-resolved FEMA P795 coordinate set.",
-		);
-	}
-
-	return buildDirectModel(mode, method, axes);
-}
-
 // Builds the chart model used by the Specimen page.
 export function buildBackboneChartModel(
 	input: BackboneChartInput,
@@ -448,8 +423,6 @@ export function buildBackboneChartModel(
 			return buildCenModel(mode, input.method, axes);
 		case YieldPointMethod.EEEP:
 			return buildEeepModel(mode, input.method, axes);
-		case YieldPointMethod.FEMA_P795:
-			return buildFemaModel(mode, input.method, axes);
 		default:
 			return buildDirectModel(mode, input.method, axes);
 	}

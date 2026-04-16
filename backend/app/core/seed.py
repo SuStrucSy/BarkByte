@@ -203,8 +203,6 @@ def map_yield_point_method(label: str) -> str | None:
         return YieldPointMethod.CEN16
     elif normalized_label == "eeep method":
         return YieldPointMethod.EEEP
-    elif normalized_label == "fema p795":
-        return YieldPointMethod.FEMAP795
     else:
         print(f"⚠️ Warning: Unknown yield point method '{label}'")
         return None

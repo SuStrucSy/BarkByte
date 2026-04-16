@@ -199,7 +199,7 @@ export const AddNewSpecimenSchema = z.object({
     "Monotonic",
     "Monotonic and Cyclic",
   ] as const),
-  e_yield_point_method: z.enum(["CEN 1/6", "EEEP", "FEMA P795"] as const),
+  e_yield_point_method: z.enum(["CEN 1/6", "EEEP"] as const),
   e_date: z.string().trim().optional().nullable(),
   e_qfm_description: z.string().trim().optional().nullable(),
   e_qualitative_failure_measure: z.array(z.uuid()).default([]),

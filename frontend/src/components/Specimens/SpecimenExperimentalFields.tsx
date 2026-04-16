@@ -49,7 +49,7 @@ const TEST_LOADING_TYPES = [
 	"Monotonic",
 	"Monotonic and Cyclic",
 ] as const;
-const YIELD_POINT_METHODS = ["CEN 1/6", "EEEP", "FEMA P795"] as const;
+const YIELD_POINT_METHODS = ["CEN 1/6", "EEEP"] as const;
 
 // ─── Helper: numeric input field ─────────────────────────────────────────────
 
