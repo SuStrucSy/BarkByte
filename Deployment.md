@@ -575,15 +575,24 @@ Deployments are triggered by releases, not every push. This means a `docs:` or `
 
 ### `.github/workflows/release.yml`
 
-Runs on every push to `main`. Creates or updates a Release PR. When you merge the Release PR, release-please pushes a `v*` tag which triggers the deploy workflow.
+Runs on every push to `main`. Creates or updates a Release PR. When you merge the Release PR, release-please pushes a `v*` tag which triggers the deploy step or manually via `workflow_dispatch` with an explicit tag input.
+
+**Two jobs run in sequence:**
+1. `build-and-push` — builds Docker images in CI with layer caching, pushes to GHCR
+2. `deploy` — SSHes to the server, pulls the pre-built images, runs migrations, starts services
 
 ```yaml
-name: Release Please
+name: Release and Deploy
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.2.0)"
+        required: true
 
 permissions:
   contents: write
@@ -592,51 +601,30 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: python
-```
+          release-type: simple
 
----
-
-### `.github/workflows/deploy.yml`
-
-Triggered automatically when release-please pushes a `v*` tag, or manually via `workflow_dispatch` with an explicit tag input.
-
-**Two jobs run in sequence:**
-1. `build-and-push` — builds Docker images in CI with layer caching, pushes to GHCR
-2. `deploy` — SSHes to the server, pulls the pre-built images, runs migrations, starts services
-
-```yaml
-name: Deploy to Server
-
-on:
-  push:
-    tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to deploy (e.g. v1.2.0)"
-        required: true
-
-jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    needs: release
+    if: ${{ needs.release.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch' }}
+    environment: production
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref_name }}
+          ref: ${{ github.event.inputs.tag || needs.release.outputs.tag_name }}
 
       - name: Lowercase repository name
-        # GHCR requires all image names to be lowercase.
-        # github.repository preserves original casing (e.g. SuStrucSy/BarkByte)
-        # so we lowercase it here and export it for subsequent steps.
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
@@ -654,7 +642,7 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ghcr.io/${{ env.REPO }}/backend:${{ github.event.inputs.tag || github.ref_name }}
+          tags: ghcr.io/${{ env.REPO }}/backend:${{ github.event.inputs.tag || needs.release.outputs.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -663,7 +651,7 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/${{ env.REPO }}/frontend:${{ github.event.inputs.tag || github.ref_name }}
+          tags: ghcr.io/${{ env.REPO }}/frontend:${{ github.event.inputs.tag || needs.release.outputs.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -672,11 +660,14 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [release, build-and-push]
+    if: ${{ needs.release.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch' }}
     environment: production
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Lowercase repository name
-        # env context does not carry across jobs — must be set again here
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Configure SSH keep-alive
@@ -697,7 +688,7 @@ jobs:
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || needs.release.outputs.tag_name }}
         run: |
           ssh $SSH_USER@$SSH_HOST "DEPLOY_TAG=$DEPLOY_TAG bash -s" <<EOF
             set -e
@@ -705,7 +696,7 @@ jobs:
             cd ~/timverse-app
             source .env
 
-            # Silence Docker Compose warnings about TAG not being set
+            # Silence Compose warnings about TAG not being set
             export TAG=\$DEPLOY_TAG
 
             TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
@@ -715,14 +706,22 @@ jobs:
               | gzip > /mnt/data/backups/pre_deploy_\$TIMESTAMP.sql.gz
 
             echo "Pre-deploy backup saved: pre_deploy_\$TIMESTAMP.sql.gz"
+
+            echo "Keep only last 5 backups"
+
+            cd /mnt/data/backups
+
+            ls -1t pre_deploy_*.sql.gz \
+              | tail -n +6 \
+              | xargs -r rm -f
           EOF
 
       - name: Deploy
         env:
+          REPO: ${{ env.REPO }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          DEPLOY_TAG: ${{ github.event.inputs.tag || github.ref_name }}
-          REPO: ${{ env.REPO }}
+          DEPLOY_TAG: ${{ github.event.inputs.tag || needs.release.outputs.tag_name }}
           DOMAIN: ${{ secrets.DOMAIN }}
           FRONTEND_HOST: ${{ secrets.FRONTEND_HOST }}
           STACK_NAME: ${{ secrets.STACK_NAME }}
@@ -748,13 +747,14 @@ jobs:
 
             echo "Deploying \$DEPLOY_TAG"
 
+            PREVIOUS_COMMIT=\$(git rev-parse HEAD)
+            echo \$PREVIOUS_COMMIT > .last_deploy
+            if [ -f .env ]; then
+              cp .env .env.rollback
+            fi
+
             git fetch --tags
             git checkout \$DEPLOY_TAG
-            # Server will be in detached HEAD state — this is intentional.
-            # The server repo exists only to serve docker-compose.yml at the correct version.
-
-            CURRENT_COMMIT=\$(git rev-parse HEAD)
-            echo \$CURRENT_COMMIT > .last_deploy
 
             cat > .env <<ENVFILE
           DOMAIN=${DOMAIN}
@@ -782,21 +782,37 @@ jobs:
 
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
 
+            echo "Pulling backend and frontend docker images"
+
             docker compose -f docker-compose.yml pull backend frontend
 
-            docker compose -f docker-compose.yml up -d db
-            docker compose -f docker-compose.yml run --rm prestart
+            echo "Staring up db container"
 
-            # --no-deps prevents Compose from re-running prestart when bringing up
-            # backend (which declares depends_on: prestart: condition: service_completed_successfully)
-            if ! docker compose -f docker-compose.yml up -d --force-recreate --no-deps backend frontend; then
-              echo "Deploy failed — rolling back..."
+            docker compose -f docker-compose.yml up -d db
+
+            echo "Staring up backend and frontend containers"
+
+            docker compose -f docker-compose.yml up -d --force-recreate backend frontend
+
+            # ✅ real validation
+            sleep 10
+
+            if ! docker compose ps backend | grep -q "Up"; then
+              echo "Rolling back..."
               git checkout \$(cat .last_deploy)
-              docker compose -f docker-compose.yml up -d
+              if [ -f .env.rollback ]; then
+                mv .env.rollback .env
+              fi
+              docker compose -f docker-compose.yml up -d --force-recreate backend frontend
               exit 1
             fi
 
+            rm -f .env.rollback
+
             echo "Deploy complete: \$DEPLOY_TAG"
+
+            echo "Cleaning unused Docker images..."
+            docker image prune -a -f
           EOF
 
       - name: Clean up old backend images
@@ -814,7 +830,10 @@ jobs:
           package-type: container
           min-versions-to-keep: 5
           token: ${{ secrets.GITHUB_TOKEN }}
+
 ```
+
+---
 
 #### Key design decisions in the deploy workflow
 
