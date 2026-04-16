@@ -2,7 +2,6 @@ from datetime import datetime
 
 import sqlalchemy as sa
 from pydantic import EmailStr
-from sqlalchemy import Column, DateTime, func
 from sqlmodel import Field, SQLModel
 
 from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
@@ -45,18 +44,3 @@ class SpecimenBase(SQLModel):
     e_ultimate_force: float
     e_ductility: float
     e_qfm_description: str | None = None
-
-    created_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True), server_default=func.now(), nullable=False
-        )
-    )
-
-    updated_at: datetime = Field(
-        sa_column=Column(
-            DateTime(timezone=True),
-            server_default=func.now(),
-            onupdate=func.now(),
-            nullable=False,
-        )
-    )

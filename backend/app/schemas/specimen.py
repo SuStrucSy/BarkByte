@@ -1,16 +1,17 @@
 import uuid
+from datetime import datetime
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
 
-from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
 from app.core.bases import SpecimenBase
+from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
+from app.models.doi import DOI
 from app.models.failuremode import FailureMode
 from app.models.fastenertype import FastenerType
 from app.models.joinerytype import JoineryType
 from app.models.loadingdirection import LoadingDirection
 from app.models.subjoinerytype import SubJoineryType
-from app.models.doi import DOI
 
 
 # Properties to receive on item creation
@@ -21,6 +22,7 @@ class SpecimenCreate(SpecimenBase):
     loading_direction_ids: list[uuid.UUID]
     joinery_type_id: uuid.UUID
     sub_joinery_type_id: uuid.UUID
+
 
 # Properties to receive on item update
 class SpecimenUpdate(SQLModel):
@@ -61,10 +63,14 @@ class SpecimenUpdate(SQLModel):
     joinery_type_id: uuid.UUID | None = None
     sub_joinery_type_id: uuid.UUID | None = None
 
+
 # Properties to return via API, id is always required
 class SpecimenPublic(SpecimenBase):
     id: uuid.UUID
     uploader_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
     doi: DOI
     joinery_type: JoineryType
     sub_joinery_type: SubJoineryType
@@ -72,9 +78,11 @@ class SpecimenPublic(SpecimenBase):
     fastener_types: list[FastenerType]
     loading_directions: list[LoadingDirection]
 
+
 class SpecimensPublic(SQLModel):
     data: list[SpecimenPublic]
     count: int
+
 
 class SpecimenFilterOptionsPublic(SQLModel):
     assembly_types: list[str]
