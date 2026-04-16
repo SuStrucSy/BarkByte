@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.6](https://github.com/SuStrucSy/BarkByte/compare/v2.0.5...v2.0.6) (2026-04-16)
+
+
+### Bug Fixes
+
+* trigger deploy for Daniel's changes ([9000577](https://github.com/SuStrucSy/BarkByte/commit/9000577cca4249fd491270d98234d2f3d06d350d))
+
 ## [2.0.5](https://github.com/SuStrucSy/BarkByte/compare/v2.0.4...v2.0.5) (2026-04-15)
 
 
