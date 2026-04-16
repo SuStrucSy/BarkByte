@@ -1,28 +1,35 @@
-from typing import Any
 import uuid
+from typing import Any
 
-from sqlmodel import Session, select, delete, func, SQLModel
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, SQLModel, delete, func, select
 
+from app.enums import AssemblyType, Practice, TestLoadingType
+from app.models.failuremode import FailureMode
+from app.models.fastenertype import FastenerType
+from app.models.joinerytype import JoineryType
+from app.models.loadingdirection import LoadingDirection
 from app.models.specimen import Specimen
+from app.models.specimen_failuremode import SpecimenFailureMode
+from app.models.specimen_fastenertype import SpecimenFastenerType
+from app.models.specimen_loadingdirection import SpecimenLoadingDirection
+from app.models.subjoinerytype import SubJoineryType
+from app.models.user import User
 from app.schemas.specimen import (
     SpecimenCreate,
     SpecimenFilterOptionsPublic,
     SpecimensPublic,
     SpecimenUpdate,
 )
-from app.models.failuremode import FailureMode
-from app.models.specimen_failuremode import SpecimenFailureMode
-from app.models.joinerytype import JoineryType
-from app.models.subjoinerytype import SubJoineryType
-from app.models.user import User
-from app.models.fastenertype import FastenerType
-from app.models.specimen_fastenertype import SpecimenFastenerType
-from app.models.loadingdirection import LoadingDirection
-from app.models.specimen_loadingdirection import SpecimenLoadingDirection
-from app.enums import AssemblyType, Practice, TestLoadingType
 
-def get_specimens_by_uploader(*, session: Session, uploader_id: uuid.UUID, skip: int = 0, limit: int = 100) -> SpecimensPublic:
+
+def specimen_order():
+    return Specimen.created_at.desc()
+
+
+def get_specimens_by_uploader(
+    *, session: Session, uploader_id: uuid.UUID, skip: int = 0, limit: int = 100
+) -> SpecimensPublic:
     count_stmt = (
         select(func.count())
         .select_from(Specimen)
@@ -33,6 +40,7 @@ def get_specimens_by_uploader(*, session: Session, uploader_id: uuid.UUID, skip:
     stmt = (
         select(Specimen)
         .where(Specimen.uploader_id == uploader_id)
+        .order_by(specimen_order())
         .offset(skip)
         .limit(limit)
     )
@@ -40,40 +48,42 @@ def get_specimens_by_uploader(*, session: Session, uploader_id: uuid.UUID, skip:
 
     return SpecimensPublic(data=items, count=count)
 
+
 def get_specimen_by_id(*, session: Session, id: uuid.UUID) -> Specimen | None:
     """Return specimen or None."""
     return session.get(Specimen, id)
 
-def get_specimens(*, session: Session, skip: int = 0, limit: int = 100) -> SpecimensPublic:
+
+def get_specimens(
+    *, session: Session, skip: int = 0, limit: int = 100
+) -> SpecimensPublic:
     count_statement = select(func.count()).select_from(Specimen)
     count = session.exec(count_statement).one()
-    statement = select(Specimen).offset(skip).limit(limit)
+    statement = select(Specimen).order_by(specimen_order()).offset(skip).limit(limit)
     specimens = session.exec(statement).all()
     return SpecimensPublic(data=specimens, count=count)
+
 
 def get_specimens_for_doi(*, session: Session, doi_id: uuid.UUID) -> SpecimensPublic:
     """
     Get all specimens associated with a given DOI.
     """
-    count_statement = select(func.count()).select_from(Specimen).where(Specimen.doi_id == doi_id)
+    count_statement = (
+        select(func.count()).select_from(Specimen).where(Specimen.doi_id == doi_id)
+    )
     count = session.exec(count_statement).one()
-    statement = select(Specimen).where(Specimen.doi_id == doi_id)
+    statement = (
+        select(Specimen).where(Specimen.doi_id == doi_id).order_by(specimen_order())
+    )
     specimens = session.exec(statement).all()
     return SpecimensPublic(data=specimens, count=count)
 
+
 def get_specimen_filter_options(*, session: Session) -> SpecimenFilterOptionsPublic:
-    joinery_types = sorted(
-        set(session.exec(select(JoineryType.label)).all())
-    )
-    sub_joinery_types = sorted(
-        set(session.exec(select(SubJoineryType.label)).all())
-    )
-    failure_modes = sorted(
-        set(session.exec(select(FailureMode.label)).all())
-    )
-    uploader_ids = list(
-        set(session.exec(select(Specimen.uploader_id)).all())
-    )
+    joinery_types = sorted(set(session.exec(select(JoineryType.label)).all()))
+    sub_joinery_types = sorted(set(session.exec(select(SubJoineryType.label)).all()))
+    failure_modes = sorted(set(session.exec(select(FailureMode.label)).all()))
+    uploader_ids = list(set(session.exec(select(Specimen.uploader_id)).all()))
     uploader_rows = session.exec(
         select(User.id, User.full_name, User.email).where(User.id.in_(uploader_ids))
     ).all()
@@ -94,10 +104,22 @@ def get_specimen_filter_options(*, session: Session) -> SpecimenFilterOptionsPub
         uploader=uploader,
     )
 
-def _split_specimen_payload(specimen_in: SQLModel, for_update: bool) -> tuple[dict[str, Any], list[uuid.UUID] | None, list[uuid.UUID] | None, list[uuid.UUID] | None]:
+
+def _split_specimen_payload(
+    specimen_in: SQLModel, for_update: bool
+) -> tuple[
+    dict[str, Any],
+    list[uuid.UUID] | None,
+    list[uuid.UUID] | None,
+    list[uuid.UUID] | None,
+]:
     data = specimen_in.model_dump(
-        exclude={"e_qualitative_failure_measure", "fastener_type_ids", "loading_direction_ids"},
-        exclude_unset=for_update
+        exclude={
+            "e_qualitative_failure_measure",
+            "fastener_type_ids",
+            "loading_direction_ids",
+        },
+        exclude_unset=for_update,
     )
     if for_update:
         # keep tri-state semantics
@@ -110,6 +132,7 @@ def _split_specimen_payload(specimen_in: SQLModel, for_update: bool) -> tuple[di
         ft_ids = specimen_in.fastener_type_ids or []
         ld_ids = specimen_in.loading_direction_ids or []
     return data, fm_ids, ft_ids, ld_ids
+
 
 def _validate_joinery_and_dowel(session: Session, data: dict) -> None:
     given_joinerytype_id = data.get("joinery_type_id")
@@ -138,7 +161,13 @@ def _validate_joinery_and_dowel(session: Session, data: dict) -> None:
             msg = "Specimen is marked as not having a dowel but the selected joinery type requires dowels"
         raise ValueError(msg)
 
-def _validate_failure_modes_against_toggles(session: Session, failure_mode_ids: list[uuid.UUID] | None, connector: bool | None = None, dowel: bool | None = None) -> None:
+
+def _validate_failure_modes_against_toggles(
+    session: Session,
+    failure_mode_ids: list[uuid.UUID] | None,
+    connector: bool | None = None,
+    dowel: bool | None = None,
+) -> None:
     if not failure_mode_ids:
         return
 
@@ -153,21 +182,31 @@ def _validate_failure_modes_against_toggles(session: Session, failure_mode_ids: 
         mtype = getattr(m.type, "value", m.type)
         mtype = str(mtype).upper()
         if mtype == "CONNECTOR" and connector is False:
-            raise ValueError(f"'{m.label}' requires a connector but connector is false on this specimen")
+            raise ValueError(
+                f"'{m.label}' requires a connector but connector is false on this specimen"
+            )
         if mtype == "DOWEL" and dowel is False:
-            raise ValueError(f"'{m.label}' requires a dowel but dowel is false on this specimen")
+            raise ValueError(
+                f"'{m.label}' requires a dowel but dowel is false on this specimen"
+            )
 
-def _validate_fasteners_against_dowel(fastener_type_ids: list[uuid.UUID] | None, dowel: bool | None) -> None:
+
+def _validate_fasteners_against_dowel(
+    fastener_type_ids: list[uuid.UUID] | None, dowel: bool | None
+) -> None:
     if dowel and not fastener_type_ids:
         raise ValueError("At least one fastener type is required when dowel is true")
     if not dowel and fastener_type_ids:
         raise ValueError("Remove fastener types when dowel is false")
 
-def _sync_specimen_failure_modes(session: Session, specimen_id: uuid.UUID, failure_mode_ids: list[uuid.UUID] | None) -> None:
+
+def _sync_specimen_failure_modes(
+    session: Session, specimen_id: uuid.UUID, failure_mode_ids: list[uuid.UUID] | None
+) -> None:
     # normalize
     failure_mode_ids = failure_mode_ids or []
 
-    # Validate if there are any   
+    # Validate if there are any
     fmodes: list[FailureMode] = []
     if failure_mode_ids:
         fmodes = session.exec(
@@ -175,13 +214,20 @@ def _sync_specimen_failure_modes(session: Session, specimen_id: uuid.UUID, failu
         ).all()
         if len(fmodes) != len(set(failure_mode_ids)):
             raise ValueError("One or more failure mode IDs are invalid")
-        
+
     # clear existing links
-    session.exec(delete(SpecimenFailureMode).where(SpecimenFailureMode.specimen_id == specimen_id))
-    
+    session.exec(
+        delete(SpecimenFailureMode).where(
+            SpecimenFailureMode.specimen_id == specimen_id
+        )
+    )
+
     # insert new links
     for mode_id in failure_mode_ids:
-        session.add(SpecimenFailureMode(specimen_id=specimen_id, failure_mode_id=mode_id))
+        session.add(
+            SpecimenFailureMode(specimen_id=specimen_id, failure_mode_id=mode_id)
+        )
+
 
 def _sync_specimen_fastener_types(
     session: Session,
@@ -190,7 +236,7 @@ def _sync_specimen_fastener_types(
 ) -> None:
     # normalize
     fastener_type_ids = fastener_type_ids or []
-    
+
     # Validate if there are any
     ftypes: list[FastenerType] = []
     if fastener_type_ids:
@@ -201,35 +247,55 @@ def _sync_specimen_fastener_types(
             raise ValueError("One or more fastener type IDs are invalid")
 
     # clear existing links
-    session.exec(delete(SpecimenFastenerType).where(SpecimenFastenerType.specimen_id == specimen_id))
+    session.exec(
+        delete(SpecimenFastenerType).where(
+            SpecimenFastenerType.specimen_id == specimen_id
+        )
+    )
 
     # insert new links
     for ft_id in fastener_type_ids:
-        session.add(SpecimenFastenerType(specimen_id=specimen_id, fastener_type_id=ft_id))
+        session.add(
+            SpecimenFastenerType(specimen_id=specimen_id, fastener_type_id=ft_id)
+        )
 
-def _sync_specimen_loading_directions(session: Session, specimen_id: uuid.UUID, loading_direction_ids: list[uuid.UUID] | None,) -> None:
+
+def _sync_specimen_loading_directions(
+    session: Session,
+    specimen_id: uuid.UUID,
+    loading_direction_ids: list[uuid.UUID] | None,
+) -> None:
     # normalize
     ids = loading_direction_ids or []
-    
+
     # Validate if there are any
     ldirs: list[LoadingDirection] = []
     if loading_direction_ids:
         ldirs = session.exec(
-            select(LoadingDirection).where(LoadingDirection.id.in_(loading_direction_ids))
+            select(LoadingDirection).where(
+                LoadingDirection.id.in_(loading_direction_ids)
+            )
         ).all()
         if len(ldirs) != len(set(ids)):
             raise ValueError("One or more loading direction IDs are invalid")
 
     # clear existing links
-    session.exec(delete(SpecimenLoadingDirection).where(SpecimenLoadingDirection.specimen_id == specimen_id))
+    session.exec(
+        delete(SpecimenLoadingDirection).where(
+            SpecimenLoadingDirection.specimen_id == specimen_id
+        )
+    )
 
     # insert new links
     for ld in ldirs:
-        session.add(SpecimenLoadingDirection(specimen_id=specimen_id, loading_direction_id=ld.id))
+        session.add(
+            SpecimenLoadingDirection(
+                specimen_id=specimen_id, loading_direction_id=ld.id
+            )
+        )
 
-def validate_specimen_create(
-    *, session: Session, specimen_in: SpecimenCreate
-) -> None:
+
+def validate_specimen_create(*, session: Session, specimen_in: SpecimenCreate) -> None:
     """
     Run all create-time domain validations for a specimen,
     without inserting anything.
@@ -254,7 +320,10 @@ def validate_specimen_create(
     # NOTE: this is commented out to allow specimens with no fasteners (e.g., adhesive)
     # to be created. If this is undesired, uncomment the above call.
 
-def get_current_fastener_type_ids(session: Session, specimen_id: uuid.UUID) -> list[uuid.UUID]:
+
+def get_current_fastener_type_ids(
+    session: Session, specimen_id: uuid.UUID
+) -> list[uuid.UUID]:
     return [
         row.fastener_type_id
         for row in session.exec(
@@ -264,7 +333,10 @@ def get_current_fastener_type_ids(session: Session, specimen_id: uuid.UUID) -> l
         ).all()
     ]
 
-def get_current_loading_direction_ids(session: Session, specimen_id: uuid.UUID) -> list[uuid.UUID]:
+
+def get_current_loading_direction_ids(
+    session: Session, specimen_id: uuid.UUID
+) -> list[uuid.UUID]:
     return [
         row.loading_direction_id
         for row in session.exec(
@@ -274,7 +346,10 @@ def get_current_loading_direction_ids(session: Session, specimen_id: uuid.UUID) 
         ).all()
     ]
 
-def get_current_failure_mode_ids(session: Session, specimen_id: uuid.UUID) -> list[uuid.UUID]:
+
+def get_current_failure_mode_ids(
+    session: Session, specimen_id: uuid.UUID
+) -> list[uuid.UUID]:
     return [
         row.failure_mode_id
         for row in session.exec(
@@ -283,6 +358,7 @@ def get_current_failure_mode_ids(session: Session, specimen_id: uuid.UUID) -> li
             )
         ).all()
     ]
+
 
 def create_specimen(
     *, session: Session, specimen_in: SpecimenCreate, current_user_id: uuid.UUID
@@ -309,19 +385,32 @@ def create_specimen(
     session.commit()
     session.refresh(specimen)
     return specimen
- 
-def _build_complete_specimen_for_update(session: Session, specimen: Specimen, patch: SpecimenUpdate) -> SpecimenCreate:
+
+
+def _build_complete_specimen_for_update(
+    session: Session, specimen: Specimen, patch: SpecimenUpdate
+) -> SpecimenCreate:
     """
     Take the existing specimen row and a SpecimenUpdate patch,
     return a SpecimenCreate-like object with the full proposed state.
     """
 
     # Start from current scalar fields that SpecimenCreate knows about
-    base_data = specimen.model_dump(exclude={"e_qualitative_failure_measure", "fastener_type_ids", "loading_direction_ids"})
+    base_data = specimen.model_dump(
+        exclude={
+            "e_qualitative_failure_measure",
+            "fastener_type_ids",
+            "loading_direction_ids",
+        }
+    )
 
     # Overlay the patch scalars (exclude the relationship lists here)
     patch_data = patch.model_dump(
-        exclude={"e_qualitative_failure_measure", "fastener_type_ids", "loading_direction_ids"},
+        exclude={
+            "e_qualitative_failure_measure",
+            "fastener_type_ids",
+            "loading_direction_ids",
+        },
         exclude_unset=True,
     )
     base_data.update(patch_data)
@@ -350,6 +439,7 @@ def _build_complete_specimen_for_update(session: Session, specimen: Specimen, pa
     # Let Pydantic validate everything as a SpecimenCreate
     return SpecimenCreate.model_validate(base_data)
 
+
 def update_specimen(
     *, session: Session, specimen_in: SpecimenUpdate, id: uuid.UUID
 ) -> Specimen:
@@ -361,7 +451,9 @@ def update_specimen(
         raise ValueError("Specimen not found")
 
     # Build a full proposed state that looks like a SpecimenCreate
-    complete = _build_complete_specimen_for_update(session=session, specimen=specimen, patch=specimen_in)
+    complete = _build_complete_specimen_for_update(
+        session=session, specimen=specimen, patch=specimen_in
+    )
 
     # Now reuse the same splitting as create
     data, failure_mode_ids, fastener_type_ids, loading_direction_ids = (
@@ -370,8 +462,15 @@ def update_specimen(
 
     # Validation, same pattern as create
     _validate_joinery_and_dowel(session, data)
-    _validate_failure_modes_against_toggles(session=session, failure_mode_ids=failure_mode_ids, connector=data.get("connector"), dowel=data.get("dowel"))
-    _validate_fasteners_against_dowel(fastener_type_ids=fastener_type_ids, dowel=data.get("dowel"))
+    _validate_failure_modes_against_toggles(
+        session=session,
+        failure_mode_ids=failure_mode_ids,
+        connector=data.get("connector"),
+        dowel=data.get("dowel"),
+    )
+    _validate_fasteners_against_dowel(
+        fastener_type_ids=fastener_type_ids, dowel=data.get("dowel")
+    )
 
     # Apply scalar updates to the existing row
     specimen.sqlmodel_update(data)
@@ -386,6 +485,7 @@ def update_specimen(
     session.commit()
     session.refresh(specimen)
     return specimen
+
 
 def delete_specimen(*, session: Session, specimen: Specimen) -> Any:
     session.delete(specimen)

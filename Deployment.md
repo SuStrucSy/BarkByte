@@ -575,7 +575,7 @@ Deployments are triggered by releases, not every push. This means a `docs:` or `
 
 ### `.github/workflows/release.yml`
 
-Runs on every push to `main`. Creates or updates a Release PR. When you merge the Release PR, release-please pushes a `v*` tag which triggers the deploy step or manually via `workflow_dispatch` with an explicit tag input.
+Runs on every push to `main`. Creates or updates a Release PR. release-please pushes a `v*` tag. When you merge the Release PR, the deploy step is triggered. The deploy step can be triggered manually via `workflow_dispatch` with an explicit tag input.
 
 **Two jobs run in sequence:**
 1. `build-and-push` — builds Docker images in CI with layer caching, pushes to GHCR
