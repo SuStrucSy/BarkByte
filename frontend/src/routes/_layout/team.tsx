@@ -87,6 +87,7 @@ function TeamPage() {
 								target="_blank"
 								rel="noreferrer"
 								aria-label="Visit the Civil and Mineral Engineering website"
+								className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
 							>
 								<img
 									src={civilEngineeringLogo}
@@ -104,6 +105,7 @@ function TeamPage() {
 								target="_blank"
 								rel="noreferrer"
 								aria-label="Visit the Data Sciences Institute website"
+								className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
 							>
 								<img
 									src={dsiLogo}
