@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import civilEngineeringLogo from "@/assets/branding/civil_and_mineral_engineering_logo.svg";
 import dsiLogo from "@/assets/branding/dsi_logo.svg";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -77,34 +78,69 @@ function TeamPage() {
 				))}
 			</div>
 
-			<Card className="mx-auto w-full max-w-3xl">
-				<CardContent className="flex flex-col items-center gap-4 p-8 text-center">
-					<a
-						href="https://datasciences.utoronto.ca/"
-						target="_blank"
-						rel="noreferrer"
-						aria-label="Visit the Data Sciences Institute website"
-					>
-						<img
-							src={dsiLogo}
-							alt="Data Sciences Institute logo"
-							className="h-20 w-auto object-contain"
-						/>
-					</a>
-					<p className="text-sm leading-relaxed text-muted-foreground">
-						This project is supported by the{" "}
-						<a
-							href="https://datasciences.utoronto.ca/"
-							target="_blank"
-							rel="noreferrer"
-							className="font-medium text-foreground underline underline-offset-4"
-						>
-							Data Sciences Institute at the University of Toronto
-						</a>
-						.
-					</p>
-				</CardContent>
-			</Card>
+			<div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+				<div className="grid gap-6 md:grid-cols-2">
+					<Card className="h-full">
+						<CardContent className="flex h-full items-center justify-center p-8 text-center">
+							<a
+								href="https://civmin.utoronto.ca/"
+								target="_blank"
+								rel="noreferrer"
+								aria-label="Visit the Civil and Mineral Engineering website"
+							>
+								<img
+									src={civilEngineeringLogo}
+									alt="Civil Engineering logo"
+									className="h-32 w-auto object-contain"
+								/>
+							</a>
+						</CardContent>
+					</Card>
+
+					<Card className="h-full">
+						<CardContent className="flex h-full items-center justify-center p-8 text-center">
+							<a
+								href="https://datasciences.utoronto.ca/"
+								target="_blank"
+								rel="noreferrer"
+								aria-label="Visit the Data Sciences Institute website"
+							>
+								<img
+									src={dsiLogo}
+									alt="Data Sciences Institute logo"
+									className="h-28 w-auto object-contain"
+								/>
+							</a>
+						</CardContent>
+					</Card>
+				</div>
+
+				<Card className="h-full">
+					<CardContent className="flex h-full items-center justify-center p-8 text-center">
+						<p className="text-sm leading-relaxed text-muted-foreground">
+							This project is supported by the{" "}
+							<a
+								href="https://civmin.utoronto.ca/"
+								target="_blank"
+								rel="noreferrer"
+								className="font-medium text-foreground underline underline-offset-4"
+							>
+								Department of Civil and Mineral Engineering
+							</a>
+							, and the{" "}
+							<a
+								href="https://datasciences.utoronto.ca/"
+								target="_blank"
+								rel="noreferrer"
+								className="font-medium text-foreground underline underline-offset-4"
+							>
+								Data Sciences Institute at the University of Toronto
+							</a>
+							.
+						</p>
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	);
 }
