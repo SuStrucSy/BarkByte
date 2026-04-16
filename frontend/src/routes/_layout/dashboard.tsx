@@ -1,7 +1,16 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CandlestickChartIcon, Maximize2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { MinusIcon, PlusIcon, RotateCcwIcon } from "lucide-react";
+import {
+	type PointerEvent as ReactPointerEvent,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic, SpecimensReadSpecimensParams } from "@/api/model";
@@ -9,6 +18,10 @@ import joineryTypesReference from "@/assets/joineryTypes.svg";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { ExpandableChart } from "@/components/Charts/ExpandableChart";
 import { BoxPlot } from "@/components/Dashboard/BoxPlot";
+import {
+	type BoxPlotChartType,
+	BoxPlotOptionsToolbar,
+} from "@/components/Dashboard/BoxPlotOptionsToolbar";
 import { DemographyGrid } from "@/components/Dashboard/DemographyGrid";
 import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
@@ -24,30 +37,9 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
-import {
-	Select,
-	SelectContent,
-	SelectGroup,
-	SelectItem,
-	SelectLabel,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Toggle } from "@/components/ui/toggle";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useChartHeight } from "@/hooks/useChartHeight";
 import {
 	EXPERIMENTAL_KEYS,
@@ -63,6 +55,307 @@ export const Route = createFileRoute("/_layout/dashboard")({
 	},
 	component: Dashboard,
 });
+
+const BOX_PLOT_LABELS = EXPERIMENTAL_KEYS.map((key) => ({
+	key,
+	label: getExperimentalLabel(key),
+}));
+const CHART_OPTIONS_CARD_CLASSNAME =
+	"sticky top-0 z-30 col-span-1 w-full justify-self-center overflow-hidden lg:col-span-2 lg:max-w-7xl";
+const MIN_REFERENCE_SCALE = 1;
+const MAX_REFERENCE_SCALE = 3;
+const REFERENCE_ZOOM_STEP = 0.25;
+
+function getDefaultFastener(fastenerTypes: string[]) {
+	return (
+		fastenerTypes.find((fastener) => fastener.toLowerCase() === "screw") ||
+		fastenerTypes.find((fastener) =>
+			fastener.toLowerCase().includes("screw"),
+		) ||
+		fastenerTypes[0]
+	);
+}
+
+function MetricScatterCard({
+	title,
+	description,
+	pointCount,
+	expandableTitle,
+	chartName,
+	children,
+}: {
+	title: string;
+	description: string;
+	pointCount: number;
+	expandableTitle: string;
+	chartName: string;
+	children: ReactNode;
+}) {
+	return (
+		<Card>
+			<CardHeader className="pb-4">
+				<CardTitle>{title}</CardTitle>
+				<CardDescription>
+					{description}
+					{pointCount > 0 && (
+						<span className="ml-2 text-xs">
+							({pointCount.toLocaleString()} points)
+						</span>
+					)}
+				</CardDescription>
+				<CardAction>
+					<ExpandableChart title={expandableTitle}>
+						{() => children}
+					</ExpandableChart>
+				</CardAction>
+			</CardHeader>
+			<CardContent className="pb-4">
+				<ChartErrorBoundary chartName={chartName}>
+					{children}
+				</ChartErrorBoundary>
+			</CardContent>
+		</Card>
+	);
+}
+
+function clamp(value: number, min: number, max: number) {
+	return Math.min(Math.max(value, min), max);
+}
+
+function JoineryReferenceViewer() {
+	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [scale, setScale] = useState(MIN_REFERENCE_SCALE);
+	const [offset, setOffset] = useState({ x: 0, y: 0 });
+	const [bounds, setBounds] = useState({ x: 0, y: 0 });
+	const [imageSize, setImageSize] = useState({ width: 1, height: 1 });
+	const dragStateRef = useRef<{
+		pointerId: number;
+		startX: number;
+		startY: number;
+		originX: number;
+		originY: number;
+	} | null>(null);
+	const [isDragging, setIsDragging] = useState(false);
+
+	const resetView = useCallback(() => {
+		setScale(MIN_REFERENCE_SCALE);
+		setOffset({ x: 0, y: 0 });
+	}, []);
+
+	const clampOffset = useCallback(
+		(nextOffset: { x: number; y: number }) => ({
+			x: clamp(nextOffset.x, -bounds.x, bounds.x),
+			y: clamp(nextOffset.y, -bounds.y, bounds.y),
+		}),
+		[bounds.x, bounds.y],
+	);
+
+	const updateBounds = useCallback(() => {
+		const container = containerRef.current;
+		if (!container) {
+			return;
+		}
+
+		const containerWidth = container.clientWidth;
+		const containerHeight = container.clientHeight;
+		const imageRatio = imageSize.width / imageSize.height;
+		const containerRatio = containerWidth / containerHeight;
+
+		const baseWidth =
+			imageRatio > containerRatio
+				? containerWidth
+				: containerHeight * imageRatio;
+		const baseHeight =
+			imageRatio > containerRatio
+				? containerWidth / imageRatio
+				: containerHeight;
+
+		setBounds({
+			x: Math.max(0, (baseWidth * scale - containerWidth) / 2),
+			y: Math.max(0, (baseHeight * scale - containerHeight) / 2),
+		});
+	}, [imageSize.height, imageSize.width, scale]);
+
+	useLayoutEffect(() => {
+		updateBounds();
+	}, [updateBounds]);
+
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) {
+			return;
+		}
+
+		const resizeObserver = new ResizeObserver(() => {
+			updateBounds();
+		});
+
+		resizeObserver.observe(container);
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}, [updateBounds]);
+
+	useEffect(() => {
+		setOffset((currentOffset) => clampOffset(currentOffset));
+	}, [clampOffset]);
+
+	const applyZoom = useCallback(
+		(delta: number) => {
+			setScale((currentScale) => {
+				const nextScale = clamp(
+					currentScale + delta,
+					MIN_REFERENCE_SCALE,
+					MAX_REFERENCE_SCALE,
+				);
+
+				if (nextScale === MIN_REFERENCE_SCALE) {
+					setOffset({ x: 0, y: 0 });
+				}
+
+				return nextScale;
+			});
+		},
+		[],
+	);
+
+	const handlePointerDown = useCallback(
+		(event: ReactPointerEvent<HTMLDivElement>) => {
+			if (scale === MIN_REFERENCE_SCALE) {
+				return;
+			}
+
+			dragStateRef.current = {
+				pointerId: event.pointerId,
+				startX: event.clientX,
+				startY: event.clientY,
+				originX: offset.x,
+				originY: offset.y,
+			};
+
+			setIsDragging(true);
+			event.currentTarget.setPointerCapture(event.pointerId);
+		},
+		[offset.x, offset.y, scale],
+	);
+
+	const handlePointerMove = useCallback(
+		(event: ReactPointerEvent<HTMLDivElement>) => {
+			const dragState = dragStateRef.current;
+			if (!dragState || dragState.pointerId !== event.pointerId) {
+				return;
+			}
+
+			const deltaX = event.clientX - dragState.startX;
+			const deltaY = event.clientY - dragState.startY;
+
+			setOffset(
+				clampOffset({
+					x: dragState.originX + deltaX,
+					y: dragState.originY + deltaY,
+				}),
+			);
+		},
+		[clampOffset],
+	);
+
+	const handlePointerUp = useCallback(
+		(event: ReactPointerEvent<HTMLDivElement>) => {
+			if (dragStateRef.current?.pointerId !== event.pointerId) {
+				return;
+			}
+
+			dragStateRef.current = null;
+			setIsDragging(false);
+
+			if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+				event.currentTarget.releasePointerCapture(event.pointerId);
+			}
+		},
+		[],
+	);
+
+	return (
+		<div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+			<div className="flex w-fit shrink-0 flex-row rounded-lg border border-border bg-background shadow-xs lg:flex-col">
+				<Button
+					variant="outline"
+					size="icon"
+					className="rounded-r-none border-0 border-r lg:rounded-b-none lg:rounded-r-md lg:border-r-0 lg:border-b"
+					onClick={() => applyZoom(REFERENCE_ZOOM_STEP)}
+					disabled={scale >= MAX_REFERENCE_SCALE}
+					aria-label="Zoom in reference image"
+				>
+					<PlusIcon />
+				</Button>
+				<Button
+					variant="outline"
+					size="icon"
+					className="rounded-none border-0 border-r lg:border-r-0 lg:border-b"
+					onClick={() => applyZoom(-REFERENCE_ZOOM_STEP)}
+					disabled={scale <= MIN_REFERENCE_SCALE}
+					aria-label="Zoom out reference image"
+				>
+					<MinusIcon />
+				</Button>
+				<Button
+					variant="outline"
+					size="icon"
+					className="rounded-l-none border-0 lg:rounded-t-none lg:rounded-l-md"
+					onClick={resetView}
+					disabled={
+						scale === MIN_REFERENCE_SCALE && offset.x === 0 && offset.y === 0
+					}
+					aria-label="Reset reference image position"
+				>
+					<RotateCcwIcon />
+				</Button>
+			</div>
+
+			<div
+				ref={containerRef}
+				className="relative flex min-h-[420px] flex-1 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4 select-none"
+			>
+				<div className="absolute right-4 top-4 rounded-md bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
+					{Math.round(scale * 100)}%
+				</div>
+				<div
+					className={`flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white p-3 shadow-sm ${
+						scale > MIN_REFERENCE_SCALE
+							? isDragging
+								? "cursor-grabbing"
+								: "cursor-grab"
+							: "cursor-default"
+					}`}
+					onPointerDown={handlePointerDown}
+					onPointerMove={handlePointerMove}
+					onPointerUp={handlePointerUp}
+					onPointerCancel={handlePointerUp}
+					onPointerLeave={handlePointerUp}
+					role="presentation"
+				>
+					<img
+						src={joineryTypesReference}
+						alt="Reference sheet showing timber joinery and connection types"
+						className="pointer-events-none h-auto max-h-[620px] w-full object-contain"
+						style={{
+							transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+							transformOrigin: "center center",
+							transition: isDragging ? "none" : "transform 150ms ease-out",
+						}}
+						onLoad={(event) => {
+							setImageSize({
+								width: event.currentTarget.naturalWidth,
+								height: event.currentTarget.naturalHeight,
+							});
+						}}
+					/>
+				</div>
+			</div>
+		</div>
+	);
+}
 
 // Hook for managing infinite query with better tracking
 function useSpecimenData(pageSize: number) {
@@ -111,8 +404,11 @@ function Dashboard() {
 	const [selectedSpecimen, setSelectedSpecimen] =
 		useState<SpecimenPublic | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
-	const [joineryReferenceOpen, setJoineryReferenceOpen] = useState(false);
+	const [chartOptionsHeight, setChartOptionsHeight] = useState(0);
+	const chartOptionsStickyBottomGap = 8;
 	const chartHeight = useChartHeight(280, 500);
+	const [chartOptionsCardElement, setChartOptionsCardElement] =
+		useState<HTMLDivElement | null>(null);
 
 	const handlePointClick = useCallback((specimen: SpecimenPublic) => {
 		setSelectedSpecimen(specimen);
@@ -162,12 +458,7 @@ function Dashboard() {
 			return;
 		}
 
-		const defaultFastener =
-			fastenerTypes.find((fastener) => fastener.toLowerCase() === "screw") ||
-			fastenerTypes.find((fastener) =>
-				fastener.toLowerCase().includes("screw"),
-			) ||
-			fastenerTypes[0];
+		const defaultFastener = getDefaultFastener(fastenerTypes);
 
 		if (defaultFastener) {
 			setSelectedFastener(defaultFastener);
@@ -196,27 +487,12 @@ function Dashboard() {
 		[allSpecimens],
 	);
 
-	// Loading state
-	if (isLoading || isFastenerLoading) {
-		return <PageLoading />;
-	}
-
-	// Error state
-	if (isError) {
-		return (
-			<div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
-				<div className="text-lg font-semibold">
-					Failed to load dashboard data
-				</div>
-				<div className="text-sm">{error?.message || "Unknown error"}</div>
-			</div>
-		);
-	}
-
-	const yLabels = EXPERIMENTAL_KEYS.map((key) => ({
-		key,
-		label: getExperimentalLabel(key),
-	}));
+	const selectedChartType: ChartTypeOption = mirrorPosition
+		? "violin"
+		: "boxplot";
+	const selectedFastenerBadgeLabel = selectedFastener
+		? `Fastener: ${selectedFastener}`
+		: null;
 
 	const loadingProgress =
 		totalCount > 0 ? Math.round((loadedCount / totalCount) * 100) : 0;
@@ -242,6 +518,48 @@ function Dashboard() {
 		title: "Stiffness vs Yield Force",
 		onPointClick: handlePointClick,
 	} as const;
+	const chartOptionsSpacerHeight = chartOptionsHeight
+		? `${chartOptionsHeight + chartOptionsStickyBottomGap}px`
+		: undefined;
+
+	useLayoutEffect(() => {
+		if (!chartOptionsCardElement) {
+			return;
+		}
+
+		const updateHeight = () => {
+			setChartOptionsHeight(chartOptionsCardElement.offsetHeight);
+		};
+
+		updateHeight();
+
+		const resizeObserver = new ResizeObserver(() => {
+			updateHeight();
+		});
+
+		resizeObserver.observe(chartOptionsCardElement);
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}, [chartOptionsCardElement]);
+
+	// Loading state
+	if (isLoading || isFastenerLoading) {
+		return <PageLoading />;
+	}
+
+	// Error state
+	if (isError) {
+		return (
+			<div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+				<div className="text-lg font-semibold">
+					Failed to load dashboard data
+				</div>
+				<div className="text-sm">{error?.message || "Unknown error"}</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-4">
@@ -249,6 +567,9 @@ function Dashboard() {
 			<Card>
 				<CardHeader>
 					<CardTitle>Specimen Analysis Dashboard</CardTitle>
+					<CardDescription className="flex flex-wrap items-center gap-1">
+						This is the dashboard page, where key data is visualized through distributions and individual data points to provide a clear overview of trends and patterns. The visualizations are interactive, allowing users to explore, filter, and engage with the data for deeper insights. {" "}
+					</CardDescription>
 					<CardDescription className="flex flex-wrap items-center gap-1">
 						{loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
 						specimens
@@ -274,176 +595,93 @@ function Dashboard() {
 						Quick visual guide to the timber joinery and connection details used
 						throughout the specimen dataset.
 					</CardDescription>
-					<CardAction>
-						<Button
-							size="icon"
-							variant="ghost"
-							onClick={() => setJoineryReferenceOpen(true)}
-							aria-label="Expand joinery types reference"
-						>
-							<Maximize2 className="h-4 w-4" />
-						</Button>
-					</CardAction>
 				</CardHeader>
 				<CardContent className="pb-4">
-					<button
-						type="button"
-						onClick={() => setJoineryReferenceOpen(true)}
-						className="flex w-full items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4 transition hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-						aria-label="Expand joinery types reference image"
-					>
-						<div className="w-full rounded-lg bg-white p-3 shadow-sm">
-							<img
-								src={joineryTypesReference}
-								alt="Reference sheet showing timber joinery and connection types"
-								className="h-auto max-h-[620px] w-full object-contain"
-							/>
-						</div>
-					</button>
+					<JoineryReferenceViewer />
 				</CardContent>
 			</Card>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 				{/* Stiffness vs Ductility */}
-				<Card>
-					<CardHeader className="pb-4">
-						<CardTitle>Stiffness vs Ductility</CardTitle>
-						<CardDescription>
-							Analyzing structural performance metrics
-							{stiffnessDuctilityData.length > 0 && (
-								<span className="ml-2 text-xs">
-									({stiffnessDuctilityData.length.toLocaleString()} points)
-								</span>
-							)}
-						</CardDescription>
-						<CardAction>
-							<ExpandableChart title="Stiffness vs Ductility">
-								{() => <ScatterPlotD3 {...stiffnessDuctilityProps} />}
-							</ExpandableChart>
-						</CardAction>
-					</CardHeader>
-					<CardContent className="pb-4">
-						<ChartErrorBoundary chartName="Stiffness vs Ductility">
-							<ScatterPlotD3
-								{...stiffnessDuctilityProps}
-								height={chartHeight}
-							/>
-						</ChartErrorBoundary>
-					</CardContent>
-				</Card>
+				<MetricScatterCard
+					title="Stiffness vs Ductility"
+					description="Analyzing structural performance metrics"
+					pointCount={stiffnessDuctilityData.length}
+					expandableTitle="Stiffness vs Ductility"
+					chartName="Stiffness vs Ductility"
+				>
+					<ScatterPlotD3 {...stiffnessDuctilityProps} height={chartHeight} />
+				</MetricScatterCard>
 
 				{/* Stiffness vs Yield Force */}
-				<Card>
-					<CardHeader className="pb-4">
-						<CardTitle>Stiffness vs Yield Force</CardTitle>
-						<CardDescription>
-							Stiffness-force relationship analysis
-							{stiffnessYieldData.length > 0 && (
-								<span className="ml-2 text-xs">
-									({stiffnessYieldData.length.toLocaleString()} points)
-								</span>
-							)}
-						</CardDescription>
-						<CardAction>
-							<ExpandableChart title="Stiffness vs Yield Force">
-								{() => <ScatterPlotD3 {...stiffnessYieldProps} />}
-							</ExpandableChart>
-						</CardAction>
-					</CardHeader>
-					<CardContent className="pb-4">
-						<ChartErrorBoundary chartName="Stiffness vs Yield Force">
-							<ScatterPlotD3 {...stiffnessYieldProps} height={chartHeight} />
-						</ChartErrorBoundary>
-					</CardContent>
-				</Card>
+				<MetricScatterCard
+					title="Stiffness vs Yield Force"
+					description="Stiffness-force relationship analysis"
+					pointCount={stiffnessYieldData.length}
+					expandableTitle="Stiffness vs Yield Force"
+					chartName="Stiffness vs Yield Force"
+				>
+					<ScatterPlotD3 {...stiffnessYieldProps} height={chartHeight} />
+				</MetricScatterCard>
 
-				{/* Chart Options */}
-				<Card className="col-span-1 lg:col-span-2">
-					<CardHeader>
-						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-							<div>
-								<CardTitle>Chart Options</CardTitle>
-								<CardDescription className="mt-1">
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Toggle
-												aria-label="Toggle violin plot"
-												variant="outline"
-												onPressedChange={(pressed) =>
-													setMirrorPosition(pressed ? 1 : 0)
-												}
-											>
-												<CandlestickChartIcon className="group-data-[state=on]/toggle:fill-foreground" />
-												{mirrorPosition ? "Violin" : "Boxplot"}
-											</Toggle>
-										</TooltipTrigger>
-										<TooltipContent>
-											<p>Toggle between boxplot and violin plot</p>
-										</TooltipContent>
-									</Tooltip>
+				<div className="col-span-1 grid grid-cols-1 gap-4 lg:col-span-2 lg:grid-cols-2">
+					{/* Chart Options */}
+					<BoxPlotOptionsToolbar
+						className={CHART_OPTIONS_CARD_CLASSNAME}
+						containerRef={setChartOptionsCardElement}
+						selectedChartType={selectedChartType}
+						onChartTypeChange={(value: BoxPlotChartType) =>
+							setMirrorPosition(value === "violin" ? 1 : 0)
+						}
+						fastenerTypes={fastenerTypes}
+						selectedFastener={selectedFastener}
+						onFastenerChange={setSelectedFastener}
+					/>
+
+					{/* Box plots */}
+					{BOX_PLOT_LABELS.map((ylabel) => (
+						<Card key={ylabel.key} className="col-span-1">
+							<CardHeader className="pb-4">
+								<CardTitle>Box Plot Distribution</CardTitle>
+								<CardDescription>
+									Summarizes the distribution of {ylabel.label} grouped by
+									joinery type
+									{selectedSpecimens.length > 0 && (
+										<span className="ml-2 text-xs">
+											({selectedSpecimens.length.toLocaleString()} specimens)
+										</span>
+									)}
 								</CardDescription>
-							</div>
-							<Select
-								onValueChange={setSelectedFastener}
-								value={selectedFastener}
-							>
-								<SelectTrigger
-									className="w-full sm:w-48"
-									aria-label="Select fastener type"
-								>
-									<SelectValue placeholder="Select a fastener" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectGroup>
-										<SelectLabel>Fastener</SelectLabel>
-										{fastenerTypes.map((fastener) => (
-											<SelectItem key={fastener} value={fastener}>
-												{fastener}
-											</SelectItem>
-										))}
-									</SelectGroup>
-								</SelectContent>
-							</Select>
-						</div>
-					</CardHeader>
-				</Card>
-
-				{/* Box plots */}
-				{yLabels.map((ylabel) => (
-					<Card
-						key={ylabel.key}
-						className="col-span-1 lg:last:col-span-2 lg:odd:last-of-type:col-span-2"
-					>
-						<CardHeader className="pb-4">
-							<CardTitle>Box Plot Distribution</CardTitle>
-							<CardDescription>
-								Summarizes the distribution of {ylabel.label} grouped by joinery
-								type
-								{selectedSpecimens.length > 0 && (
-									<span className="ml-2 text-xs">
-										({selectedSpecimens.length.toLocaleString()} specimens)
-									</span>
-								)}
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="pb-4 min-w-0">
-							<ChartErrorBoundary chartName="Box Plot">
-								<BoxPlot
-									selectedSpecimens={selectedSpecimens}
-									yKey={ylabel.key}
-									yLabel={getFullLabel(ylabel.key)}
-									mirrorPosition={mirrorPosition}
-									onPointClick={handlePointClick}
-								/>
-							</ChartErrorBoundary>
-						</CardContent>
-						<CardFooter />
-					</Card>
-				))}
+								{selectedFastenerBadgeLabel ? (
+									<CardAction>
+										<Badge className="border-[color:var(--failure-badge-border)] bg-[color:var(--failure-badge-bg)] text-[color:var(--failure-badge-text)]">
+											{selectedFastenerBadgeLabel}
+										</Badge>
+									</CardAction>
+								) : null}
+							</CardHeader>
+							<CardContent className="pb-4 min-w-0">
+								<ChartErrorBoundary chartName="Box Plot">
+									<BoxPlot
+										selectedSpecimens={selectedSpecimens}
+										yKey={ylabel.key}
+										yLabel={getFullLabel(ylabel.key)}
+										mirrorPosition={mirrorPosition}
+										onPointClick={handlePointClick}
+									/>
+								</ChartErrorBoundary>
+							</CardContent>
+							<CardFooter />
+						</Card>
+					))}
+					<div
+						className="col-span-1 lg:col-span-2"
+						style={{ height: chartOptionsSpacerHeight }}
+					/>
+				</div>
 
 				<Separator className="col-span-1 lg:col-span-2" />
 				<DemographyGrid specimens={allSpecimens} />
-
 			</div>
 
 			{selectedSpecimen && (
@@ -453,23 +691,6 @@ function Dashboard() {
 					onOpenChange={setSheetOpen}
 				/>
 			)}
-
-			<Dialog open={joineryReferenceOpen} onOpenChange={setJoineryReferenceOpen}>
-				<DialogContent className="max-w-none! h-screen w-11/12 flex flex-col rounded-none p-6">
-					<DialogHeader>
-						<DialogTitle>Joinery Types Reference</DialogTitle>
-					</DialogHeader>
-					<div className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-xl border border-border/70 bg-muted/20 p-4">
-						<div className="w-full rounded-lg bg-white p-4 shadow-sm">
-							<img
-								src={joineryTypesReference}
-								alt="Reference sheet showing timber joinery and connection types"
-								className="h-auto max-h-full w-full object-contain"
-							/>
-						</div>
-					</div>
-				</DialogContent>
-			</Dialog>
 
 			{isLoadingAll && (
 				<div className="flex flex-col items-center gap-4">
