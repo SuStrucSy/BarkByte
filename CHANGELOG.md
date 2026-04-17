@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.2.0](https://github.com/SuStrucSy/BarkByte/compare/v2.1.1...v2.2.0) (2026-04-17)
+
+
+### Features
+
+* add SpecimenVersionHistory component and integrate specimen diff logic ([cc30560](https://github.com/SuStrucSy/BarkByte/commit/cc3056079aa0e0343793386c864bf66eea9286f2))
+* enhance References component with improved UI and item structure ([077da17](https://github.com/SuStrucSy/BarkByte/commit/077da17573f41df03b31cb7e95a72cf0f91a5ff1))
+* enhance specimen management with delete functionality and UI improvements ([9c127fd](https://github.com/SuStrucSy/BarkByte/commit/9c127fdd89aef3cf04cbd0b75516179dbc7c1d48))
+* implement pending specimen management and update form handling ([89915eb](https://github.com/SuStrucSy/BarkByte/commit/89915eb225f876b77a885384ca77c0fcc44e8ae9))
+* integrate SpecimenReferenceSheet for DOI selection in References component ([ba8064c](https://github.com/SuStrucSy/BarkByte/commit/ba8064c7ffb7f0744361ed9dc27a34383884f428))
+* replace ToggleGroup with Tabs in StatusFilter component for improved UI ([1e378d5](https://github.com/SuStrucSy/BarkByte/commit/1e378d5b03f40218f859ad7e0446f3de891b413c))
+
+
+### Bug Fixes
+
+* adjust BoxPlot component to include dynamic height and improve SVG transition effects ([bdb688c](https://github.com/SuStrucSy/BarkByte/commit/bdb688cf74ea30fb0cc668bd5ffc54cf17e6ddf8))
+* improve BoxPlot component responsiveness and layout handling ([b06667e](https://github.com/SuStrucSy/BarkByte/commit/b06667e9dab5422ca38e0a354455c2a47e9f1a69))
+* improve ModeToggle component with responsive design and button integration ([0be952a](https://github.com/SuStrucSy/BarkByte/commit/0be952a54c00498157e9227f394668dd60def55c))
+* remove unused Notifications item from NavUser dropdown menu ([3941944](https://github.com/SuStrucSy/BarkByte/commit/39419447dbd6cdba11d02b483f66855daab83120))
+* update BoxPlot component for responsive dimensions and improved resize handling ([ca48963](https://github.com/SuStrucSy/BarkByte/commit/ca48963c48011dbb8d9a030af0dddd606ba9b25e))
+* update project support text to reflect correct department affiliation ([bdec3fc](https://github.com/SuStrucSy/BarkByte/commit/bdec3fce7347d738c0ca77f7d71d44ea8575de25))
+
 ## [2.1.1](https://github.com/SuStrucSy/BarkByte/compare/v2.1.0...v2.1.1) (2026-04-16)
 
 
