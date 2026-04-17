@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SpecimenPublic } from "@/api/model";
 import { CHART_CONFIG } from "@/components/Charts/chartConfig";
 import { isNumericValue } from "@/lib/typeGuards";
@@ -165,7 +165,7 @@ export function BoxPlot({
 	height = 400,
 }: BoxPlotProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [dimensions, setDimensions] = useState({ width: 0, height });
+	const [dimensions, setDimensions] = useState({ width: 600, height });
 
 	// Responsive margins based on container width
 	const margins = useMemo(() => {
@@ -398,22 +398,55 @@ export function BoxPlot({
 		yScale,
 	]);
 
-	// Resize handler - only for ongoing resize events
-	useEffect(() => {
+	// Initial layout can briefly report width 0 on refresh.
+	// Retry on animation frames until layout stabilizes, while also observing
+	// later container resizes.
+	useLayoutEffect(() => {
 		if (!containerRef.current) return;
-		const resizeObserver = new ResizeObserver(([entry]) => {
-			if (!entry) return;
-			const { width, height: observedHeight } = entry.contentRect;
+
+		let frameId = 0;
+		let cancelled = false;
+
+		const measure = () => {
+			if (!containerRef.current || cancelled) return false;
+			const { width, height: measuredHeight } =
+				containerRef.current.getBoundingClientRect();
 			if (width > 0) {
 				setDimensions({
 					width,
-					height: observedHeight > 0 ? observedHeight : height,
+					height: measuredHeight > 0 ? measuredHeight : height,
+				});
+				return true;
+			}
+			return false;
+		};
+
+		const measureUntilReady = (attemptsLeft: number) => {
+			if (measure() || attemptsLeft <= 0 || cancelled) {
+				return;
+			}
+			frameId = requestAnimationFrame(() =>
+				measureUntilReady(attemptsLeft - 1),
+			);
+		};
+
+		measureUntilReady(12);
+
+		const resizeObserver = new ResizeObserver(([entry]) => {
+			if (!entry || cancelled) return;
+			if (entry.contentRect.width > 0) {
+				setDimensions({
+					width: entry.contentRect.width,
+					height:
+						entry.contentRect.height > 0 ? entry.contentRect.height : height,
 				});
 			}
 		});
 
 		resizeObserver.observe(containerRef.current);
 		return () => {
+			cancelled = true;
+			cancelAnimationFrame(frameId);
 			resizeObserver.disconnect();
 		};
 	}, [height]);
@@ -439,75 +472,66 @@ export function BoxPlot({
 				role="img"
 				aria-label={`Box plot showing ${yLabel} distribution across ${chartData.groups.length} groups`}
 			>
-				{dimensions.width === 0 ? (
-					<div className="flex items-center justify-center h-full text-muted-foreground">
-						Loading chart...
-					</div>
-				) : (
+				<div
+					style={{
+						position: "relative",
+						width: "100%",
+						height: responsiveHeight,
+						transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+					}}
+				>
 					<div
 						style={{
-							position: "relative",
 							width: "100%",
 							height: responsiveHeight,
+							position: "absolute",
+							top: 0,
+							left: 0,
 							transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
 						}}
 					>
 						<div
 							style={{
-								width: "100%",
-								height: responsiveHeight,
-								position: "absolute",
-								top: 0,
-								left: 0,
-								transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+								width: boundsWidth,
+								height: boundsHeight,
+								transform: `translate(${margins.left}px, ${margins.top}px)`,
+								transition: `width ${CHART_CONFIG.transitionDuration}ms ease, height ${CHART_CONFIG.transitionDuration}ms ease, transform ${CHART_CONFIG.transitionDuration}ms ease`,
 							}}
 						>
-							<div
-								style={{
-									width: boundsWidth,
-									height: boundsHeight,
-									transform: `translate(${margins.left}px, ${margins.top}px)`,
-									transition: `width ${CHART_CONFIG.transitionDuration}ms ease, height ${CHART_CONFIG.transitionDuration}ms ease, transform ${CHART_CONFIG.transitionDuration}ms ease`,
-								}}
-							>
-								{allBoxes}
-								{allViolins}
-							</div>
+							{allBoxes}
+							{allViolins}
 						</div>
-						<svg
-							width="100%"
-							height={responsiveHeight}
-							style={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								pointerEvents: "none",
-								transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
-							}}
-							className="text-foreground"
-							aria-hidden="true"
-						>
-							<g
-								transform={`translate(${margins.left}, ${margins.top})`}
-								style={{ color: "hsl(var(--foreground))" }}
-							>
-								<AxisLeft
-									yScale={yScale}
-									pixelsPerTick={
-										boundsWidth < 400 ? 60 : CHART_CONFIG.pixelsPerTick
-									}
-									title={yLabel}
-								/>
-								<g transform={`translate(0, ${boundsHeight})`}>
-									<AxisBottom
-										xScale={xScale}
-										width={boundsWidth} // ← pass width for label rotation
-									/>
-								</g>
-							</g>
-						</svg>
 					</div>
-				)}
+					<svg
+						width="100%"
+						height={responsiveHeight}
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							pointerEvents: "none",
+							transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+						}}
+						className="text-foreground"
+						aria-hidden="true"
+					>
+						<g
+							transform={`translate(${margins.left}, ${margins.top})`}
+							style={{ color: "hsl(var(--foreground))" }}
+						>
+							<AxisLeft
+								yScale={yScale}
+								pixelsPerTick={
+									boundsWidth < 400 ? 60 : CHART_CONFIG.pixelsPerTick
+								}
+								title={yLabel}
+							/>
+							<g transform={`translate(0, ${boundsHeight})`}>
+								<AxisBottom xScale={xScale} width={boundsWidth} />
+							</g>
+						</g>
+					</svg>
+				</div>
 				{!enableInteractions && (
 					<div className="text-xs text-muted-foreground mt-2 text-center">
 						Point interactions disabled for performance (

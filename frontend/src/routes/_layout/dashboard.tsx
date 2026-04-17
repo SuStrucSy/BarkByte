@@ -1,9 +1,9 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { MinusIcon, PlusIcon, RotateCcwIcon } from "lucide-react";
 import {
-	type PointerEvent as ReactPointerEvent,
 	type ReactNode,
+	type PointerEvent as ReactPointerEvent,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -201,24 +201,21 @@ function JoineryReferenceViewer() {
 		setOffset((currentOffset) => clampOffset(currentOffset));
 	}, [clampOffset]);
 
-	const applyZoom = useCallback(
-		(delta: number) => {
-			setScale((currentScale) => {
-				const nextScale = clamp(
-					currentScale + delta,
-					MIN_REFERENCE_SCALE,
-					MAX_REFERENCE_SCALE,
-				);
+	const applyZoom = useCallback((delta: number) => {
+		setScale((currentScale) => {
+			const nextScale = clamp(
+				currentScale + delta,
+				MIN_REFERENCE_SCALE,
+				MAX_REFERENCE_SCALE,
+			);
 
-				if (nextScale === MIN_REFERENCE_SCALE) {
-					setOffset({ x: 0, y: 0 });
-				}
+			if (nextScale === MIN_REFERENCE_SCALE) {
+				setOffset({ x: 0, y: 0 });
+			}
 
-				return nextScale;
-			});
-		},
-		[],
-	);
+			return nextScale;
+		});
+	}, []);
 
 	const handlePointerDown = useCallback(
 		(event: ReactPointerEvent<HTMLDivElement>) => {
@@ -359,50 +356,62 @@ function JoineryReferenceViewer() {
 	);
 }
 
-// Hook for managing infinite query with better tracking
 function useSpecimenData(pageSize: number) {
-	const queryResult = useInfiniteQuery({
-		queryKey: ["specimens", "dashboard"],
-		queryFn: async ({ pageParam = 0 }) => {
-			const params: SpecimensReadSpecimensParams = {
-				limit: pageSize,
-				skip: pageParam,
-			};
-			const result = await specimensReadSpecimens(params);
+	const queryResult = useQuery({
+		queryKey: ["specimens", "dashboard", pageSize],
+		queryFn: async ({ signal }) => {
+			const allSpecimens: SpecimenPublic[] = [];
+			let totalCount = 0;
+			let skip = 0;
 
-			return result;
+			while (true) {
+				const params: SpecimensReadSpecimensParams = {
+					limit: pageSize,
+					skip,
+				};
+				const result = await specimensReadSpecimens(params, signal);
+				totalCount = result.count ?? totalCount;
+				allSpecimens.push(...result.data);
+
+				if (
+					result.data.length < pageSize ||
+					(totalCount > 0 && allSpecimens.length >= totalCount)
+				) {
+					break;
+				}
+
+				skip += pageSize;
+			}
+
+			return {
+				allSpecimens,
+				totalCount,
+			};
 		},
-		initialPageParam: 0,
-		getNextPageParam: (lastPage, pages) => {
-			const specimens = lastPage.data;
-			return specimens.length === pageSize
-				? pages.length * pageSize
-				: undefined;
-		},
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000,
 	});
 
-	const pages = queryResult.data?.pages ?? [];
-	const allSpecimens = pages.flatMap((page) => page.data);
-	const totalCount = pages[0]?.count ?? 0;
+	const allSpecimens = queryResult.data?.allSpecimens ?? [];
+	const totalCount = queryResult.data?.totalCount ?? 0;
 	const loadedCount = allSpecimens.length;
-	const isLoadingAll =
-		queryResult.hasNextPage || queryResult.isFetchingNextPage;
 
 	return {
 		...queryResult,
 		allSpecimens,
 		totalCount,
 		loadedCount,
-		isLoadingAll,
+		isLoadingAll: queryResult.isPending,
 	};
 }
 
 function Dashboard() {
 	const PAGE_SIZE = 1000;
-	const [selectedFastener, setSelectedFastener] = useState<string>("");
-	const [mirrorPosition, setMirrorPosition] = useState(0);
+	const [selectedFastenerOverride, setSelectedFastenerOverride] = useState<
+		string | null
+	>(null);
+	const [selectedChartType, setSelectedChartType] =
+		useState<BoxPlotChartType>("boxplot");
 	const [selectedSpecimen, setSelectedSpecimen] =
 		useState<SpecimenPublic | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
@@ -418,9 +427,6 @@ function Dashboard() {
 	}, []);
 
 	const {
-		fetchNextPage,
-		hasNextPage,
-		isFetchingNextPage,
 		isLoading,
 		isError,
 		error,
@@ -432,13 +438,6 @@ function Dashboard() {
 
 	const { isLoading: isFastenerLoading, data: fastenerTypesData } =
 		useFastenertypeGetFastenerTypes();
-
-	// Auto-fetch all pages
-	useEffect(() => {
-		if (hasNextPage && !isFetchingNextPage) {
-			fetchNextPage();
-		}
-	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 	// Group specimens by fastener type - only recompute when data changes
 	const groupsByFastenerType = useMemo(
@@ -455,17 +454,16 @@ function Dashboard() {
 		[groupsByFastenerType],
 	);
 
-	useEffect(() => {
-		if (selectedFastener || fastenerTypes.length === 0) {
-			return;
+	const selectedFastener = useMemo(() => {
+		if (
+			selectedFastenerOverride &&
+			fastenerTypes.includes(selectedFastenerOverride)
+		) {
+			return selectedFastenerOverride;
 		}
 
-		const defaultFastener = getDefaultFastener(fastenerTypes);
-
-		if (defaultFastener) {
-			setSelectedFastener(defaultFastener);
-		}
-	}, [fastenerTypes, selectedFastener]);
+		return getDefaultFastener(fastenerTypes) ?? "";
+	}, [fastenerTypes, selectedFastenerOverride]);
 
 	const selectedSpecimens = useMemo(
 		() => groupsByFastenerType[selectedFastener] || [],
@@ -489,9 +487,7 @@ function Dashboard() {
 		[allSpecimens],
 	);
 
-	const selectedChartType: ChartTypeOption = mirrorPosition
-		? "violin"
-		: "boxplot";
+	const mirrorPosition = selectedChartType === "violin" ? 1 : 0;
 	const selectedFastenerBadgeLabel = selectedFastener
 		? `Fastener: ${selectedFastener}`
 		: null;
@@ -570,7 +566,11 @@ function Dashboard() {
 				<CardHeader>
 					<CardTitle>Specimen Analysis Dashboard</CardTitle>
 					<CardDescription className="flex flex-wrap items-center gap-1">
-						This is the dashboard page, where key data is visualized through distributions and individual data points to provide a clear overview of trends and patterns. The visualizations are interactive, allowing users to explore, filter, and engage with the data for deeper insights. {" "}
+						This is the dashboard page, where key data is visualized through
+						distributions and individual data points to provide a clear overview
+						of trends and patterns. The visualizations are interactive, allowing
+						users to explore, filter, and engage with the data for deeper
+						insights.{" "}
 					</CardDescription>
 					<CardDescription className="flex flex-wrap items-center gap-1">
 						{loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
@@ -632,12 +632,12 @@ function Dashboard() {
 						className={CHART_OPTIONS_CARD_CLASSNAME}
 						containerRef={setChartOptionsCardElement}
 						selectedChartType={selectedChartType}
-						onChartTypeChange={(value: BoxPlotChartType) =>
-							setMirrorPosition(value === "violin" ? 1 : 0)
-						}
+						onChartTypeChange={setSelectedChartType}
 						fastenerTypes={fastenerTypes}
 						selectedFastener={selectedFastener}
-						onFastenerChange={setSelectedFastener}
+						onFastenerChange={(value) =>
+							setSelectedFastenerOverride(value || null)
+						}
 					/>
 
 					{/* Box plots */}
