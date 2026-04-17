@@ -277,81 +277,83 @@ function JoineryReferenceViewer() {
 	);
 
 	return (
-		<div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-			<div className="flex w-fit shrink-0 flex-row rounded-lg border border-border bg-background shadow-xs lg:flex-col">
-				<Button
-					variant="outline"
-					size="icon"
-					className="rounded-r-none border-0 border-r lg:rounded-b-none lg:rounded-r-md lg:border-r-0 lg:border-b"
-					onClick={() => applyZoom(REFERENCE_ZOOM_STEP)}
-					disabled={scale >= MAX_REFERENCE_SCALE}
-					aria-label="Zoom in reference image"
-				>
-					<PlusIcon />
-				</Button>
-				<Button
-					variant="outline"
-					size="icon"
-					className="rounded-none border-0 border-r lg:border-r-0 lg:border-b"
-					onClick={() => applyZoom(-REFERENCE_ZOOM_STEP)}
-					disabled={scale <= MIN_REFERENCE_SCALE}
-					aria-label="Zoom out reference image"
-				>
-					<MinusIcon />
-				</Button>
-				<Button
-					variant="outline"
-					size="icon"
-					className="rounded-l-none border-0 lg:rounded-t-none lg:rounded-l-md"
-					onClick={resetView}
-					disabled={
-						scale === MIN_REFERENCE_SCALE && offset.x === 0 && offset.y === 0
-					}
-					aria-label="Reset reference image position"
-				>
-					<RotateCcwIcon />
-				</Button>
-			</div>
-
+		<div
+			ref={containerRef}
+			className="relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4 select-none"
+		>
 			<div
-				ref={containerRef}
-				className="relative flex min-h-[420px] flex-1 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4 select-none"
+				className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white p-3 shadow-sm ${
+					scale > MIN_REFERENCE_SCALE
+						? isDragging
+							? "cursor-grabbing"
+							: "cursor-grab"
+						: "cursor-default"
+				}`}
+				onPointerDown={handlePointerDown}
+				onPointerMove={handlePointerMove}
+				onPointerUp={handlePointerUp}
+				onPointerCancel={handlePointerUp}
+				onPointerLeave={handlePointerUp}
+				role="presentation"
 			>
-				<div className="absolute right-4 top-4 rounded-md bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
+				<div
+					className="absolute left-4 top-4 z-10 flex flex-col rounded-lg border border-border bg-background/90 shadow-xs backdrop-blur-sm"
+					onPointerDown={(event) => {
+						event.stopPropagation();
+					}}
+				>
+					<Button
+						variant="outline"
+						size="icon"
+						className="rounded-b-none border-0 border-b bg-transparent"
+						onClick={() => applyZoom(REFERENCE_ZOOM_STEP)}
+						disabled={scale >= MAX_REFERENCE_SCALE}
+						aria-label="Zoom in reference image"
+					>
+						<PlusIcon />
+					</Button>
+					<Button
+						variant="outline"
+						size="icon"
+						className="rounded-none border-0 border-b bg-transparent"
+						onClick={() => applyZoom(-REFERENCE_ZOOM_STEP)}
+						disabled={scale <= MIN_REFERENCE_SCALE}
+						aria-label="Zoom out reference image"
+					>
+						<MinusIcon />
+					</Button>
+					<Button
+						variant="outline"
+						size="icon"
+						className="rounded-t-none border-0 bg-transparent"
+						onClick={resetView}
+						disabled={
+							scale === MIN_REFERENCE_SCALE && offset.x === 0 && offset.y === 0
+						}
+						aria-label="Reset reference image position"
+					>
+						<RotateCcwIcon />
+					</Button>
+				</div>
+				<div className="absolute right-4 top-4 z-10 rounded-md bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
 					{Math.round(scale * 100)}%
 				</div>
-				<div
-					className={`flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white p-3 shadow-sm ${
-						scale > MIN_REFERENCE_SCALE
-							? isDragging
-								? "cursor-grabbing"
-								: "cursor-grab"
-							: "cursor-default"
-					}`}
-					onPointerDown={handlePointerDown}
-					onPointerMove={handlePointerMove}
-					onPointerUp={handlePointerUp}
-					onPointerCancel={handlePointerUp}
-					onPointerLeave={handlePointerUp}
-					role="presentation"
-				>
-					<img
-						src={joineryTypesReference}
-						alt="Reference sheet showing timber joinery and connection types"
-						className="pointer-events-none h-auto max-h-[620px] w-full object-contain"
-						style={{
-							transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-							transformOrigin: "center center",
-							transition: isDragging ? "none" : "transform 150ms ease-out",
-						}}
-						onLoad={(event) => {
-							setImageSize({
-								width: event.currentTarget.naturalWidth,
-								height: event.currentTarget.naturalHeight,
-							});
-						}}
-					/>
-				</div>
+				<img
+					src={joineryTypesReference}
+					alt="Reference sheet showing timber joinery and connection types"
+					className="pointer-events-none h-auto max-h-[620px] w-full object-contain"
+					style={{
+						transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+						transformOrigin: "center center",
+						transition: isDragging ? "none" : "transform 150ms ease-out",
+					}}
+					onLoad={(event) => {
+						setImageSize({
+							width: event.currentTarget.naturalWidth,
+							height: event.currentTarget.naturalHeight,
+						});
+					}}
+				/>
 			</div>
 		</div>
 	);
