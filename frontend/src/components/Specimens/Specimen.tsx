@@ -8,6 +8,7 @@ import { SpecimenFailureModeLinks } from "./SpecimenFailureModeLinks";
 import { SpecimenHeader } from "./SpecimenHeader";
 import { SpecimenTabMeta } from "./SpecimenTabMeta";
 import { SpecimenTabStructural } from "./SpecimenTabStructural";
+import { SpecimenVersionHistory } from "./SpecimenVersionHistory";
 
 // Page component for the specimen detail view.
 type SpecimenProps = {
@@ -74,6 +75,7 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 						</Card>
 					</TabsContent>
 				</Tabs>
+				<SpecimenVersionHistory specimenId={data.id} />
 			</div>
 		</>
 	);

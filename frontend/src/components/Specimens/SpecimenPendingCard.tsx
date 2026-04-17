@@ -54,8 +54,18 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { humanizeLabel, renderValue } from "@/lib/utils";
+import { renderValue } from "@/lib/utils";
 import { Textarea } from "../ui/textarea";
+import {
+	allSectionFields,
+	fieldUnits,
+	getSpecimenFieldLabel,
+	isSpecimenFieldChanged,
+	renderFailureModeValue,
+	SpecimenDiffFieldRow,
+	type SpecimenField,
+	sectionFields,
+} from "./specimenDiff";
 
 export type ActiveAction = {
 	pendingId: string;
@@ -299,128 +309,6 @@ interface SpecimenPendingCardProps {
 	canDeletePending: boolean;
 }
 
-type SpecimenField = keyof SpecimenPublic;
-
-const manualLabels: Partial<Record<SpecimenField, string>> = {
-	e_qfm_description: "QFM Description",
-	e_qualitative_failure_measure: "QFM",
-	note: "Specimen Note",
-	specimen_reference_id: "Reference Title",
-};
-
-const sectionFields: Record<string, SpecimenField[]> = {
-	"Meta Data": [
-		"specimen_reference_id",
-		"assembly_type",
-		"joinery_type",
-		"sub_joinery_type",
-		"fastener_types",
-		"loading_directions",
-		"practice",
-		"fastener_numbers",
-		"connector",
-		"dowel",
-		"replicate_tests",
-		"connection_description",
-		"note",
-	],
-	"Structural Data": [
-		"element_dimension",
-		"moisture_percentage",
-		"wood_type",
-		"wood_mechanical_properties",
-		"fastener_mechanical_properties",
-		"connector_mechanical_properties",
-	],
-	"Experimental Data": [
-		"e_date",
-		"e_test_loading_type",
-		"e_yield_point_method",
-		"e_qualitative_failure_measure",
-		"e_qfm_description",
-		"e_max_force",
-		"e_max_displacement",
-		"e_stiffness",
-		"e_ultimate_force",
-		"e_ultimate_displacement",
-		"e_yield_force",
-		"e_yield_displacement",
-		"e_ductility",
-	],
-};
-
-const allSectionFields = Object.values(sectionFields).flat();
-
-const changeKeyMap: Partial<Record<SpecimenField, string[]>> = {
-	joinery_type: ["joinery_type_id"],
-	sub_joinery_type: ["sub_joinery_type_id"],
-	fastener_types: ["fastener_type_ids"],
-	loading_directions: ["loading_direction_ids"],
-	e_qualitative_failure_measure: ["e_qualitative_failure_measure"],
-};
-
-function getLabel(property: SpecimenField) {
-	return manualLabels[property] ?? humanizeLabel(property);
-}
-
-function formatFieldValue(value: unknown, unit?: string) {
-	const text = renderValue(value);
-	return (
-		<span className="font-medium">
-			{text}
-			{unit ? (
-				<span className="ml-1 text-sm font-light text-muted-foreground">
-					{unit}
-				</span>
-			) : null}
-		</span>
-	);
-}
-
-function PendingFieldRow({
-	label,
-	oldValue,
-	newValue,
-	isChanged,
-	unit,
-	renderOldValue,
-	renderNewValue,
-}: {
-	label: string;
-	oldValue: unknown;
-	newValue: unknown;
-	isChanged: boolean;
-	unit?: string;
-	renderOldValue?: () => React.ReactNode;
-	renderNewValue?: () => React.ReactNode;
-}) {
-	return (
-		<div className="grid gap-1 rounded-md px-3 py-2">
-			<span className="text-[10px] tracking-wide text-muted-foreground uppercase">
-				{label}
-			</span>
-			{isChanged ? (
-				<div className="grid min-w-0 gap-1">
-					<div className="text-sm text-red-600 line-through decoration-red-400">
-						{renderOldValue
-							? renderOldValue()
-							: formatFieldValue(oldValue, unit)}
-					</div>
-					<div className="text-sm text-green-700 dark:text-green-400">
-						{renderNewValue
-							? renderNewValue()
-							: formatFieldValue(newValue, unit)}
-					</div>
-				</div>
-			) : (
-				<div className="min-w-0 text-sm">
-					{renderNewValue ? renderNewValue() : formatFieldValue(newValue, unit)}
-				</div>
-			)}
-		</div>
-	);
-}
-
 export function SpecimenPendingCard({
 	specimen,
 	changedData,
@@ -462,19 +350,8 @@ export function SpecimenPendingCard({
 		},
 	);
 
-	const fieldUnits: Partial<Record<SpecimenField, string>> = {
-		e_max_force: "kN",
-		e_max_displacement: "mm",
-		e_stiffness: "kN/mm",
-		e_ultimate_force: "kN",
-		e_ultimate_displacement: "mm",
-		e_yield_force: "kN",
-		e_yield_displacement: "mm",
-	};
-
 	const isFieldChanged = (field: SpecimenField) => {
-		const changeKeys = changeKeyMap[field] ?? [field];
-		return changeKeys.some((key) => changedData[key] !== undefined);
+		return isSpecimenFieldChanged(field, changedData);
 	};
 
 	const getDisplayValue = (field: SpecimenField) => {
@@ -483,10 +360,6 @@ export function SpecimenPendingCard({
 		}
 		return originalSpecimen?.[field];
 	};
-
-	const formatQfmLabels = (
-		failureModes: SpecimenPublic["e_qualitative_failure_measure"] | undefined,
-	) => <span className="font-medium">{renderValue(failureModes ?? [])}</span>;
 
 	const renderFieldGrid = (
 		fields: SpecimenField[],
@@ -505,9 +378,9 @@ export function SpecimenPendingCard({
 			<div className={columnsClassName}>
 				{leadingRow}
 				{fields.map((field) => (
-					<PendingFieldRow
+					<SpecimenDiffFieldRow
 						key={field}
-						label={getLabel(field)}
+						label={getSpecimenFieldLabel(field)}
 						oldValue={originalSpecimen?.[field]}
 						newValue={getDisplayValue(field)}
 						isChanged={!isNew && isFieldChanged(field)}
@@ -515,14 +388,17 @@ export function SpecimenPendingCard({
 						renderOldValue={
 							field === "e_qualitative_failure_measure"
 								? () =>
-										formatQfmLabels(
+										renderFailureModeValue(
 											originalSpecimen?.e_qualitative_failure_measure,
 										)
 								: undefined
 						}
 						renderNewValue={
 							field === "e_qualitative_failure_measure"
-								? () => formatQfmLabels(specimen.e_qualitative_failure_measure)
+								? () =>
+										renderFailureModeValue(
+											specimen.e_qualitative_failure_measure,
+										)
 								: undefined
 						}
 					/>
