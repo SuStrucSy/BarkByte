@@ -2,7 +2,6 @@ import * as d3 from "d3";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SpecimenPublic } from "@/api/model";
 import { CHART_CONFIG } from "@/components/Charts/chartConfig";
-import useDebounce from "@/hooks/use-debounce";
 import { isNumericValue } from "@/lib/typeGuards";
 import { getChartColors, getSummaryStats } from "@/lib/utils";
 import {
@@ -166,7 +165,7 @@ export function BoxPlot({
 	height = 400,
 }: BoxPlotProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const [dimensions, setDimensions] = useState({ width: 600, height });
+	const [dimensions, setDimensions] = useState({ width: 0, height });
 
 	// Responsive margins based on container width
 	const margins = useMemo(() => {
@@ -184,18 +183,13 @@ export function BoxPlot({
 		return height;
 	}, [dimensions.width, height]);
 
-	const debouncedDimensions = useDebounce(
-		dimensions,
-		CHART_CONFIG.resizeDebounceMs,
-	);
-
 	const boundsWidth = useMemo(
-		() => debouncedDimensions.width - margins.right - margins.left,
-		[debouncedDimensions.width, margins],
+		() => Math.max(0, dimensions.width - margins.right - margins.left),
+		[dimensions.width, margins],
 	);
 
 	const boundsHeight = useMemo(
-		() => responsiveHeight - margins.top - margins.bottom,
+		() => Math.max(0, responsiveHeight - margins.top - margins.bottom),
 		[responsiveHeight, margins],
 	);
 
@@ -407,25 +401,19 @@ export function BoxPlot({
 	// Resize handler - only for ongoing resize events
 	useEffect(() => {
 		if (!containerRef.current) return;
-		const { width: w } = containerRef.current.getBoundingClientRect();
-		setDimensions({ width: w, height });
-
-		let timeoutId: ReturnType<typeof setTimeout>;
-		const resizeObserver = new ResizeObserver((entries) => {
-			const entry = entries[0];
+		const resizeObserver = new ResizeObserver(([entry]) => {
 			if (!entry) return;
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(() => {
+			const { width, height: observedHeight } = entry.contentRect;
+			if (width > 0) {
 				setDimensions({
-					width: entry.contentRect.width,
-					height,
+					width,
+					height: observedHeight > 0 ? observedHeight : height,
 				});
-			}, CHART_CONFIG.resizeDebounceMs);
+			}
 		});
 
 		resizeObserver.observe(containerRef.current);
 		return () => {
-			clearTimeout(timeoutId);
 			resizeObserver.disconnect();
 		};
 	}, [height]);
@@ -446,58 +434,58 @@ export function BoxPlot({
 		<TooltipProvider delayDuration={100}>
 			<div
 				ref={containerRef}
-				className="w-full"
+				className="relative w-full min-w-0 overflow-hidden"
 				style={{ height: responsiveHeight }}
 				role="img"
 				aria-label={`Box plot showing ${yLabel} distribution across ${chartData.groups.length} groups`}
 			>
-				{debouncedDimensions.width === 0 ? (
+				{dimensions.width === 0 ? (
 					<div className="flex items-center justify-center h-full text-muted-foreground">
 						Loading chart...
 					</div>
 				) : (
+					<div
+						style={{
+							position: "relative",
+							width: "100%",
+							height: responsiveHeight,
+							transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+						}}
+					>
 						<div
 							style={{
-								position: "relative",
 								width: "100%",
 								height: responsiveHeight,
+								position: "absolute",
+								top: 0,
+								left: 0,
 								transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
 							}}
 						>
 							<div
 								style={{
-									width: "100%",
-									height: responsiveHeight,
-									position: "absolute",
-									top: 0,
-									left: 0,
-									transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+									width: boundsWidth,
+									height: boundsHeight,
+									transform: `translate(${margins.left}px, ${margins.top}px)`,
+									transition: `width ${CHART_CONFIG.transitionDuration}ms ease, height ${CHART_CONFIG.transitionDuration}ms ease, transform ${CHART_CONFIG.transitionDuration}ms ease`,
 								}}
 							>
-								<div
-									style={{
-										width: boundsWidth,
-										height: boundsHeight,
-										transform: `translate(${margins.left}px, ${margins.top}px)`,
-										transition: `width ${CHART_CONFIG.transitionDuration}ms ease, height ${CHART_CONFIG.transitionDuration}ms ease, transform ${CHART_CONFIG.transitionDuration}ms ease`,
-									}}
-								>
-									{allBoxes}
-									{allViolins}
+								{allBoxes}
+								{allViolins}
 							</div>
 						</div>
-							<svg
-								width="100%"
-								height={responsiveHeight}
-								style={{
-									position: "absolute",
-									top: 0,
-									left: 0,
-									pointerEvents: "none",
-									transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
-								}}
-								className="text-foreground"
-								aria-hidden="true"
+						<svg
+							width="100%"
+							height={responsiveHeight}
+							style={{
+								position: "absolute",
+								top: 0,
+								left: 0,
+								pointerEvents: "none",
+								transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+							}}
+							className="text-foreground"
+							aria-hidden="true"
 						>
 							<g
 								transform={`translate(${margins.left}, ${margins.top})`}
