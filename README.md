@@ -1,5 +1,16 @@
 # Full Stack Timverse
 
+Shield: [![CC BY-NC 4.0][cc-by-nc-shield]][cc-by-nc]
+
+This work is licensed under a
+[Creative Commons Attribution-NonCommercial 4.0 International License][cc-by-nc].
+
+[![CC BY-NC 4.0][cc-by-nc-image]][cc-by-nc]
+
+[cc-by-nc]: https://creativecommons.org/licenses/by-nc/4.0/
+[cc-by-nc-image]: https://licensebuttons.net/l/by-nc/4.0/88x31.png
+[cc-by-nc-shield]: https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg
+
 
 ## Technology Stack and Features
 
@@ -75,4 +86,4 @@ Check the file [CHANGELOG.md](./CHANGELOG.md).
 
 ## License
 
-The Full Stack Timverse ports is licensed under the terms of the GNU GPLv3 license.
+The Full Stack Timverse portal is licensed under the terms of the Creative Commons Attribution-NonCommercial 4.0 International [License](./LICENESE)
