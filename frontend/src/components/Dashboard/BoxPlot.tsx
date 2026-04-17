@@ -456,44 +456,48 @@ export function BoxPlot({
 						Loading chart...
 					</div>
 				) : (
-					<div
-						style={{
-							position: "relative",
-							width: "100%",
-							height: responsiveHeight,
-						}}
-					>
 						<div
 							style={{
+								position: "relative",
 								width: "100%",
 								height: responsiveHeight,
-								position: "absolute",
-								top: 0,
-								left: 0,
+								transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
 							}}
 						>
 							<div
 								style={{
-									width: boundsWidth,
-									height: boundsHeight,
-									transform: `translate(${CHART_CONFIG.margins.left}px, ${CHART_CONFIG.margins.top}px)`,
+									width: "100%",
+									height: responsiveHeight,
+									position: "absolute",
+									top: 0,
+									left: 0,
+									transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
 								}}
 							>
-								{allBoxes}
-								{allViolins}
+								<div
+									style={{
+										width: boundsWidth,
+										height: boundsHeight,
+										transform: `translate(${margins.left}px, ${margins.top}px)`,
+										transition: `width ${CHART_CONFIG.transitionDuration}ms ease, height ${CHART_CONFIG.transitionDuration}ms ease, transform ${CHART_CONFIG.transitionDuration}ms ease`,
+									}}
+								>
+									{allBoxes}
+									{allViolins}
 							</div>
 						</div>
-						<svg
-							width="100%"
-							height={responsiveHeight}
-							style={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								pointerEvents: "none",
-							}}
-							className="text-foreground"
-							aria-hidden="true"
+							<svg
+								width="100%"
+								height={responsiveHeight}
+								style={{
+									position: "absolute",
+									top: 0,
+									left: 0,
+									pointerEvents: "none",
+									transition: `height ${CHART_CONFIG.transitionDuration}ms ease`,
+								}}
+								className="text-foreground"
+								aria-hidden="true"
 						>
 							<g
 								transform={`translate(${margins.left}, ${margins.top})`}

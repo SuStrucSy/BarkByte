@@ -668,6 +668,7 @@ function Dashboard() {
 										selectedSpecimens={selectedSpecimens}
 										yKey={ylabel.key}
 										yLabel={getFullLabel(ylabel.key)}
+										height={chartHeight}
 										mirrorPosition={mirrorPosition}
 										onPointClick={handlePointClick}
 									/>
