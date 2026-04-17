@@ -89,7 +89,13 @@ function SpecimenDetails() {
 				<>
 					<SpecimenHeader
 						id={data.specimen_reference_id ?? data.id}
-						onEditClick={handleStartEditing}
+						onBackClick={() =>
+							navigate({
+								to: Route.fullPath,
+								params: { specimenId },
+								search: {},
+							})
+						}
 					/>
 					<SpecimenEditForm
 						specimen={data}
@@ -111,7 +117,11 @@ function SpecimenDetails() {
 				</>
 			) : (
 				<>
-					<Specimen data={data} setSheetOpen={setSheetOpen} onEditClick={handleStartEditing} />
+					<Specimen
+						data={data}
+						setSheetOpen={setSheetOpen}
+						onEditClick={handleStartEditing}
+					/>
 					<SpecimenReferenceSheet
 						specimen={data}
 						mode="doi"

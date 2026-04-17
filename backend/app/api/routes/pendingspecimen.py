@@ -159,7 +159,7 @@ def update_pending_specimen(
     )
 
 
-@secure_router.delete("/{pending_id}", response_model=PendingSpecimenPublic)
+@public_router.delete("/{pending_id}", response_model=PendingSpecimenPublic)
 def delete_pending_specimen(
     pending_id: uuid.UUID,
     session: SessionDep,

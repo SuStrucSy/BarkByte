@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+	ArrowUpRight,
 	ChevronDown,
 	ChevronRight,
 	Layers,
@@ -14,6 +15,7 @@ import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype
 import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection";
 import {
 	usePendingSpecimensApprovePendingSpecimen,
+	usePendingSpecimensDeletePendingSpecimen,
 	usePendingSpecimensListPendingSpecimens,
 	usePendingSpecimensRejectPendingSpecimenRoute,
 } from "@/api/endpoints/pending-specimens/pending-specimens";
@@ -141,6 +143,22 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 			},
 		},
 	});
+	const deleteMutation = usePendingSpecimensDeletePendingSpecimen({
+		mutation: {
+			onSuccess: () => {
+				queryClient.invalidateQueries({
+					queryKey: ["pendingSpecimens", status],
+				});
+				toast.success("Pending specimen deleted", {
+					description: "The pending specimen has been removed.",
+					position: "bottom-right",
+				});
+			},
+			onError: (err: undefined | HTTPValidationError) => {
+				handleError(err);
+			},
+		},
+	});
 
 	async function onApprove(id: string): Promise<void> {
 		try {
@@ -168,6 +186,21 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 			setComment("");
 		} catch (err) {
 			toast.error("Rejection failed", {
+				description: err instanceof Error ? err.message : "Unknown error",
+				position: "bottom-right",
+			});
+		}
+	}
+
+	async function onDelete(id: string): Promise<void> {
+		try {
+			await deleteMutation.mutateAsync({
+				pendingId: id,
+			});
+			setActiveAction(null);
+			setComment("");
+		} catch (err) {
+			toast.error("Delete failed", {
 				description: err instanceof Error ? err.message : "Unknown error",
 				position: "bottom-right",
 			});
@@ -204,17 +237,10 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 					</EmptyDescription>
 				</EmptyHeader>
 				<EmptyContent>
-					<Button
-						variant="outline"
-						onClick={() =>
-							queryClient.invalidateQueries({
-								queryKey: ["pendingSpecimens", status],
-							})
-						}
-					>
-						<RefreshCcwIcon />
-						Refresh
-					</Button>
+					<div className="flex max-w-xs items-center gap-2 text-sm text-muted-foreground">
+						<ArrowUpRight className="size-4 shrink-0" />
+						<span>Use the "Refresh" button in the top right.</span>
+					</div>
 				</EmptyContent>
 			</Empty>
 		);
@@ -330,6 +356,9 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 			const isRejectingThis =
 				rejectMutation.isPending &&
 				rejectMutation.variables?.pendingId === specimen.id;
+			const isDeletingThis =
+				deleteMutation.isPending &&
+				deleteMutation.variables?.pendingId === specimen.id;
 
 			const createdAt = new Date(specimen.created_at);
 			const stackId = specimen.specimen_id ?? `new-${specimen.id}`;
@@ -341,6 +370,15 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 				requester?.full_name?.trim() ||
 				requester?.email ||
 				specimen.changed_by_user_id;
+			const isOwnPendingSpecimen =
+				currentUser?.id === specimen.changed_by_user_id;
+			const canReview = Boolean(currentUser?.is_superuser);
+			const canReject = canReview && !isOwnPendingSpecimen;
+			const canDeletePending =
+				status === "pending" &&
+				Boolean(
+					currentUser && (!currentUser.is_superuser || isOwnPendingSpecimen),
+				);
 			const stackTitle =
 				spec.specimen_reference_id ??
 				existingSpecimen?.specimen_reference_id ??
@@ -375,7 +413,7 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 						changedData={changed}
 						specimenId={specimen.specimen_id ?? null}
 						requestedBy={requestedBy}
-						isBusy={isApprovingThis || isRejectingThis}
+						isBusy={isApprovingThis || isRejectingThis || isDeletingThis}
 						pendingID={specimen.id}
 						commentByAuthor={specimen.comment_by_author}
 						commentByReviewer={specimen.comment_by_reviewer}
@@ -385,8 +423,12 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 						setComment={setComment}
 						onApprove={onApprove}
 						onReject={onReject}
+						onDelete={onDelete}
 						isNew={specimen.specimen_id === null}
 						status={status}
+						canReview={canReview}
+						canReject={canReject}
+						canDeletePending={canDeletePending}
 					/>
 				),
 			};
@@ -562,16 +604,41 @@ function PendingSpecimenStackPreview({
 
 function PendingSpecimens() {
 	const [status, setStatus] = useState<SpecimenStatus>("pending");
+	const [refreshRotation, setRefreshRotation] = useState(0);
+	const queryClient = useQueryClient();
+
+	async function refreshPendingSpecimens() {
+		setRefreshRotation((current) => current - 180);
+		await queryClient.invalidateQueries({
+			queryKey: ["pendingSpecimens", status],
+		});
+	}
+
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between gap-3">
 				<div>
 					<h1 className="text-xl font-semibold">Specimens</h1>
 					<p className="text-sm text-muted-foreground">
 						Review and manage submitted specimens
 					</p>
 				</div>
-				<StatusFilter value={status} onChange={setStatus} />
+				<div className="flex items-center gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => void refreshPendingSpecimens()}
+					>
+						<RefreshCcwIcon
+							style={{
+								transform: `rotate(${refreshRotation}deg)`,
+								transition: "transform 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+							}}
+						/>
+						Refresh
+					</Button>
+					<StatusFilter value={status} onChange={setStatus} />
+				</div>
 			</div>
 			<PendingSpecimensGrid status={status} />
 		</div>

@@ -1,14 +1,17 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
-	BookOpenText,
 	ExternalLinkIcon,
 	Info,
 	LayersPlus,
 	Pencil,
 	Pyramid,
 	RulerDimensionLine,
+	TriangleAlert,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { pendingSpecimensListPendingSpecimens } from "@/api/endpoints/pending-specimens/pending-specimens";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens";
 import type {
 	PendingSpecimenPublicChangedData,
@@ -64,6 +67,9 @@ const rejectSecondaryClassName =
 
 interface PendingCardActionsProps {
 	status: SpecimenStatus;
+	canReview: boolean;
+	canReject: boolean;
+	canDeletePending: boolean;
 	isBusy: boolean;
 	comment: string;
 	commentByAuthor?: string | null;
@@ -72,12 +78,17 @@ interface PendingCardActionsProps {
 	pendingID: string;
 	setActiveAction: React.Dispatch<React.SetStateAction<ActiveAction>>;
 	setComment: React.Dispatch<React.SetStateAction<string>>;
+	onStartReviewAction: (actionType: "approve" | "reject") => Promise<void>;
+	onRequestDelete: () => void;
 	onApprove: (id: string) => Promise<void>;
 	onReject: (id: string) => Promise<void>;
 }
 
 function PendingCardActions({
 	status,
+	canReview,
+	canReject,
+	canDeletePending,
 	isBusy,
 	comment,
 	commentByAuthor,
@@ -86,6 +97,8 @@ function PendingCardActions({
 	pendingID,
 	setActiveAction,
 	setComment,
+	onStartReviewAction,
+	onRequestDelete,
 	onApprove,
 	onReject,
 }: PendingCardActionsProps) {
@@ -121,6 +134,34 @@ function PendingCardActions({
 			);
 		}
 		return null;
+	}
+
+	if (!canReview && canDeletePending) {
+		return (
+			<>
+				{commentByAuthor?.trim().length ? (
+					<>
+						<span>Comment by Author</span>
+						<Textarea
+							value={commentByAuthor}
+							readOnly
+							disabled
+							rows={3}
+							className="w-full text-sm"
+						/>
+					</>
+				) : null}
+				<Button
+					type="button"
+					variant="destructive"
+					className="w-full min-w-28"
+					disabled={isBusy}
+					onClick={onRequestDelete}
+				>
+					Delete
+				</Button>
+			</>
+		);
 	}
 
 	if (activeAction?.pendingId === pendingID) {
@@ -205,25 +246,31 @@ function PendingCardActions({
 				type="button"
 				className="w-full"
 				disabled={isBusy}
-				onClick={() => {
-					setComment("");
-					setActiveAction({ pendingId: pendingID, type: "approve" });
-				}}
+				onClick={() => void onStartReviewAction("approve")}
 			>
 				Approve
 			</Button>
-			<Button
-				variant="secondary"
-				type="button"
-				className={`w-full ${rejectSecondaryClassName}`}
-				disabled={isBusy}
-				onClick={() => {
-					setComment("");
-					setActiveAction({ pendingId: pendingID, type: "reject" });
-				}}
-			>
-				Reject
-			</Button>
+			{canReject ? (
+				<Button
+					variant="secondary"
+					type="button"
+					className={`w-full ${rejectSecondaryClassName}`}
+					disabled={isBusy}
+					onClick={() => void onStartReviewAction("reject")}
+				>
+					Reject
+				</Button>
+			) : canDeletePending ? (
+				<Button
+					type="button"
+					variant="destructive"
+					className="w-full min-w-28"
+					disabled={isBusy}
+					onClick={onRequestDelete}
+				>
+					Delete
+				</Button>
+			) : null}
 		</>
 	);
 }
@@ -244,8 +291,12 @@ interface SpecimenPendingCardProps {
 	setComment: React.Dispatch<React.SetStateAction<string>>;
 	onApprove: (id: string) => Promise<void>;
 	onReject: (id: string) => Promise<void>;
+	onDelete: (id: string) => Promise<void>;
 	isNew: boolean;
 	status: SpecimenStatus;
+	canReview: boolean;
+	canReject: boolean;
+	canDeletePending: boolean;
 }
 
 type SpecimenField = keyof SpecimenPublic;
@@ -254,10 +305,12 @@ const manualLabels: Partial<Record<SpecimenField, string>> = {
 	e_qfm_description: "QFM Description",
 	e_qualitative_failure_measure: "QFM",
 	note: "Specimen Note",
+	specimen_reference_id: "Reference Title",
 };
 
 const sectionFields: Record<string, SpecimenField[]> = {
 	"Meta Data": [
+		"specimen_reference_id",
 		"assembly_type",
 		"joinery_type",
 		"sub_joinery_type",
@@ -384,13 +437,22 @@ export function SpecimenPendingCard({
 	setActiveAction,
 	onApprove,
 	onReject,
+	onDelete,
 	isNew,
 	status,
+	canReview,
+	canReject,
+	canDeletePending,
 }: SpecimenPendingCardProps) {
 	const [detailsOpen, setDetailsOpen] = useState(false);
 	const [dialogAction, setDialogAction] = useState<"approve" | "reject" | null>(
 		null,
 	);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [staleReviewWarning, setStaleReviewWarning] = useState<string | null>(
+		null,
+	);
+	const queryClient = useQueryClient();
 	const { data: originalSpecimen } = useSpecimensReadSpecimen(
 		specimenId ?? "",
 		{
@@ -424,9 +486,7 @@ export function SpecimenPendingCard({
 
 	const formatQfmLabels = (
 		failureModes: SpecimenPublic["e_qualitative_failure_measure"] | undefined,
-	) => (
-		<span className="font-medium">{renderValue(failureModes ?? [])}</span>
-	);
+	) => <span className="font-medium">{renderValue(failureModes ?? [])}</span>;
 
 	const renderFieldGrid = (
 		fields: SpecimenField[],
@@ -462,8 +522,7 @@ export function SpecimenPendingCard({
 						}
 						renderNewValue={
 							field === "e_qualitative_failure_measure"
-								? () =>
-										formatQfmLabels(specimen.e_qualitative_failure_measure)
+								? () => formatQfmLabels(specimen.e_qualitative_failure_measure)
 								: undefined
 						}
 					/>
@@ -483,7 +542,7 @@ export function SpecimenPendingCard({
 	const renderChangedOnly = () => {
 		const fields = allSectionFields.filter((field) => isFieldChanged(field));
 
-		if (!fields.length && !specimenId) {
+		if (!fields.length) {
 			return (
 				<div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
 					No changed attributes.
@@ -491,33 +550,7 @@ export function SpecimenPendingCard({
 			);
 		}
 
-		return renderFieldGrid(
-			fields,
-			"grid grid-cols-1 gap-3",
-			specimenId ? (
-				<PendingFieldRow
-					label="Reference Title"
-					oldValue={null}
-					newValue={
-						specimen.specimen_reference_id ??
-						originalSpecimen?.specimen_reference_id
-					}
-					isChanged={false}
-					renderNewValue={() => (
-						<a
-							href={`/specimens/${specimenId}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="font-medium text-primary underline underline-offset-4"
-						>
-							{specimen.specimen_reference_id ??
-								originalSpecimen?.specimen_reference_id ??
-								specimenId}
-						</a>
-					)}
-				/>
-			) : undefined,
-		);
+		return renderFieldGrid(fields, "grid grid-cols-1 gap-3");
 	};
 
 	const renderFullDetailsTabs = () => (
@@ -532,10 +565,6 @@ export function SpecimenPendingCard({
 				<TabsTrigger value="Experimental Data">
 					<RulerDimensionLine />
 					Experimental Data
-				</TabsTrigger>
-				<TabsTrigger value="Details">
-					<BookOpenText />
-					Details
 				</TabsTrigger>
 			</TabsList>
 			<div className="h-[clamp(18rem,42dvh,30rem)] min-h-0">
@@ -561,13 +590,6 @@ export function SpecimenPendingCard({
 							<div className="grid gap-3">
 								{renderSection("Experimental Data")}
 							</div>
-						</div>
-					</ScrollArea>
-				</TabsContent>
-				<TabsContent value="Details" className="h-full min-h-0">
-					<ScrollArea className="h-full pr-4">
-						<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-							<div className="grid gap-3">{renderDetails()}</div>
 						</div>
 					</ScrollArea>
 				</TabsContent>
@@ -675,6 +697,66 @@ export function SpecimenPendingCard({
 				? "Rejection metadata and reviewer actions."
 				: "Submission metadata and reviewer actions.";
 
+	const resetReviewUi = () => {
+		setDialogAction(null);
+		setDeleteDialogOpen(false);
+		setActiveAction(null);
+		setComment("");
+		setStaleReviewWarning(null);
+	};
+
+	const checkForLatestPendingChanges = async (
+		actionType: "approve" | "reject",
+		onCurrentSnapshot: () => void,
+	) => {
+		const latestList = await pendingSpecimensListPendingSpecimens({ status });
+		const latestPending = latestList.pending_specimens.find(
+			(pending) => pending.id === pendingID,
+		);
+
+		if (!latestPending || latestPending.status !== "pending") {
+			queryClient.setQueryData(["pendingSpecimens", status], latestList);
+			resetReviewUi();
+			toast.error("This submission changed", {
+				description:
+					"It is no longer pending. The page has been refreshed to the latest state.",
+				position: "bottom-right",
+			});
+			return;
+		}
+
+		const hasChangedSinceLoad =
+			JSON.stringify(latestPending.changed_data ?? {}) !==
+				JSON.stringify(changedData ?? {}) ||
+			(latestPending.comment_by_author ?? "") !== (commentByAuthor ?? "");
+
+		if (hasChangedSinceLoad) {
+			queryClient.setQueryData(["pendingSpecimens", status], latestList);
+			setComment("");
+			setDialogAction(null);
+			setActiveAction({ pendingId: pendingID, type: actionType });
+			setStaleReviewWarning(
+				"This submission changed since you loaded the page. Review the latest changes before continuing.",
+			);
+			setDetailsOpen(true);
+			return;
+		}
+
+		setStaleReviewWarning(null);
+		onCurrentSnapshot();
+	};
+
+	const startDrawerReviewAction = async (actionType: "approve" | "reject") => {
+		await checkForLatestPendingChanges(actionType, () => {
+			setComment("");
+			setActiveAction({ pendingId: pendingID, type: actionType });
+		});
+	};
+
+	const requestDelete = () => {
+		setDeleteDialogOpen(true);
+	};
+
 	return (
 		<Card className="w-full max-w-3xl">
 			<CardHeader>
@@ -711,34 +793,62 @@ export function SpecimenPendingCard({
 					</div>
 					<div className="justify-self-start sm:justify-self-end">
 						<div className="flex flex-col items-start gap-2 sm:items-end">
-							{status === "pending" ? (
+							{status === "pending" && canReview ? (
 								<div className="flex items-center gap-2">
-									<Button
-										variant="secondary"
-										type="button"
-										size="sm"
-										className={`w-auto min-w-28 ${rejectSecondaryClassName}`}
-										disabled={isBusy}
-										onClick={() => {
-											setComment("");
-											setDialogAction("reject");
-										}}
-									>
-										Reject
-									</Button>
+									{canReject ? (
+										<Button
+											variant="secondary"
+											type="button"
+											size="sm"
+											className={`w-auto min-w-28 ${rejectSecondaryClassName}`}
+											disabled={isBusy}
+											onClick={() =>
+												void checkForLatestPendingChanges("reject", () => {
+													setComment("");
+													setDialogAction("reject");
+												})
+											}
+										>
+											Reject
+										</Button>
+									) : canDeletePending ? (
+										<Button
+											type="button"
+											variant="destructive"
+											size="sm"
+											className="w-auto min-w-28"
+											disabled={isBusy}
+											onClick={requestDelete}
+										>
+											Delete
+										</Button>
+									) : null}
 									<Button
 										type="button"
 										size="sm"
 										className="w-auto min-w-28"
 										disabled={isBusy}
-										onClick={() => {
-											setComment("");
-											setDialogAction("approve");
-										}}
+										onClick={() =>
+											void checkForLatestPendingChanges("approve", () => {
+												setComment("");
+												setDialogAction("approve");
+											})
+										}
 									>
 										Approve
 									</Button>
 								</div>
+							) : status === "pending" && canDeletePending ? (
+								<Button
+									type="button"
+									variant="destructive"
+									size="sm"
+									className="w-auto min-w-28"
+									disabled={isBusy}
+									onClick={requestDelete}
+								>
+									Delete
+								</Button>
 							) : null}
 						</div>
 					</div>
@@ -781,7 +891,12 @@ export function SpecimenPendingCard({
 			</CardContent>
 			<Drawer
 				open={detailsOpen}
-				onOpenChange={setDetailsOpen}
+				onOpenChange={(open) => {
+					setDetailsOpen(open);
+					if (!open) {
+						resetReviewUi();
+					}
+				}}
 				direction="bottom"
 			>
 				<DrawerContent className="w-screen max-w-none min-h-[24rem] max-h-[85dvh]">
@@ -815,6 +930,12 @@ export function SpecimenPendingCard({
 											</div>
 										</CardHeader>
 										<CardContent className="grid gap-3">
+											{staleReviewWarning ? (
+												<div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+													<TriangleAlert className="mt-0.5 size-4 shrink-0" />
+													<span>{staleReviewWarning}</span>
+												</div>
+											) : null}
 											<div className="flex flex-wrap items-center gap-2">
 												<Button variant="link" className="px-0">
 													{createdAt}
@@ -840,6 +961,9 @@ export function SpecimenPendingCard({
 											</div>
 											<PendingCardActions
 												status={status}
+												canReview={canReview}
+												canReject={canReject}
+												canDeletePending={canDeletePending}
 												isBusy={isBusy}
 												comment={comment}
 												commentByAuthor={commentByAuthor}
@@ -848,11 +972,14 @@ export function SpecimenPendingCard({
 												pendingID={pendingID}
 												setActiveAction={setActiveAction}
 												setComment={setComment}
+												onStartReviewAction={startDrawerReviewAction}
+												onRequestDelete={requestDelete}
 												onApprove={onApprove}
 												onReject={onReject}
 											/>
 										</CardContent>
 									</Card>
+									{renderDetails()}
 								</div>
 							</ScrollArea>
 						</div>
@@ -938,6 +1065,32 @@ export function SpecimenPendingCard({
 							{dialogAction === "approve"
 								? "Confirm Approval"
 								: "Confirm Rejection"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+			<AlertDialog
+				open={deleteDialogOpen}
+				onOpenChange={(open) => {
+					setDeleteDialogOpen(open);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete pending specimen?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will permanently remove this pending specimen submission.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								void onDelete(pendingID);
+								setDeleteDialogOpen(false);
+							}}
+						>
+							Confirm Delete
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
