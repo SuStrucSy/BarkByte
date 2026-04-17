@@ -1,6 +1,6 @@
 import { ChevronRightIcon, ExternalLinkIcon } from "lucide-react";
 import { useDoiGetDoiById } from "@/api/endpoints/doi/doi";
-import type { SpecimenPublic } from "@/api/model";
+import type { DOIDetailPublic, DOIPublic, Doi, SpecimenPublic } from "@/api/model";
 import { Button } from "@/components/ui/button";
 import {
 	Item,
@@ -20,10 +20,11 @@ import {
 import { renderValue } from "@/lib/utils";
 
 type SpecimenReferenceSheetProps = {
-	specimen: SpecimenPublic;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	mode?: "doi" | "specimen";
+	specimen?: SpecimenPublic;
+	doi?: Doi | DOIPublic | DOIDetailPublic;
 	relatedSpecimens?: SpecimenPublic[];
 };
 
@@ -71,15 +72,17 @@ function showRelatedSpecimens(relatedSpecimens: SpecimenPublic[]) {
 }
 
 function ReferenceDetails({
-	specimen,
+	doi,
+	activeSpecimenId,
 	relatedSpecimens = [],
 	showRelated = false,
 }: {
-	specimen: SpecimenPublic;
+	doi: Doi | DOIPublic | DOIDetailPublic;
+	activeSpecimenId?: string;
 	relatedSpecimens?: SpecimenPublic[];
 	showRelated?: boolean;
 }) {
-	const doiId = specimen.doi.id ?? "";
+	const doiId = doi.id ?? "";
 	const { data: doiData } = useDoiGetDoiById(doiId, {
 		query: {
 			enabled: showRelated && !!doiId && relatedSpecimens.length === 0,
@@ -90,7 +93,7 @@ function ReferenceDetails({
 		relatedSpecimens.length > 0
 			? relatedSpecimens
 			: (doiData?.specimens?.data ?? []).filter(
-					(item) => item.id !== specimen.id,
+					(item) => item.id !== activeSpecimenId,
 				);
 
 	return (
@@ -104,11 +107,11 @@ function ReferenceDetails({
 				research for this specimen data.
 			</p>
 			<Item variant="outline" asChild>
-				<a href={specimen.doi.link} target="_blank" rel="noopener noreferrer">
+				<a href={doi.link} target="_blank" rel="noopener noreferrer">
 					<ItemContent>
-						<ItemTitle>{renderValue(specimen.doi.ref_title)}</ItemTitle>
+						<ItemTitle>{renderValue(doi.ref_title)}</ItemTitle>
 						<ItemDescription>
-							{`${renderValue(specimen.doi.authors)} • ${renderValue(specimen.doi.pub_year)}`}
+							{`${renderValue(doi.authors)} • ${renderValue(doi.pub_year)}`}
 						</ItemDescription>
 					</ItemContent>
 					<ItemActions>
@@ -123,12 +126,18 @@ function ReferenceDetails({
 
 export function SpecimenReferenceSheet({
 	specimen,
+	doi,
 	open = false,
 	onOpenChange,
 	mode = "specimen",
 	relatedSpecimens = [],
 }: SpecimenReferenceSheetProps) {
 	const isDoiMode = mode === "doi";
+	const resolvedDoi = doi ?? specimen?.doi;
+
+	if (!resolvedDoi || (!isDoiMode && !specimen)) {
+		return null;
+	}
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
@@ -136,7 +145,8 @@ export function SpecimenReferenceSheet({
 				<ScrollArea className="min-h-0 flex-1 pr-2">
 					{isDoiMode ? (
 						<ReferenceDetails
-							specimen={specimen}
+							doi={resolvedDoi}
+							activeSpecimenId={specimen?.id}
 							relatedSpecimens={relatedSpecimens}
 							showRelated
 						/>
@@ -228,7 +238,8 @@ export function SpecimenReferenceSheet({
 
 							<div className="border-t pt-6">
 								<ReferenceDetails
-									specimen={specimen}
+									doi={resolvedDoi}
+									activeSpecimenId={specimen.id}
 									relatedSpecimens={relatedSpecimens}
 									showRelated
 								/>
@@ -236,11 +247,13 @@ export function SpecimenReferenceSheet({
 						</div>
 					)}
 				</ScrollArea>
-				<SheetFooter>
-					<SheetClose asChild>
-						<Button variant="outline">Close</Button>
-					</SheetClose>
-				</SheetFooter>
+				{isDoiMode ? null : (
+					<SheetFooter>
+						<SheetClose asChild>
+							<Button variant="outline">Close</Button>
+						</SheetClose>
+					</SheetFooter>
+				)}
 			</SheetContent>
 		</Sheet>
 	);

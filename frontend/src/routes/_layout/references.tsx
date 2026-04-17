@@ -1,9 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Newspaper } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { doiGetDois } from "@/api/endpoints/doi/doi";
 import type { DOIPublic } from "@/api/model";
+import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -40,31 +41,43 @@ function useInfiniteDois() {
 	});
 }
 
-function ReferenceItem({ doi }: { doi: DOIPublic }) {
+function ReferenceItem({
+	doi,
+	onSelect,
+}: {
+	doi: DOIPublic;
+	onSelect: (doi: DOIPublic) => void;
+}) {
 	return (
-		<Link to="/references/$id" params={{ id: doi.id }}>
-			<div className="group flex flex-col gap-1 py-4 px-4 rounded-lg hover:bg-accent transition-colors border-b last:border-0">
-				<p className="font-medium text-sm group-hover:text-primary transition-colors leading-snug">
-					{doi.ref_title}
-				</p>
-				<p className="text-xs text-muted-foreground line-clamp-1">
-					{doi.authors}
-				</p>
-				<div className="flex items-center gap-2 mt-1 flex-wrap">
-					<Badge variant="secondary" className="text-xs">
-						{doi.pub_year}
-					</Badge>
-					<span className="text-xs text-muted-foreground truncate max-w-xs">
-						{doi.link}
-					</span>
-				</div>
+		<button
+			type="button"
+			onClick={() => onSelect(doi)}
+			className="group flex w-full flex-col gap-1 rounded-lg border-b px-4 py-4 text-left transition-colors hover:bg-accent last:border-0"
+		>
+			<p className="font-medium text-sm group-hover:text-primary transition-colors leading-snug">
+				{doi.ref_title}
+			</p>
+			<p className="text-xs text-muted-foreground line-clamp-1">
+				{doi.authors}
+			</p>
+			<div className="flex items-center gap-2 mt-1 flex-wrap">
+				<Badge variant="secondary" className="text-xs">
+					{doi.pub_year}
+				</Badge>
+				<span className="text-xs text-muted-foreground truncate max-w-xs">
+					{doi.link}
+				</span>
 			</div>
-		</Link>
+		</button>
 	);
 }
 
 function References() {
 	const sentinelRef = useRef<HTMLDivElement>(null);
+	const [selectedReference, setSelectedReference] = useState<DOIPublic | null>(
+		null,
+	);
+	const [sheetOpen, setSheetOpen] = useState(false);
 	const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
 		useInfiniteDois();
 
@@ -84,65 +97,84 @@ function References() {
 		return () => observer.disconnect();
 	}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-	return (
-		<div className="space-y-4 h-full flex flex-col">
-			<div>
-				<h1 className="text-xl font-semibold">References</h1>
-				<p className="text-sm text-muted-foreground">
-					{allReferences.length > 0
-						? `${allReferences.length} papers loaded`
-						: "Browse published papers"}
-				</p>
-			</div>
+	const handleSelectReference = (doi: DOIPublic) => {
+		setSelectedReference(doi);
+		setSheetOpen(true);
+	};
 
-			<Card className="flex-1 min-h-0">
-				<ScrollArea className="h-full">
-					<CardContent className="p-0">
-						{isLoading ? (
-							<div className="divide-y">
-								{SKELETON_ROWS.map((key) => (
-									<div key={key} className="flex flex-col gap-2 py-4 px-4">
-										<Skeleton className="h-4 w-3/4" />
-										<Skeleton className="h-3 w-1/2" />
-										<Skeleton className="h-3 w-24" />
-									</div>
-								))}
-							</div>
-						) : !allReferences.length ? (
-							<Empty className="border-none">
-								<EmptyHeader>
-									<EmptyMedia variant="icon">
-										<Newspaper />
-									</EmptyMedia>
-									<EmptyTitle>No References Found</EmptyTitle>
-									<EmptyDescription>
-										No references have been added yet.
-									</EmptyDescription>
-								</EmptyHeader>
-							</Empty>
-						) : (
-							<div className="divide-y">
-								{allReferences.map((reference) => (
-									<ReferenceItem key={reference.id} doi={reference} />
-								))}
-								<div ref={sentinelRef} className="py-4 flex justify-center">
-									{isFetchingNextPage ? (
-										<Spinner className="h-4 w-4" />
-									) : hasNextPage ? (
-										<span className="text-xs text-muted-foreground">
-											Scroll for more
-										</span>
-									) : (
-										<span className="text-xs text-muted-foreground">
-											All {allReferences.length} references loaded
-										</span>
-									)}
+	return (
+		<>
+			<div className="space-y-4 h-full flex flex-col">
+				<div>
+					<h1 className="text-xl font-semibold">References</h1>
+					<p className="text-sm text-muted-foreground">
+						{allReferences.length > 0
+							? `${allReferences.length} papers loaded`
+							: "Browse published papers"}
+					</p>
+				</div>
+
+				<Card className="flex-1 min-h-0">
+					<ScrollArea className="h-full">
+						<CardContent className="p-0">
+							{isLoading ? (
+								<div className="divide-y">
+									{SKELETON_ROWS.map((key) => (
+										<div key={key} className="flex flex-col gap-2 py-4 px-4">
+											<Skeleton className="h-4 w-3/4" />
+											<Skeleton className="h-3 w-1/2" />
+											<Skeleton className="h-3 w-24" />
+										</div>
+									))}
 								</div>
-							</div>
-						)}
-					</CardContent>
-				</ScrollArea>
-			</Card>
-		</div>
+							) : !allReferences.length ? (
+								<Empty className="border-none">
+									<EmptyHeader>
+										<EmptyMedia variant="icon">
+											<Newspaper />
+										</EmptyMedia>
+										<EmptyTitle>No References Found</EmptyTitle>
+										<EmptyDescription>
+											No references have been added yet.
+										</EmptyDescription>
+									</EmptyHeader>
+								</Empty>
+							) : (
+								<div className="divide-y">
+									{allReferences.map((reference) => (
+										<ReferenceItem
+											key={reference.id}
+											doi={reference}
+											onSelect={handleSelectReference}
+										/>
+									))}
+									<div ref={sentinelRef} className="py-4 flex justify-center">
+										{isFetchingNextPage ? (
+											<Spinner className="h-4 w-4" />
+										) : hasNextPage ? (
+											<span className="text-xs text-muted-foreground">
+												Scroll for more
+											</span>
+										) : (
+											<span className="text-xs text-muted-foreground">
+												All {allReferences.length} references loaded
+											</span>
+										)}
+									</div>
+								</div>
+							)}
+						</CardContent>
+					</ScrollArea>
+				</Card>
+			</div>
+			{selectedReference ? (
+				<SpecimenReferenceSheet
+					doi={selectedReference}
+					mode="doi"
+					open={sheetOpen}
+					onOpenChange={setSheetOpen}
+				/>
+			) : null}
+		</>
 	);
 }
