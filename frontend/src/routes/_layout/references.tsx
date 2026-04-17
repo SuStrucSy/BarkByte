@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Newspaper } from "lucide-react";
+import { ChevronRightIcon, Newspaper } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { doiGetDois } from "@/api/endpoints/doi/doi";
 import type { DOIPublic } from "@/api/model";
@@ -14,6 +14,14 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemTitle,
+} from "@/components/ui/item";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -49,26 +57,33 @@ function ReferenceItem({
 	onSelect: (doi: DOIPublic) => void;
 }) {
 	return (
-		<button
-			type="button"
-			onClick={() => onSelect(doi)}
-			className="group flex w-full flex-col gap-1 rounded-lg border-b px-4 py-4 text-left transition-colors hover:bg-accent last:border-0"
+		<Item
+			variant="outline"
+			asChild
+			className="group/item rounded-xl border-border/70"
 		>
-			<p className="font-medium text-sm group-hover:text-primary transition-colors leading-snug">
-				{doi.ref_title}
-			</p>
-			<p className="text-xs text-muted-foreground line-clamp-1">
-				{doi.authors}
-			</p>
-			<div className="flex items-center gap-2 mt-1 flex-wrap">
-				<Badge variant="secondary" className="text-xs">
-					{doi.pub_year}
-				</Badge>
-				<span className="text-xs text-muted-foreground truncate max-w-xs">
-					{doi.link}
-				</span>
-			</div>
-		</button>
+			<button type="button" onClick={() => onSelect(doi)} className="w-full text-left">
+				<ItemContent className="min-w-0">
+					<ItemTitle className="w-full text-base leading-snug group-hover/item:text-primary">
+						<span className="line-clamp-2">{doi.ref_title}</span>
+					</ItemTitle>
+					<ItemDescription className="line-clamp-1">
+						{doi.authors}
+					</ItemDescription>
+					<div className="flex items-center gap-2 pt-1">
+						<Badge variant="secondary" className="text-xs">
+							{doi.pub_year}
+						</Badge>
+						<ItemDescription className="truncate text-xs">
+							{doi.link}
+						</ItemDescription>
+					</div>
+				</ItemContent>
+				<ItemActions className="text-muted-foreground transition-colors group-hover/item:text-primary">
+					<ChevronRightIcon className="size-4" />
+				</ItemActions>
+			</button>
+		</Item>
 	);
 }
 
@@ -118,9 +133,12 @@ function References() {
 					<ScrollArea className="h-full">
 						<CardContent className="p-0">
 							{isLoading ? (
-								<div className="divide-y">
+								<div className="grid gap-3 p-4">
 									{SKELETON_ROWS.map((key) => (
-										<div key={key} className="flex flex-col gap-2 py-4 px-4">
+										<div
+											key={key}
+											className="flex flex-col gap-2 rounded-xl border border-border/70 px-4 py-4"
+										>
 											<Skeleton className="h-4 w-3/4" />
 											<Skeleton className="h-3 w-1/2" />
 											<Skeleton className="h-3 w-24" />
@@ -140,7 +158,7 @@ function References() {
 									</EmptyHeader>
 								</Empty>
 							) : (
-								<div className="divide-y">
+								<ItemGroup className="gap-3 p-4">
 									{allReferences.map((reference) => (
 										<ReferenceItem
 											key={reference.id}
@@ -161,7 +179,7 @@ function References() {
 											</span>
 										)}
 									</div>
-								</div>
+								</ItemGroup>
 							)}
 						</CardContent>
 					</ScrollArea>
