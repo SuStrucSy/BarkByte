@@ -176,8 +176,9 @@ function Home() {
         </Card>
       </div>
       <p className="sticky bottom-0 mt-auto pt-2 pb-0 text-center text-xs leading-relaxed text-muted-foreground">
-        This project is supported by the Faculty of Applied Sciences and Engineering, Data Sciences Institute,
-        University of Toronto
+        This project is supported by the Department of Civil and Mineral
+        Engineering, and the Data Sciences Institute at the University of
+        Toronto.
       </p>
     </div>
   );
