@@ -134,13 +134,29 @@ def update_specimen(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Specimen validation failed: {e}")
 
-    pending = pendingspecimen_crud.create_pending_specimen(
-        session=session,
-        changed_by_user_id=current_user.id,
-        changed_data=changed_data,
-        specimen_id=id,
-        comment_by_author=specimen_in.comment_by_author,
+    existing_pending = (
+        pendingspecimen_crud.get_active_pending_specimen_for_user_and_specimen(
+            session=session,
+            user_id=current_user.id,
+            specimen_id=id,
+        )
     )
+
+    if existing_pending is not None:
+        pending = pendingspecimen_crud.merge_active_pending_specimen(
+            session=session,
+            pending_specimen=existing_pending,
+            changed_data=changed_data,
+            comment_by_author=specimen_in.comment_by_author,
+        )
+    else:
+        pending = pendingspecimen_crud.create_pending_specimen(
+            session=session,
+            changed_by_user_id=current_user.id,
+            changed_data=changed_data,
+            specimen_id=id,
+            comment_by_author=specimen_in.comment_by_author,
+        )
     return pending
 
 

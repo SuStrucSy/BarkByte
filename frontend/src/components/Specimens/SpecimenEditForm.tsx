@@ -1,14 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype";
 import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection";
-import { getPendingSpecimensListPendingSpecimensQueryKey } from "@/api/endpoints/pending-specimens/pending-specimens";
+import {
+	getPendingSpecimensListPendingSpecimensQueryKey,
+	usePendingSpecimensListPendingSpecimens,
+} from "@/api/endpoints/pending-specimens/pending-specimens";
 import {
 	getSpecimensReadSpecimenQueryKey,
 	useSpecimensUpdateSpecimen,
@@ -37,6 +40,7 @@ import { SpecimenStructuralFields } from "./SpecimenStructuralFields";
 import {
 	buildSpecimenEditDiff,
 	getSpecimenFormValues,
+	mergeSpecimenFormValuesWithPendingChanges,
 } from "./specimenForm.utils";
 
 type SpecimenEditFormProps = {
@@ -88,9 +92,32 @@ export function SpecimenEditForm({
 	const queryClient = useQueryClient();
 	const isLoggedIn = useIsLoggedIn();
 	const [lastPendingId, setLastPendingId] = useState<string | null>(null);
-	const defaultValues = useMemo(
+	const originalValues = useMemo(
 		() => getSpecimenFormValues(specimen),
 		[specimen],
+	);
+	const { data: pendingSpecimensData } = usePendingSpecimensListPendingSpecimens(
+		{ status: "pending" },
+		{
+			query: {
+				enabled: isLoggedIn,
+			},
+		},
+	);
+	const activePendingSpecimen = useMemo(
+		() =>
+			pendingSpecimensData?.pending_specimens.find(
+				(pending) => pending.specimen_id === specimen.id,
+			),
+		[pendingSpecimensData?.pending_specimens, specimen.id],
+	);
+	const defaultValues = useMemo(
+		() =>
+			mergeSpecimenFormValuesWithPendingChanges(
+				originalValues,
+				activePendingSpecimen?.changed_data as Record<string, unknown> | undefined,
+			),
+		[activePendingSpecimen?.changed_data, originalValues],
 	);
 
 	const form = useForm<AddNewSpecimenFormValues>({
@@ -99,10 +126,14 @@ export function SpecimenEditForm({
 		mode: "onChange",
 	});
 
+	useEffect(() => {
+		form.reset(defaultValues);
+	}, [defaultValues, form]);
+
 	const currentValues = form.watch();
 	const pendingDiff = useMemo(
-		() => buildSpecimenEditDiff(defaultValues, currentValues),
-		[defaultValues, currentValues],
+		() => buildSpecimenEditDiff(originalValues, currentValues),
+		[originalValues, currentValues],
 	);
 	const changedFields = useMemo(
 		() =>
@@ -110,6 +141,7 @@ export function SpecimenEditForm({
 		[pendingDiff],
 	);
 	const hasChanges = Object.keys(pendingDiff).length > 0;
+	const changedFieldSet = useMemo(() => new Set(changedFields), [changedFields]);
 	const { data: joineryData } = useJoinerytypeGetJtypes();
 	const { data: subjoineryData } = useSubjoinerytypeGetSjtypes();
 	const { data: fastenerData } = useFastenertypeGetFastenerTypes();
@@ -220,7 +252,7 @@ export function SpecimenEditForm({
 			return;
 		}
 
-		const diff = buildSpecimenEditDiff(defaultValues, values);
+		const diff = buildSpecimenEditDiff(originalValues, values);
 		if (Object.keys(diff).length === 0) {
 			toast.message("No changes to submit.");
 			return;
@@ -253,7 +285,10 @@ export function SpecimenEditForm({
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<SpecimenDetailsFields control={form.control} />
+					<SpecimenDetailsFields
+						control={form.control}
+						changedFields={changedFieldSet}
+					/>
 				</CardContent>
 			</Card>
 
@@ -262,7 +297,10 @@ export function SpecimenEditForm({
 					<CardTitle>Structural Data</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<SpecimenStructuralFields control={form.control} />
+					<SpecimenStructuralFields
+						control={form.control}
+						changedFields={changedFieldSet}
+					/>
 				</CardContent>
 			</Card>
 
@@ -271,7 +309,10 @@ export function SpecimenEditForm({
 					<CardTitle>Experimental Data</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<SpecimenExperimentalFields control={form.control} />
+					<SpecimenExperimentalFields
+						control={form.control}
+						changedFields={changedFieldSet}
+					/>
 				</CardContent>
 			</Card>
 
@@ -298,7 +339,7 @@ export function SpecimenEditForm({
 								<div className="text-sm text-red-600 line-through decoration-red-400">
 									{renderChangedFieldValue(
 										field,
-										defaultValues,
+										originalValues,
 										originalQfmLookup,
 									)}
 								</div>

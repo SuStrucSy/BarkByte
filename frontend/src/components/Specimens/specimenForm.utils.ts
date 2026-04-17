@@ -225,6 +225,51 @@ export function getSpecimenFormValues(
 	};
 }
 
+function normalizePendingFieldValueForForm(
+	field: EditableField,
+	value: unknown,
+): AddNewSpecimenFormValues[EditableField] {
+	if (typeof value === "string") {
+		return (NULLABLE_STRING_FIELDS.has(field) && value === ""
+			? ""
+			: value) as AddNewSpecimenFormValues[EditableField];
+	}
+
+	if (value === null && NULLABLE_STRING_FIELDS.has(field)) {
+		return "" as AddNewSpecimenFormValues[EditableField];
+	}
+
+	if (Array.isArray(value)) {
+		return [...value] as AddNewSpecimenFormValues[EditableField];
+	}
+
+	return value as AddNewSpecimenFormValues[EditableField];
+}
+
+export function mergeSpecimenFormValuesWithPendingChanges(
+	originalValues: AddNewSpecimenFormValues,
+	changedData: Record<string, unknown> | undefined,
+): AddNewSpecimenFormValues {
+	if (!changedData) {
+		return originalValues;
+	}
+
+	const mergedValues = { ...originalValues };
+
+	for (const field of EDITABLE_FIELDS) {
+		if (!(field in changedData)) {
+			continue;
+		}
+
+		mergedValues[field] = normalizePendingFieldValueForForm(
+			field,
+			changedData[field],
+		);
+	}
+
+	return mergedValues;
+}
+
 export function buildSpecimenEditDiff(
 	originalValues: AddNewSpecimenFormValues,
 	currentValues: AddNewSpecimenFormValues,

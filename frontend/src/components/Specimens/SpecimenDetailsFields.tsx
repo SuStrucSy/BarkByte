@@ -21,6 +21,7 @@ import {
 	FieldLegend,
 	FieldSet,
 } from "@/components/ui/field";
+import { cn } from "@/lib/utils";
 import { ASSEMBLY_TYPES } from "@/lib/constants";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { Checkbox } from "../ui/checkbox";
@@ -62,9 +63,16 @@ const toImageKey = (label: string) => label.toLowerCase().replace(/\s+/g, "-");
 
 interface AddSpecimenFormProps {
 	control: Control<AddNewSpecimenFormValues>;
+	changedFields?: Set<keyof AddNewSpecimenFormValues>;
 }
 
-export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
+const changedControlClassName =
+	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
+
+export function SpecimenDetailsFields({
+	control,
+	changedFields,
+}: AddSpecimenFormProps) {
 	const anchorFastener = useComboboxAnchor();
 	const anchorLoading = useComboboxAnchor();
 	const { data: joineryData } = useJoinerytypeGetJtypes();
@@ -101,7 +109,11 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							id="specimen_reference_id"
 							aria-invalid={fieldState.invalid}
 							autoComplete="off"
-							className="w-full"
+							className={cn(
+								"w-full",
+								changedFields?.has("specimen_reference_id") &&
+									changedControlClassName,
+							)}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
@@ -132,6 +144,10 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 										value={type}
 										id={type}
 										aria-invalid={fieldState.invalid}
+										className={cn(
+											changedFields?.has("assembly_type") &&
+												changedControlClassName,
+										)}
 									/>
 									<FieldLabel htmlFor={type}>{type}</FieldLabel>
 								</Field>
@@ -179,7 +195,11 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 								<SelectTrigger
 									id="joinery_type_id"
 									aria-invalid={fieldState.invalid}
-									className="w-full"
+									className={cn(
+										"w-full",
+										changedFields?.has("joinery_type_id") &&
+											changedControlClassName,
+									)}
 								>
 									<SelectValue placeholder="Choose joinery" />
 								</SelectTrigger>
@@ -206,7 +226,14 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							Sub Joinery Type
 						</FieldLabel>
 						<Select value={field.value} onValueChange={field.onChange}>
-							<SelectTrigger id="sub_joinery_type_id" className="w-full">
+							<SelectTrigger
+								id="sub_joinery_type_id"
+								className={cn(
+									"w-full",
+									changedFields?.has("sub_joinery_type_id") &&
+										changedControlClassName,
+								)}
+							>
 								<SelectValue placeholder="Choose sub joinery" />
 							</SelectTrigger>
 							<SelectContent>
@@ -251,7 +278,14 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 								itemToStringValue={(fastener) => fastener.id}
 								value={values}
 							>
-								<ComboboxChips ref={anchorFastener} className="w-full max-w-xs">
+								<ComboboxChips
+									ref={anchorFastener}
+									className={cn(
+										"w-full max-w-xs",
+										changedFields?.has("fastener_type_ids") &&
+											changedControlClassName,
+									)}
+								>
 									<ComboboxValue>
 										{(chips) => (
 											<>
@@ -309,7 +343,14 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 								itemToStringValue={(loading) => loading.id}
 								value={values}
 							>
-								<ComboboxChips ref={anchorLoading} className="w-full max-w-xs">
+								<ComboboxChips
+									ref={anchorLoading}
+									className={cn(
+										"w-full max-w-xs",
+										changedFields?.has("loading_direction_ids") &&
+											changedControlClassName,
+									)}
+								>
 									<ComboboxValue>
 										{(chips) => (
 											<>
@@ -373,6 +414,10 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 											value={p}
 											id={p}
 											aria-invalid={fieldState.invalid}
+											className={cn(
+												changedFields?.has("practice") &&
+													changedControlClassName,
+											)}
 										/>
 										<FieldLabel htmlFor={p}>{p}</FieldLabel>
 									</Field>
@@ -394,6 +439,10 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							id="connector"
 							checked={field.value}
 							onCheckedChange={field.onChange}
+							className={cn(
+								changedFields?.has("connector") &&
+									changedControlClassName,
+							)}
 						/>
 						<FieldLabel htmlFor="connector">Has Connector</FieldLabel>
 					</Field>
@@ -420,7 +469,11 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							value={field.value ?? ""}
 							onChange={(e) => field.onChange(e.target.valueAsNumber)}
 							aria-invalid={fieldState.invalid}
-							className="w-full"
+							className={cn(
+								"w-full",
+								changedFields?.has("fastener_numbers") &&
+									changedControlClassName,
+							)}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
@@ -443,7 +496,11 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							value={field.value ?? ""}
 							onChange={(e) => field.onChange(e.target.valueAsNumber)}
 							aria-invalid={fieldState.invalid}
-							className="w-full"
+							className={cn(
+								"w-full",
+								changedFields?.has("replicate_tests") &&
+									changedControlClassName,
+							)}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
@@ -465,6 +522,10 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							value={field.value ?? ""}
 							aria-invalid={fieldState.invalid}
 							rows={3}
+							className={cn(
+								changedFields?.has("connection_description") &&
+									changedControlClassName,
+							)}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
@@ -482,6 +543,9 @@ export function SpecimenDetailsFields({ control }: AddSpecimenFormProps) {
 							value={field.value ?? ""}
 							aria-invalid={fieldState.invalid}
 							rows={2}
+							className={cn(
+								changedFields?.has("note") && changedControlClassName,
+							)}
 						/>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>

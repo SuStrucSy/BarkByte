@@ -51,6 +51,21 @@ def get_pending_specimen_by_id(
     return pending
 
 
+def get_active_pending_specimen_for_user_and_specimen(
+    session: Session,
+    *,
+    user_id: uuid.UUID,
+    specimen_id: uuid.UUID,
+) -> PendingSpecimen | None:
+    return session.exec(
+        select(PendingSpecimen).where(
+            PendingSpecimen.changed_by_user_id == user_id,
+            PendingSpecimen.specimen_id == specimen_id,
+            PendingSpecimen.status == PendingStatus.PENDING,
+        )
+    ).first()
+
+
 def list_pending_by_user(
     session: Session,
     *,
@@ -116,6 +131,26 @@ def create_pending_specimen(
     session.commit()
     session.refresh(pending)
     return pending
+
+
+def merge_active_pending_specimen(
+    session: Session,
+    *,
+    pending_specimen: PendingSpecimen,
+    changed_data: dict[str, Any],
+    comment_by_author: str | None = None,
+) -> PendingSpecimen:
+    existing_changed_data = pending_specimen.changed_data or {}
+    pending_specimen.changed_data = {
+        **existing_changed_data,
+        **_to_jsonable(changed_data),
+    }
+    pending_specimen.comment_by_author = comment_by_author
+
+    session.add(pending_specimen)
+    session.commit()
+    session.refresh(pending_specimen)
+    return pending_specimen
 
 
 def update_pending_specimen(

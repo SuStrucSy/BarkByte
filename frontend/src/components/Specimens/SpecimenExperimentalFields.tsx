@@ -35,11 +35,13 @@ import {
 	ComboboxValue,
 	useComboboxAnchor,
 } from "../ui/combobox";
+import { cn } from "@/lib/utils";
 import { FieldHelpHover } from "./FieldHelpHover";
 import { TextField } from "./SpecimenStructuralFields";
 
 interface SpecimenExperimentalFormProps {
 	control: Control<AddNewSpecimenFormValues>;
+	changedFields?: Set<keyof AddNewSpecimenFormValues>;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -50,6 +52,8 @@ const TEST_LOADING_TYPES = [
 	"Monotonic and Cyclic",
 ] as const;
 const YIELD_POINT_METHODS = ["CEN 1/6", "EEEP"] as const;
+const changedControlClassName =
+	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
 
 // ─── Helper: numeric input field ─────────────────────────────────────────────
 
@@ -59,12 +63,14 @@ function NumericField({
 	description,
 	control,
 	unit,
+	changed = false,
 }: {
 	name: keyof AddNewSpecimenFormValues;
 	label: string;
 	description?: string;
 	control: Control<AddNewSpecimenFormValues>;
 	unit?: string;
+	changed?: boolean;
 }) {
 	return (
 		<Controller
@@ -93,7 +99,7 @@ function NumericField({
 							)
 						}
 						aria-invalid={fieldState.invalid}
-						className="w-full max-w-48"
+						className={cn("w-full max-w-48", changed && changedControlClassName)}
 					/>
 					{description && <FieldDescription>{description}</FieldDescription>}
 					{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -107,6 +113,7 @@ function NumericField({
 
 export function SpecimenExperimentalFields({
 	control,
+	changedFields,
 }: SpecimenExperimentalFormProps) {
 	const anchor = useComboboxAnchor();
 	const hasConnector = useWatch({
@@ -135,47 +142,55 @@ export function SpecimenExperimentalFields({
 					label="Stiffness (Ks)"
 					unit="kN/mm"
 					control={control}
+					changed={changedFields?.has("e_stiffness")}
 				/>
 				<NumericField
 					name="e_ductility"
 					label="Ductility (μ)"
 					control={control}
+					changed={changedFields?.has("e_ductility")}
 				/>
 				<NumericField
 					name="e_yield_force"
 					label="Yield Force (Fy)"
 					unit="kN"
 					control={control}
+					changed={changedFields?.has("e_yield_force")}
 				/>
 				<NumericField
 					name="e_yield_displacement"
 					label="Yield Displacement (Δy)"
 					unit="mm"
 					control={control}
+					changed={changedFields?.has("e_yield_displacement")}
 				/>
 				<NumericField
 					name="e_max_force"
 					label="Max Force (Fmax)"
 					unit="kN"
 					control={control}
+					changed={changedFields?.has("e_max_force")}
 				/>
 				<NumericField
 					name="e_max_displacement"
 					label="Max Displacement (Δmax)"
 					unit="mm"
 					control={control}
+					changed={changedFields?.has("e_max_displacement")}
 				/>
 				<NumericField
 					name="e_ultimate_force"
 					label="Ultimate Force (Fu)"
 					unit="kN"
 					control={control}
+					changed={changedFields?.has("e_ultimate_force")}
 				/>
 				<NumericField
 					name="e_ultimate_displacement"
 					label="Ultimate Displacement (Δu)"
 					unit="mm"
 					control={control}
+					changed={changedFields?.has("e_ultimate_displacement")}
 				/>
 			</div>
 
@@ -196,7 +211,11 @@ export function SpecimenExperimentalFields({
 						>
 							<SelectTrigger
 								id="e_test_loading_type"
-								className="w-full max-w-64"
+								className={cn(
+									"w-full max-w-64",
+									changedFields?.has("e_test_loading_type") &&
+										changedControlClassName,
+								)}
 							>
 								<SelectValue placeholder="Select loading type" />
 							</SelectTrigger>
@@ -227,7 +246,11 @@ export function SpecimenExperimentalFields({
 						>
 							<SelectTrigger
 								id="e_yield_point_method"
-								className="w-full max-w-64"
+								className={cn(
+									"w-full max-w-64",
+									changedFields?.has("e_yield_point_method") &&
+										changedControlClassName,
+								)}
 							>
 								<SelectValue placeholder="Select method" />
 							</SelectTrigger>
@@ -257,7 +280,10 @@ export function SpecimenExperimentalFields({
 									type="button"
 									variant="outline"
 									aria-invalid={fieldState.invalid}
-									className="w-full max-w-64 justify-between font-normal"
+									className={cn(
+										"w-full max-w-64 justify-between font-normal",
+										changedFields?.has("e_date") && changedControlClassName,
+									)}
 								>
 									{field.value
 										? format(parseISO(field.value), "PPP")
@@ -317,7 +343,14 @@ export function SpecimenExperimentalFields({
 								itemToStringValue={(qfm) => qfm.id}
 								value={values}
 							>
-								<ComboboxChips ref={anchor} className="w-full max-w-xs">
+								<ComboboxChips
+									ref={anchor}
+									className={cn(
+										"w-full max-w-xs",
+										changedFields?.has("e_qualitative_failure_measure") &&
+											changedControlClassName,
+									)}
+								>
 									<ComboboxValue>
 										{(chips) => (
 											<>
@@ -360,6 +393,7 @@ export function SpecimenExperimentalFields({
 				label="Qualitative Failure Mode Description"
 				description="Free-text description of the observed failure mode"
 				control={control}
+				changed={changedFields?.has("e_qfm_description")}
 			/>
 		</FieldGroup>
 	);
