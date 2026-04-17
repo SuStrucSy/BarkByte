@@ -616,29 +616,29 @@ function PendingSpecimens() {
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between gap-3">
-				<div>
-					<h1 className="text-xl font-semibold">Specimens</h1>
-					<p className="text-sm text-muted-foreground">
-						Review and manage submitted specimens
-					</p>
-				</div>
-				<div className="flex items-center gap-2">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => void refreshPendingSpecimens()}
-					>
-						<RefreshCcwIcon
-							style={{
-								transform: `rotate(${refreshRotation}deg)`,
-								transition: "transform 900ms cubic-bezier(0.22, 1, 0.36, 1)",
-							}}
-						/>
-						Refresh
-					</Button>
+			<div className="flex items-end justify-between gap-3">
+				<div className="space-y-3">
+					<div>
+						<h1 className="text-xl font-semibold">Specimens</h1>
+						<p className="text-sm text-muted-foreground">
+							Review and manage submitted specimens
+						</p>
+					</div>
 					<StatusFilter value={status} onChange={setStatus} />
 				</div>
+				<Button
+					type="button"
+					variant="outline"
+					onClick={() => void refreshPendingSpecimens()}
+				>
+					<RefreshCcwIcon
+						style={{
+							transform: `rotate(${refreshRotation}deg)`,
+							transition: "transform 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+						}}
+					/>
+					Refresh
+				</Button>
 			</div>
 			<PendingSpecimensGrid status={status} />
 		</div>

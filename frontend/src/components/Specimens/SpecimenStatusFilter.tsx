@@ -1,5 +1,5 @@
 import { CheckCircle, Clock, XCircle } from "lucide-react";
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 
 export type SpecimenStatus = "pending" | "approved" | "rejected";
 
@@ -20,30 +20,30 @@ export function StatusFilter({
 	onChange: (s: SpecimenStatus) => void;
 }) {
 	return (
-		<ToggleGroup
-			type="single"
+		<Tabs
 			value={value}
 			onValueChange={(v) => {
 				if (v) onChange(v as SpecimenStatus);
 			}}
-			className="gap-1"
 		>
-			{(
-				Object.entries(STATUS_CONFIG) as [
-					SpecimenStatus,
-					{ label: string; icon: React.ReactNode },
-				][]
-			).map(([status, { label, icon }]) => (
-				<ToggleGroupItem
-					key={status}
-					value={status}
-					aria-label={`Filter by ${label}`}
-					className="gap-1.5 text-sm data-[state=on]:ring-2 data-[state=on]:ring-ring"
-				>
-					{icon}
-					{label}
-				</ToggleGroupItem>
-			))}
-		</ToggleGroup>
+			<TabsList>
+				{(
+					Object.entries(STATUS_CONFIG) as [
+						SpecimenStatus,
+						{ label: string; icon: React.ReactNode },
+					][]
+				).map(([status, { label, icon }]) => (
+					<TabsTrigger
+						key={status}
+						value={status}
+						aria-label={`Filter by ${label}`}
+						className="gap-1.5"
+					>
+						{icon}
+						{label}
+					</TabsTrigger>
+				))}
+			</TabsList>
+		</Tabs>
 	);
 }
