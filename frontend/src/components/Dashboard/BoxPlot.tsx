@@ -107,7 +107,10 @@ function DataPoint({
 					{...interactiveProps}
 				/>
 			</TooltipTrigger>
-			<TooltipContent side="right" className="max-w-xs">
+			<TooltipContent
+				side="right"
+				className="max-w-xs border bg-background text-foreground shadow-xl"
+			>
 				<button
 					type="button"
 					className="space-y-2 text-left"
