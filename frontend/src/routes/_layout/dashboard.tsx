@@ -124,6 +124,7 @@ function clamp(value: number, min: number, max: number) {
 
 function JoineryReferenceViewer() {
 	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [isTouchScreen, setIsTouchScreen] = useState(false);
 	const [scale, setScale] = useState(MIN_REFERENCE_SCALE);
 	const [offset, setOffset] = useState({ x: 0, y: 0 });
 	const [bounds, setBounds] = useState({ x: 0, y: 0 });
@@ -136,6 +137,22 @@ function JoineryReferenceViewer() {
 		originY: number;
 	} | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia(
+			"(pointer: coarse), (hover: none), (any-pointer: coarse)",
+		);
+		const updateTouchScreenState = () => {
+			setIsTouchScreen(mediaQuery.matches);
+		};
+
+		updateTouchScreenState();
+		mediaQuery.addEventListener("change", updateTouchScreenState);
+
+		return () => {
+			mediaQuery.removeEventListener("change", updateTouchScreenState);
+		};
+	}, []);
 
 	const resetView = useCallback(() => {
 		setScale(MIN_REFERENCE_SCALE);
@@ -272,6 +289,20 @@ function JoineryReferenceViewer() {
 		},
 		[],
 	);
+
+	if (isTouchScreen) {
+		return (
+			<div className="relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/20 p-4">
+				<div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white p-3 shadow-sm">
+					<img
+						src={joineryTypesReference}
+						alt="Reference sheet showing timber joinery and connection types"
+						className="h-auto max-h-[620px] w-full object-contain"
+					/>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div
