@@ -5,12 +5,18 @@ type AxisLeftProps = {
 	yScale: ScaleLinear<number, number>;
 	pixelsPerTick: number;
 	title?: string;
+	titleOffset?: number;
 };
 
 // tick length
 const TICK_LENGTH = 6;
 
-export const AxisLeft = ({ yScale, pixelsPerTick, title }: AxisLeftProps) => {
+export const AxisLeft = ({
+	yScale,
+	pixelsPerTick,
+	title,
+	titleOffset = -40,
+}: AxisLeftProps) => {
 	const range = yScale.range();
 
 	const ticks = useMemo(() => {
@@ -33,7 +39,7 @@ export const AxisLeft = ({ yScale, pixelsPerTick, title }: AxisLeftProps) => {
 						textAnchor: "middle",
 						fill: "currentColor",
 					}}
-					transform={`translate(-40, ${(range[0] - range[1]) / 2} ) rotate(-90)`}
+					transform={`translate(${titleOffset}, ${(range[0] - range[1]) / 2} ) rotate(-90)`}
 				>
 					{title}
 				</text>

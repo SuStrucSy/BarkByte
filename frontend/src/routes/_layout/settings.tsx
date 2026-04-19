@@ -30,7 +30,7 @@ function UserSettings() {
 	}
 
 	return (
-		<div className="flex max-w-full flex-col gap-6">
+		<div className="flex max-w-full flex-col gap-6 px-2 sm:px-2 md:px-4">
 			<h1 className="text-3xl ">User Settings</h1>
 
 			<Tabs defaultValue="my-profile">

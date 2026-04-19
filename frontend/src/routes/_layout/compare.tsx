@@ -381,7 +381,7 @@ function ComparePage() {
 	}
 
 	return (
-		<div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
+		<div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden px-2 sm:px-2 md:px-4">
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{selectedIds.map((selectedId, slotIndex) => {
 					const specimen = selectedId

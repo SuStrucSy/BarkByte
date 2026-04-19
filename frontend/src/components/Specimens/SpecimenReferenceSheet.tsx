@@ -1,6 +1,11 @@
 import { ChevronRightIcon, ExternalLinkIcon } from "lucide-react";
 import { useDoiGetDoiById } from "@/api/endpoints/doi/doi";
-import type { DOIDetailPublic, DOIPublic, Doi, SpecimenPublic } from "@/api/model";
+import type {
+	DOIDetailPublic,
+	DOIPublic,
+	Doi,
+	SpecimenPublic,
+} from "@/api/model";
 import { Button } from "@/components/ui/button";
 import {
 	Item,
@@ -141,114 +146,116 @@ export function SpecimenReferenceSheet({
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetContent className="flex h-full flex-col px-6 py-6">
-				<ScrollArea className="min-h-0 flex-1 pr-2">
-					{isDoiMode ? (
-						<ReferenceDetails
-							doi={resolvedDoi}
-							activeSpecimenId={specimen?.id}
-							relatedSpecimens={relatedSpecimens}
-							showRelated
-						/>
-					) : (
-						<div className="flex flex-col gap-6">
-							<div className="flex flex-col gap-4">
-								<SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
-									Specimen Details
-								</SheetTitle>
-								<dl className="grid gap-3">
-									<div className="grid gap-1">
-										<dt className="text-xs font-medium text-muted-foreground">
-											Reference ID
-										</dt>
-										<dd className="text-sm">
-											{renderValue(
-												specimen.specimen_reference_id ?? specimen.id,
-											)}
-										</dd>
-									</div>
-
-									<div className="grid gap-1">
-										<dt className="text-xs font-medium text-muted-foreground">
-											Assembly type
-										</dt>
-										<dd className="text-sm">
-											{renderValue(specimen.assembly_type)}
-										</dd>
-									</div>
-
-									<div className="grid gap-1">
-										<dt className="text-xs font-medium text-muted-foreground">
-											Joinery type
-										</dt>
-										<dd className="text-sm">
-											{renderValue(specimen.joinery_type)}
-										</dd>
-									</div>
-
-									<div className="grid gap-1">
-										<dt className="text-xs font-medium text-muted-foreground">
-											Sub joinery type
-										</dt>
-										<dd className="text-sm">
-											{renderValue(specimen.sub_joinery_type)}
-										</dd>
-									</div>
-
-									<div className="grid gap-1">
-										<dt className="text-xs font-medium text-muted-foreground">
-											Connector
-										</dt>
-										<dd className="text-sm">
-											{renderValue(specimen.connector)}
-										</dd>
-									</div>
-
-									<div className="grid gap-1">
-										<dt className="text-xs font-medium text-muted-foreground">
-											Dowel
-										</dt>
-										<dd className="text-sm">{renderValue(specimen.dowel)}</dd>
-									</div>
-								</dl>
-								<p className="text-sm text-muted-foreground">
-									For more information about this specimen, open the specimen
-									record.
-								</p>
-								<Item variant="outline" asChild>
-									<a
-										href={`/specimens/${specimen.id}`}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										<ItemContent>
-											<ItemTitle>Specimen Record</ItemTitle>
-											<ItemDescription>
+			<SheetContent className="flex h-full flex-col gap-0 px-6 py-6">
+				<div className="relative min-h-0 flex-1">
+					<ScrollArea className="h-full min-h-0 [&>[data-slot=scroll-area-scrollbar]]:hidden">
+						{isDoiMode ? (
+							<ReferenceDetails
+								doi={resolvedDoi}
+								activeSpecimenId={specimen?.id}
+								relatedSpecimens={relatedSpecimens}
+								showRelated
+							/>
+						) : (
+							<div className="flex flex-col gap-6">
+								<div className="flex flex-col gap-4">
+									<SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
+										Specimen Details
+									</SheetTitle>
+									<dl className="grid gap-3">
+										<div className="grid gap-1">
+											<dt className="text-xs font-medium text-muted-foreground">
+												Reference ID
+											</dt>
+											<dd className="text-sm">
 												{renderValue(
 													specimen.specimen_reference_id ?? specimen.id,
 												)}
-											</ItemDescription>
-										</ItemContent>
-										<ItemActions>
-											<ExternalLinkIcon className="size-4" />
-										</ItemActions>
-									</a>
-								</Item>
-							</div>
+											</dd>
+										</div>
 
-							<div className="border-t pt-6">
-								<ReferenceDetails
-									doi={resolvedDoi}
-									activeSpecimenId={specimen.id}
-									relatedSpecimens={relatedSpecimens}
-									showRelated
-								/>
+										<div className="grid gap-1">
+											<dt className="text-xs font-medium text-muted-foreground">
+												Assembly type
+											</dt>
+											<dd className="text-sm">
+												{renderValue(specimen.assembly_type)}
+											</dd>
+										</div>
+
+										<div className="grid gap-1">
+											<dt className="text-xs font-medium text-muted-foreground">
+												Joinery type
+											</dt>
+											<dd className="text-sm">
+												{renderValue(specimen.joinery_type)}
+											</dd>
+										</div>
+
+										<div className="grid gap-1">
+											<dt className="text-xs font-medium text-muted-foreground">
+												Sub joinery type
+											</dt>
+											<dd className="text-sm">
+												{renderValue(specimen.sub_joinery_type)}
+											</dd>
+										</div>
+
+										<div className="grid gap-1">
+											<dt className="text-xs font-medium text-muted-foreground">
+												Connector
+											</dt>
+											<dd className="text-sm">
+												{renderValue(specimen.connector)}
+											</dd>
+										</div>
+
+										<div className="grid gap-1">
+											<dt className="text-xs font-medium text-muted-foreground">
+												Dowel
+											</dt>
+											<dd className="text-sm">{renderValue(specimen.dowel)}</dd>
+										</div>
+									</dl>
+									<p className="text-sm text-muted-foreground">
+										For more information about this specimen, open the specimen
+										record.
+									</p>
+									<Item variant="outline" asChild>
+										<a
+											href={`/specimens/${specimen.id}`}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											<ItemContent>
+												<ItemTitle>Specimen Record</ItemTitle>
+												<ItemDescription>
+													{renderValue(
+														specimen.specimen_reference_id ?? specimen.id,
+													)}
+												</ItemDescription>
+											</ItemContent>
+											<ItemActions>
+												<ExternalLinkIcon className="size-4" />
+											</ItemActions>
+										</a>
+									</Item>
+								</div>
+
+								<div className="border-t pt-6">
+									<ReferenceDetails
+										doi={resolvedDoi}
+										activeSpecimenId={specimen.id}
+										relatedSpecimens={relatedSpecimens}
+										showRelated
+									/>
+								</div>
 							</div>
-						</div>
-					)}
-				</ScrollArea>
+						)}
+					</ScrollArea>
+				</div>
 				{isDoiMode ? null : (
-					<SheetFooter>
+					<SheetFooter className="-mx-6 border-t border-border/70 bg-background px-6">
 						<SheetClose asChild>
 							<Button variant="outline">Close</Button>
 						</SheetClose>

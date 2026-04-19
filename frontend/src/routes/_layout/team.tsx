@@ -58,17 +58,19 @@ const teamMembers = [
 
 function TeamPage() {
 	return (
-		<div className="mx-auto flex w-full max-w-6xl flex-col gap-12">
+		<div className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-2 sm:px-2 md:px-4">
 			<section className="space-y-6">
-				<div className="space-y-2 px-4 md:px-0">
-					<h1 className="text-3xl font-semibold tracking-tight">Meet the Team</h1>
+				<div className="space-y-2">
+					<h1 className="text-3xl font-semibold tracking-tight">
+						Meet the Team
+					</h1>
 					<p className="max-w-2xl text-sm text-muted-foreground">
 						The people building Timverse and shaping the project across design,
 						data, and engineering.
 					</p>
 				</div>
 
-				<div className="grid gap-6 px-4 md:grid-cols-2 md:px-0 xl:grid-cols-4">
+				<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 					{teamMembers.map((member) => (
 						<Card key={member.name} className="h-full">
 							<CardHeader className="text-center">
@@ -93,9 +95,11 @@ function TeamPage() {
 				</div>
 			</section>
 
-			<section className="space-y-6 px-4 md:px-0">
+			<section className="space-y-6">
 				<div className="space-y-2">
-					<h2 className="text-3xl font-semibold tracking-tight">Project Partners</h2>
+					<h2 className="text-3xl font-semibold tracking-tight">
+						Project Partners
+					</h2>
 					<p className="max-w-2xl text-sm text-muted-foreground">
 						This project is supported by the Department of Civil and Mineral
 						Engineering and the Data Sciences Institute at the University of
@@ -157,7 +161,6 @@ function TeamPage() {
 						</CardContent>
 					</Card>
 				</div>
-
 			</section>
 		</div>
 	);

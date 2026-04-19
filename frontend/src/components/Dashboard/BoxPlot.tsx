@@ -108,7 +108,17 @@ function DataPoint({
 				/>
 			</TooltipTrigger>
 			<TooltipContent side="right" className="max-w-xs">
-				<div className="space-y-2">
+				<button
+					type="button"
+					className="space-y-2 text-left"
+					onClick={() => onPointClick?.(specimen)}
+					disabled={!isInteractive}
+					aria-label={
+						isInteractive
+							? `Open specimen details for ${specimen.specimen_reference_id || "selected point"}`
+							: undefined
+					}
+				>
 					<div className="font-semibold text-sm">
 						{specimen.specimen_reference_id || "N/A"}
 					</div>
@@ -147,7 +157,12 @@ function DataPoint({
 							</>
 						)}
 					</div>
-				</div>
+					{isInteractive ? (
+						<div className="border-t pt-2 text-[11px] font-medium text-primary">
+							Open specimen details
+						</div>
+					) : null}
+				</button>
 			</TooltipContent>
 		</Tooltip>
 	);
@@ -170,9 +185,15 @@ export function BoxPlot({
 	// Responsive margins based on container width
 	const margins = useMemo(() => {
 		const w = dimensions.width;
-		if (w < 400) return { top: 20, right: 10, bottom: 80, left: 45 };
-		if (w < 640) return { top: 20, right: 15, bottom: 80, left: 50 };
+		if (w < 400) return { top: 20, right: 10, bottom: 80, left: 66 };
+		if (w < 640) return { top: 20, right: 15, bottom: 80, left: 62 };
 		return CHART_CONFIG.margins;
+	}, [dimensions.width]);
+
+	const yAxisTitleOffset = useMemo(() => {
+		if (dimensions.width < 400) return -38;
+		if (dimensions.width < 640) return -40;
+		return -40;
 	}, [dimensions.width]);
 
 	// Responsive height
@@ -525,6 +546,7 @@ export function BoxPlot({
 									boundsWidth < 400 ? 60 : CHART_CONFIG.pixelsPerTick
 								}
 								title={yLabel}
+								titleOffset={yAxisTitleOffset}
 							/>
 							<g transform={`translate(0, ${boundsHeight})`}>
 								<AxisBottom xScale={xScale} width={boundsWidth} />

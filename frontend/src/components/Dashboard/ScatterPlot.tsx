@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { RotateCcwIcon, ZoomInIcon } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FastenerTypes, SpecimenPublic } from "@/api/model";
 import {
@@ -36,13 +36,21 @@ interface GroupedDataItem {
 }
 
 const Legend = memo(({ groupedData }: { groupedData: GroupedDataItem[] }) => (
-	<div className="flex flex-wrap justify-center gap-4 pt-2">
+	<div className="flex flex-wrap justify-center gap-x-3 gap-y-2 pt-1 sm:gap-x-4 sm:gap-y-3 sm:pt-2">
 		{groupedData.map((group) => (
-			<div key={group.groupName} className="flex items-center gap-2 text-sm">
-				<svg width="20" height="20" aria-hidden="true">
+			<div
+				key={group.groupName}
+				className="flex items-center gap-1.5 px-0.5 text-xs sm:gap-2 sm:px-1 sm:text-sm"
+			>
+				<svg
+					width="18"
+					height="18"
+					aria-hidden="true"
+					className="sm:h-5 sm:w-5"
+				>
 					<path
 						d={SHAPE_GENERATORS[group.shape](6) || undefined}
-						transform="translate(10,10)"
+						transform="translate(9,9)"
 						fill={group.color}
 						fillOpacity={0.6}
 						stroke={group.color}
@@ -65,6 +73,9 @@ const ScatterTooltip = memo(
 		yLabel,
 		xKey,
 		yKey,
+		onPointClick,
+		tooltipRef,
+		onTooltipLeave,
 	}: {
 		hoveredPoint: SpecimenPublic;
 		tooltipPos: { x: number; y: number };
@@ -73,17 +84,29 @@ const ScatterTooltip = memo(
 		yLabel: string;
 		xKey: keyof SpecimenPublic;
 		yKey: keyof SpecimenPublic;
+		onPointClick?: (specimen: SpecimenPublic) => void;
+		tooltipRef: React.RefObject<HTMLButtonElement | null>;
+		onTooltipLeave: () => void;
 	}) => (
-		<div
+		<button
+			ref={tooltipRef}
+			type="button"
 			style={{
 				position: "absolute",
 				left: Math.min(tooltipPos.x + 15, dimensions.width - 300),
 				top: tooltipPos.y - 10,
-				pointerEvents: "none",
+				pointerEvents: "auto",
 				zIndex: 50,
 			}}
-			className="rounded-lg border bg-background p-3 shadow-xl max-w-sm"
-			role="tooltip"
+			className="max-w-sm rounded-lg border bg-background p-3 text-left shadow-xl"
+			onClick={() => onPointClick?.(hoveredPoint)}
+			onMouseLeave={onTooltipLeave}
+			onBlur={(event) => {
+				if (!event.currentTarget.contains(event.relatedTarget)) {
+					onTooltipLeave();
+				}
+			}}
+			aria-label={`Open specimen details for ${hoveredPoint.specimen_reference_id || "selected point"}`}
 		>
 			<div className="font-semibold text-sm mb-2">
 				{hoveredPoint.specimen_reference_id || "N/A"}
@@ -140,8 +163,13 @@ const ScatterTooltip = memo(
 						</span>
 					</div>
 				)}
+				{onPointClick && (
+					<div className="border-t mt-2 pt-2 text-[11px] font-medium text-primary">
+						Open specimen details
+					</div>
+				)}
 			</div>
-		</div>
+		</button>
 	),
 );
 ScatterTooltip.displayName = "ScatterTooltip";
@@ -166,6 +194,7 @@ export function ScatterPlotD3({
 	const [zoomExtent, setZoomExtent] = useState<ZoomExtent | null>(null);
 	const [zoomMode, setZoomMode] = useState(false);
 	const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
+	const tooltipRef = useRef<HTMLButtonElement | null>(null);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -196,14 +225,20 @@ export function ScatterPlotD3({
 		}));
 	}, [data, fastenerTypesData, xKey, yKey]);
 
+	const scatterMargins = useMemo(() => {
+		if (dimensions.width > 0 && dimensions.width < 400) {
+			return { top: 4, right: 6, bottom: 48, left: 46 };
+		}
+		if (dimensions.width > 0 && dimensions.width < 640) {
+			return { top: 6, right: 8, bottom: 52, left: 50 };
+		}
+		return CHART_CONFIG.scatterMargins;
+	}, [dimensions.width]);
+
 	const boundsWidth =
-		dimensions.width -
-		CHART_CONFIG.scatterMargins.left -
-		CHART_CONFIG.scatterMargins.right;
+		dimensions.width - scatterMargins.left - scatterMargins.right;
 	const boundsHeight =
-		dimensions.height -
-		CHART_CONFIG.scatterMargins.top -
-		CHART_CONFIG.scatterMargins.bottom;
+		dimensions.height - scatterMargins.top - scatterMargins.bottom;
 
 	const { xScale, yScale } = useMemo(() => {
 		const allValues = groupedData.flatMap((g) =>
@@ -309,9 +344,9 @@ export function ScatterPlotD3({
 			.attr("class", "axis-label x-label")
 			.attr("text-anchor", "middle")
 			.attr("x", boundsWidth / 2)
-			.attr("y", boundsHeight + 45)
+			.attr("y", boundsHeight + Math.max(34, scatterMargins.bottom - 8))
 			.attr("fill", "currentColor")
-			.attr("font-size", "14px")
+			.attr("font-size", dimensions.width < 400 ? "12px" : "14px")
 			.text(xLabel);
 
 		g.append("text")
@@ -319,9 +354,9 @@ export function ScatterPlotD3({
 			.attr("text-anchor", "middle")
 			.attr("transform", "rotate(-90)")
 			.attr("x", -boundsHeight / 2)
-			.attr("y", -50)
+			.attr("y", -Math.max(30, scatterMargins.left - 12))
 			.attr("fill", "currentColor")
-			.attr("font-size", "14px")
+			.attr("font-size", dimensions.width < 400 ? "12px" : "14px")
 			.text(yLabel);
 
 		let pointsContainer = g.select<SVGGElement>(".points-container");
@@ -431,7 +466,14 @@ export function ScatterPlotD3({
 						});
 					}
 				})
-				.on("mouseleave", function () {
+				.on("mouseleave", function (event) {
+					if (
+						tooltipRef.current &&
+						event.relatedTarget instanceof Node &&
+						tooltipRef.current.contains(event.relatedTarget)
+					) {
+						return;
+					}
 					setHoveredGroup(null);
 					d3.select(this)
 						.transition()
@@ -488,8 +530,11 @@ export function ScatterPlotD3({
 		onPointClick,
 		zoomMode,
 		hoveredGroup,
+		scatterMargins.bottom,
+		scatterMargins.left,
 		xKey,
 		yKey,
+		dimensions.width,
 	]);
 
 	if (data.length === 0) {
@@ -504,35 +549,39 @@ export function ScatterPlotD3({
 	}
 
 	return (
-		<div className={`w-full flex flex-col gap-2 ${!height ? "h-full" : ""}`}>
-			<div className="flex items-center justify-between flex-shrink-0">
-				<div className="text-xs text-muted-foreground">
+		<div
+			className={`w-full flex flex-col gap-1.5 sm:gap-2 ${!height ? "h-full" : ""}`}
+		>
+			<div className="flex items-center justify-between gap-2 flex-shrink-0">
+				<div className="min-w-0 text-xs text-muted-foreground whitespace-nowrap">
 					{zoomMode
 						? "💡 Drag to select zoom area"
 						: "💡 Hover and click points to explore"}
 				</div>
-				<div className="flex gap-2">
+				<div className="flex gap-1.5 sm:gap-2">
 					<Button
 						variant={zoomMode ? "default" : "outline"}
 						size="sm"
 						onClick={toggleZoomMode}
-						className="text-xs"
+						className="h-7 w-7 px-0 text-xs sm:h-8 sm:w-auto sm:px-3"
 						aria-pressed={zoomMode}
 						aria-label={zoomMode ? "Exit zoom mode" : "Enter zoom mode"}
 					>
-						<ZoomInIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-						{zoomMode ? "Exit Zoom" : "Zoom Mode"}
+						<ZoomInIcon className="h-3 w-3 sm:mr-1" aria-hidden="true" />
+						<span className="hidden sm:inline">
+							{zoomMode ? "Exit Zoom" : "Zoom Mode"}
+						</span>
 					</Button>
 					{zoomExtent && (
 						<Button
 							variant="outline"
 							size="sm"
 							onClick={handleZoomOut}
-							className="text-xs"
+							className="h-7 w-7 px-0 text-xs sm:h-8 sm:w-auto sm:px-3"
 							aria-label="Reset zoom"
 						>
-							<ZoomOutIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-							Reset
+							<RotateCcwIcon className="h-3 w-3 sm:mr-1" aria-hidden="true" />
+							<span className="hidden sm:inline">Reset</span>
 						</Button>
 					)}
 				</div>
@@ -555,7 +604,7 @@ export function ScatterPlotD3({
 				>
 					<g
 						className="chart-area"
-						transform={`translate(${CHART_CONFIG.scatterMargins.left},${CHART_CONFIG.scatterMargins.top})`}
+						transform={`translate(${scatterMargins.left},${scatterMargins.top})`}
 					/>
 				</svg>
 
@@ -568,6 +617,12 @@ export function ScatterPlotD3({
 						yLabel={yLabel}
 						xKey={xKey}
 						yKey={yKey}
+						onPointClick={onPointClick}
+						tooltipRef={tooltipRef}
+						onTooltipLeave={() => {
+							setHoveredPoint(null);
+							setHoveredGroup(null);
+						}}
 					/>
 				)}
 			</div>

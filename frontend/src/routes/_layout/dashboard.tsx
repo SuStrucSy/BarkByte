@@ -61,7 +61,7 @@ const BOX_PLOT_LABELS = EXPERIMENTAL_KEYS.map((key) => ({
 	label: getExperimentalLabel(key),
 }));
 const CHART_OPTIONS_CARD_CLASSNAME =
-	"sticky top-0 z-30 col-span-1 w-full justify-self-center overflow-hidden lg:col-span-2 lg:max-w-7xl";
+	"col-span-1 w-full justify-self-center overflow-hidden lg:sticky lg:top-0 lg:z-30 lg:col-span-2 lg:max-w-7xl";
 const MIN_REFERENCE_SCALE = 1;
 const MAX_REFERENCE_SCALE = 3;
 const REFERENCE_ZOOM_STEP = 0.25;
@@ -93,9 +93,9 @@ function MetricScatterCard({
 }) {
 	return (
 		<Card>
-			<CardHeader className="pb-4">
+			<CardHeader className="gap-y-2 pb-3 has-data-[slot=card-action]:grid-cols-1 lg:gap-y-1.5 lg:pb-4 lg:has-data-[slot=card-action]:grid-cols-[1fr_auto]">
 				<CardTitle>{title}</CardTitle>
-				<CardDescription>
+				<CardDescription className="col-start-1 row-start-2">
 					{description}
 					{pointCount > 0 && (
 						<span className="ml-2 text-xs">
@@ -103,7 +103,7 @@ function MetricScatterCard({
 						</span>
 					)}
 				</CardDescription>
-				<CardAction>
+				<CardAction className="hidden lg:block">
 					<ExpandableChart title={expandableTitle}>
 						{() => children}
 					</ExpandableChart>
@@ -591,7 +591,7 @@ function Dashboard() {
 	}
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4 px-2 sm:px-2 md:px-4">
 			{/* Header */}
 			<Card>
 				<CardHeader>
@@ -674,9 +674,16 @@ function Dashboard() {
 					{/* Box plots */}
 					{BOX_PLOT_LABELS.map((ylabel) => (
 						<Card key={ylabel.key} className="col-span-1">
-							<CardHeader className="pb-4">
-								<CardTitle>Box Plot Distribution</CardTitle>
-								<CardDescription>
+							<CardHeader className="grid-cols-1 gap-y-2 pb-4 has-data-[slot=card-action]:grid-cols-1 sm:gap-y-1.5">
+								<div className="col-start-1 row-start-1 flex items-start justify-between gap-3">
+									<CardTitle>Box Plot Distribution</CardTitle>
+									{selectedFastenerBadgeLabel ? (
+										<Badge className="border-[color:var(--failure-badge-border)] bg-[color:var(--failure-badge-bg)] text-[color:var(--failure-badge-text)]">
+											{selectedFastenerBadgeLabel}
+										</Badge>
+									) : null}
+								</div>
+								<CardDescription className="col-start-1 row-start-2">
 									Summarizes the distribution of {ylabel.label} grouped by
 									joinery type
 									{selectedSpecimens.length > 0 && (
@@ -685,13 +692,6 @@ function Dashboard() {
 										</span>
 									)}
 								</CardDescription>
-								{selectedFastenerBadgeLabel ? (
-									<CardAction>
-										<Badge className="border-[color:var(--failure-badge-border)] bg-[color:var(--failure-badge-bg)] text-[color:var(--failure-badge-text)]">
-											{selectedFastenerBadgeLabel}
-										</Badge>
-									</CardAction>
-								) : null}
 							</CardHeader>
 							<CardContent className="pb-4 min-w-0">
 								<ChartErrorBoundary chartName="Box Plot">
@@ -709,7 +709,7 @@ function Dashboard() {
 						</Card>
 					))}
 					<div
-						className="col-span-1 lg:col-span-2"
+						className="hidden col-span-1 lg:col-span-2 lg:block"
 						style={{ height: chartOptionsSpacerHeight }}
 					/>
 				</div>

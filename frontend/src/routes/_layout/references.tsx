@@ -62,7 +62,11 @@ function ReferenceItem({
 			asChild
 			className="group/item rounded-xl border-border/70"
 		>
-			<button type="button" onClick={() => onSelect(doi)} className="w-full text-left">
+			<button
+				type="button"
+				onClick={() => onSelect(doi)}
+				className="w-full text-left"
+			>
 				<ItemContent className="min-w-0">
 					<ItemTitle className="w-full text-base leading-snug group-hover/item:text-primary">
 						<span className="line-clamp-2">{doi.ref_title}</span>
@@ -119,7 +123,7 @@ function References() {
 
 	return (
 		<>
-			<div className="space-y-4 h-full flex flex-col">
+			<div className="flex h-full flex-col space-y-4 px-2 sm:px-2 md:px-4">
 				<div>
 					<h1 className="text-xl font-semibold">References</h1>
 					<p className="text-sm text-muted-foreground">
