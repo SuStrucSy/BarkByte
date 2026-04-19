@@ -8,6 +8,13 @@ import type {
 } from "@/api/model";
 import { Button } from "@/components/ui/button";
 import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerFooter,
+	DrawerTitle,
+} from "@/components/ui/drawer";
+import {
 	Item,
 	ItemActions,
 	ItemContent,
@@ -22,6 +29,7 @@ import {
 	SheetFooter,
 	SheetTitle,
 } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { renderValue } from "@/lib/utils";
 
 type SpecimenReferenceSheetProps = {
@@ -32,6 +40,27 @@ type SpecimenReferenceSheetProps = {
 	doi?: Doi | DOIPublic | DOIDetailPublic;
 	relatedSpecimens?: SpecimenPublic[];
 };
+
+type DetailsTitleProps = {
+	children: React.ReactNode;
+	isMobile: boolean;
+};
+
+function DetailsTitle({ children, isMobile }: DetailsTitleProps) {
+	if (isMobile) {
+		return (
+			<DrawerTitle className="text-xl font-semibold tracking-tight text-foreground">
+				{children}
+			</DrawerTitle>
+		);
+	}
+
+	return (
+		<SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
+			{children}
+		</SheetTitle>
+	);
+}
 
 function showRelatedSpecimens(relatedSpecimens: SpecimenPublic[]) {
 	if (!relatedSpecimens || relatedSpecimens.length === 0) {
@@ -81,11 +110,13 @@ function ReferenceDetails({
 	activeSpecimenId,
 	relatedSpecimens = [],
 	showRelated = false,
+	isMobile,
 }: {
 	doi: Doi | DOIPublic | DOIDetailPublic;
 	activeSpecimenId?: string;
 	relatedSpecimens?: SpecimenPublic[];
 	showRelated?: boolean;
+	isMobile: boolean;
 }) {
 	const doiId = doi.id ?? "";
 	const { data: doiData } = useDoiGetDoiById(doiId, {
@@ -103,9 +134,7 @@ function ReferenceDetails({
 
 	return (
 		<div className="flex flex-col gap-4">
-			<SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
-				Reference Details
-			</SheetTitle>
+			<DetailsTitle isMobile={isMobile}>Reference Details</DetailsTitle>
 
 			<p className="text-sm text-muted-foreground">
 				This is the original publication containing the written paper and
@@ -137,6 +166,7 @@ export function SpecimenReferenceSheet({
 	mode = "specimen",
 	relatedSpecimens = [],
 }: SpecimenReferenceSheetProps) {
+	const { isMobile } = useIsMobile();
 	const isDoiMode = mode === "doi";
 	const resolvedDoi = doi ?? specimen?.doi;
 
@@ -144,123 +174,147 @@ export function SpecimenReferenceSheet({
 		return null;
 	}
 
-	return (
-		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetContent className="flex h-full flex-col gap-0 px-6 py-6">
-				<div className="relative min-h-0 flex-1">
-					<ScrollArea className="h-full min-h-0 [&>[data-slot=scroll-area-scrollbar]]:hidden">
-						{isDoiMode ? (
-							<ReferenceDetails
-								doi={resolvedDoi}
-								activeSpecimenId={specimen?.id}
-								relatedSpecimens={relatedSpecimens}
-								showRelated
-							/>
-						) : (
-							<div className="flex flex-col gap-6">
-								<div className="flex flex-col gap-4">
-									<SheetTitle className="text-xl font-semibold tracking-tight text-foreground">
-										Specimen Details
-									</SheetTitle>
-									<dl className="grid gap-3">
-										<div className="grid gap-1">
-											<dt className="text-xs font-medium text-muted-foreground">
-												Reference ID
-											</dt>
-											<dd className="text-sm">
+	const content = (
+		<>
+			<div className="relative min-h-0 flex-1">
+				<ScrollArea className="h-full min-h-0 [&>[data-slot=scroll-area-scrollbar]]:hidden">
+					{isDoiMode ? (
+						<ReferenceDetails
+							doi={resolvedDoi}
+							activeSpecimenId={specimen?.id}
+							relatedSpecimens={relatedSpecimens}
+							showRelated
+							isMobile={isMobile}
+						/>
+					) : (
+						<div className="flex flex-col gap-6">
+							<div className="flex flex-col gap-4">
+								<DetailsTitle isMobile={isMobile}>
+									Specimen Details
+								</DetailsTitle>
+								<dl className="grid gap-3">
+									<div className="grid gap-1">
+										<dt className="text-xs font-medium text-muted-foreground">
+											Reference ID
+										</dt>
+										<dd className="text-sm">
+											{renderValue(
+												specimen.specimen_reference_id ?? specimen.id,
+											)}
+										</dd>
+									</div>
+
+									<div className="grid gap-1">
+										<dt className="text-xs font-medium text-muted-foreground">
+											Assembly type
+										</dt>
+										<dd className="text-sm">
+											{renderValue(specimen.assembly_type)}
+										</dd>
+									</div>
+
+									<div className="grid gap-1">
+										<dt className="text-xs font-medium text-muted-foreground">
+											Joinery type
+										</dt>
+										<dd className="text-sm">
+											{renderValue(specimen.joinery_type)}
+										</dd>
+									</div>
+
+									<div className="grid gap-1">
+										<dt className="text-xs font-medium text-muted-foreground">
+											Sub joinery type
+										</dt>
+										<dd className="text-sm">
+											{renderValue(specimen.sub_joinery_type)}
+										</dd>
+									</div>
+
+									<div className="grid gap-1">
+										<dt className="text-xs font-medium text-muted-foreground">
+											Connector
+										</dt>
+										<dd className="text-sm">
+											{renderValue(specimen.connector)}
+										</dd>
+									</div>
+
+									<div className="grid gap-1">
+										<dt className="text-xs font-medium text-muted-foreground">
+											Dowel
+										</dt>
+										<dd className="text-sm">{renderValue(specimen.dowel)}</dd>
+									</div>
+								</dl>
+								<p className="text-sm text-muted-foreground">
+									For more information about this specimen, open the specimen
+									record.
+								</p>
+								<Item variant="outline" asChild>
+									<a
+										href={`/specimens/${specimen.id}`}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										<ItemContent>
+											<ItemTitle>Specimen Record</ItemTitle>
+											<ItemDescription>
 												{renderValue(
 													specimen.specimen_reference_id ?? specimen.id,
 												)}
-											</dd>
-										</div>
-
-										<div className="grid gap-1">
-											<dt className="text-xs font-medium text-muted-foreground">
-												Assembly type
-											</dt>
-											<dd className="text-sm">
-												{renderValue(specimen.assembly_type)}
-											</dd>
-										</div>
-
-										<div className="grid gap-1">
-											<dt className="text-xs font-medium text-muted-foreground">
-												Joinery type
-											</dt>
-											<dd className="text-sm">
-												{renderValue(specimen.joinery_type)}
-											</dd>
-										</div>
-
-										<div className="grid gap-1">
-											<dt className="text-xs font-medium text-muted-foreground">
-												Sub joinery type
-											</dt>
-											<dd className="text-sm">
-												{renderValue(specimen.sub_joinery_type)}
-											</dd>
-										</div>
-
-										<div className="grid gap-1">
-											<dt className="text-xs font-medium text-muted-foreground">
-												Connector
-											</dt>
-											<dd className="text-sm">
-												{renderValue(specimen.connector)}
-											</dd>
-										</div>
-
-										<div className="grid gap-1">
-											<dt className="text-xs font-medium text-muted-foreground">
-												Dowel
-											</dt>
-											<dd className="text-sm">{renderValue(specimen.dowel)}</dd>
-										</div>
-									</dl>
-									<p className="text-sm text-muted-foreground">
-										For more information about this specimen, open the specimen
-										record.
-									</p>
-									<Item variant="outline" asChild>
-										<a
-											href={`/specimens/${specimen.id}`}
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											<ItemContent>
-												<ItemTitle>Specimen Record</ItemTitle>
-												<ItemDescription>
-													{renderValue(
-														specimen.specimen_reference_id ?? specimen.id,
-													)}
-												</ItemDescription>
-											</ItemContent>
-											<ItemActions>
-												<ExternalLinkIcon className="size-4" />
-											</ItemActions>
-										</a>
-									</Item>
-								</div>
-
-								<div className="border-t pt-6">
-									<ReferenceDetails
-										doi={resolvedDoi}
-										activeSpecimenId={specimen.id}
-										relatedSpecimens={relatedSpecimens}
-										showRelated
-									/>
-								</div>
+											</ItemDescription>
+										</ItemContent>
+										<ItemActions>
+											<ExternalLinkIcon className="size-4" />
+										</ItemActions>
+									</a>
+								</Item>
 							</div>
-						)}
-					</ScrollArea>
-				</div>
-				{isDoiMode ? null : (
-					<SheetFooter className="-mx-6 border-t border-border/70 bg-background px-6">
-						<SheetClose asChild>
-							<Button variant="outline">Close</Button>
-						</SheetClose>
-					</SheetFooter>
-				)}
+
+							<div className="border-t pt-6">
+								<ReferenceDetails
+									doi={resolvedDoi}
+									activeSpecimenId={specimen.id}
+									relatedSpecimens={relatedSpecimens}
+									showRelated
+									isMobile={isMobile}
+								/>
+							</div>
+						</div>
+					)}
+				</ScrollArea>
+			</div>
+			{isDoiMode ? null : isMobile ? (
+				<DrawerFooter className="-mx-6 border-t border-border/70 bg-background px-6">
+					<DrawerClose asChild>
+						<Button variant="outline">Close</Button>
+					</DrawerClose>
+				</DrawerFooter>
+			) : (
+				<SheetFooter className="-mx-6 border-t border-border/70 bg-background px-6">
+					<SheetClose asChild>
+						<Button variant="outline">Close</Button>
+					</SheetClose>
+				</SheetFooter>
+			)}
+		</>
+	);
+
+	if (isMobile) {
+		return (
+			<Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
+				<DrawerContent className="mt-24 h-[85vh] max-h-[85vh] px-6 py-6">
+					<div className="flex min-h-0 flex-1 flex-col gap-0">{content}</div>
+				</DrawerContent>
+			</Drawer>
+		);
+	}
+
+	return (
+		<Sheet open={open} onOpenChange={onOpenChange}>
+			<SheetContent className="flex h-full flex-col gap-0 px-6 py-6">
+				{content}
 			</SheetContent>
 		</Sheet>
 	);
