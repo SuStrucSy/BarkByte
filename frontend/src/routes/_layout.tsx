@@ -23,7 +23,7 @@ function Layout() {
 			<AppSidebar />
 			<SidebarInset>
 				<Navbar />
-				<div className="flex flex-col flex-1 p-5 overflow-auto">
+				<div className="flex flex-1 flex-col overflow-auto p-3 sm:p-4 md:p-5">
 					<ForbiddenBoundary>
 						<Outlet />
 					</ForbiddenBoundary>

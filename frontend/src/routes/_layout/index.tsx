@@ -75,15 +75,15 @@ const joineryHotspots = [
 
 function Home() {
   return (
-    <div className="flex h-full min-h-0 flex-col px-4 overflow-hidden">
-      <div className="flex flex-1 items-center justify-center py-6">
+    <div className="flex min-h-full flex-col px-2 sm:px-2 md:px-4">
+      <div className="flex flex-1 items-center justify-center py-2 sm:py-4 md:py-6">
         <Card className="mx-auto w-full max-w-6xl gap-0 overflow-hidden border-border/70 bg-card/95 py-0 shadow-xl">
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="flex flex-col justify-center p-8 text-center md:p-10 lg:text-left">
-              <h1 className="text-4xl font-bold leading-tight text-foreground md:text-6xl">
+            <div className="flex flex-col justify-center p-5 text-left sm:p-8 md:p-10 lg:text-left">
+              <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
                 Timverse
               </h1>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
                 Timverse gives civil engineers a structured way to move from
                 connection detail to evidence. The visual map on the right acts
                 as an entry point into the dataset, helping teams identify
@@ -91,20 +91,20 @@ function Home() {
                 different materials, setups, and failure patterns behave without
                 digging through disconnected notes and spreadsheets.
               </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-                <Button asChild variant="secondary">
+              <div className="mt-6 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+                <Button asChild variant="secondary" className="w-full min-w-0 px-2 sm:w-auto sm:px-4">
                   <Link to="/team">
                     <Users className="h-4 w-4" />
                     Team
                   </Link>
                 </Button>
-                <Button asChild variant="secondary">
+                <Button asChild variant="secondary" className="w-full min-w-0 px-2 sm:w-auto sm:px-4">
                   <a href="mailto:aryan.rad@utoronto.ca">
                     <Mail className="h-4 w-4" />
                     Contact
                   </a>
                 </Button>
-                <Button asChild variant="secondary">
+                <Button asChild variant="secondary" className="w-full min-w-0 px-2 sm:w-auto sm:px-4">
                   <a
                     href="https://github.com/SuStrucSy/BarkByte"
                     target="_blank"
@@ -127,22 +127,22 @@ function Home() {
                 </Button>
               </div>
             </div>
-            <div className="relative min-h-[420px] border-t border-border/70 bg-gradient-to-br from-muted/40 via-background to-muted/10 lg:min-h-full lg:border-t-0 lg:border-l">
+            <div className="relative hidden min-h-[220px] border-t border-border/70 bg-gradient-to-br from-muted/40 via-background to-muted/10 sm:min-h-[320px] lg:block lg:min-h-full lg:border-t-0 lg:border-l">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--viz-2)_20%,transparent),transparent_55%)]" />
-              <div className="relative flex h-full items-center justify-center p-2 md:p-4">
-                <div className="w-full rounded-[2rem] border border-border/60 bg-background/80 p-2 shadow-2xl backdrop-blur-sm">
+              <div className="relative flex h-full items-center justify-center p-2.5 sm:p-4 md:p-5">
+                <div className="w-full rounded-[1.25rem] border border-border/70 bg-background/90 p-2.5 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:rounded-[2rem] sm:p-4">
                   <div className="relative">
                     <img
                       src={joineryOverview}
                       alt="Overview sheet of timber joinery types"
-                      className="h-auto w-full rounded-2xl object-contain"
+                      className="h-auto max-h-[200px] w-full rounded-[1rem] border border-border/50 bg-white object-contain sm:max-h-none sm:rounded-[1.25rem]"
                     />
                     {joineryHotspots.map((hotspot) => (
                       <Tooltip key={hotspot.id}>
                         <TooltipTrigger asChild>
                           <button
                             type="button"
-                            className="absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-[var(--viz-3)] shadow-[0_0_0_6px_color-mix(in_srgb,var(--viz-2)_18%,transparent)] transition-transform hover:scale-110 focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-[var(--viz-3)] shadow-[0_0_0_5px_color-mix(in_srgb,var(--viz-2)_18%,transparent)] transition-transform hover:scale-110 focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-4 sm:shadow-[0_0_0_6px_color-mix(in_srgb,var(--viz-2)_18%,transparent)]"
                             style={{
                               left: hotspot.left,
                               top: hotspot.top,
@@ -175,7 +175,7 @@ function Home() {
           </CardContent>
         </Card>
       </div>
-      <p className="sticky bottom-0 mt-auto pt-2 pb-0 text-center text-xs leading-relaxed text-muted-foreground">
+      <p className="mx-auto mt-4 max-w-3xl px-2 pb-2 text-center text-xs leading-relaxed text-muted-foreground sm:mt-6 sm:px-4 md:mt-auto">
         This project is supported by the Department of Civil and Mineral
         Engineering, and the Data Sciences Institute at the University of
         Toronto.
