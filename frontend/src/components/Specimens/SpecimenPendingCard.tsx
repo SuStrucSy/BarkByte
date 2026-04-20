@@ -468,83 +468,85 @@ export function SpecimenPendingCard({
 					</TabsTrigger>
 				</TabsList>
 			</div>
-			<div
-				className={hasSideBySideReviewLayout ? "min-h-0" : ""}
-				style={
-					hasSideBySideReviewLayout && sideBySideTabContentHeight > 0
-						? { height: `${sideBySideTabContentHeight}px` }
-						: undefined
-				}
-			>
-				<TabsContent
-					value="Meta Data"
-					className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
+			<ScrollArea>
+				<div
+					className={hasSideBySideReviewLayout ? "min-h-0" : ""}
+					style={
+						hasSideBySideReviewLayout && sideBySideTabContentHeight > 0
+							? { height: `${sideBySideTabContentHeight}px` }
+							: undefined
+					}
 				>
-					{hasSideBySideReviewLayout ? (
-						<div
-							data-vaul-no-drag
-							className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-							style={sideBySideTabScrollStyle}
-						>
+					<TabsContent
+						value="Meta Data"
+						className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
+					>
+						{hasSideBySideReviewLayout ? (
+							<div
+								data-vaul-no-drag
+								className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+								style={sideBySideTabScrollStyle}
+							>
+								<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+									<div className="grid gap-3">{renderSection("Meta Data")}</div>
+								</div>
+							</div>
+						) : (
 							<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
 								<div className="grid gap-3">{renderSection("Meta Data")}</div>
 							</div>
-						</div>
-					) : (
-						<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-							<div className="grid gap-3">{renderSection("Meta Data")}</div>
-						</div>
-					)}
-				</TabsContent>
-				<TabsContent
-					value="Structural Data"
-					className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
-				>
-					{hasSideBySideReviewLayout ? (
-						<div
-							data-vaul-no-drag
-							className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-							style={sideBySideTabScrollStyle}
-						>
+						)}
+					</TabsContent>
+					<TabsContent
+						value="Structural Data"
+						className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
+					>
+						{hasSideBySideReviewLayout ? (
+							<div
+								data-vaul-no-drag
+								className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+								style={sideBySideTabScrollStyle}
+							>
+								<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+									<div className="grid gap-3">
+										{renderSection("Structural Data")}
+									</div>
+								</div>
+							</div>
+						) : (
 							<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
 								<div className="grid gap-3">
 									{renderSection("Structural Data")}
 								</div>
 							</div>
-						</div>
-					) : (
-						<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-							<div className="grid gap-3">
-								{renderSection("Structural Data")}
+						)}
+					</TabsContent>
+					<TabsContent
+						value="Experimental Data"
+						className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
+					>
+						{hasSideBySideReviewLayout ? (
+							<div
+								data-vaul-no-drag
+								className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+								style={sideBySideTabScrollStyle}
+							>
+								<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+									<div className="grid gap-3">
+										{renderSection("Experimental Data")}
+									</div>
+								</div>
 							</div>
-						</div>
-					)}
-				</TabsContent>
-				<TabsContent
-					value="Experimental Data"
-					className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
-				>
-					{hasSideBySideReviewLayout ? (
-						<div
-							data-vaul-no-drag
-							className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-							style={sideBySideTabScrollStyle}
-						>
+						) : (
 							<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
 								<div className="grid gap-3">
 									{renderSection("Experimental Data")}
 								</div>
 							</div>
-						</div>
-					) : (
-						<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-							<div className="grid gap-3">
-								{renderSection("Experimental Data")}
-							</div>
-						</div>
-					)}
-				</TabsContent>
-			</div>
+						)}
+					</TabsContent>
+				</div>
+			</ScrollArea>
 		</Tabs>
 	);
 
