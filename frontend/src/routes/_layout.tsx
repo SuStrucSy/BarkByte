@@ -4,13 +4,14 @@ import { ForbiddenBoundary } from "@/components/Common/ForbiddenBoundary";
 import Navbar from "@/components/Common/Navbar";
 import AppSidebar from "@/components/Common/NavSidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Disclaimer } from "@/components/Common/Disclaimer";
 
 export const Route = createFileRoute("/_layout")({
   component: Layout,
 });
 
 function Layout() {
-  const [disclaimerVisible, setDisclaimerVisible] = useState(() => {
+  const [disclaimerVisible, setDisclaimerVisible] = useState<boolean>(() => {
     return localStorage.getItem("disclaimer-hidden") !== "true";
   });
 
@@ -32,39 +33,10 @@ function Layout() {
           </ForbiddenBoundary>
         </div>
         <footer className="shrink-0 border-t border-border">
-          {disclaimerVisible ? (
-            <div className="flex items-start gap-4 px-5 py-4">
-              <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  Disclaimer:{" "}
-                </span>
-                This database contains curated data from cited references for
-                research and educational purposes. It is intended as a
-                preliminary engineering resource and does not replace
-                project-specific design, codes, or manufacturer documentation.
-                Use is at your own discretion, provided "as is", and the authors
-                are not liable for any outcomes. Users should verify information
-                with original sources.
-              </p>
-              <button
-                type="button"
-                onClick={() => setDisclaimerVisible(false)}
-                className="shrink-0 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
-              >
-                Hide
-              </button>
-            </div>
-          ) : (
-            <div className="flex justify-end px-5 py-2">
-              <button
-                type="button"
-                onClick={() => setDisclaimerVisible(true)}
-                className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
-              >
-                Show disclaimer
-              </button>
-            </div>
-          )}
+          <Disclaimer
+            isVisible={disclaimerVisible}
+            setVisible={setDisclaimerVisible}
+          />
         </footer>
       </SidebarInset>
     </SidebarProvider>

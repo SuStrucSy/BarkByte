@@ -31,9 +31,7 @@ export const Route = createRootRoute({
       <AnalyticsListener />
       <Outlet />
       <Toaster richColors position="top-center" />
-      <Suspense>
-        <TanStackDevtools />
-      </Suspense>
+      <Suspense>{/*<TanStackDevtools />*/}</Suspense>
     </>
   ),
   notFoundComponent: () => <NotFound />,
