@@ -2,6 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from jwt.exceptions import ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
@@ -277,7 +278,13 @@ def verify_email(session: SessionDep, body: NewAccount) -> Message:
     """
     verify email and reset password.
     """
-    email = verify_token(body.token, "email_verification")
+    try:
+        email = verify_token(body.token, "email_verification")
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=410,
+            detail="Verification link has expired. Please request a new one at /users/resend-verification.",
+        )
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
     user = user_crud.get_user_by_email(session=session, email=email)
@@ -293,3 +300,29 @@ def verify_email(session: SessionDep, body: NewAccount) -> Message:
     session.add(user)
     session.commit()
     return Message(message="User account activated successfully.")
+
+
+@router.post("/resend-verification", response_model=Message)
+def resend_verification(session: SessionDep, email: str) -> Any:
+    user = user_crud.get_user_by_email(session=session, email=email)
+
+    # Intentionally vague to avoid email enumeration
+    generic_response = Message(
+        message="If this email is pending verification, a new link has been sent."
+    )
+
+    if not user or user.is_active:
+        return generic_response
+
+    if settings.emails_enabled:
+        token = generate_email_verification_token(email=user.email)
+        email_data = generate_signup_email(
+            email_to=user.email, email=user.email, token=token
+        )
+        send_email(
+            email_to=user.email,
+            subject=email_data.subject,
+            html_content=email_data.html_content,
+        )
+
+    return generic_response

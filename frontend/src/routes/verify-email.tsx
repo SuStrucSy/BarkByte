@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod/v4";
 import ErrorComponent from "@/components/Common/Error";
-import { VerifyEmailComponent } from "@/components/Common/VerifyEmail";
+import { VerifyEmailComponent } from "@/components/Auth/VerifyEmail";
 import { usersVerifyEmail } from "@/api/endpoints/users/users";
 import { useState } from "react";
 

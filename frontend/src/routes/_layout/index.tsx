@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Mail, Users } from "lucide-react";
+import { Mail, Users, ExternalLink, ChartSpline, Layers } from "lucide-react";
 import joineryOverview from "@/assets/joineryTypes/all.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,111 +75,172 @@ const joineryHotspots = [
 
 function Home() {
   return (
-    <div className="flex min-h-full flex-col px-2 sm:px-2 md:px-4">
-      <div className="flex flex-1 items-center justify-center py-2 sm:py-4 md:py-6">
-        <Card className="mx-auto w-full max-w-6xl gap-0 overflow-hidden border-border/70 bg-card/95 py-0 shadow-xl">
-          <CardContent className="grid gap-0 p-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="flex flex-col justify-center p-5 text-left sm:p-8 md:p-10 lg:text-left">
-              <h1 className="text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
-                Timverse
-              </h1>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Timverse gives civil engineers a structured way to move from
-                connection detail to evidence. The visual map on the right acts
-                as an entry point into the dataset, helping teams identify
-                joinery types, jump into related specimens, and compare how
-                different materials, setups, and failure patterns behave without
-                digging through disconnected notes and spreadsheets.
-              </p>
-              <div className="mt-6 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
-                <Button asChild variant="secondary" className="w-full min-w-0 px-2 sm:w-auto sm:px-4">
-                  <Link to="/team">
-                    <Users className="h-4 w-4" />
-                    Team
-                  </Link>
-                </Button>
-                <Button asChild variant="secondary" className="w-full min-w-0 px-2 sm:w-auto sm:px-4">
-                  <a href="mailto:aryan.rad@utoronto.ca">
-                    <Mail className="h-4 w-4" />
-                    Contact
-                  </a>
-                </Button>
-                <Button asChild variant="secondary" className="w-full min-w-0 px-2 sm:w-auto sm:px-4">
-                  <a
-                    href="https://github.com/SuStrucSy/BarkByte"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <svg
-                      role="img"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4 fill-current text-muted-foreground)]
-                               hover:text--foreground)] dark:hover:text-white
-                               transition-all duration-200
-                               hover:scale-110 hover:-translate-y-0.5"
-                    >
-                      <title>GitHub</title>
-                      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-                    </svg>
-                    GitHub
-                  </a>
-                </Button>
+    <div className="flex items-center justify-center overflow p-4 mt-4 md:mt-10 lg:mt-14">
+      <Card className="w-full max-w-6xl overflow-hidden border-border/60 shadow-2xl">
+        <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.25fr]">
+          {/* ── Left: content panel ── */}
+          <div className="flex flex-col justify-between gap-8 p-8 md:p-10 lg:p-12">
+            <div className="space-y-6">
+              {/* Brand name — small, sets context before the headline */}
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-border" />
+                <span className="font-serif text-sm italic text-muted-foreground">
+                  Timverse
+                </span>
+              </div>
+
+              {/* Headline — value proposition, not the product name */}
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl lg:text-5xl leading-tight">
+                  Curated experimental data on mass timber connections
+                </h1>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-[0.95rem]">
+                  Browse specimens by joinery type, material, and failure mode.
+                  Trace from connection detail to test conditions and outcomes —
+                  without digging through disconnected notes and spreadsheets.
+                </p>
+              </div>
+
+              {/* Stat strip */}
+              <div className="flex items-center gap-4 border-t border-border pt-5">
+                <div className="shrink-0 text-center">
+                  <p className="text-2xl font-semibold tracking-tight text-foreground">
+                    7
+                  </p>
+                  <p className="text-[0.65rem] uppercase tracking-widest text-muted-foreground">
+                    Joinery types
+                  </p>
+                </div>
+                <div className="h-8 w-px shrink-0 bg-border" />
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Each hotspot on the diagram links to a connection family
+                </p>
               </div>
             </div>
-            <div className="relative hidden min-h-[220px] border-t border-border/70 bg-gradient-to-br from-muted/40 via-background to-muted/10 sm:min-h-[320px] lg:block lg:min-h-full lg:border-t-0 lg:border-l">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--viz-2)_20%,transparent),transparent_55%)]" />
-              <div className="relative flex h-full items-center justify-center p-2.5 sm:p-4 md:p-5">
-                <div className="w-full rounded-[1.25rem] border border-border/70 bg-background/90 p-2.5 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.35)] backdrop-blur-sm sm:rounded-[2rem] sm:p-4">
-                  <div className="relative">
-                    <img
-                      src={joineryOverview}
-                      alt="Overview sheet of timber joinery types"
-                      className="h-auto max-h-[200px] w-full rounded-[1rem] border border-border/50 bg-white object-contain sm:max-h-none sm:rounded-[1.25rem]"
-                    />
-                    {joineryHotspots.map((hotspot) => (
-                      <Tooltip key={hotspot.id}>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="absolute size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-[var(--viz-3)] shadow-[0_0_0_5px_color-mix(in_srgb,var(--viz-2)_18%,transparent)] transition-transform hover:scale-110 focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-4 sm:shadow-[0_0_0_6px_color-mix(in_srgb,var(--viz-2)_18%,transparent)]"
-                            style={{
-                              left: hotspot.left,
-                              top: hotspot.top,
-                            }}
-                            aria-label={`${hotspot.label}: ${hotspot.description}`}
-                          >
-                            <span className="absolute inset-0 animate-ping rounded-full bg-[var(--viz-2)] opacity-35" />
-                            <span className="absolute inset-[3px] rounded-full bg-background/85" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-56">
-                          <div className="space-y-1">
-                            <p className="font-medium">{hotspot.label}</p>
-                            <p className="text-background/80">
-                              {hotspot.description}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
-                    Each hotspot points to a connection family so researchers
-                    can start from a timber detail and trace the experiments,
-                    conditions, and outcomes tied to it.
+
+            {/* CTAs */}
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Primary */}
+                <Button asChild>
+                  <Link to="/specimens">
+                    <Layers className="h-3.5 w-3.5" />
+                    Browse Specimens
+                  </Link>
+                </Button>
+
+                {/* Secondary */}
+                <Button asChild variant="secondary" size="sm">
+                  <Link to="/dashboard">
+                    <ChartSpline className="h-3.5 w-3.5" />
+                    Dashboard
+                  </Link>
+                </Button>
+
+                {/* Tertiary — icon-only, visually recede */}
+                <div className="ml-1 flex items-center gap-0.5">
+                  <Button asChild size="sm" variant="ghost">
+                    <Link to="/team" aria-label="Team">
+                      <Users className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="ghost">
+                    <a href="mailto:aryan.rad@utoronto.ca" aria-label="Contact">
+                      <Mail className="h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                  <Button asChild size="sm" variant="ghost">
+                    <a
+                      href="https://github.com/SuStrucSy/BarkByte"
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="GitHub repository"
+                    >
+                      <svg
+                        role="img"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-3.5 w-3.5 fill-current"
+                      >
+                        <title>GitHub</title>
+                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                      </svg>
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-[0.65rem] leading-relaxed text-muted-foreground/60">
+                University of Toronto · Civil & Mineral Engineering · Data
+                Sciences Institute
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right: interactive image panel ── */}
+          <div className="relative min-h-110 border-t border-border/60 bg-muted/30 lg:min-h-full lg:border-t-0 lg:border-l">
+            {/* Subtle grid texture */}
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(0deg,currentColor,currentColor 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,currentColor,currentColor 1px,transparent 1px,transparent 40px)",
+              }}
+            />
+
+            {/* Corner label */}
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-md border border-border/60 bg-background/80 px-2.5 py-1 backdrop-blur-sm">
+              <span className="size-1.5 rounded-full bg-viz-3" />
+              <span className="text-[0.6rem] font-medium tracking-widest uppercase text-muted-foreground">
+                {joineryHotspots.length} connections mapped
+              </span>
+            </div>
+
+            <div className="relative flex h-full items-center justify-center p-6 md:p-8">
+              <div className="w-full overflow-hidden rounded-2xl border border-border/50 bg-background/70 shadow-xl backdrop-blur-sm">
+                <div className="relative">
+                  <img
+                    src={joineryOverview}
+                    alt="Overview sheet of timber joinery types"
+                    className="h-auto w-full object-contain"
+                  />
+                  {joineryHotspots.map((hotspot) => (
+                    <Tooltip key={hotspot.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-viz-3 shadow-[0_0_0_6px_color-mix(in_srgb,var(--viz-2)_18%,transparent)] transition-transform hover:scale-125 focus-visible:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          style={{ left: hotspot.left, top: hotspot.top }}
+                          aria-label={`${hotspot.label}: ${hotspot.description}`}
+                        >
+                          <span className="absolute inset-0 animate-ping rounded-full bg-viz-2 opacity-35" />
+                          <span className="absolute inset-0.75 rounded-full bg-background/85" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-56">
+                        <div className="space-y-1">
+                          <p className="font-medium">{hotspot.label}</p>
+                          <p className="text-muted text-xs">
+                            {hotspot.description}
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+
+                {/* Image footer */}
+                <div className="flex items-center justify-between border-t border-border/50 px-4 py-2.5">
+                  <p className="text-xs text-muted-foreground">
+                    Hover a hotspot to identify the connection type
                   </p>
+                  <ExternalLink className="h-3 w-3 text-muted-foreground/50" />
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      <p className="mx-auto mt-4 max-w-3xl px-2 pb-2 text-center text-xs leading-relaxed text-muted-foreground sm:mt-6 sm:px-4 md:mt-auto">
-        This project is supported by the Department of Civil and Mineral
-        Engineering, and the Data Sciences Institute at the University of
-        Toronto.
-      </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

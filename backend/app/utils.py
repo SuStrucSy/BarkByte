@@ -7,7 +7,7 @@ from typing import Any
 import emails
 import jwt
 from jinja2 import Template
-from jwt.exceptions import InvalidTokenError
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 from app.core import security
 from app.core.config import settings
@@ -60,6 +60,8 @@ def verify_token(token: str, expected_type: str) -> str | None:
             return None
 
         return str(decoded["sub"])
+    except ExpiredSignatureError:
+        raise  # let callers handle this case explicitly
     except InvalidTokenError:
         return None
 
@@ -67,7 +69,7 @@ def verify_token(token: str, expected_type: str) -> str | None:
 def generate_reset_password_email(email: str, username: str, token: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Password recovery for user {username}"
-    link = f"{settings.FRONTEND_HOST}/reset-password?token={token}"
+    link = f"{settings.FRONTEND_HOST}/reset-password?token={token}&email={email}"
     html_content = render_email_template(
         template_name="reset_password.html",
         context={
@@ -86,7 +88,7 @@ def generate_reset_password_email(email: str, username: str, token: str) -> Emai
 def generate_signup_email(email_to: str, email: str, token: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Welcome {email}!"
-    link = f"{settings.FRONTEND_HOST}/verify-email?token={token}"
+    link = f"{settings.FRONTEND_HOST}/verify-email?token={token}&email={email_to}"
     print(f"{settings.FRONTEND_HOST}/logo.png")
     html_content = render_email_template(
         template_name="verify_email.html",  # TODO: need verify-email.html to be updated also!
@@ -139,7 +141,7 @@ def send_email(
 def generate_new_account_email(email_to: str, username: str, token: str) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - New account for user {username}"
-    link = f"{settings.FRONTEND_HOST}/set-password?token={token}"
+    link = f"{settings.FRONTEND_HOST}/set-password?token={token}&email={email_to}"
     html_content = render_email_template(
         template_name="new_account.html",
         context={

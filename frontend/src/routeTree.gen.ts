@@ -10,12 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SetPasswordRouteImport } from './routes/set-password'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutTeamRouteImport } from './routes/_layout/team'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
@@ -23,6 +19,11 @@ import { Route as LayoutReferencesRouteImport } from './routes/_layout/reference
 import { Route as LayoutDashboardRouteImport } from './routes/_layout/dashboard'
 import { Route as LayoutCompareRouteImport } from './routes/_layout/compare'
 import { Route as LayoutAuthenticatedRouteImport } from './routes/_layout/_authenticated'
+import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
+import { Route as AuthSetPasswordRouteImport } from './routes/_auth/set-password'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
+import { Route as AuthRecoverPasswordRouteImport } from './routes/_auth/recover-password'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as LayoutSpecimensIndexRouteImport } from './routes/_layout/specimens/index'
 import { Route as LayoutSpecimensSpecimenIdRouteImport } from './routes/_layout/specimens/$specimenId'
 import { Route as LayoutAuthenticatedAdminRouteImport } from './routes/_layout/_authenticated/admin'
@@ -34,33 +35,12 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SetPasswordRoute = SetPasswordRouteImport.update({
-  id: '/set-password',
-  path: '/set-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecoverPasswordRoute = RecoverPasswordRouteImport.update({
-  id: '/recover-password',
-  path: '/recover-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
@@ -97,6 +77,31 @@ const LayoutAuthenticatedRoute = LayoutAuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => LayoutRoute,
 } as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSetPasswordRoute = AuthSetPasswordRouteImport.update({
+  id: '/set-password',
+  path: '/set-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthRecoverPasswordRoute = AuthRecoverPasswordRouteImport.update({
+  id: '/recover-password',
+  path: '/recover-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
 const LayoutSpecimensIndexRoute = LayoutSpecimensIndexRouteImport.update({
   id: '/specimens/',
   path: '/specimens/',
@@ -129,12 +134,12 @@ const LayoutAuthenticatedSpecimensNewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
-  '/login': typeof LoginRoute
-  '/recover-password': typeof RecoverPasswordRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/set-password': typeof SetPasswordRoute
-  '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/login': typeof AuthLoginRoute
+  '/recover-password': typeof AuthRecoverPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/set-password': typeof AuthSetPasswordRoute
+  '/signup': typeof AuthSignupRoute
   '/compare': typeof LayoutCompareRoute
   '/dashboard': typeof LayoutDashboardRoute
   '/references': typeof LayoutReferencesRoute
@@ -147,13 +152,13 @@ export interface FileRoutesByFullPath {
   '/specimens/pending': typeof LayoutAuthenticatedSpecimensPendingRoute
 }
 export interface FileRoutesByTo {
-  '/login': typeof LoginRoute
-  '/recover-password': typeof RecoverPasswordRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/set-password': typeof SetPasswordRoute
-  '/signup': typeof SignupRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/': typeof LayoutIndexRoute
+  '/verify-email': typeof VerifyEmailRoute
+  '/login': typeof AuthLoginRoute
+  '/recover-password': typeof AuthRecoverPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/set-password': typeof AuthSetPasswordRoute
+  '/signup': typeof AuthSignupRoute
   '/compare': typeof LayoutCompareRoute
   '/dashboard': typeof LayoutDashboardRoute
   '/references': typeof LayoutReferencesRoute
@@ -167,13 +172,14 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_auth': typeof AuthRouteWithChildren
   '/_layout': typeof LayoutRouteWithChildren
-  '/login': typeof LoginRoute
-  '/recover-password': typeof RecoverPasswordRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/set-password': typeof SetPasswordRoute
-  '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/recover-password': typeof AuthRecoverPasswordRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
+  '/_auth/set-password': typeof AuthSetPasswordRoute
+  '/_auth/signup': typeof AuthSignupRoute
   '/_layout/_authenticated': typeof LayoutAuthenticatedRouteWithChildren
   '/_layout/compare': typeof LayoutCompareRoute
   '/_layout/dashboard': typeof LayoutDashboardRoute
@@ -191,12 +197,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/verify-email'
     | '/login'
     | '/recover-password'
     | '/reset-password'
     | '/set-password'
     | '/signup'
-    | '/verify-email'
     | '/compare'
     | '/dashboard'
     | '/references'
@@ -209,13 +215,13 @@ export interface FileRouteTypes {
     | '/specimens/pending'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/verify-email'
     | '/login'
     | '/recover-password'
     | '/reset-password'
     | '/set-password'
     | '/signup'
-    | '/verify-email'
-    | '/'
     | '/compare'
     | '/dashboard'
     | '/references'
@@ -228,13 +234,14 @@ export interface FileRouteTypes {
     | '/specimens/pending'
   id:
     | '__root__'
+    | '/_auth'
     | '/_layout'
-    | '/login'
-    | '/recover-password'
-    | '/reset-password'
-    | '/set-password'
-    | '/signup'
     | '/verify-email'
+    | '/_auth/login'
+    | '/_auth/recover-password'
+    | '/_auth/reset-password'
+    | '/_auth/set-password'
+    | '/_auth/signup'
     | '/_layout/_authenticated'
     | '/_layout/compare'
     | '/_layout/dashboard'
@@ -250,12 +257,8 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthRoute: typeof AuthRouteWithChildren
   LayoutRoute: typeof LayoutRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  RecoverPasswordRoute: typeof RecoverPasswordRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
-  SetPasswordRoute: typeof SetPasswordRoute
-  SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
@@ -268,46 +271,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/set-password': {
-      id: '/set-password'
-      path: '/set-password'
-      fullPath: '/set-password'
-      preLoaderRoute: typeof SetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recover-password': {
-      id: '/recover-password'
-      path: '/recover-password'
-      fullPath: '/recover-password'
-      preLoaderRoute: typeof RecoverPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_layout': {
       id: '/_layout'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_layout/': {
@@ -359,6 +334,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_auth/signup': {
+      id: '/_auth/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/set-password': {
+      id: '/_auth/set-password'
+      path: '/set-password'
+      fullPath: '/set-password'
+      preLoaderRoute: typeof AuthSetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/recover-password': {
+      id: '/_auth/recover-password'
+      path: '/recover-password'
+      fullPath: '/recover-password'
+      preLoaderRoute: typeof AuthRecoverPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_layout/specimens/': {
       id: '/_layout/specimens/'
       path: '/specimens'
@@ -396,6 +406,24 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRecoverPasswordRoute: typeof AuthRecoverPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSetPasswordRoute: typeof AuthSetPasswordRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRecoverPasswordRoute: AuthRecoverPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSetPasswordRoute: AuthSetPasswordRoute,
+  AuthSignupRoute: AuthSignupRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface LayoutAuthenticatedRouteChildren {
   LayoutAuthenticatedAdminRoute: typeof LayoutAuthenticatedAdminRoute
@@ -441,12 +469,8 @@ const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  AuthRoute: AuthRouteWithChildren,
   LayoutRoute: LayoutRouteWithChildren,
-  LoginRoute: LoginRoute,
-  RecoverPasswordRoute: RecoverPasswordRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
-  SetPasswordRoute: SetPasswordRoute,
-  SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }
 export const routeTree = rootRouteImport
