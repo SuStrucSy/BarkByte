@@ -126,7 +126,7 @@ export function RadarMetricsChart({
 		<ChartContainer
 			config={chartConfig}
 			className={[
-				"w-full min-w-0 aspect-square max-w-[520px] mx-auto",
+				"mx-auto aspect-square w-full min-w-0 max-w-[520px] overflow-visible",
 				className,
 			]
 				.filter(Boolean)

@@ -51,7 +51,7 @@ import {
 	getExperimentalLabel,
 	getExperimentalUnit,
 } from "@/lib/constants";
-import { humanizeLabel } from "@/lib/utils";
+import { cn, humanizeLabel } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/compare")({
 	staticData: {
@@ -313,23 +313,31 @@ function ComparePage() {
 	const { data: specimens = [], isLoading, isError, error } = useAllSpecimens();
 	const { isMobile } = useIsMobile();
 	const [isDesktop, setIsDesktop] = useState(false);
+	const [isPortraitTablet, setIsPortraitTablet] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Array<string | null>>(
 		Array.from({ length: COMPARE_SLOT_COUNT }, () => null),
 	);
-	const visibleSlotCount = isMobile ? 2 : COMPARE_SLOT_COUNT;
+	const useTwoColumnCompare = isMobile || isPortraitTablet;
+	const visibleSlotCount = useTwoColumnCompare ? 2 : COMPARE_SLOT_COUNT;
 	const visibleSelectedIds = selectedIds.slice(0, visibleSlotCount);
 
 	useEffect(() => {
-		const mediaQuery = window.matchMedia("(min-width: 1280px)");
-		const updateDesktopState = () => {
-			setIsDesktop(mediaQuery.matches);
+		const desktopQuery = window.matchMedia("(min-width: 1280px)");
+		const portraitTabletQuery = window.matchMedia(
+			"(min-width: 768px) and (max-width: 1279px) and (orientation: portrait)",
+		);
+		const updateViewportState = () => {
+			setIsDesktop(desktopQuery.matches);
+			setIsPortraitTablet(portraitTabletQuery.matches);
 		};
 
-		updateDesktopState();
-		mediaQuery.addEventListener("change", updateDesktopState);
+		updateViewportState();
+		desktopQuery.addEventListener("change", updateViewportState);
+		portraitTabletQuery.addEventListener("change", updateViewportState);
 
 		return () => {
-			mediaQuery.removeEventListener("change", updateDesktopState);
+			desktopQuery.removeEventListener("change", updateViewportState);
+			portraitTabletQuery.removeEventListener("change", updateViewportState);
 		};
 	}, []);
 
@@ -430,7 +438,14 @@ function ComparePage() {
 							{section.title}
 						</div>
 						{section.title === "Meta Data" ? (
-							<div className="mb-6 grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3">
+							<div
+								className={cn(
+									"mb-6 grid min-w-0 gap-3",
+									useTwoColumnCompare
+										? "grid-cols-2"
+										: "grid-cols-2 md:grid-cols-3",
+								)}
+							>
 								{comparisonSlots.map((specimen, index) => (
 									<div
 										key={`compare-card-link-${specimen?.id ?? `empty-${index}`}`}
@@ -453,14 +468,21 @@ function ComparePage() {
 							</div>
 						) : null}
 						{section.title === "Experimental Data" ? (
-							<div className="mb-8 grid min-w-0 grid-cols-2 gap-4 md:grid-cols-3">
+							<div
+								className={cn(
+									"mb-8 grid min-w-0 gap-4",
+									useTwoColumnCompare
+										? "grid-cols-2"
+										: "grid-cols-2 md:grid-cols-3",
+								)}
+							>
 								{comparisonSlots.map((specimen, index) => (
 									<div
 										key={`compare-radar-${specimen?.id ?? `empty-${index}`}`}
 										className={`min-w-0 ${index > 0 ? "md:pl-4" : ""}`}
 									>
 										{specimen ? (
-											<div className="grid min-w-0 gap-2 overflow-hidden">
+											<div className="grid min-w-0 gap-2 overflow-visible">
 												<div className="text-center text-sm font-medium text-foreground">
 													Quantitative Mechanical Measures
 												</div>
@@ -478,7 +500,14 @@ function ComparePage() {
 						<div className="flex flex-col gap-4">
 							{section.fields.map((field) => (
 								<div key={field.key}>
-									<div className="grid min-w-0 grid-cols-2 md:grid-cols-3">
+									<div
+										className={cn(
+											"grid min-w-0",
+											useTwoColumnCompare
+												? "grid-cols-2"
+												: "grid-cols-2 md:grid-cols-3",
+										)}
+									>
 										{comparisonSlots.map((specimen, index) => {
 											const renderedValue = specimen
 												? field.render(specimen)
@@ -505,7 +534,12 @@ function ComparePage() {
 
 	return (
 		<div className="flex min-h-0 flex-col gap-6 px-2 sm:px-2 md:px-4 xl:h-full xl:overflow-hidden">
-			<div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+			<div
+				className={cn(
+					"grid gap-3 md:gap-4",
+					useTwoColumnCompare ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3",
+				)}
+			>
 				{visibleSlots.map(({ slotIndex, specimen, availableSpecimens }) => {
 					return specimen ? (
 						<Item
