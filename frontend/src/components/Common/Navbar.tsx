@@ -1,8 +1,13 @@
 import { useMatches } from "@tanstack/react-router";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
-function Navbar() {
+interface NavbarProps {
+	onShowDisclaimer: () => void;
+}
+
+function Navbar({ onShowDisclaimer }: NavbarProps) {
 	const matches = useMatches();
 	const { state } = useSidebar();
 
@@ -31,6 +36,17 @@ function Navbar() {
 					/>
 				</div>
 				<h1 className="min-w-0 truncate text-base font-medium">{title}</h1>
+				<div className="ml-auto">
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={onShowDisclaimer}
+						className="h-8 border-0 px-2 text-sm text-muted-foreground hover:text-foreground"
+					>
+						Show disclaimer
+					</Button>
+				</div>
 			</div>
 		</header>
 	);

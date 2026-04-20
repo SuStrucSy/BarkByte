@@ -26,18 +26,16 @@ function Layout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <Navbar />
+        <Navbar onShowDisclaimer={() => setDisclaimerVisible(true)} />
+        <Disclaimer
+          isVisible={disclaimerVisible}
+          setVisible={setDisclaimerVisible}
+        />
         <div className="flex flex-col flex-1 p-5 overflow-auto">
           <ForbiddenBoundary>
             <Outlet />
           </ForbiddenBoundary>
         </div>
-        <footer className="shrink-0 border-t border-border">
-          <Disclaimer
-            isVisible={disclaimerVisible}
-            setVisible={setDisclaimerVisible}
-          />
-        </footer>
       </SidebarInset>
     </SidebarProvider>
   );
