@@ -30,9 +30,10 @@ interface SetPasswordForm {
 
 interface SetPasswordFormProps {
   onSubmit: SubmitHandler<SetPasswordForm>;
+  email: string;
 }
 
-export function SetPasswordForm({ onSubmit }: SetPasswordFormProps) {
+export function SetPasswordForm({ onSubmit, email }: SetPasswordFormProps) {
   const form = useForm<SetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
     mode: "onBlur",
@@ -49,7 +50,12 @@ export function SetPasswordForm({ onSubmit }: SetPasswordFormProps) {
         <FieldSet>
           <FieldGroup>
             <div className="flex flex-col items-center gap-1 text-center">
-              <h1 className="text-2xl font-bold">Activate Account</h1>
+              <h1 className="text-2xl font-bold">
+                Activate Account for{" "}
+                <span className="dark:text-indigo-300 text-indigo-600 font-extrabold">
+                  {email}
+                </span>
+              </h1>
               <p className="text-sm text-balance text-muted-foreground">
                 Enter your new password and confirm it to activate your account.
               </p>

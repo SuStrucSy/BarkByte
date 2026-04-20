@@ -14,6 +14,7 @@ interface SetPasswordForm {
 
 const searchSchema = z.object({
   token: z.string().min(1),
+  email: z.email(),
 });
 
 export const Route = createFileRoute("/_auth/set-password")({
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/_auth/set-password")({
 });
 
 function SetPasswordPage() {
-  const { token } = Route.useSearch();
+  const { token, email } = Route.useSearch();
   const navigate = useNavigate();
 
   const mutation = useLoginSetPassword({
@@ -48,5 +49,5 @@ function SetPasswordPage() {
     mutation.mutateAsync({ data: { new_password: data.new_password, token } });
   };
 
-  return <SetPasswordForm onSubmit={onSubmit} />;
+  return <SetPasswordForm onSubmit={onSubmit} email={email} />;
 }
