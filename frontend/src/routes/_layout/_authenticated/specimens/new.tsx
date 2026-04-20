@@ -285,7 +285,7 @@ function NewSpecimen() {
 	const dois: DOIPublic[] = doisData?.data || [];
 
 	return (
-		<div className="w-6xl space-y-4 self-center">
+		<div className="w-full max-w-6xl mx-auto space-y-4 px-4 sm:px-6">
 			{/* ── Existing DOI quick-fill ─────────────────────────────────────── */}
 			{currentStep === 0 && (
 				<Card>
@@ -351,36 +351,58 @@ function NewSpecimen() {
 			)}
 
 			{/* ── Step indicator ──────────────────────────────────────────────── */}
-			<div className="flex items-center gap-2">
-				{steps.map((step, i) => (
-					<div key={step.id} className="flex items-center gap-2 flex-1">
+			<div className="flex items-center gap-1 sm:gap-2">
+				{steps.map((step, i) => {
+					const isCurrent = i === currentStep
+					const isComplete = i < currentStep
+
+					return (
 						<div
+							key={step.id}
 							className={[
-								"flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold shrink-0 transition-colors",
-								i < currentStep
-									? "bg-primary text-primary-foreground"
-									: i === currentStep
-										? "bg-primary/20 text-primary ring-2 ring-primary"
-										: "bg-muted text-muted-foreground",
+								"flex items-center gap-1 sm:gap-2 min-w-0",
+								isCurrent ? "flex-1" : "flex-none sm:flex-1",
 							].join(" ")}
 						>
-							{i < currentStep ? "✓" : i + 1}
+							<div
+								className={[
+									"flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold shrink-0 transition-colors",
+									isComplete
+										? "bg-primary text-primary-foreground"
+										: isCurrent
+											? "bg-primary/20 text-primary ring-2 ring-primary"
+											: "bg-muted text-muted-foreground",
+								].join(" ")}
+							>
+								{isComplete ? "✓" : i + 1}
+							</div>
+
+							<span
+								className={[
+									"text-xs truncate min-w-0",
+									isCurrent
+										? "inline text-foreground font-medium"
+										: "hidden text-muted-foreground",
+									"sm:inline",
+								].join(" ")}
+							>
+								{step.title}
+							</span>
+
+							{i < steps.length - 1 && (
+								<>
+									{/* mobile: only show line after current step */}
+									{i === currentStep && (
+										<div className="flex-1 h-px bg-border mx-1 sm:hidden" />
+									)}
+
+									{/* desktop: show all lines */}
+									<div className="hidden sm:block flex-1 h-px bg-border mx-1" />
+								</>
+							)}
 						</div>
-						<span
-							className={[
-								"text-xs truncate",
-								i === currentStep
-									? "text-foreground font-medium"
-									: "text-muted-foreground",
-							].join(" ")}
-						>
-							{step.title}
-						</span>
-						{i < steps.length - 1 && (
-							<div className="flex-1 h-px bg-border mx-1" />
-						)}
-					</div>
-				))}
+					)
+				})}
 			</div>
 
 			{/* ── Main form card ──────────────────────────────────────────────── */}
