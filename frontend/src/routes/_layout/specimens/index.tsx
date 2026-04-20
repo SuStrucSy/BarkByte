@@ -73,6 +73,7 @@ const specimensSearchSchema = z.object({
 });
 
 const TABLE_PANEL_HEIGHT = "flex-1 min-h-0";
+const WIDE_TABLE_LAYOUT_MEDIA_QUERY = "(min-width: 1280px)";
 const isNonEmptyString = (value: unknown): value is string =>
 	typeof value === "string" && value.trim().length > 0;
 type Bounds = { min: number; max: number };
@@ -251,8 +252,14 @@ function SpecimensKitTable() {
 		getInitialQuerySearchTerm(search.q),
 	).current;
 
-	// Controls whether the right-side filter sidebar is visible.
-	const [controlsOpen, setControlsOpen] = useState(true);
+	// Keep filters open by default only when there's enough horizontal space for the table.
+	const [controlsOpen, setControlsOpen] = useState(() => {
+		if (typeof window === "undefined") {
+			return true;
+		}
+
+		return window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY).matches;
+	});
 	// Free-text / command input used in the top search bar.
 	const [searchTerm, setSearchTerm] = useState(initialBrowserQuerySearchTerm);
 	const searchTermRef = useRef(initialBrowserQuerySearchTerm);
@@ -276,6 +283,20 @@ function SpecimensKitTable() {
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
 		() => getInitialColumnVisibility(),
 	);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY);
+		const syncControlsVisibility = () => {
+			setControlsOpen(mediaQuery.matches);
+		};
+
+		syncControlsVisibility();
+		mediaQuery.addEventListener("change", syncControlsVisibility);
+
+		return () => {
+			mediaQuery.removeEventListener("change", syncControlsVisibility);
+		};
+	}, []);
 
 	const syncSearchState = useCallback(
 		(overrides: Partial<RelevantSearchState>) => {
