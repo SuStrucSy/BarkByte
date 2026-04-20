@@ -31,10 +31,7 @@ import type {
 	SpecimenPublic,
 } from "@/api/model";
 import { SkeletonCard } from "@/components/Skeleton/SkeletonCard";
-import {
-	type ActiveAction,
-	SpecimenPendingCard,
-} from "@/components/Specimens/SpecimenPendingCard";
+import { SpecimenPendingCard } from "@/components/Specimens/SpecimenPendingCard";
 import {
 	type SpecimenStatus,
 	StatusFilter,
@@ -69,7 +66,6 @@ export const Route = createFileRoute(
 });
 
 function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
-	const [activeAction, setActiveAction] = useState<ActiveAction>(null);
 	const [comment, setComment] = useState("");
 	const [openStacks, setOpenStacks] = useState<string[]>([]);
 	const queryClient = useQueryClient();
@@ -167,7 +163,6 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 				pendingId: id,
 				data: { comment_by_reviewer: comment } as never,
 			});
-			setActiveAction(null);
 			setComment("");
 		} catch (err) {
 			toast.error("Approval failed", {
@@ -183,7 +178,6 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 				pendingId: id,
 				data: { comment_by_reviewer: comment } as never,
 			});
-			setActiveAction(null);
 			setComment("");
 		} catch (err) {
 			toast.error("Rejection failed", {
@@ -198,7 +192,6 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 			await deleteMutation.mutateAsync({
 				pendingId: id,
 			});
-			setActiveAction(null);
 			setComment("");
 		} catch (err) {
 			toast.error("Delete failed", {
@@ -349,8 +342,6 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 						commentByAuthor={specimen.comment_by_author}
 						commentByReviewer={specimen.comment_by_reviewer}
 						comment={comment}
-						activeAction={activeAction}
-						setActiveAction={setActiveAction}
 						setComment={setComment}
 						onApprove={onApprove}
 						onReject={onReject}
@@ -560,7 +551,10 @@ function PendingSpecimens() {
 				<Button
 					type="button"
 					variant="outline"
+					size="icon"
 					onClick={() => void refreshPendingSpecimens()}
+					aria-label="Refresh pending specimens"
+					title="Refresh pending specimens"
 				>
 					<RefreshCcwIcon
 						style={{
@@ -568,7 +562,6 @@ function PendingSpecimens() {
 							transition: "transform 900ms cubic-bezier(0.22, 1, 0.36, 1)",
 						}}
 					/>
-					Refresh
 				</Button>
 			</div>
 			<PendingSpecimensGrid status={status} />
