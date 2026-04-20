@@ -75,12 +75,12 @@ const joineryHotspots = [
 
 function Home() {
   return (
-    <div className="flex items-center justify-center overflow p-4 mt-4 md:mt-10 lg:mt-14">
+    <div className="flex items-center justify-center overflow  mt-4 md:mt-10 lg:mt-14">
       <Card className="w-full max-w-6xl overflow-hidden border-border/60 shadow-2xl">
         <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.25fr]">
           {/* ── Left: content panel ── */}
-          <div className="flex flex-col justify-between gap-8 p-8 md:p-10 lg:p-12">
-            <div className="space-y-6">
+          <div className="flex flex-col justify-between gap-2 md:gap-8 p-6 md:p-10 lg:p-12">
+            <div className="space-y-3 md:space-y-6">
               {/* Brand name — small, sets context before the headline */}
               <div className="flex items-center gap-2">
                 <span className="h-px w-5 bg-border" />
@@ -102,7 +102,7 @@ function Home() {
               </div>
 
               {/* Stat strip */}
-              <div className="flex items-center gap-4 border-t border-border pt-5">
+              <div className="hidden md:flex items-center gap-4 border-t border-border pt-5">
                 <div className="shrink-0 text-center">
                   <p className="text-2xl font-semibold tracking-tight text-foreground">
                     7
@@ -125,7 +125,7 @@ function Home() {
                 <Button asChild>
                   <Link to="/specimens">
                     <Layers className="h-3.5 w-3.5" />
-                    Browse Specimens
+                    <span className="hidden md:inline">Browse Specimens</span>
                   </Link>
                 </Button>
 
@@ -133,7 +133,7 @@ function Home() {
                 <Button asChild variant="secondary" size="sm">
                   <Link to="/dashboard">
                     <ChartSpline className="h-3.5 w-3.5" />
-                    Dashboard
+                    <span className="hidden md:inline">Dashboard</span>
                   </Link>
                 </Button>
 
@@ -178,7 +178,7 @@ function Home() {
           </div>
 
           {/* ── Right: interactive image panel ── */}
-          <div className="relative min-h-110 border-t border-border/60 bg-muted/30 lg:min-h-full lg:border-t-0 lg:border-l">
+          <div className="hidden md:block relative min-h-110 border-t border-border/60 bg-muted/30 lg:min-h-full lg:border-t-0 lg:border-l">
             {/* Subtle grid texture */}
             <div
               className="absolute inset-0 opacity-[0.03]"

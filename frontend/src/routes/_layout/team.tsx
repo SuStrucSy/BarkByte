@@ -106,7 +106,7 @@ function TeamPage() {
       </div>
 
       {/* Institutions */}
-      <div className="mt-16">
+      <div className="mt-8 md:mt-16">
         <p className="mb-4 text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground">
           Supported by
         </p>
@@ -117,7 +117,7 @@ function TeamPage() {
             target="_blank"
             rel="noreferrer"
             aria-label="Visit the Civil and Mineral Engineering website"
-            className="flex min-h-36 items-center justify-center rounded-xl border border-border bg-card p-8 transition-colors hover:bg-muted/50 hover:border-foreground/20"
+            className="flex min-h-36 items-center justify-center rounded-xl border border-border bg-card p-4 md:p-8 transition-colors hover:bg-muted/50 hover:border-foreground/20"
           >
             <img
               src={civilEngineeringLogo}
@@ -131,7 +131,7 @@ function TeamPage() {
             target="_blank"
             rel="noreferrer"
             aria-label="Visit the Data Sciences Institute website"
-            className="flex min-h-36 items-center justify-center rounded-xl border border-border bg-card p-8 transition-colors hover:bg-muted/50 hover:border-foreground/20"
+            className="flex min-h-36 items-center justify-center rounded-xl border border-border bg-card p-4 md:p-8 transition-colors hover:bg-muted/50 hover:border-foreground/20"
           >
             <img
               src={dsiLogo}
