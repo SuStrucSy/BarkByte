@@ -44,7 +44,7 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 							<CardHeader>
 								<CardTitle className="text-2xl">Experimental Data</CardTitle>
 							</CardHeader>
-							<CardContent className="grid gap-6 lg:grid-cols-2 lg:items-start">
+							<CardContent className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
 								<div className="grid gap-2">
 									<h3 className="text-xl font-semibold tracking-tight text-foreground">
 										Experimental Results
@@ -63,8 +63,8 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 										<LabelValue property="e_qfm_description" data={data} />
 									</div>
 								</div>
-								<div className="grid w-full justify-self-stretch gap-6">
-									<div className="grid gap-2 min-w-0 overflow-hidden">
+								<div className="grid h-full w-full justify-self-stretch gap-6">
+									<div className="grid h-full min-w-0 gap-2 overflow-hidden">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">
 											Quantitative Mechanical Measures
 										</h3>

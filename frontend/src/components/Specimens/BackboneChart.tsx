@@ -199,8 +199,11 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 	);
 
 	return (
-		<div className={cn("space-y-2", className)}>
-			<ChartContainer config={chartConfig} className="min-h-[320px] w-full">
+		<div className={cn("flex h-full min-h-[380px] w-full min-w-0 flex-col", className)}>
+			<ChartContainer
+				config={chartConfig}
+				className="h-full min-h-[380px] w-full min-w-0 max-w-full"
+			>
 				<LineChart
 					accessibilityLayer
 					data={chartData}

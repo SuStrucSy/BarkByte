@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SpecimenHeaderProps = {
@@ -20,18 +20,36 @@ export function SpecimenHeader({
 			</div>
 			<div className="flex items-center gap-2">
 				{onEditClick ? (
-					<Button onClick={onEditClick}>
+					<Button
+						size="icon"
+						onClick={onEditClick}
+						aria-label="Edit specimen"
+						title="Edit specimen"
+					>
 						<Pencil className="h-4 w-4" />
-						Edit Specimen
 					</Button>
 				) : null}
 				{onBackClick ? (
-					<Button variant="outline" onClick={onBackClick}>
-						Back to specimen
+					<Button
+						variant="outline"
+						size="icon"
+						onClick={onBackClick}
+						aria-label="Back to specimens"
+						title="Back to specimens"
+					>
+						<ArrowLeft className="h-4 w-4" />
 					</Button>
 				) : (
-					<Button variant="outline" asChild>
-						<Link to="/specimens">Back to specimens</Link>
+					<Button
+						variant="outline"
+						size="icon"
+						asChild
+						aria-label="Back to specimens"
+						title="Back to specimens"
+					>
+						<Link to="/specimens">
+							<ArrowLeft className="h-4 w-4" />
+						</Link>
 					</Button>
 				)}
 			</div>
