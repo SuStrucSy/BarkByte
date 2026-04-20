@@ -65,25 +65,29 @@ function ReferenceItem({
 			<button
 				type="button"
 				onClick={() => onSelect(doi)}
-				className="w-full text-left"
+				className="w-full min-w-0 text-left"
 			>
 				<ItemContent className="min-w-0">
 					<ItemTitle className="w-full text-base leading-snug group-hover/item:text-primary">
-						<span className="line-clamp-2">{doi.ref_title}</span>
+						<span className="block min-w-0 line-clamp-2 overflow-hidden text-ellipsis">
+							{doi.ref_title}
+						</span>
 					</ItemTitle>
-					<ItemDescription className="line-clamp-1">
-						{doi.authors}
-					</ItemDescription>
-					<div className="flex items-center gap-2 pt-1">
-						<Badge variant="secondary" className="text-xs">
+					<div className="flex min-w-0 items-center gap-2 pt-1">
+						<ItemDescription className="min-w-0 truncate text-sm">
+							{doi.authors}
+						</ItemDescription>
+						<Badge variant="secondary" className="shrink-0 text-xs">
 							{doi.pub_year}
 						</Badge>
-						<ItemDescription className="truncate text-xs">
+					</div>
+					<div className="hidden min-w-0 items-center gap-2 pt-1 sm:flex">
+						<ItemDescription className="min-w-0 truncate text-xs">
 							{doi.link}
 						</ItemDescription>
 					</div>
 				</ItemContent>
-				<ItemActions className="text-muted-foreground transition-colors group-hover/item:text-primary">
+				<ItemActions className="shrink-0 text-muted-foreground transition-colors group-hover/item:text-primary">
 					<ChevronRightIcon className="size-4" />
 				</ItemActions>
 			</button>

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Columns3, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/item";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import {
 	COMPARE_SECTION_CONFIG,
 	COMPARE_SLOT_COUNT,
@@ -310,25 +311,75 @@ function useAllSpecimens() {
 
 function ComparePage() {
 	const { data: specimens = [], isLoading, isError, error } = useAllSpecimens();
+	const { isMobile } = useIsMobile();
+	const [isDesktop, setIsDesktop] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Array<string | null>>(
 		Array.from({ length: COMPARE_SLOT_COUNT }, () => null),
+	);
+	const visibleSlotCount = isMobile ? 2 : COMPARE_SLOT_COUNT;
+	const visibleSelectedIds = selectedIds.slice(0, visibleSlotCount);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia("(min-width: 1280px)");
+		const updateDesktopState = () => {
+			setIsDesktop(mediaQuery.matches);
+		};
+
+		updateDesktopState();
+		mediaQuery.addEventListener("change", updateDesktopState);
+
+		return () => {
+			mediaQuery.removeEventListener("change", updateDesktopState);
+		};
+	}, []);
+
+	const specimenById = useMemo(
+		() => new Map(specimens.map((specimen) => [specimen.id, specimen])),
+		[specimens],
+	);
+	const availableSpecimensBySlot = useMemo(
+		() =>
+			visibleSelectedIds.map((_, slotIndex) => {
+				const takenIds = new Set(
+					visibleSelectedIds.filter(
+						(selectedId, selectedIndex): selectedId is string =>
+							Boolean(selectedId) && selectedIndex !== slotIndex,
+					),
+				);
+
+				return specimens.filter((specimen) => !takenIds.has(specimen.id));
+			}),
+		[visibleSelectedIds, specimens],
+	);
+	const visibleSlots = useMemo(
+		() =>
+			visibleSelectedIds.map((selectedId, slotIndex) => {
+				const specimen = selectedId
+					? (specimenById.get(selectedId) ?? null)
+					: null;
+
+				return {
+					slotIndex,
+					specimen,
+					availableSpecimens: availableSpecimensBySlot[slotIndex] ?? specimens,
+				};
+			}),
+		[availableSpecimensBySlot, specimenById, specimens, visibleSelectedIds],
 	);
 
 	const selectedSpecimens = useMemo(
 		() =>
-			selectedIds
-				.map((id) =>
-					id ? specimens.find((specimen) => specimen.id === id) : undefined,
-				)
+			visibleSelectedIds
+				.map((id) => (id ? specimenById.get(id) : undefined))
 				.filter((specimen): specimen is SpecimenPublic => Boolean(specimen)),
-		[selectedIds, specimens],
+		[specimenById, visibleSelectedIds],
 	);
 	const comparisonSlots = useMemo(
 		() =>
-			selectedIds.map((id) =>
-				id ? (specimens.find((specimen) => specimen.id === id) ?? null) : null,
+			visibleSelectedIds.map((id) =>
+				id ? (specimenById.get(id) ?? null) : null,
 			),
-		[selectedIds, specimens],
+		[specimenById, visibleSelectedIds],
 	);
 
 	const compareFields = useMemo(() => getCompareFields(), []);
@@ -336,17 +387,6 @@ function ComparePage() {
 		() => groupCompareFields(compareFields),
 		[compareFields],
 	);
-
-	const getAvailableSpecimens = (slotIndex: number) => {
-		const takenIds = new Set(
-			selectedIds.filter(
-				(selectedId, selectedIndex): selectedId is string =>
-					Boolean(selectedId) && selectedIndex !== slotIndex,
-			),
-		);
-
-		return specimens.filter((specimen) => !takenIds.has(specimen.id));
-	};
 
 	const setSelectedSpecimen = (slotIndex: number, specimenId: string) => {
 		setSelectedIds((current) =>
@@ -380,15 +420,93 @@ function ComparePage() {
 		);
 	}
 
-	return (
-		<div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden px-2 sm:px-2 md:px-4">
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-				{selectedIds.map((selectedId, slotIndex) => {
-					const specimen = selectedId
-						? (specimens.find((entry) => entry.id === selectedId) ?? null)
-						: null;
-					const availableSpecimens = getAvailableSpecimens(slotIndex);
+	const comparisonContent = (
+		<div className="min-w-0">
+			{compareSections.map((section, index) => (
+				<div key={section.title}>
+					{index > 0 ? <Separator /> : null}
+					<div className="px-4 py-10 first:pt-8 last:pb-10">
+						<div className="mb-8 text-lg font-bold uppercase tracking-[0.18em] text-foreground">
+							{section.title}
+						</div>
+						{section.title === "Meta Data" ? (
+							<div className="mb-6 grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3">
+								{comparisonSlots.map((specimen, index) => (
+									<div
+										key={`compare-card-link-${specimen?.id ?? `empty-${index}`}`}
+										className={`min-w-0 text-center text-sm ${index > 0 ? "md:pl-4" : ""}`}
+									>
+										{specimen ? (
+											<a
+												href={`/specimens/${specimen.id}`}
+												target="_blank"
+												rel="noreferrer"
+												className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-primary"
+											>
+												{specimen.specimen_reference_id}
+											</a>
+										) : (
+											""
+										)}
+									</div>
+								))}
+							</div>
+						) : null}
+						{section.title === "Experimental Data" ? (
+							<div className="mb-8 grid min-w-0 grid-cols-2 gap-4 md:grid-cols-3">
+								{comparisonSlots.map((specimen, index) => (
+									<div
+										key={`compare-radar-${specimen?.id ?? `empty-${index}`}`}
+										className={`min-w-0 ${index > 0 ? "md:pl-4" : ""}`}
+									>
+										{specimen ? (
+											<div className="grid min-w-0 gap-2 overflow-hidden">
+												<div className="text-center text-sm font-medium text-foreground">
+													Quantitative Mechanical Measures
+												</div>
+												<RadarMetricsChart
+													data={specimen}
+													className="max-w-[320px]"
+													syncId="compare-radar-metrics"
+												/>
+											</div>
+										) : null}
+									</div>
+								))}
+							</div>
+						) : null}
+						<div className="flex flex-col gap-4">
+							{section.fields.map((field) => (
+								<div key={field.key}>
+									<div className="grid min-w-0 grid-cols-2 md:grid-cols-3">
+										{comparisonSlots.map((specimen, index) => {
+											const renderedValue = specimen
+												? field.render(specimen)
+												: null;
 
+											return (
+												<div
+													key={`${field.key}-${specimen?.id ?? `empty-${index}`}`}
+													className={`min-w-0 break-words whitespace-normal text-center text-sm leading-6 md:flex md:items-center md:justify-center ${renderedValue?.isMissing ? "italic text-muted-foreground" : ""} ${index > 0 ? "md:pl-4" : ""}`}
+												>
+													{renderedValue?.text ?? ""}
+												</div>
+											);
+										})}
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+
+	return (
+		<div className="flex min-h-0 flex-col gap-6 px-2 sm:px-2 md:px-4 xl:h-full xl:overflow-hidden">
+			<div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+				{visibleSlots.map(({ slotIndex, specimen, availableSpecimens }) => {
 					return specimen ? (
 						<Item
 							key={`compare-slot-${slotIndex}`}
@@ -417,12 +535,12 @@ function ComparePage() {
 									{specimen.doi.ref_title || "No reference title"}
 								</ItemDescription>
 							</ItemContent>
-							<ItemActions className="text-muted-foreground opacity-0 transition-opacity group-hover/item:opacity-100 group-hover/item:text-red-800">
+							<ItemActions className="text-muted-foreground opacity-100 transition-opacity xl:opacity-0 xl:group-hover/item:opacity-100 group-hover/item:text-red-800">
 								<X className="size-4" />
 							</ItemActions>
 						</Item>
 					) : (
-						<div key={`compare-slot-${slotIndex}`} className="p-1">
+						<div key={`compare-slot-${slotIndex}`} className="min-w-0 p-1">
 							<Combobox
 								items={availableSpecimens}
 								itemToStringValue={(item: SpecimenPublic) => item.id}
@@ -464,7 +582,7 @@ function ComparePage() {
 			</div>
 
 			{selectedSpecimens.length === 0 ? (
-				<Empty className="min-h-0 flex-1 border">
+				<Empty className="border xl:min-h-0 xl:flex-1">
 					<EmptyHeader>
 						<EmptyMedia variant="icon">
 							<Columns3 className="size-5" />
@@ -476,96 +594,21 @@ function ComparePage() {
 					</EmptyHeader>
 				</Empty>
 			) : (
-				<Card className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+				<Card className="flex min-w-0 flex-col xl:min-h-0 xl:flex-1 xl:overflow-hidden">
 					<CardHeader>
 						<CardTitle>Comparison</CardTitle>
 						<CardDescription>
 							The comparison content scrolls inside this panel.
 						</CardDescription>
 					</CardHeader>
-					<CardContent className="min-h-0 min-w-0 flex-1 px-0">
-						<ScrollArea className="h-full min-w-0 overflow-x-hidden [&>[data-slot=scroll-area-scrollbar][data-orientation=horizontal]]:hidden [&>[data-slot=scroll-area-viewport]]:overflow-x-hidden">
-							<div className="min-w-0">
-								{compareSections.map((section, index) => (
-									<div key={section.title}>
-										{index > 0 ? <Separator /> : null}
-										<div className="px-4 py-10 first:pt-8 last:pb-10">
-											<div className="mb-8 text-lg font-bold uppercase tracking-[0.18em] text-foreground">
-												{section.title}
-											</div>
-											{section.title === "Meta Data" ? (
-												<div className="mb-6 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-													{comparisonSlots.map((specimen, index) => (
-														<div
-															key={`compare-card-link-${specimen?.id ?? `empty-${index}`}`}
-															className={`min-w-0 text-center text-sm ${index > 0 ? "border-t pt-3 sm:border-t-0 sm:pt-0 sm:pl-4" : ""}`}
-														>
-															{specimen ? (
-																<a
-																	href={`/specimens/${specimen.id}`}
-																	target="_blank"
-																	rel="noreferrer"
-																	className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-primary"
-																>
-																	{specimen.specimen_reference_id}
-																</a>
-															) : (
-																""
-															)}
-														</div>
-													))}
-												</div>
-											) : null}
-											{section.title === "Experimental Data" ? (
-												<div className="mb-8 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-													{comparisonSlots.map((specimen, index) => (
-														<div
-															key={`compare-radar-${specimen?.id ?? `empty-${index}`}`}
-															className={`min-w-0 ${index > 0 ? "border-t pt-4 sm:border-t-0 sm:pt-0 sm:pl-4" : ""}`}
-														>
-															{specimen ? (
-																<div className="grid min-w-0 gap-2 overflow-hidden">
-																	<div className="text-center text-sm font-medium text-foreground">
-																		Quantitative Mechanical Measures
-																	</div>
-																	<RadarMetricsChart
-																		data={specimen}
-																		className="max-w-[320px]"
-																		syncId="compare-radar-metrics"
-																	/>
-																</div>
-															) : null}
-														</div>
-													))}
-												</div>
-											) : null}
-											<div className="flex flex-col gap-4">
-												{section.fields.map((field) => (
-													<div key={field.key}>
-														<div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-															{comparisonSlots.map((specimen, index) => {
-																const renderedValue = specimen
-																	? field.render(specimen)
-																	: null;
-
-																return (
-																	<div
-																		key={`${field.key}-${specimen?.id ?? `empty-${index}`}`}
-																		className={`min-w-0 break-words whitespace-normal text-center text-sm leading-6 sm:flex sm:items-center sm:justify-center ${renderedValue?.isMissing ? "italic text-muted-foreground" : ""} ${index > 0 ? "border-t pt-3 sm:border-t-0 sm:pt-0 sm:pl-4" : ""}`}
-																	>
-																		{renderedValue?.text ?? ""}
-																	</div>
-																);
-															})}
-														</div>
-													</div>
-												))}
-											</div>
-										</div>
-									</div>
-								))}
-							</div>
-						</ScrollArea>
+					<CardContent className="min-w-0 px-0 xl:min-h-0 xl:flex-1">
+						{isDesktop ? (
+							<ScrollArea className="h-full min-w-0 overflow-x-hidden [&>[data-slot=scroll-area-scrollbar][data-orientation=horizontal]]:hidden [&>[data-slot=scroll-area-viewport]]:overflow-x-hidden">
+								{comparisonContent}
+							</ScrollArea>
+						) : (
+							comparisonContent
+						)}
 					</CardContent>
 				</Card>
 			)}
