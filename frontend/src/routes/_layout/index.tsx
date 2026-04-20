@@ -75,11 +75,12 @@ const joineryHotspots = [
 
 function Home() {
   return (
-    <div className="flex items-center justify-center overflow  mt-4 md:mt-10 lg:mt-14">
-      <Card className="w-full max-w-6xl overflow-hidden border-border/60 shadow-2xl">
-        <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.25fr]">
+    <div className="mt-4 flex min-h-[calc(100svh-7rem)] items-center justify-center md:mt-10 md:min-h-[calc(100svh-10rem)] lg:mt-14 lg:min-h-0">
+      <Card className="w-full max-w-6xl overflow-hidden border-border/60 py-0 shadow-2xl md:w-auto md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
+      
+        <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.2fr_0.8fr] xl:grid-cols-[1fr_1.25fr]">
           {/* ── Left: content panel ── */}
-          <div className="flex flex-col justify-between gap-2 md:gap-8 p-6 md:p-10 lg:p-12">
+          <div className="flex flex-col gap-2 p-6 md:gap-8 md:p-10 lg:p-8 xl:p-12">
             <div className="space-y-3 md:space-y-6">
               {/* Brand name — small, sets context before the headline */}
               <div className="flex items-center gap-2">
@@ -91,7 +92,7 @@ function Home() {
 
               {/* Headline — value proposition, not the product name */}
               <div>
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl lg:text-5xl leading-tight">
+                <h1 className="text-2xl font-semibold leading-tight tracking-tight text-foreground md:text-3xl lg:text-4 xl:text-6xl">
                   Curated experimental data on mass timber connections
                 </h1>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-[0.95rem]">
@@ -102,7 +103,7 @@ function Home() {
               </div>
 
               {/* Stat strip */}
-              <div className="hidden md:flex items-center gap-4 border-t border-border pt-5">
+              <div className="hidden lg:flex items-center gap-4 border-t border-border pt-5">
                 <div className="shrink-0 text-center">
                   <p className="text-2xl font-semibold tracking-tight text-foreground">
                     7
@@ -178,7 +179,7 @@ function Home() {
           </div>
 
           {/* ── Right: interactive image panel ── */}
-          <div className="hidden md:block relative min-h-110 border-t border-border/60 bg-muted/30 lg:min-h-full lg:border-t-0 lg:border-l">
+          <div className="relative hidden border-t border-border/60 bg-muted/30 lg:flex lg:flex-col lg:border-t-0 lg:border-l">
             {/* Subtle grid texture */}
             <div
               className="absolute inset-0 opacity-[0.03]"
@@ -188,15 +189,7 @@ function Home() {
               }}
             />
 
-            {/* Corner label */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-md border border-border/60 bg-background/80 px-2.5 py-1 backdrop-blur-sm">
-              <span className="size-1.5 rounded-full bg-viz-3" />
-              <span className="text-[0.6rem] font-medium tracking-widest uppercase text-muted-foreground">
-                {joineryHotspots.length} connections mapped
-              </span>
-            </div>
-
-            <div className="relative flex h-full items-center justify-center p-6 md:p-8">
+            <div className="relative flex flex-1 items-center justify-center p-5 lg:p-6 xl:p-8">
               <div className="w-full overflow-hidden rounded-2xl border border-border/50 bg-background/70 shadow-xl backdrop-blur-sm">
                 <div className="relative">
                   <img
@@ -234,7 +227,6 @@ function Home() {
                   <p className="text-xs text-muted-foreground">
                     Hover a hotspot to identify the connection type
                   </p>
-                  <ExternalLink className="h-3 w-3 text-muted-foreground/50" />
                 </div>
               </div>
             </div>
