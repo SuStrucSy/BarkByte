@@ -283,7 +283,7 @@ def verify_email(session: SessionDep, body: NewAccount) -> Message:
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=410,
-            detail="Verification link has expired. Please request a new one at /users/resend-verification.",
+            detail="Verification link has expired. Please request a new one.",
         )
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")

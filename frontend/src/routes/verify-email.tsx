@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod/v4";
-import ErrorComponent from "@/components/Common/Error";
+import ErrorComponent, { getStatusCode } from "@/components/Common/Error";
 import { VerifyEmailComponent } from "@/components/Auth/VerifyEmail";
-import { usersVerifyEmail } from "@/api/endpoints/users/users";
+import {
+  usersResendVerification,
+  usersVerifyEmail,
+} from "@/api/endpoints/users/users";
 import { useState } from "react";
 
 const verifyEmailSearchSchema = z.object({
   token: z.string().min(1).optional(),
+  email: z.email(),
 });
 
 type VerifyEmailSearch = z.infer<typeof verifyEmailSearchSchema>;
@@ -14,6 +18,7 @@ type VerifyEmailSearch = z.infer<typeof verifyEmailSearchSchema>;
 type VerifyState =
   | { phase: "idle" }
   | { phase: "loading" }
+  | { phase: "resend"; message: string }
   | { phase: "success"; message: string }
   | { phase: "error"; error: unknown };
 
@@ -23,15 +28,17 @@ export const Route = createFileRoute("/verify-email")({
 
   loaderDeps: ({ search }) => ({
     token: search.token,
+    email: search.email,
   }),
 
   loader: ({ deps }) => {
     const token = deps.token;
+    const email = deps.email;
 
-    if (!token) {
+    if (!token || !email) {
       return { status: "missing" as const };
     }
-    return { status: "pending" as const, token: deps.token };
+    return { status: "pending" as const, token: deps.token, email: deps.email };
   },
   component: VerifyEmail,
 });
@@ -58,12 +65,51 @@ function VerifyEmail() {
     }
   }
 
+  async function resendVerification() {
+    if (data.status !== "pending") return;
+    setState({ phase: "loading" });
+    try {
+      const res = await usersResendVerification({ email: data.email });
+      setState({
+        phase: "resend",
+        message: res.message ?? "Email verification resent.",
+      });
+    } catch (err) {
+      setState({ phase: "error", error: err });
+    }
+  }
+
   if (state.phase === "error") {
     const error =
       state.error instanceof Error
         ? state.error
         : new Error(String(state.error));
+
+    const statusCode = getStatusCode(error);
+    if (statusCode === 410) {
+      return (
+        <VerifyEmailComponent
+          icon="failure"
+          title="Token Expired"
+          message="Verification link has expired. Please request a new one."
+          action={{
+            label: "Resend Verfication Link",
+            onClick: resendVerification,
+          }}
+        />
+      );
+    }
     return <ErrorComponent error={error} />;
+  }
+
+  if (state.phase === "resend") {
+    return (
+      <VerifyEmailComponent
+        icon="success"
+        title="Email verification link sent"
+        message={state.message}
+      />
+    );
   }
 
   if (state.phase === "success") {
@@ -92,7 +138,7 @@ function VerifyEmail() {
     <VerifyEmailComponent
       icon="email"
       title="Confirm your email address"
-      message="Click the button below to verify your email."
+      message={`Click the button below to verify your email: ${data.email}`}
       action={{ label: "Verify my email", onClick: handleVerify }}
     />
   );

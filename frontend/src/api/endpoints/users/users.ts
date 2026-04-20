@@ -31,6 +31,7 @@ import type {
 	UserRegister,
 	UsersPublic,
 	UsersReadUsersParams,
+	UsersResendVerificationParams,
 	UserUpdate,
 	UserUpdateMe,
 } from "../../model";
@@ -1139,4 +1140,90 @@ export const useUsersVerifyEmail = <
 	TContext
 > => {
 	return useMutation(getUsersVerifyEmailMutationOptions(options), queryClient);
+};
+/**
+ * @summary Resend Verification
+ */
+export const usersResendVerification = (
+	params: UsersResendVerificationParams,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/resend-verification`,
+		method: "POST",
+		params,
+		signal,
+	});
+};
+
+export const getUsersResendVerificationMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersResendVerification>>,
+		TError,
+		{ params: UsersResendVerificationParams },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersResendVerification>>,
+	TError,
+	{ params: UsersResendVerificationParams },
+	TContext
+> => {
+	const mutationKey = ["usersResendVerification"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersResendVerification>>,
+		{ params: UsersResendVerificationParams }
+	> = (props) => {
+		const { params } = props ?? {};
+
+		return usersResendVerification(params);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersResendVerificationMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersResendVerification>>
+>;
+
+export type UsersResendVerificationMutationError =
+	ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Resend Verification
+ */
+export const useUsersResendVerification = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersResendVerification>>,
+			TError,
+			{ params: UsersResendVerificationParams },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersResendVerification>>,
+	TError,
+	{ params: UsersResendVerificationParams },
+	TContext
+> => {
+	return useMutation(
+		getUsersResendVerificationMutationOptions(options),
+		queryClient,
+	);
 };

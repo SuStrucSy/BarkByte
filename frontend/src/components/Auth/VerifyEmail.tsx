@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, CircleX, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 type VerifyEmailComponentProps = {
-  icon: "loading" | "success" | "email";
+  icon: "loading" | "success" | "failure" | "email";
   title: string;
   message: string;
   action?:
@@ -21,6 +21,8 @@ export function VerifyEmailComponent({
   const iconWrapperClass = {
     success:
       "mb-5 flex size-14 items-center justify-center rounded-full bg-emerald-500/10",
+    failure:
+      "mb-5 flex size-14 items-center justify-center rounded-full bg-red-500/10",
     email:
       "mb-5 flex size-14 items-center justify-center rounded-full bg-muted",
     loading:
@@ -51,6 +53,9 @@ export function VerifyEmailComponent({
             <div className={iconWrapperClass}>
               {icon === "success" && (
                 <CheckCircle2 className="size-7 text-emerald-600" />
+              )}
+              {icon === "failure" && (
+                <CircleX className="size-7 text-red-600" />
               )}
               {icon === "email" && (
                 <Mail className="size-6 text-muted-foreground" />

@@ -220,3 +220,14 @@ export const UsersVerifyEmailBody = zod.object({
 export const UsersVerifyEmailResponse = zod.object({
 	message: zod.string(),
 });
+
+/**
+ * @summary Resend Verification
+ */
+export const UsersResendVerificationQueryParams = zod.object({
+	email: zod.string(),
+});
+
+export const UsersResendVerificationResponse = zod.object({
+	message: zod.string(),
+});

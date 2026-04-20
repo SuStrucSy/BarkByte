@@ -61,6 +61,7 @@ export * from "./userPublic";
 export * from "./userRegister";
 export * from "./usersPublic";
 export * from "./usersReadUsersParams";
+export * from "./usersResendVerificationParams";
 export * from "./userUpdate";
 export * from "./userUpdateMe";
 export * from "./validationError";

@@ -434,6 +434,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/resend-verification:
+    post:
+      tags:
+        - users
+      summary: Resend Verification
+      operationId: users-resend_verification
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            title: Email
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
   /api/v1/utils/health-check/:
     get:
       tags:
