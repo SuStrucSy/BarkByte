@@ -10,6 +10,7 @@ import {
 	useReactTable,
 	type VisibilityState,
 } from "@tanstack/react-table";
+import { ChevronRightIcon } from "lucide-react";
 import {
 	type Dispatch,
 	type SetStateAction,
@@ -52,6 +53,15 @@ import {
 } from "@/components/Data-Table/specimenTableFilters";
 import { useSpecimenSearchFilterSync } from "@/components/Data-Table/useSpecimenSearchFilterSync";
 import SkeletonSpecimensTable from "@/components/Skeleton/SkeletonSpecimensTable";
+import { Badge } from "@/components/ui/badge";
+import {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemTitle,
+} from "@/components/ui/item";
 
 const sliderSearchSchemaFields = Object.fromEntries(
 	SLIDER_FILTER_CONFIG.map((config) => [config.field, z.string().optional()]),
@@ -170,6 +180,68 @@ function useAllSpecimens() {
 		},
 		staleTime: 30_000,
 	});
+}
+
+function MobileSpecimenListItem({
+	row,
+	onSelect,
+}: {
+	row: SpecimenPublic;
+	onSelect: () => void;
+}) {
+	const failureModes = row.e_qualitative_failure_measure
+		.map((mode) => mode.label)
+		.filter(Boolean);
+
+	return (
+		<Item
+			variant="outline"
+			asChild
+			className="group/item rounded-xl border-border/70"
+		>
+			<button
+				type="button"
+				onClick={onSelect}
+				className="w-full min-w-0 text-left"
+			>
+				<ItemContent className="min-w-0">
+					<div className="flex min-w-0 items-start justify-between gap-3">
+						<ItemTitle className="min-w-0 text-base leading-snug group-hover/item:text-primary">
+							<span className="block min-w-0 truncate">
+								{row.specimen_reference_id}
+							</span>
+						</ItemTitle>
+						<Badge variant="secondary" className="shrink-0 text-xs">
+							{row.joinery_type.label}
+						</Badge>
+					</div>
+					<ItemDescription className="min-w-0 truncate text-sm">
+						{row.sub_joinery_type.label}
+					</ItemDescription>
+					<ItemDescription className="min-w-0 line-clamp-2 text-sm">
+						{row.doi.ref_title || "No reference title"}
+					</ItemDescription>
+					<div className="flex min-w-0 flex-wrap items-center gap-2 pt-1">
+						{failureModes.slice(0, 2).map((failureMode) => (
+							<Badge
+								key={failureMode}
+								variant="outline"
+								className="max-w-full text-xs"
+							>
+								<span className="truncate">{failureMode}</span>
+							</Badge>
+						))}
+						<Badge variant="secondary" className="text-xs">
+							{row.practice}
+						</Badge>
+					</div>
+				</ItemContent>
+				<ItemActions className="shrink-0 text-muted-foreground transition-colors group-hover/item:text-primary">
+					<ChevronRightIcon className="size-4" />
+				</ItemActions>
+			</button>
+		</Item>
+	);
 }
 
 function SpecimensKitTable() {
@@ -580,10 +652,12 @@ function SpecimensKitTable() {
 		return <SkeletonSpecimensTable />;
 	}
 
+	const paginatedRows = table.getRowModel().rows;
+
 	return (
 		<div className="flex w-full min-h-0 flex-1 flex-col gap-3 sm:flex-row">
 			<div
-				className={`flex w-full min-h-0 flex-1 flex-col gap-4 overflow-hidden ${TABLE_PANEL_HEIGHT}`}
+				className={`flex w-full min-h-0 flex-1 flex-col gap-4 md:overflow-hidden ${TABLE_PANEL_HEIGHT}`}
 			>
 				{/* Quick search bar: users type plain text or field:value commands to narrow results. */}
 				{/*<DataTableFilterCommand
@@ -598,61 +672,89 @@ function SpecimensKitTable() {
 					fieldOptions={fieldOptions}
 				/>*/}
 				{/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
-				<DataTableToolbar
-					table={table}
-					totalRows={rows.length}
-					filteredRows={filteredRows.length}
-					controlsOpen={controlsOpen}
-					onToggleControls={() => setControlsOpen((prev) => !prev)}
-				/>
+				<div className="hidden md:block">
+					<DataTableToolbar
+						table={table}
+						totalRows={rows.length}
+						filteredRows={filteredRows.length}
+						controlsOpen={controlsOpen}
+						onToggleControls={() => setControlsOpen((prev) => !prev)}
+					/>
+				</div>
 
-				{/* Main results grid: this is the actual list of specimens users can scan and click into. */}
-				<SpecimensResultsTable
-					table={table}
-					columnCount={kitColumns.length}
-					onRowClick={(row) =>
-						navigate({
-							to: "/specimens/$specimenId",
-							params: { specimenId: row.original.id },
-						})
-					}
-				/>
+				<div className="min-h-0 md:hidden">
+					<ItemGroup className="gap-3">
+						{paginatedRows.map((row) => (
+							<MobileSpecimenListItem
+								key={row.original.id}
+								row={row.original}
+								onSelect={() =>
+									navigate({
+										to: "/specimens/$specimenId",
+										params: { specimenId: row.original.id },
+									})
+								}
+							/>
+						))}
+						<div className="pt-2">
+							<DataTablePagination table={table} pagination={pagination} />
+						</div>
+					</ItemGroup>
+				</div>
+
+				<div className="hidden md:block">
+					{/* Main results grid: this is the actual list of specimens users can scan and click into. */}
+					<SpecimensResultsTable
+						table={table}
+						columnCount={kitColumns.length}
+						onRowClick={(row) =>
+							navigate({
+								to: "/specimens/$specimenId",
+								params: { specimenId: row.original.id },
+							})
+						}
+					/>
+				</div>
 				{/* Bottom pager: lets users move between pages and control how many rows are shown. */}
-				<DataTablePagination table={table} pagination={pagination} />
+				<div className="hidden md:block">
+					<DataTablePagination table={table} pagination={pagination} />
+				</div>
 			</div>
 
-			<SpecimenTableSideBar
-				controlsOpen={controlsOpen}
-				panelHeightClassName={TABLE_PANEL_HEIGHT}
-				onClearAll={clearAllFilters}
-				hasActiveSidebarFilters={hasActiveSidebarFilters}
-				fields={filterFields}
-				selectedByField={selectedFilters}
-				sliderValuesByField={sliderValuesByField}
-				failureModeFilterMode={failureModeFilterMode}
-				onToggleOption={handleToggleOption}
-				onSliderChange={(field, value) => {
-					setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
-					syncSearchState({
-						[field]:
-							value[0] !== sliderDefaults[field as SliderField][0] ||
-							value[1] !== sliderDefaults[field as SliderField][1]
-								? serializeSliderParam(value)
-								: undefined,
-					});
-				}}
-				onFailureModeFilterModeChange={(mode) => {
-					setFailureModeFilterMode(mode);
-					if (selectedFilters.failure_modes.length > 0) {
-						updateCheckboxSearchClause(
-							"failure_modes",
-							selectedFilters.failure_modes,
-							mode,
-						);
-					}
-				}}
-				onResetField={handleResetField}
-			/>
+			<div className="hidden md:block">
+				<SpecimenTableSideBar
+					controlsOpen={controlsOpen}
+					panelHeightClassName={TABLE_PANEL_HEIGHT}
+					onClearAll={clearAllFilters}
+					hasActiveSidebarFilters={hasActiveSidebarFilters}
+					fields={filterFields}
+					selectedByField={selectedFilters}
+					sliderValuesByField={sliderValuesByField}
+					failureModeFilterMode={failureModeFilterMode}
+					onToggleOption={handleToggleOption}
+					onSliderChange={(field, value) => {
+						setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
+						syncSearchState({
+							[field]:
+								value[0] !== sliderDefaults[field as SliderField][0] ||
+								value[1] !== sliderDefaults[field as SliderField][1]
+									? serializeSliderParam(value)
+									: undefined,
+						});
+					}}
+					onFailureModeFilterModeChange={(mode) => {
+						setFailureModeFilterMode(mode);
+						if (selectedFilters.failure_modes.length > 0) {
+							updateCheckboxSearchClause(
+								"failure_modes",
+								selectedFilters.failure_modes,
+								mode,
+							);
+						}
+					}}
+					onResetField={handleResetField}
+				/>
+			</div>
 		</div>
 	);
 }
