@@ -702,7 +702,7 @@ function SpecimensKitTable() {
 					</ItemGroup>
 				</div>
 
-				<div className="hidden md:block">
+				<div className="hidden min-h-0 flex-1 md:flex md:flex-col">
 					{/* Main results grid: this is the actual list of specimens users can scan and click into. */}
 					<SpecimensResultsTable
 						table={table}
@@ -716,7 +716,7 @@ function SpecimensKitTable() {
 					/>
 				</div>
 				{/* Bottom pager: lets users move between pages and control how many rows are shown. */}
-				<div className="hidden md:block">
+				<div className="hidden shrink-0 md:block">
 					<DataTablePagination table={table} pagination={pagination} />
 				</div>
 			</div>
