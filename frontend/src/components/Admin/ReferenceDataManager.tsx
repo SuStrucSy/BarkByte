@@ -287,68 +287,118 @@ function ReferenceSection<
 					</Form>
 				</Dialog>
 			</CardHeader>
-			<CardContent>
-				<Table>
-					<TableHeader>
-						<TableRow>
-							{columns.map((column) => (
-								<TableHead key={column.header} className={column.className}>
-									{column.header}
-								</TableHead>
-							))}
-							<TableHead className="w-[140px] text-right">Actions</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{isLoading ? (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length + 1}
-									className="py-6 text-center text-muted-foreground"
+			<CardContent className="space-y-3">
+				<div className="md:hidden">
+					{isLoading ? (
+						<div className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+							Loading…
+						</div>
+					) : items.length === 0 ? (
+						<div className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+							No items yet.
+						</div>
+					) : (
+						<div className="space-y-3">
+							{items.map((item) => (
+								<div
+									key={getItemId(item)}
+									className="space-y-3 rounded-lg border bg-muted/20 p-4"
 								>
-									Loading…
-								</TableCell>
-							</TableRow>
-						) : items.length === 0 ? (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length + 1}
-									className="py-6 text-center text-muted-foreground"
-								>
-									No items yet.
-								</TableCell>
-							</TableRow>
-						) : (
-							items.map((item) => (
-								<TableRow key={getItemId(item)}>
-									{columns.map((column) => (
-										<TableCell
-											key={`${getItemId(item)}-${column.header}`}
-											className={column.className}
-										>
-											{column.render(item)}
-										</TableCell>
-									))}
-									<TableCell className="text-right">
-										<div className="flex justify-end gap-2">
-											<Button
-												type="button"
-												variant="ghost"
-												size="sm"
-												className="text-destructive hover:text-destructive disabled:pointer-events-auto disabled:opacity-50"
-												aria-disabled={isDeleteBlocked?.(item) ?? false}
-												onClick={() => handleDeleteClick(item)}
+									<div className="space-y-2">
+										{columns.map((column) => (
+											<div
+												key={`${getItemId(item)}-${column.header}`}
+												className="space-y-1"
 											>
-												<Trash2 className="size-4" />
-												Delete
-											</Button>
-										</div>
+												<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+													{column.header}
+												</p>
+												<div className={column.className}>
+													{column.render(item)}
+												</div>
+											</div>
+										))}
+									</div>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										className="w-full justify-center text-destructive hover:text-destructive disabled:pointer-events-auto disabled:opacity-50"
+										aria-disabled={isDeleteBlocked?.(item) ?? false}
+										onClick={() => handleDeleteClick(item)}
+									>
+										<Trash2 className="size-4" />
+										Delete
+									</Button>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+
+				<div className="hidden md:block">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								{columns.map((column) => (
+									<TableHead key={column.header} className={column.className}>
+										{column.header}
+									</TableHead>
+								))}
+								<TableHead className="w-[140px] text-right">Actions</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{isLoading ? (
+								<TableRow>
+									<TableCell
+										colSpan={columns.length + 1}
+										className="py-6 text-center text-muted-foreground"
+									>
+										Loading…
 									</TableCell>
 								</TableRow>
-							))
-						)}
-					</TableBody>
-				</Table>
+							) : items.length === 0 ? (
+								<TableRow>
+									<TableCell
+										colSpan={columns.length + 1}
+										className="py-6 text-center text-muted-foreground"
+									>
+										No items yet.
+									</TableCell>
+								</TableRow>
+							) : (
+								items.map((item) => (
+									<TableRow key={getItemId(item)}>
+										{columns.map((column) => (
+											<TableCell
+												key={`${getItemId(item)}-${column.header}`}
+												className={column.className}
+											>
+												{column.render(item)}
+											</TableCell>
+										))}
+										<TableCell className="text-right">
+											<div className="flex justify-end gap-2">
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													className="text-destructive hover:text-destructive disabled:pointer-events-auto disabled:opacity-50"
+													aria-disabled={isDeleteBlocked?.(item) ?? false}
+													onClick={() => handleDeleteClick(item)}
+												>
+													<Trash2 className="size-4" />
+													Delete
+												</Button>
+											</div>
+										</TableCell>
+									</TableRow>
+								))
+							)}
+						</TableBody>
+					</Table>
+				</div>
 			</CardContent>
 
 			<Dialog
