@@ -1,6 +1,7 @@
 import type { Column } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
+import { OverflowTooltipText } from "@/components/Data-Table/OverflowTooltipText";
 import { Button, type ButtonProps } from "@/components/ui/button";
 
 import { cn } from "@/lib/utils";
@@ -17,68 +18,51 @@ export function DataTableColumnHeader<TData, TValue>({
 	...props
 }: DataTableColumnHeaderProps<TData, TValue>) {
 	if (!column.getCanSort()) {
-		return <div className={cn(className)}>{title}</div>;
+		return (
+			<div className={cn("flex min-h-9 items-center", className)}>{title}</div>
+		);
 	}
 
 	const sorted = column.getIsSorted();
+	const iconClassName = cn(
+		"h-3.5 w-3.5 text-muted-foreground transition-colors",
+		sorted && "text-foreground",
+	);
+
+	const handleSortClick = () => {
+		if (sorted === false) {
+			column.toggleSorting(false);
+			return;
+		}
+		if (sorted === "asc") {
+			column.toggleSorting(true);
+			return;
+		}
+		column.clearSorting();
+	};
 
 	return (
-		<div
+		<Button
+			variant="ghost"
+			type="button"
+			onClick={handleSortClick}
+			aria-label={`Sort ${title}`}
 			className={cn(
-				"flex h-7 w-full items-center justify-between gap-2",
+				"-ml-3 flex min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left hover:bg-transparent",
 				className,
 			)}
+			{...props}
 		>
-			<span>{title}</span>
-			<span className="flex flex-col">
-				<Button
-					variant="ghost"
-					size="icon"
-					type="button"
-					aria-label={`Sort ${title} descending`}
-					onClick={() => {
-						if (sorted === "desc") {
-							column.clearSorting();
-							return;
-						}
-						column.toggleSorting(true);
-					}}
-					className="h-3 w-3 p-0 hover:bg-transparent"
-					{...props}
-				>
-					<ChevronUp
-						className={cn(
-							"h-3 w-3",
-							sorted === "desc"
-								? "text-accent-foreground"
-								: "text-muted-foreground",
-						)}
-					/>
-				</Button>
-				<Button
-					variant="ghost"
-					size="icon"
-					type="button"
-					aria-label={`Sort ${title} ascending`}
-					onClick={() => {
-						if (sorted === "asc") {
-							column.clearSorting();
-							return;
-						}
-						column.toggleSorting(false);
-					}}
-					className="h-3 w-3 p-0 hover:bg-transparent"
-				>
-					<ChevronDown
-						className={cn(
-							"h-3 w-3",
-							sorted === "asc"
-								? "text-accent-foreground"
-								: "text-muted-foreground",
-						)}
-					/>
-				</Button>
-			</span>
-		</div>
+			<OverflowTooltipText
+				value={title}
+				as="span"
+				className="flex-1 text-sm font-medium text-foreground/80"
+			/>
+			{sorted === "desc" ? (
+				<ChevronUp className={cn(iconClassName, "shrink-0")} />
+			) : sorted === "asc" ? (
+				<ChevronDown className={cn(iconClassName, "shrink-0")} />
+			) : null}
+		</Button>
 	);
 }

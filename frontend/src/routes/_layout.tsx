@@ -31,7 +31,7 @@ function Layout() {
           isVisible={disclaimerVisible}
           setVisible={setDisclaimerVisible}
         />
-        <div className="flex flex-col flex-1 p-5 overflow-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-5">
           <ForbiddenBoundary>
             <Outlet />
           </ForbiddenBoundary>

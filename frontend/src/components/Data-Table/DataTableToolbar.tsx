@@ -40,11 +40,11 @@ export function DataTableToolbar<TData>({
 		);
 
 	return (
-		<div className="flex flex-wrap items-center justify-between gap-4">
-			<div className="flex items-center gap-2">
+		<div className="flex min-h-10 flex-wrap items-center justify-between gap-3 px-1">
+			<div className="flex items-center gap-3">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="outline" size="icon" className="h-9 w-9">
+						<Button variant="outline" size="icon" className="h-8 w-8">
 							<Settings2 className="h-4 w-4" />
 							<span className="sr-only">View options</span>
 						</Button>
@@ -89,7 +89,12 @@ export function DataTableToolbar<TData>({
 			</div>
 
 			<div className="ml-auto flex items-center gap-2">
-				<Button size="sm" variant="ghost" onClick={onToggleControls}>
+				<Button
+					size="sm"
+					variant="ghost"
+					className="h-8 text-muted-foreground hover:text-foreground"
+					onClick={onToggleControls}
+				>
 					{controlsOpen ? (
 						<>
 							<PanelRightClose className="h-4 w-4" />

@@ -37,7 +37,7 @@ export function DataTableFilterCheckbox({
 	);
 
 	return (
-		<div className="space-y-2">
+		<div className="min-w-0 space-y-2">
 			{options.length > 5 ? (
 				<Input
 					value={query}
@@ -83,14 +83,14 @@ export function DataTableFilterCheckbox({
 					</ToggleGroupItem>
 				</ToggleGroup>
 			) : null}
-			<div className="space-y-1">
+			<div className="min-w-0 space-y-1">
 				{filteredOptions.map((option) => {
 					const id = `filter-${field}-${option.toLowerCase().replace(/\s+/g, "-")}`;
 					return (
 						<label
 							key={option}
 							htmlFor={id}
-							className="flex items-center gap-2 text-sm"
+							className="flex min-h-10 min-w-0 items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
 						>
 							<Checkbox
 								id={id}
@@ -101,7 +101,7 @@ export function DataTableFilterCheckbox({
 								)}
 								onCheckedChange={() => onToggle(field, option)}
 							/>
-							<span className="truncate">{option}</span>
+							<span className="min-w-0 truncate">{option}</span>
 						</label>
 					);
 				})}

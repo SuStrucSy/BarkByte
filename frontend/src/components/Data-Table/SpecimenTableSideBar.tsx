@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  DataTableFilterControls,
-  type DataTableFilterField,
+	DataTableFilterControls,
+	type DataTableFilterField,
 } from "@/components/Data-Table/DataTableFilterControls";
 import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { Button } from "@/components/ui/button";
@@ -13,92 +13,125 @@ import { ScrollArea } from "@/components/ui/scroll-area";
  * while keeping only UI-local accordion state inside this component.
  */
 interface SpecimenTableSideBarProps {
-  controlsOpen: boolean;
-  panelHeightClassName: string;
-  onClearAll: () => void;
-  hasActiveSidebarFilters: boolean;
-  fields: DataTableFilterField[];
-  selectedByField: Record<string, string[]>;
-  sliderValuesByField: Record<string, [number, number]>;
-  failureModeFilterMode: FailureModeFilterMode;
-  onToggleOption: (field: string, option: string) => void;
-  onSliderChange: (field: string, value: [number, number]) => void;
-  onFailureModeFilterModeChange: (mode: FailureModeFilterMode) => void;
-  onResetField: (field: string) => void;
+	controlsOpen: boolean;
+	onClearAll: () => void;
+	hasActiveSidebarFilters: boolean;
+	fields: DataTableFilterField[];
+	selectedByField: Record<string, string[]>;
+	sliderValuesByField: Record<string, [number, number]>;
+	failureModeFilterMode: FailureModeFilterMode;
+	onToggleOption: (field: string, option: string) => void;
+	onSliderChange: (field: string, value: [number, number]) => void;
+	onFailureModeFilterModeChange: (mode: FailureModeFilterMode) => void;
+	onResetField: (field: string) => void;
+}
+
+function getDefaultOpenByField(fields: DataTableFilterField[]) {
+	return fields.reduce<Record<string, boolean>>((acc, field, index) => {
+		acc[field.value] = index < 2;
+		return acc;
+	}, {});
 }
 
 /**
  * Displays the filter panel next to the specimens table.
- * Parent provides filter data/state; this component manages only bulk open/close UI behavior.
+ * Parent provides filter data/state; this component owns only the sidebar section UI state.
  */
 export function SpecimenTableSideBar({
-  controlsOpen,
-  panelHeightClassName,
-  onClearAll,
-  hasActiveSidebarFilters,
-  fields,
-  selectedByField,
-  sliderValuesByField,
-  failureModeFilterMode,
-  onToggleOption,
-  onSliderChange,
-  onFailureModeFilterModeChange,
-  onResetField,
+	controlsOpen,
+	onClearAll,
+	hasActiveSidebarFilters,
+	fields,
+	selectedByField,
+	sliderValuesByField,
+	failureModeFilterMode,
+	onToggleOption,
+	onSliderChange,
+	onFailureModeFilterModeChange,
+	onResetField,
 }: SpecimenTableSideBarProps) {
-  // Signals DataTableFilterControls to apply a bulk open/close action once.
-  const [toggleAllSignal, setToggleAllSignal] = useState(0);
-  // Desired open state when the bulk toggle signal fires.
-  const [toggleAllOpenState, setToggleAllOpenState] = useState(false);
-  // Tracks current aggregate collapse state to choose button label/action.
-  const [allControlsCollapsed, setAllControlsCollapsed] = useState(false);
+	const [openByField, setOpenByField] = useState<Record<string, boolean>>(() =>
+		getDefaultOpenByField(fields),
+	);
 
-  // Flip all filter sections at once by toggling both desired state and signal id.
-  const handleToggleAll = () => {
-    const nextCollapsedState = !allControlsCollapsed;
-    setToggleAllOpenState(!nextCollapsedState);
-    setToggleAllSignal((prev) => prev + 1);
-  };
+	useEffect(() => {
+		setOpenByField((prev) => {
+			const next = { ...prev };
+			fields.forEach((field, index) => {
+				if (typeof next[field.value] === "undefined") {
+					next[field.value] = index < 2;
+				}
+			});
 
-  return (
-    <aside
-      className={`w-full min-h-0 overflow-hidden sm:w-72 sm:min-w-72 sm:max-w-72 md:w-80 md:min-w-80 md:max-w-80 ${panelHeightClassName} ${
-        controlsOpen ? "block" : "hidden"
-      }`}
-    >
-      {/* Sticky header keeps global filter actions visible while sidebar content scrolls. */}
-      <div className="sticky top-0 z-10  bg-background p-3">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-medium">Filters</h3>
-          <div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
-            {/* Toggles every filter subsection open/closed in one click. */}
-            <Button variant="secondary" size="sm" onClick={handleToggleAll}>
-              {allControlsCollapsed ? "Expand all" : "Collapse all"}
-            </Button>
+			Object.keys(next).forEach((fieldValue) => {
+				if (!fields.some((field) => field.value === fieldValue)) {
+					delete next[fieldValue];
+				}
+			});
 
-            {hasActiveSidebarFilters ? (
-              <Button variant="secondary" size="sm" onClick={onClearAll}>
-                Clear
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      </div>
-      {/* Scrollable body that renders all checkbox + slider filter controls. */}
-      <ScrollArea className="h-[80vh] p-4">
-        <DataTableFilterControls
-          fields={fields}
-          selectedByField={selectedByField}
-          sliderValuesByField={sliderValuesByField}
-          failureModeFilterMode={failureModeFilterMode}
-          onToggleOption={onToggleOption}
-          onSliderChange={onSliderChange}
-          onFailureModeFilterModeChange={onFailureModeFilterModeChange}
-          onResetField={onResetField}
-          toggleAllSignal={toggleAllSignal}
-          toggleAllOpenState={toggleAllOpenState}
-          onAllCollapsedChange={setAllControlsCollapsed}
-        />
-      </ScrollArea>
-    </aside>
-  );
+			return next;
+		});
+	}, [fields]);
+
+	const allControlsCollapsed = useMemo(
+		() =>
+			fields.length > 0 && fields.every((field) => !openByField[field.value]),
+		[fields, openByField],
+	);
+
+	const handleToggleAll = () => {
+		const nextOpenState = allControlsCollapsed;
+		setOpenByField(
+			fields.reduce<Record<string, boolean>>((acc, field) => {
+				acc[field.value] = nextOpenState;
+				return acc;
+			}, {}),
+		);
+	};
+
+	return (
+		<aside
+			className={`h-full min-h-0 w-full min-w-0 overflow-hidden rounded-md border md:flex md:flex-[0_1_24rem] md:flex-col md:max-w-[24rem] ${
+				controlsOpen ? "block" : "hidden"
+			}`}
+		>
+			{/* Sticky header keeps global filter actions visible while sidebar content scrolls. */}
+			<div className="sticky top-0 z-10 border-b bg-background p-3">
+				<div className="flex items-center justify-between gap-2">
+					<h3 className="text-sm font-medium">Filters</h3>
+					<div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+						{/* Toggles every filter subsection open/closed in one click. */}
+						<Button variant="ghost" size="sm" onClick={handleToggleAll}>
+							{allControlsCollapsed ? "Expand all" : "Collapse all"}
+						</Button>
+
+						{hasActiveSidebarFilters ? (
+							<Button variant="ghost" size="sm" onClick={onClearAll}>
+								Clear
+							</Button>
+						) : null}
+					</div>
+				</div>
+			</div>
+			{/* Scrollable body that renders all checkbox + slider filter controls. */}
+			<ScrollArea className="bg-background overflow-x-hidden md:min-h-0 md:flex-1 [&>[data-slot=scroll-area-scrollbar][data-orientation=horizontal]]:hidden [&>[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:w-3 [&>[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:border-l [&>[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:border-border/60 [&>[data-slot=scroll-area-thumb]]:bg-muted-foreground/50 hover:[&>[data-slot=scroll-area-thumb]]:bg-muted-foreground/70 [&>[data-slot=scroll-area-viewport]]:overflow-x-hidden">
+				<div className="min-w-0">
+					<DataTableFilterControls
+						fields={fields}
+						openByField={openByField}
+						selectedByField={selectedByField}
+						sliderValuesByField={sliderValuesByField}
+						failureModeFilterMode={failureModeFilterMode}
+						onFieldOpenChange={(field, open) =>
+							setOpenByField((prev) => ({ ...prev, [field]: open }))
+						}
+						onToggleOption={onToggleOption}
+						onSliderChange={onSliderChange}
+						onFailureModeFilterModeChange={onFailureModeFilterModeChange}
+						onResetField={onResetField}
+					/>
+				</div>
+			</ScrollArea>
+		</aside>
+	);
 }

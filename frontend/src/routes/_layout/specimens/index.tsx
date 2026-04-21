@@ -775,9 +775,9 @@ function SpecimensKitTable() {
 					fieldOptions={fieldOptions}
 				/>*/}
         {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
-        <div className="hidden md:flex md:items-center md:justify-between md:gap-2">
+        <div className="hidden md:flex md:items-center md:justify-between md:gap-3 md:pb-1">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             disabled={!filteredRows.length}
             onClick={() => exportSpecimensToCsv(filteredRows)}
@@ -839,10 +839,9 @@ function SpecimensKitTable() {
         </div>
       </div>
 
-      <div className="hidden md:block">
+      <div className="hidden min-h-0 min-w-0 md:ml-6 md:block md:w-full md:max-w-[24rem]">
         <SpecimenTableSideBar
           controlsOpen={controlsOpen}
-          panelHeightClassName={TABLE_PANEL_HEIGHT}
           onClearAll={clearAllFilters}
           hasActiveSidebarFilters={hasActiveSidebarFilters}
           fields={filterFields}
