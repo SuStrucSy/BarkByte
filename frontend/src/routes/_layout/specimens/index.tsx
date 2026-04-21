@@ -10,7 +10,7 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, DownloadIcon } from "lucide-react";
 import {
   type Dispatch,
   type SetStateAction,
@@ -63,6 +63,80 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import SpecimenSearch from "@/components/Specimens/SpecimenSearch";
+
+import Papa from "papaparse";
+import { saveAs } from "file-saver";
+import { Button } from "@/components/ui/button";
+
+export function exportSpecimensToCsv(rows: SpecimenPublic[]) {
+  if (!rows.length) return;
+
+  try {
+    const isIdKey = (key: string) => key === "id" || key.endsWith("_id");
+
+    const flattenRow = (row: SpecimenPublic): Record<string, string> => {
+      const flat: Record<string, string> = {};
+      for (const [key, value] of Object.entries(row)) {
+        if (isIdKey(key)) continue;
+        if (key === "doi" && value && typeof value === "object") {
+          for (const [dKey, dVal] of Object.entries(value as object)) {
+            if (!isIdKey(dKey)) flat[`doi_${dKey}`] = String(dVal ?? "");
+          }
+        } else if (
+          key === "joinery_type" &&
+          value &&
+          typeof value === "object"
+        ) {
+          const v = value as { label: string; has_dowel: boolean };
+          flat["joinery_type"] = v.label ?? "";
+          flat["joinery_type_has_dowel"] = String(v.has_dowel ?? "");
+        } else if (
+          key === "sub_joinery_type" &&
+          value &&
+          typeof value === "object"
+        ) {
+          flat["sub_joinery_type"] = (value as { label: string }).label ?? "";
+        } else if (
+          key === "e_qualitative_failure_measure" &&
+          Array.isArray(value)
+        ) {
+          flat["failure_modes"] = value.map((v) => v.label).join("; ");
+          flat["failure_mode_types"] = value.map((v) => v.type).join("; ");
+        } else if (key === "fastener_types" && Array.isArray(value)) {
+          flat["fastener_types"] = value.map((v) => v.label).join("; ");
+        } else if (key === "loading_directions" && Array.isArray(value)) {
+          flat["loading_directions"] = value.map((v) => v.label).join("; ");
+        } else if (Array.isArray(value)) {
+          flat[key] = value.join("; ");
+        } else {
+          flat[key] =
+            value === null || value === undefined ? "" : String(value);
+        }
+      }
+      return flat;
+    };
+
+    console.log("Step 1: flattening rows");
+    const flatRows = rows.map(flattenRow);
+    console.log("Step 1 OK", flatRows[0]);
+
+    console.log("Step 2: Papa.unparse");
+    const csv = Papa.unparse(flatRows);
+    console.log("Step 2 OK, length:", csv.length);
+
+    console.log("Step 3: Blob");
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+    console.log("Step 3 OK");
+
+    console.log("Step 4: saveAs");
+    saveAs(blob, "specimens.csv");
+    console.log("Step 4 OK");
+  } catch (err) {
+    console.error("exportSpecimensToCsv failed:", err);
+  }
+}
 
 const sliderSearchSchemaFields = Object.fromEntries(
   SLIDER_FILTER_CONFIG.map((config) => [config.field, z.string().optional()]),
@@ -253,62 +327,14 @@ function SpecimensKitTable() {
     getInitialQuerySearchTerm(search.q),
   ).current;
 
-<<<<<<< HEAD
-	// Keep filters open by default only when there's enough horizontal space for the table.
-	const [controlsOpen, setControlsOpen] = useState(() => {
-		if (typeof window === "undefined") {
-			return true;
-		}
+  // Keep filters open by default only when there's enough horizontal space for the table.
+  const [controlsOpen, setControlsOpen] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
 
-		return window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY).matches;
-	});
-	// Free-text / command input used in the top search bar.
-	const [searchTerm, setSearchTerm] = useState(initialBrowserQuerySearchTerm);
-	const searchTermRef = useRef(initialBrowserQuerySearchTerm);
-	const hasAppliedInitialBrowserQueryRef = useRef(false);
-	// Checkbox filter selections keyed by filter field.
-	const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>(
-		createEmptySelectedFilters,
-	);
-	const [failureModeFilterMode, setFailureModeFilterMode] =
-		useState<FailureModeFilterMode>("any");
-	// Slider range selections keyed by slider field.
-	const [sliderValuesByField, setSliderValuesByField] =
-		useState<SliderValuesByField>({});
-	// Client-side pagination state for the filtered table.
-	const [pagination, setPagination] = useState<PaginationState>({
-		pageIndex: 0,
-		pageSize: DEFAULT_PAGE_SIZE,
-	});
-	const [sorting, setSorting] = useState<SortingState>([]);
-	// Default visible/hidden columns on first render. Users can still change this from Toggle Columns.
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-		() => getInitialColumnVisibility(),
-	);
-
-	useEffect(() => {
-		const mediaQuery = window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY);
-		const syncControlsVisibility = () => {
-			setControlsOpen(mediaQuery.matches);
-		};
-
-		syncControlsVisibility();
-		mediaQuery.addEventListener("change", syncControlsVisibility);
-
-		return () => {
-			mediaQuery.removeEventListener("change", syncControlsVisibility);
-		};
-	}, []);
-
-	const syncSearchState = useCallback(
-		(overrides: Partial<RelevantSearchState>) => {
-			const nextSearch = {
-				...getRelevantSearchState(search),
-				...overrides,
-			} satisfies RelevantSearchState;
-=======
-  // Controls whether the right-side filter sidebar is visible.
-  const [controlsOpen, setControlsOpen] = useState(true);
+    return window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY).matches;
+  });
   // Free-text / command input used in the top search bar.
   const [searchTerm, setSearchTerm] = useState(initialBrowserQuerySearchTerm);
   const searchTermRef = useRef(initialBrowserQuerySearchTerm);
@@ -333,13 +359,26 @@ function SpecimensKitTable() {
     () => getInitialColumnVisibility(),
   );
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY);
+    const syncControlsVisibility = () => {
+      setControlsOpen(mediaQuery.matches);
+    };
+
+    syncControlsVisibility();
+    mediaQuery.addEventListener("change", syncControlsVisibility);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncControlsVisibility);
+    };
+  }, []);
+
   const syncSearchState = useCallback(
     (overrides: Partial<RelevantSearchState>) => {
       const nextSearch = {
         ...getRelevantSearchState(search),
         ...overrides,
       } satisfies RelevantSearchState;
->>>>>>> 0e40887 (feat: add search by specimen id to specimens page)
 
       if (
         areRelevantSearchStatesEqual(getRelevantSearchState(search), nextSearch)
@@ -723,7 +762,6 @@ function SpecimensKitTable() {
       <div
         className={`flex w-full min-h-0 flex-1 flex-col gap-4 md:overflow-hidden ${TABLE_PANEL_HEIGHT}`}
       >
-        <SpecimenSearch specimens={data?.data} onSelect={onSearchSelect} />
         {/* Quick search bar: users type plain text or field:value commands to narrow results. */}
         {/*<DataTableFilterCommand
 					value={searchTerm}
@@ -737,7 +775,22 @@ function SpecimensKitTable() {
 					fieldOptions={fieldOptions}
 				/>*/}
         {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex md:items-center md:justify-between md:gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!filteredRows.length}
+            onClick={() => exportSpecimensToCsv(filteredRows)}
+          >
+            <DownloadIcon className="mr-2 size-4" />
+            Download CSV
+            {filteredRows.length !== rows.length && (
+              <span className="ml-1 text-muted-foreground">
+                ({filteredRows.length})
+              </span>
+            )}
+          </Button>
+          <SpecimenSearch specimens={data?.data} onSelect={onSearchSelect} />
           <DataTableToolbar
             table={table}
             totalRows={rows.length}
@@ -767,27 +820,7 @@ function SpecimensKitTable() {
           </ItemGroup>
         </div>
 
-<<<<<<< HEAD
-				<div className="hidden min-h-0 flex-1 md:flex md:flex-col">
-					{/* Main results grid: this is the actual list of specimens users can scan and click into. */}
-					<SpecimensResultsTable
-						table={table}
-						columnCount={kitColumns.length}
-						onRowClick={(row) =>
-							navigate({
-								to: "/specimens/$specimenId",
-								params: { specimenId: row.original.id },
-							})
-						}
-					/>
-				</div>
-				{/* Bottom pager: lets users move between pages and control how many rows are shown. */}
-				<div className="hidden shrink-0 md:block">
-					<DataTablePagination table={table} pagination={pagination} />
-				</div>
-			</div>
-=======
-        <div className="hidden md:block">
+        <div className="hidden min-h-0 flex-1 md:flex md:flex-col">
           {/* Main results grid: this is the actual list of specimens users can scan and click into. */}
           <SpecimensResultsTable
             table={table}
@@ -801,11 +834,10 @@ function SpecimensKitTable() {
           />
         </div>
         {/* Bottom pager: lets users move between pages and control how many rows are shown. */}
-        <div className="hidden md:block">
+        <div className="hidden shrink-0 md:block">
           <DataTablePagination table={table} pagination={pagination} />
         </div>
       </div>
->>>>>>> 0e40887 (feat: add search by specimen id to specimens page)
 
       <div className="hidden md:block">
         <SpecimenTableSideBar

@@ -100,7 +100,7 @@ export default function SpecimenSearch({
         className="flex items-center gap-2 text-muted-foreground max-w-xs"
       >
         <Search className="h-4 w-4" />
-        <span>Search specimens...</span>
+        <span>Search specimens</span>
         <kbd className="ml-2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
           <span className="text-xs">⌘</span>K
         </kbd>
@@ -108,7 +108,7 @@ export default function SpecimenSearch({
 
       <CommandDialog open={open} onOpenChange={handleOpenChange}>
         <CommandInput
-          placeholder="Search by specimen reference ID..."
+          placeholder="Search by specimen reference ID"
           value={query}
           onValueChange={setQuery}
         />
