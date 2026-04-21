@@ -75,7 +75,7 @@ const joineryHotspots = [
 
 function Home() {
   return (
-    <div className="mt-4 flex min-h-[calc(100svh-7rem)] items-center justify-center md:mt-10 md:min-h-[calc(100svh-10rem)] lg:mt-14 lg:min-h-0">
+    <div className="flex min-h-[calc(100svh-7rem)] items-center justify-center md:min-h-[calc(100svh-10rem)] lg:min-h-[calc(100svh-12rem)]">
       <Card className="w-full max-w-6xl overflow-hidden border-border/60 py-0 shadow-2xl md:w-auto md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
       
         <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.2fr_0.8fr] xl:grid-cols-[1fr_1.25fr]">
@@ -99,22 +99,6 @@ function Home() {
                   Browse specimens by joinery type, material, and failure mode.
                   Trace from connection detail to test conditions and outcomes —
                   without digging through disconnected notes and spreadsheets.
-                </p>
-              </div>
-
-              {/* Stat strip */}
-              <div className="hidden lg:flex items-center gap-4 border-t border-border pt-5">
-                <div className="shrink-0 text-center">
-                  <p className="text-2xl font-semibold tracking-tight text-foreground">
-                    7
-                  </p>
-                  <p className="text-[0.65rem] uppercase tracking-widest text-muted-foreground">
-                    Joinery types
-                  </p>
-                </div>
-                <div className="h-8 w-px shrink-0 bg-border" />
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Each hotspot on the diagram links to a connection family
                 </p>
               </div>
             </div>
