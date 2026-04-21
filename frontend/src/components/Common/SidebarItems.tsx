@@ -52,10 +52,6 @@ const SidebarItems = () => {
 			]
 		: groupTwoItems;
 
-	const adminItems: Item[] = currentUser?.is_superuser
-		? [{ icon: Users, title: "Users Management", path: "/admin" }]
-		: [];
-
 	const listItems = items.map((item) => (
 		<RouterLink key={item.title} to={item.path}>
 			<SidebarMenuItem key={item.title}>
@@ -86,21 +82,6 @@ const SidebarItems = () => {
 		</RouterLink>
 	));
 
-	const adminMenuItems = adminItems.map((item) => (
-		<RouterLink key={item.title} to={item.path}>
-			<SidebarMenuItem key={item.title}>
-				<SidebarMenuButton
-					tooltip={item.title}
-					className="cursor-pointer data-[active=true]:font-bold"
-					isActive={item.path === pathname}
-				>
-					{item.icon && <item.icon />}
-					<span>{item.title}</span>
-				</SidebarMenuButton>
-			</SidebarMenuItem>
-		</RouterLink>
-	));
-
 	return (
 		<>
 			<SidebarGroup>
@@ -111,12 +92,6 @@ const SidebarItems = () => {
 				<SidebarGroupLabel>Specimen</SidebarGroupLabel>
 				<SidebarMenu>{specimenMenuItems}</SidebarMenu>
 			</SidebarGroup>
-			{currentUser?.is_superuser ? (
-				<SidebarGroup>
-					<SidebarGroupLabel>Admin</SidebarGroupLabel>
-					<SidebarMenu>{adminMenuItems}</SidebarMenu>
-				</SidebarGroup>
-			) : null}
 		</>
 	);
 };

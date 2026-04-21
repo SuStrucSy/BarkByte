@@ -1,13 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import type { PaginationState, Row } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { z } from "zod/v4";
 import { useUsersReadUsers } from "@/api/endpoints/users/users";
 import type { UserPublic } from "@/api/model";
 import AddUser from "@/components/Admin/AddUser";
+import ReferenceDataManager from "@/components/Admin/ReferenceDataManager";
 import { createColumns } from "@/components/Data-Table/columns";
 import { DataTable } from "@/components/Data-Table/DataTable";
 import SkeletonUsersTable from "@/components/Skeleton/SkeletonUsersTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const usersSearchSchema = z.object({
@@ -18,7 +20,14 @@ const PER_PAGE = 10;
 
 export const Route = createFileRoute("/_layout/_authenticated/admin")({
 	staticData: {
-		title: "Admin",
+		title: "Admin settings",
+	},
+	beforeLoad: ({ context }) => {
+		const currentUser = context.auth?.data;
+
+		if (currentUser && !currentUser.is_superuser) {
+			throw redirect({ to: "/" });
+		}
 	},
 	component: Admin,
 	validateSearch: (search) => usersSearchSchema.parse(search),
@@ -154,9 +163,26 @@ function UsersTable() {
 function Admin() {
 	return (
 		<div className="max-w-full">
-			<h1 className="text-3xl pt-3">Users Management</h1>
-			<AddUser />
-			<UsersTable />
+			<h1 className="pt-3 text-3xl">Admin settings</h1>
+			<Tabs defaultValue="general" className="pt-4">
+				<TabsList>
+					<TabsTrigger value="general">General</TabsTrigger>
+					<TabsTrigger value="user-management">User management</TabsTrigger>
+					<TabsTrigger value="reference-data">Reference data</TabsTrigger>
+				</TabsList>
+				<TabsContent value="general" className="pt-4">
+					<div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+						Admin-only configuration lives here.
+					</div>
+				</TabsContent>
+				<TabsContent value="user-management" className="space-y-4 pt-4">
+					<AddUser />
+					<UsersTable />
+				</TabsContent>
+				<TabsContent value="reference-data" className="pt-4">
+					<ReferenceDataManager />
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
 }

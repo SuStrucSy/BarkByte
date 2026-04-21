@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, LogOut, Settings, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -83,6 +83,14 @@ export function NavUser() {
 									Account
 								</Link>
 							</DropdownMenuItem>
+							{currentUser?.is_superuser ? (
+								<DropdownMenuItem asChild>
+									<Link to="/admin">
+										<Shield />
+										Admin settings
+									</Link>
+								</DropdownMenuItem>
+							) : null}
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
