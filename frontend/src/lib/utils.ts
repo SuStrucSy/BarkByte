@@ -246,7 +246,7 @@ export function getSpecimenDisplayLabel(
 }
 
 export function getSpecimenAddress(specimenId: string): string {
-	return `https://timverse.com/specimens/${specimenId}`;
+	return `https://timverse.ca/specimens/${specimenId}`;
 }
 
 export function humanizeLabel(label: string): string {
