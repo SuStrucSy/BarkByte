@@ -18,12 +18,20 @@ import { NavUser } from "./NavUser";
 import SidebarItems from "./SidebarItems";
 
 const LoginButton = () => {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <SidebarMenuButton
       asChild
       className="data-[slot=sidebar-menu-button]:p-1.5!"
     >
-      <Link to="/login">
+      <Link to="/login" onClick={handleNavigation}>
         <LogIn className="h-5 w-5" />
         <span className="text-base font-semibold">Login</span>
       </Link>
@@ -33,7 +41,13 @@ const LoginButton = () => {
 
 const AppSidebar = () => {
   const isLoggedIn = useIsLoggedIn();
-  const { state } = useSidebar();
+  const { isMobile, setOpenMobile, state } = useSidebar();
+
+  const handleNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -53,7 +67,7 @@ const AppSidebar = () => {
                   asChild
                   className="data-[slot=sidebar-menu-button]:p-1.5!"
                 >
-                  <Link to="/">
+                  <Link to="/" onClick={handleNavigation}>
                     <TreePine />
                     <span className="text-base font-semibold">Timverse</span>
                   </Link>

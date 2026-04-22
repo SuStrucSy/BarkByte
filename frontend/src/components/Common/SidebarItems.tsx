@@ -17,6 +17,7 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	useSidebar,
 } from "@/components/ui/sidebar";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -28,7 +29,7 @@ const items = [
 	{ icon: Columns3, title: "Compare", path: "/compare" },
 ];
 
-const groupTwoItems = [{ icon: Layers, title: "All", path: "/specimens" }];
+const groupTwoItems = [{ icon: Layers, title: "All Specimens", path: "/specimens" }];
 
 interface Item {
 	icon: LucideIcon;
@@ -39,21 +40,28 @@ interface Item {
 const SidebarItems = () => {
 	const { data: currentUser } = useCurrentUser();
 	const { pathname } = useLocation();
+	const { isMobile, setOpenMobile } = useSidebar();
+
+	const handleNavigation = () => {
+		if (isMobile) {
+			setOpenMobile(false);
+		}
+	};
 
 	const specimenItems: Item[] = currentUser
 		? [
+				{ icon: LayersPlus, title: "Add Specimen", path: "/specimens/new" },
 				...groupTwoItems,
-				{ icon: LayersPlus, title: "Add", path: "/specimens/new" },
 				{
 					icon: ListTodo,
-					title: "Pending",
+					title: "Pending Specimens",
 					path: "/specimens/pending",
 				},
 			]
 		: groupTwoItems;
 
 	const listItems = items.map((item) => (
-		<RouterLink key={item.title} to={item.path}>
+		<RouterLink key={item.title} to={item.path} onClick={handleNavigation}>
 			<SidebarMenuItem key={item.title}>
 				<SidebarMenuButton
 					tooltip={item.title}
@@ -68,7 +76,7 @@ const SidebarItems = () => {
 	));
 
 	const specimenMenuItems = specimenItems.map((item) => (
-		<RouterLink key={item.title} to={item.path}>
+		<RouterLink key={item.title} to={item.path} onClick={handleNavigation}>
 			<SidebarMenuItem key={item.title}>
 				<SidebarMenuButton
 					tooltip={item.title}
