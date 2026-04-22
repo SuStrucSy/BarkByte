@@ -50,18 +50,18 @@ export function DataTableFilterControls({
 	onResetField,
 }: DataTableFilterControlsProps) {
 	return (
-		<div className="min-w-0 bg-background">
+		<div className="min-w-0 bg-muted">
 			{fields.map((field) => (
 				<details
 					key={field.value}
-					className="min-w-0 border-b border-border bg-background last:border-b-0"
+					className="group min-w-0 border-b border-border bg-muted open:bg-background last:border-b-0"
 					open={openByField[field.value] ?? false}
 					onToggle={(event) => {
 						const isOpen = (event.currentTarget as HTMLDetailsElement).open;
 						onFieldOpenChange(field.value, isOpen);
 					}}
 				>
-					<summary className="flex min-h-12 min-w-0 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-muted">
+					<summary className="flex min-h-12 min-w-0 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-background group-open:hover:bg-transparent">
 						<div className="flex min-w-0 items-center gap-2">
 							<ChevronDown
 								className={`h-4 w-4 text-muted-foreground transition-transform ${

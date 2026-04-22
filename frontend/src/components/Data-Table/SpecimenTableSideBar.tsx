@@ -65,28 +65,38 @@ export function SpecimenTableSideBar({
 	return (
 		<aside
 			className={cn(
-				"flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200",
+				"flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200 bg-muted",
 				className,
 			)}
 		>
 			{/* Sticky header keeps global filter actions visible while sidebar content scrolls. */}
-			<div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b bg-background p-3">
+			<div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b bg-muted p-3">
 				<h3 className="text-sm font-medium">Filters</h3>
 				<div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
 					{/* Toggles every filter subsection open/closed in one click. */}
-					<Button variant="ghost" size="sm" onClick={handleToggleAll}>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="hover:bg-background active:bg-background"
+						onClick={handleToggleAll}
+					>
 						{allControlsCollapsed ? "Expand all" : "Collapse all"}
 					</Button>
 
 					{hasActiveSidebarFilters ? (
-						<Button variant="ghost" size="sm" onClick={onClearAll}>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="hover:bg-background active:bg-background"
+							onClick={onClearAll}
+						>
 							Clear
 						</Button>
 					) : null}
 				</div>
 			</div>
 			{/* Scrollable body that renders all checkbox + slider filter controls. */}
-			<ScrollArea className="min-h-0 flex-1">
+			<ScrollArea className="min-h-0 flex-1 bg-muted">
 				<DataTableFilterControls
 					fields={fields}
 					openByField={openByField}

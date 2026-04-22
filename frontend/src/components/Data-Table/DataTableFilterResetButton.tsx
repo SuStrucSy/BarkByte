@@ -18,7 +18,7 @@ export function DataTableFilterResetButton({
 			type="button"
 			variant="ghost"
 			size="sm"
-			className="h-6 px-2 text-xs"
+			className="h-6 px-2 text-xs hover:bg-muted active:bg-muted"
 			onClick={(event) => {
 				event.preventDefault();
 				event.stopPropagation();
