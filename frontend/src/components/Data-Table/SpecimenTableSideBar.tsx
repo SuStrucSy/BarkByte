@@ -6,6 +6,7 @@ import {
 import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 /**
  * Sidebar container for specimens filters.
@@ -13,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
  * while keeping only UI-local accordion state inside this component.
  */
 interface SpecimenTableSideBarProps {
+	className?: string;
 	onClearAll: () => void;
 	hasActiveSidebarFilters: boolean;
 	fields: DataTableFilterField[];
@@ -30,6 +32,7 @@ interface SpecimenTableSideBarProps {
  * Parent provides filter data/state; this component owns only the sidebar section UI state.
  */
 export function SpecimenTableSideBar({
+	className,
 	onClearAll,
 	hasActiveSidebarFilters,
 	fields,
@@ -60,23 +63,26 @@ export function SpecimenTableSideBar({
 	};
 
 	return (
-		<aside className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200">
+		<aside
+			className={cn(
+				"flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200",
+				className,
+			)}
+		>
 			{/* Sticky header keeps global filter actions visible while sidebar content scrolls. */}
-			<div className="shrink-0 border-b bg-background p-3">
-				<div className="flex items-center justify-between gap-2">
-					<h3 className="text-sm font-medium">Filters</h3>
-					<div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
-						{/* Toggles every filter subsection open/closed in one click. */}
-						<Button variant="ghost" size="sm" onClick={handleToggleAll}>
-							{allControlsCollapsed ? "Expand all" : "Collapse all"}
-						</Button>
+			<div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b bg-background p-3">
+				<h3 className="text-sm font-medium">Filters</h3>
+				<div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+					{/* Toggles every filter subsection open/closed in one click. */}
+					<Button variant="ghost" size="sm" onClick={handleToggleAll}>
+						{allControlsCollapsed ? "Expand all" : "Collapse all"}
+					</Button>
 
-						{hasActiveSidebarFilters ? (
-							<Button variant="ghost" size="sm" onClick={onClearAll}>
-								Clear
-							</Button>
-						) : null}
-					</div>
+					{hasActiveSidebarFilters ? (
+						<Button variant="ghost" size="sm" onClick={onClearAll}>
+							Clear
+						</Button>
+					) : null}
 				</div>
 			</div>
 			{/* Scrollable body that renders all checkbox + slider filter controls. */}

@@ -94,7 +94,7 @@ export function SpecimensResultsTable({
 		?.headers.reduce((total, header) => total + getColumnWidthRem(header), 0);
 
 	return (
-		<ScrollArea className="min-h-0 flex-1 overflow-hidden rounded-md border border-border/60 bg-background">
+		<ScrollArea className="min-h-0 flex-1 overflow-auto rounded-md border border-border/60 bg-background">
 			<table
 				className="w-full table-fixed caption-bottom text-sm"
 				style={{

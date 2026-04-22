@@ -1,10 +1,13 @@
 import type { Table } from "@tanstack/react-table";
 import {
 	Check,
+	DownloadIcon,
 	PanelRightClose,
 	PanelRightOpen,
 	Settings2,
 } from "lucide-react";
+import type { SpecimenPublic } from "@/api/model";
+import SpecimenSearch from "@/components/Specimens/SpecimenSearch";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -18,19 +21,27 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface DataTableToolbarProps<TData> {
+	className?: string;
 	table: Table<TData>;
 	totalRows: number;
 	filteredRows: number;
 	controlsOpen: boolean;
 	onToggleControls: () => void;
+	specimens?: SpecimenPublic[];
+	onSelectSpecimen?: (specimen: SpecimenPublic) => void;
+	onDownloadCsv?: () => void;
 }
 
 export function DataTableToolbar<TData>({
+	className,
 	table,
 	totalRows,
 	filteredRows,
 	controlsOpen,
 	onToggleControls,
+	specimens,
+	onSelectSpecimen,
+	onDownloadCsv,
 }: DataTableToolbarProps<TData>) {
 	const visibleColumns = table
 		.getAllColumns()
@@ -40,8 +51,13 @@ export function DataTableToolbar<TData>({
 		);
 
 	return (
-		<div className="flex min-h-10 flex-wrap items-center justify-between gap-3 px-1">
-			<div className="flex items-center gap-3">
+		<div
+			className={cn(
+				"flex min-h-10 w-full flex-wrap items-center gap-3 px-1",
+				className,
+			)}
+		>
+			<div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="outline" size="icon" className="h-8 w-8">
@@ -81,33 +97,57 @@ export function DataTableToolbar<TData>({
 						</ScrollArea>
 					</DropdownMenuContent>
 				</DropdownMenu>
+				
+				{specimens ? (
+					<SpecimenSearch
+						specimens={specimens}
+						onSelect={onSelectSpecimen}
+						buttonClassName="px-2 xl:px-3"
+						labelClassName="hidden xl:inline"
+						shortcutClassName="hidden 2xl:flex"
+					/>
+				) : null}
 
-				<p className="text-sm text-muted-foreground">
-					<span className="font-mono font-medium">{filteredRows}</span> of{" "}
-					<span className="font-mono font-medium">{totalRows}</span> row(s)
-				</p>
+				{onDownloadCsv ? (
+					<Button
+						variant="outline"
+						size="sm"
+						className="px-2 xl:px-3"
+						disabled={!filteredRows}
+						onClick={onDownloadCsv}
+					>
+						<DownloadIcon className="size-4 xl:mr-2" />
+						<span className="sr-only">Download CSV</span>
+						<span className="hidden xl:inline">Download</span>
+						{filteredRows !== totalRows ? (
+							<span className="hidden text-muted-foreground xl:ml-1 xl:inline">
+								({filteredRows})
+							</span>
+						) : null}
+					</Button>
+				) : null}
+
+				
 			</div>
 
-			<div className="ml-auto flex items-center gap-2">
-				<Button
-					size="sm"
-					variant="ghost"
-					className="h-8 text-muted-foreground hover:text-foreground"
-					onClick={onToggleControls}
-				>
-					{controlsOpen ? (
-						<>
-							<PanelRightClose className="h-4 w-4" />
-							<span className="hidden md:block">Hide Controls</span>
-						</>
-					) : (
-						<>
-							<PanelRightOpen className="h-4 w-4" />
-							<span className="hidden md:block">Show Controls</span>
-						</>
-					)}
-				</Button>
-			</div>
+			<Button
+				size="sm"
+				variant="ghost"
+				className="ml-auto h-8 shrink-0 text-muted-foreground hover:text-foreground"
+				onClick={onToggleControls}
+			>
+				{controlsOpen ? (
+					<>
+						<PanelRightClose className="h-4 w-4" />
+						<span className="hidden md:block">Hide Controls</span>
+					</>
+				) : (
+					<>
+						<PanelRightOpen className="h-4 w-4" />
+						<span className="hidden md:block">Show Controls</span>
+					</>
+				)}
+			</Button>
 		</div>
 	);
 }

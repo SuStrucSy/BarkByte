@@ -12,10 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import type { SpecimenPublic } from "@/api/model";
 import { Button } from "../ui/button";
 import { Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SpecimenSearchProps {
   specimens: SpecimenPublic[] | undefined;
   onSelect?: (specimen: SpecimenPublic) => void;
+  buttonClassName?: string;
+  labelClassName?: string;
+  shortcutClassName?: string;
 }
 
 // --- Sub-components ---
@@ -50,6 +54,9 @@ function HighlightedText({ text, query }: HighlightedTextProps) {
 export default function SpecimenSearch({
   specimens = [],
   onSelect,
+  buttonClassName,
+  labelClassName,
+  shortcutClassName,
 }: SpecimenSearchProps) {
   const [open, setOpen] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");
@@ -97,11 +104,20 @@ export default function SpecimenSearch({
       <Button
         variant="outline"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 text-muted-foreground max-w-xs"
+        className={cn(
+          "flex max-w-xs items-center gap-2 text-muted-foreground",
+          buttonClassName,
+        )}
       >
         <Search className="h-4 w-4" />
-        <span>Search specimens</span>
-        <kbd className="ml-2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+        <span className={cn(labelClassName)}>Search specimens</span>
+        <span className="sr-only">Search specimens</span>
+        <kbd
+          className={cn(
+            "ml-2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex",
+            shortcutClassName,
+          )}
+        >
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>

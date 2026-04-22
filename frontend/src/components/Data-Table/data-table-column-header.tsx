@@ -48,7 +48,7 @@ export function DataTableColumnHeader<TData, TValue>({
 			onClick={handleSortClick}
 			aria-label={`Sort ${title}`}
 			className={cn(
-				"-ml-3 flex min-h-9 w-full min-w-0 items-center gap-2 px-3 text-left hover:bg-transparent",
+				"-ml-2 inline-flex min-h-9 w-fit max-w-full items-center justify-start gap-2 px-2 text-left",
 				className,
 			)}
 			{...props}

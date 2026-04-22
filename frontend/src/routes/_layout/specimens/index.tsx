@@ -10,7 +10,7 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ChevronRightIcon, DownloadIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import {
   type Dispatch,
   type SetStateAction,
@@ -62,11 +62,8 @@ import {
   ItemGroup,
   ItemTitle,
 } from "@/components/ui/item";
-import SpecimenSearch from "@/components/Specimens/SpecimenSearch";
-
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
-import { Button } from "@/components/ui/button";
 
 export function exportSpecimensToCsv(rows: SpecimenPublic[]) {
   if (!rows.length) return;
@@ -758,11 +755,14 @@ function SpecimensKitTable() {
   const paginatedRows = table.getRowModel().rows;
 
   return (
-    <div className="flex w-full min-h-0 flex-1 flex-col gap-3 sm:flex-row">
-      
-      <div
-        className={`flex w-full min-h-0 flex-1 flex-col gap-4 md:overflow-hidden ${TABLE_PANEL_HEIGHT}`}
-      >
+    <div
+      className={`flex w-full min-h-0 flex-1 flex-col gap-3 sm:flex-row md:grid md:grid-rows-[auto_minmax(0,1fr)_auto] md:gap-y-4 ${
+        controlsOpen
+          ? "md:grid-cols-[minmax(0,1fr)_24rem] md:gap-x-5"
+          : "md:grid-cols-[minmax(0,1fr)]"
+      } ${TABLE_PANEL_HEIGHT}`}
+    >
+      <div className="flex w-full min-h-0 flex-1 flex-col gap-4 md:contents">
         {/* Quick search bar: users type plain text or field:value commands to narrow results. */}
         {/* <DataTableFilterCommand
 					value={searchTerm}
@@ -778,30 +778,17 @@ function SpecimensKitTable() {
 
 
         {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
-        <div className="hidden md:flex md:items-center md:justify-between md:gap-3 md:pb-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={!filteredRows.length}
-            onClick={() => exportSpecimensToCsv(filteredRows)}
-          >
-            <DownloadIcon className="mr-2 size-4" />
-            Download CSV
-            {filteredRows.length !== rows.length && (
-              <span className="ml-1 text-muted-foreground">
-                ({filteredRows.length})
-              </span>
-            )}
-          </Button>
-          <SpecimenSearch specimens={data?.data} onSelect={onSearchSelect} />
-          <DataTableToolbar
-            table={table}
-            totalRows={rows.length}
-            filteredRows={filteredRows.length}
-            controlsOpen={controlsOpen}
-            onToggleControls={() => setControlsOpen((prev) => !prev)}
-          />
-        </div>
+        <DataTableToolbar
+          className="hidden md:col-span-full md:row-start-1 md:flex md:pb-1"
+          table={table}
+          totalRows={rows.length}
+          filteredRows={filteredRows.length}
+          controlsOpen={controlsOpen}
+          onToggleControls={() => setControlsOpen((prev) => !prev)}
+          specimens={data?.data}
+          onSelectSpecimen={onSearchSelect}
+          onDownloadCsv={() => exportSpecimensToCsv(filteredRows)}
+        />
 
         {/* Mobile Specimen Table */}
         <div className="min-h-0 md:hidden">
@@ -824,7 +811,7 @@ function SpecimensKitTable() {
           </ItemGroup>
         </div>
 
-        <div className="hidden min-h-0 flex-1 md:flex md:flex-col">
+        <div className="hidden min-h-0 flex-1 md:col-start-1 md:row-start-2 md:flex md:flex-col">
           {/* Main results grid: this is the actual list of specimens users can scan and click into. */}
           <SpecimensResultsTable
             table={table}
@@ -840,46 +827,47 @@ function SpecimensKitTable() {
 
 
         {/* Bottom pager: lets users move between pages and control how many rows are shown. */}
-        <div className="hidden shrink-0 md:block">
+        <div className="hidden shrink-0 md:col-start-1 md:row-start-3 md:flex md:items-center md:justify-between md:gap-4">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-mono font-medium">{filteredRows.length}</span> of{" "}
+            <span className="font-mono font-medium">{rows.length}</span> row(s)
+          </p>
           <DataTablePagination table={table} pagination={pagination} />
         </div>
-
-
       </div>
 
       {controlsOpen ? (
-        <div className="hidden min-h-0 min-w-0 md:ml-6 md:block md:w-full md:max-w-[24rem]">
-          <SpecimenTableSideBar
-            onClearAll={clearAllFilters}
-            hasActiveSidebarFilters={hasActiveSidebarFilters}
-            fields={filterFields}
-            selectedByField={selectedFilters}
-            sliderValuesByField={sliderValuesByField}
-            failureModeFilterMode={failureModeFilterMode}
-            onToggleOption={handleToggleOption}
-            onSliderChange={(field, value) => {
-              setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
-              syncSearchState({
-                [field]:
-                  value[0] !== sliderDefaults[field as SliderField][0] ||
-                  value[1] !== sliderDefaults[field as SliderField][1]
-                    ? serializeSliderParam(value)
-                    : undefined,
-              });
-            }}
-            onFailureModeFilterModeChange={(mode) => {
-              setFailureModeFilterMode(mode);
-              if (selectedFilters.failure_modes.length > 0) {
-                updateCheckboxSearchClause(
-                  "failure_modes",
-                  selectedFilters.failure_modes,
-                  mode,
-                );
-              }
-            }}
-            onResetField={handleResetField}
-          />
-        </div>
+        <SpecimenTableSideBar
+          className="hidden md:col-start-2 md:row-start-2 md:flex md:max-w-[24rem]"
+          onClearAll={clearAllFilters}
+          hasActiveSidebarFilters={hasActiveSidebarFilters}
+          fields={filterFields}
+          selectedByField={selectedFilters}
+          sliderValuesByField={sliderValuesByField}
+          failureModeFilterMode={failureModeFilterMode}
+          onToggleOption={handleToggleOption}
+          onSliderChange={(field, value) => {
+            setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
+            syncSearchState({
+              [field]:
+                value[0] !== sliderDefaults[field as SliderField][0] ||
+                value[1] !== sliderDefaults[field as SliderField][1]
+                  ? serializeSliderParam(value)
+                  : undefined,
+            });
+          }}
+          onFailureModeFilterModeChange={(mode) => {
+            setFailureModeFilterMode(mode);
+            if (selectedFilters.failure_modes.length > 0) {
+              updateCheckboxSearchClause(
+                "failure_modes",
+                selectedFilters.failure_modes,
+                mode,
+              );
+            }
+          }}
+          onResetField={handleResetField}
+        />
       ) : null}
     </div>
   );
