@@ -785,6 +785,7 @@ function SpecimensKitTable() {
           filteredRows={filteredRows.length}
           controlsOpen={controlsOpen}
           onToggleControls={() => setControlsOpen((prev) => !prev)}
+          onResetColumns={() => setColumnVisibility(getInitialColumnVisibility())}
           specimens={data?.data}
           onSelectSpecimen={onSearchSelect}
           onDownloadCsv={() => exportSpecimensToCsv(filteredRows)}
