@@ -57,6 +57,10 @@ function getPlainTextCellValue(cell: Cell<SpecimenPublic, unknown>) {
 		return cell.row.original.sub_joinery_type?.label || "N/A";
 	}
 
+	if (meta?.renderAs === "doi_label") {
+		return cell.row.original.doi?.ref_title || "Unnamed";
+	}
+
 	if (meta?.renderAs === "array_join") {
 		if (Array.isArray(rawValue)) {
 			return rawValue.join(", ") || "N/A";

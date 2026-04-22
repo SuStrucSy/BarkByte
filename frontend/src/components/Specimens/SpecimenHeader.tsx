@@ -3,13 +3,13 @@ import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SpecimenHeaderProps = {
-	id: string;
+	title: string;
 	onEditClick?: () => void;
 	onBackClick?: () => void;
 };
 
 export function SpecimenHeader({
-	id,
+	title,
 	onEditClick,
 	onBackClick,
 }: SpecimenHeaderProps) {
@@ -41,17 +41,19 @@ export function SpecimenHeader({
 		<div className="flex items-center justify-between">
 			<div className="flex items-center gap-3">
 				{backButton}
-				<h1 className="text-4xl font-semibold">{id}</h1>
+				<h1 className="text-4xl font-semibold">{title}</h1>
 			</div>
 			<div className="flex items-center gap-2">
 				{onEditClick ? (
 					<Button
-						size="icon"
+						size="sm"
 						onClick={onEditClick}
 						aria-label="Edit specimen"
 						title="Edit specimen"
+						className="gap-2"
 					>
 						<Pencil className="h-4 w-4" />
+						<span className="hidden sm:inline">Edit Specimen</span>
 					</Button>
 				) : null}
 			</div>

@@ -229,7 +229,6 @@ function FailureModeBadgeList({
 const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 	// Hidden by default
 	id: { header: "ID", hidden: true },
-	uploader_id: { header: "Uploader", hidden: true },
 	note: { header: "Notes", hidden: true },
 	connector_mechanical_properties: { header: "Connector Props", hidden: true },
 	fastener_mechanical_properties: { header: "Fastener Props", hidden: true },
@@ -237,7 +236,7 @@ const columnConfig: Record<SpecimenPublicKey, ColumnConfig> = {
 
 	// Visible columns are sortable by default unless explicitly disabled.
 	specimen_reference_id: { header: "Reference ID" },
-	doi: { header: "DOI", hidden: true },
+	doi: { header: "DOI", hidden: true, meta: { renderAs: "doi_label" } },
 	assembly_type: { header: "Assembly Type" },
 
 	connector: { header: "Connector" },
@@ -315,6 +314,11 @@ export const createColumns = <TData extends SpecimenPublic>(
 					return {
 						...baseColumn,
 						accessorFn: (row) => row.sub_joinery_type?.label ?? "",
+					} satisfies ColumnDef<TData>;
+				case "doi_label":
+					return {
+						...baseColumn,
+						accessorFn: (row) => row.doi?.ref_title ?? "Unnamed",
 					} satisfies ColumnDef<TData>;
 				case "array_labels":
 					return {

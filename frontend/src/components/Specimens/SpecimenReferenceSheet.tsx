@@ -30,7 +30,7 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-is-mobile";
-import { renderValue } from "@/lib/utils";
+import { getSpecimenDisplayLabel, renderValue } from "@/lib/utils";
 
 type SpecimenReferenceSheetProps = {
 	open: boolean;
@@ -84,9 +84,7 @@ function showRelatedSpecimens(relatedSpecimens: SpecimenPublic[]) {
 								rel="noreferrer"
 							>
 								<ItemContent>
-									<ItemTitle>
-										{specimen.specimen_reference_id ?? specimen.id}
-									</ItemTitle>
+									<ItemTitle>{getSpecimenDisplayLabel(specimen)}</ItemTitle>
 									<ItemDescription>
 										{renderValue(
 											specimen.joinery_type?.label ?? specimen.joinery_type,
@@ -198,9 +196,7 @@ export function SpecimenReferenceSheet({
 											Reference ID
 										</dt>
 										<dd className="text-sm">
-											{renderValue(
-												specimen.specimen_reference_id ?? specimen.id,
-											)}
+											{getSpecimenDisplayLabel(specimen)}
 										</dd>
 									</div>
 
@@ -260,9 +256,7 @@ export function SpecimenReferenceSheet({
 										<ItemContent>
 											<ItemTitle>Specimen Record</ItemTitle>
 											<ItemDescription>
-												{renderValue(
-													specimen.specimen_reference_id ?? specimen.id,
-												)}
+												{getSpecimenDisplayLabel(specimen)}
 											</ItemDescription>
 										</ItemContent>
 										<ItemActions>

@@ -9,6 +9,7 @@ import { SpecimenEditForm } from "@/components/Specimens/SpecimenEditForm";
 import { SpecimenHeader } from "@/components/Specimens/SpecimenHeader";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { useIsLoggedIn } from "@/hooks/useIsLoggedIn";
+import { getSpecimenDisplayLabel } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/specimens/$specimenId")({
 	validateSearch: z.object({
@@ -88,7 +89,7 @@ function SpecimenDetails() {
 			{edit ? (
 				<>
 					<SpecimenHeader
-						id={data.specimen_reference_id ?? data.id}
+						title={getSpecimenDisplayLabel(data)}
 						onBackClick={() =>
 							navigate({
 								to: Route.fullPath,

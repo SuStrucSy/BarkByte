@@ -210,6 +210,7 @@ interface SpecimenPendingCardProps {
 	pendingID: string;
 	createdAt: string;
 	requestedBy: string;
+	requestedByEmail?: string | null;
 	isBusy: boolean;
 	comment: string;
 	commentByAuthor?: string | null;
@@ -232,6 +233,7 @@ export function SpecimenPendingCard({
 	pendingID,
 	createdAt,
 	requestedBy,
+	requestedByEmail,
 	isBusy,
 	comment,
 	commentByAuthor,
@@ -351,7 +353,10 @@ export function SpecimenPendingCard({
 		return renderFieldGrid(fields, "grid grid-cols-1 gap-3");
 	};
 
-	const truncateText = (value: string | null | undefined, maxLength: number) => {
+	const truncateText = (
+		value: string | null | undefined,
+		maxLength: number,
+	) => {
 		if (!value) {
 			return value;
 		}
@@ -440,6 +445,16 @@ export function SpecimenPendingCard({
 	const sideBySideTabScrollStyle = {
 		WebkitOverflowScrolling: "touch" as const,
 	};
+	const requestedByContent = requestedByEmail ? (
+		<a
+			href={`mailto:${requestedByEmail}`}
+			className="font-medium text-foreground underline decoration-border underline-offset-4 transition-colors hover:text-primary"
+		>
+			{requestedBy}
+		</a>
+	) : (
+		<span className="font-medium text-foreground">{requestedBy}</span>
+	);
 
 	const renderFullDetailsTabs = () => (
 		<Tabs
@@ -750,8 +765,7 @@ export function SpecimenPendingCard({
 							))}
 					</div>
 					<div className="text-sm text-muted-foreground">
-						Requested by{" "}
-						<span className="font-medium text-foreground">{requestedBy}</span>
+						Requested by {requestedByContent}
 					</div>
 					{status === "pending" ? (
 						<PendingCardActions
@@ -815,8 +829,7 @@ export function SpecimenPendingCard({
 								))}
 						</div>
 						<div className="text-sm text-muted-foreground">
-							Requested by{" "}
-							<span className="font-medium text-foreground">{requestedBy}</span>
+							Requested by {requestedByContent}
 						</div>
 					</div>
 					<div className="justify-self-start sm:justify-self-end">
@@ -951,13 +964,14 @@ export function SpecimenPendingCard({
 							</div>
 						</div>
 					) : (
-						<div
-							className="grid gap-4 p-3 pb-4 sm:p-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-start lg:gap-6"
-						>
+						<div className="grid gap-4 p-3 pb-4 sm:p-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-start lg:gap-6">
 							<div className="min-w-0 self-stretch overflow-hidden">
 								{renderFullDetailsTabs()}
 							</div>
-							<div ref={sideBySideRightPaneRef} className="min-w-0 h-fit self-start">
+							<div
+								ref={sideBySideRightPaneRef}
+								className="min-w-0 h-fit self-start"
+							>
 								{renderReviewPanel()}
 							</div>
 						</div>

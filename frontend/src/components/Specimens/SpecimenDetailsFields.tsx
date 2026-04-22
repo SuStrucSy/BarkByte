@@ -3,7 +3,12 @@ import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fa
 import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype";
 import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection";
 import { useSubjoinerytypeGetSjtypesForJtype } from "@/api/endpoints/subjoinerytype/subjoinerytype";
-import type { JoineryType } from "@/api/model";
+import type {
+	FastenerType,
+	JoineryType,
+	LoadingDirection,
+	SubJoineryType,
+} from "@/api/model";
 import buttJoint from "@/assets/joineryTypes/Butt-Joint.png";
 import halfLap from "@/assets/joineryTypes/Half-Lap-Joint.png";
 import holdDown from "@/assets/joineryTypes/Hold-Down.png";
@@ -21,9 +26,9 @@ import {
 	FieldLegend,
 	FieldSet,
 } from "@/components/ui/field";
-import { cn } from "@/lib/utils";
 import { ASSEMBLY_TYPES } from "@/lib/constants";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import {
 	Combobox,
@@ -64,6 +69,10 @@ const toImageKey = (label: string) => label.toLowerCase().replace(/\s+/g, "-");
 interface AddSpecimenFormProps {
 	control: Control<AddNewSpecimenFormValues>;
 	changedFields?: Set<keyof AddNewSpecimenFormValues>;
+	initialJoineryOptions?: JoineryType[];
+	initialSubJoineryOptions?: SubJoineryType[];
+	initialFastenerOptions?: FastenerType[];
+	initialLoadingDirectionOptions?: LoadingDirection[];
 }
 
 const changedControlClassName =
@@ -72,12 +81,16 @@ const changedControlClassName =
 export function SpecimenDetailsFields({
 	control,
 	changedFields,
+	initialJoineryOptions = [],
+	initialSubJoineryOptions = [],
+	initialFastenerOptions = [],
+	initialLoadingDirectionOptions = [],
 }: AddSpecimenFormProps) {
 	const anchorFastener = useComboboxAnchor();
 	const anchorLoading = useComboboxAnchor();
 	const { data: joineryData } = useJoinerytypeGetJtypes();
 	const { data: fastenerData, refetch: refetchFasteners } =
-		useFastenertypeGetFastenerTypes({}, { query: { enabled: false } });
+		useFastenertypeGetFastenerTypes();
 	const { data: loadingDirectionData } =
 		useLoadingdirectionGetLoadingDirections();
 
@@ -89,10 +102,35 @@ export function SpecimenDetailsFields({
 	const { data: subjoinery } =
 		useSubjoinerytypeGetSjtypesForJtype(joineryTypes);
 
-	const joineryTypeList: JoineryType[] = joineryData?.data || [];
-	const subJoineryTypeList = subjoinery?.data || [];
-	const fastenerTypeList = fastenerData?.data || [];
-	const loadingDirectionList = loadingDirectionData?.data || [];
+	const joineryTypeList: JoineryType[] = [
+		...initialJoineryOptions,
+		...(joineryData?.data ?? []),
+	].filter(
+		(joinery, index, list) =>
+			list.findIndex((candidate) => candidate.id === joinery.id) === index,
+	);
+	const subJoineryTypeList = [
+		...initialSubJoineryOptions,
+		...(subjoinery?.data ?? []),
+	].filter(
+		(subJoinery, index, list) =>
+			list.findIndex((candidate) => candidate.id === subJoinery.id) === index,
+	);
+	const fastenerTypeList = [
+		...initialFastenerOptions,
+		...(fastenerData?.data ?? []),
+	].filter(
+		(fastener, index, list) =>
+			list.findIndex((candidate) => candidate.id === fastener.id) === index,
+	);
+	const loadingDirectionList = [
+		...initialLoadingDirectionOptions,
+		...(loadingDirectionData?.data ?? []),
+	].filter(
+		(loadingDirection, index, list) =>
+			list.findIndex((candidate) => candidate.id === loadingDirection.id) ===
+			index,
+	);
 
 	return (
 		<FieldGroup>
@@ -270,7 +308,7 @@ export function SpecimenDetailsFields({
 									field.onChange(selectedValues)
 								}
 								onOpenChange={(isOpen) => {
-									if (isOpen && !fastenerTypeList.length) {
+									if (isOpen && !fastenerData?.data?.length) {
 										// Trigger fetch when opened AND no data
 										refetchFasteners(); // your query refetch function
 									}
@@ -296,7 +334,7 @@ export function SpecimenDetailsFields({
 													);
 													return (
 														<ComboboxChip key={chipId}>
-															{fastener?.label || chipId}
+															{fastener?.label ?? ""}
 														</ComboboxChip>
 													);
 												})}
@@ -361,7 +399,7 @@ export function SpecimenDetailsFields({
 													);
 													return (
 														<ComboboxChip key={chipId}>
-															{loading?.label || chipId}
+															{loading?.label ?? ""}
 														</ComboboxChip>
 													);
 												})}
@@ -440,8 +478,7 @@ export function SpecimenDetailsFields({
 							checked={field.value}
 							onCheckedChange={field.onChange}
 							className={cn(
-								changedFields?.has("connector") &&
-									changedControlClassName,
+								changedFields?.has("connector") && changedControlClassName,
 							)}
 						/>
 						<FieldLabel htmlFor="connector">Has Connector</FieldLabel>

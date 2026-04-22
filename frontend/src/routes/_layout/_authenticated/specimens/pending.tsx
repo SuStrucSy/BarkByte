@@ -54,7 +54,13 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { cn, handleError, renderValue } from "@/lib/utils";
+import {
+	cn,
+	getDisplayText,
+	getSpecimenDisplayLabel,
+	handleError,
+	renderValue,
+} from "@/lib/utils";
 
 export const Route = createFileRoute(
 	"/_layout/_authenticated/specimens/pending",
@@ -291,9 +297,8 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 				: undefined;
 			const requester = userLookup.get(specimen.changed_by_user_id);
 			const requestedBy =
-				requester?.full_name?.trim() ||
-				requester?.email ||
-				specimen.changed_by_user_id;
+				requester?.full_name?.trim() || requester?.email || "Unknown user";
+			const requestedByEmail = requester?.email ?? null;
 			const isOwnPendingSpecimen =
 				currentUser?.id === specimen.changed_by_user_id;
 			const canReview = Boolean(currentUser?.is_superuser);
@@ -303,12 +308,18 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 				Boolean(
 					currentUser && (!currentUser.is_superuser || isOwnPendingSpecimen),
 				);
+			const stackTitleCandidate = getDisplayText(
+				spec.specimen_reference_id,
+				"Unnamed",
+			);
 			const stackTitle =
-				spec.specimen_reference_id ??
-				existingSpecimen?.specimen_reference_id ??
-				(specimen.specimen_id
-					? specimen.specimen_id
-					: "New specimen submission");
+				stackTitleCandidate !== "—"
+					? stackTitleCandidate
+					: getSpecimenDisplayLabel(existingSpecimen) !== "Unnamed"
+						? getSpecimenDisplayLabel(existingSpecimen)
+						: specimen.specimen_id
+							? "Unnamed specimen"
+							: "New specimen submission";
 			const stackSubtitle = [
 				specimen.specimen_id
 					? "Pending updates for this specimen"
@@ -337,6 +348,7 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 						changedData={changed}
 						specimenId={specimen.specimen_id ?? null}
 						requestedBy={requestedBy}
+						requestedByEmail={requestedByEmail}
 						isBusy={isApprovingThis || isRejectingThis || isDeletingThis}
 						pendingID={specimen.id}
 						commentByAuthor={specimen.comment_by_author}

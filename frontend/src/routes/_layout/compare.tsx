@@ -51,7 +51,12 @@ import {
 	getExperimentalLabel,
 	getExperimentalUnit,
 } from "@/lib/constants";
-import { cn, humanizeLabel } from "@/lib/utils";
+import {
+	cn,
+	getDisplayText,
+	getSpecimenDisplayLabel,
+	humanizeLabel,
+} from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/compare")({
 	staticData: {
@@ -116,7 +121,7 @@ function formatCompareValue(value: unknown): string {
 	}
 
 	if (typeof value === "string" || typeof value === "number") {
-		return String(value);
+		return getDisplayText(value, "Unnamed");
 	}
 
 	if (Array.isArray(value)) {
@@ -145,21 +150,7 @@ function formatCompareValue(value: unknown): string {
 			return `${record.ref_title}${authors}`;
 		}
 
-		if (typeof record.id === "string" && record.id.trim().length > 0) {
-			return record.id;
-		}
-
-		const scalarEntries = Object.entries(record)
-			.filter(([, entryValue]) =>
-				["string", "number", "boolean"].includes(typeof entryValue),
-			)
-			.map(
-				([entryKey, entryValue]) => `${humanizeLabel(entryKey)}: ${entryValue}`,
-			);
-
-		if (scalarEntries.length > 0) {
-			return scalarEntries.join(", ");
-		}
+		return "Unnamed";
 	}
 
 	return "No value";
@@ -458,7 +449,7 @@ function ComparePage() {
 												rel="noreferrer"
 												className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-primary"
 											>
-												{specimen.specimen_reference_id}
+												{getSpecimenDisplayLabel(specimen)}
 											</a>
 										) : (
 											""
@@ -548,7 +539,7 @@ function ComparePage() {
 							className="min-w-0 cursor-pointer hover:border-red-300 hover:bg-red-50 hover:text-red-800"
 							role="button"
 							tabIndex={0}
-							aria-label={`Remove ${specimen.specimen_reference_id}`}
+							aria-label={`Remove ${getSpecimenDisplayLabel(specimen)}`}
 							onClick={() => clearSlot(slotIndex)}
 							onKeyDown={(event) => {
 								if (event.key === "Enter" || event.key === " ") {
@@ -559,7 +550,7 @@ function ComparePage() {
 						>
 							<ItemContent className="min-w-0">
 								<ItemTitle className="group-hover/item:text-red-800">
-									{specimen.specimen_reference_id}
+									{getSpecimenDisplayLabel(specimen)}
 								</ItemTitle>
 								<ItemDescription className="group-hover/item:text-red-800">
 									{specimen.joinery_type.label} /{" "}
@@ -579,7 +570,7 @@ function ComparePage() {
 								items={availableSpecimens}
 								itemToStringValue={(item: SpecimenPublic) => item.id}
 								itemToStringLabel={(item: SpecimenPublic) =>
-									`${item.specimen_reference_id} ${item.joinery_type.label} ${item.sub_joinery_type.label} ${item.doi.ref_title ?? ""} ${item.doi.authors ?? ""}`
+									`${getSpecimenDisplayLabel(item)} ${item.joinery_type.label} ${item.sub_joinery_type.label} ${item.doi.ref_title ?? ""} ${item.doi.authors ?? ""}`
 								}
 								onValueChange={(item: SpecimenPublic | null) => {
 									if (item) {
@@ -598,7 +589,7 @@ function ComparePage() {
 											<ComboboxItem key={candidate.id} value={candidate}>
 												<div className="min-w-0">
 													<div className="font-medium">
-														{candidate.specimen_reference_id}
+														{getSpecimenDisplayLabel(candidate)}
 													</div>
 													<div className="text-muted-foreground line-clamp-1 text-xs">
 														{candidate.joinery_type.label} /{" "}

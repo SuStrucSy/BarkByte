@@ -23,7 +23,12 @@ import {
 	type AddNewSpecimenFormValues,
 	AddNewSpecimenSchema,
 } from "@/lib/schemas";
-import { handleError, humanizeLabel, renderValue } from "@/lib/utils";
+import {
+	getDisplayText,
+	handleError,
+	humanizeLabel,
+	renderValue,
+} from "@/lib/utils";
 import { Button } from "../ui/button";
 import {
 	Card,
@@ -49,17 +54,18 @@ type SpecimenEditFormProps = {
 	onSubmitted: () => void;
 };
 
-const manualFieldLabels: Partial<Record<keyof AddNewSpecimenFormValues, string>> =
-	{
-		e_qualitative_failure_measure: "QFM",
-		e_qfm_description: "QFM Description",
-		note: "Specimen Note",
-		doi_id: "DOI",
-		joinery_type_id: "Joinery Type",
-		sub_joinery_type_id: "Sub Joinery Type",
-		fastener_type_ids: "Fastener Types",
-		loading_direction_ids: "Loading Directions",
-	};
+const manualFieldLabels: Partial<
+	Record<keyof AddNewSpecimenFormValues, string>
+> = {
+	e_qualitative_failure_measure: "QFM",
+	e_qfm_description: "QFM Description",
+	note: "Specimen Note",
+	doi_id: "DOI",
+	joinery_type_id: "Joinery Type",
+	sub_joinery_type_id: "Sub Joinery Type",
+	fastener_type_ids: "Fastener Types",
+	loading_direction_ids: "Loading Directions",
+};
 
 function getLoginRedirectUrl() {
 	return typeof window === "undefined" ? "/specimens" : window.location.href;
@@ -73,14 +79,20 @@ function formatSingleLookupValue(
 	value: string | undefined,
 	labelLookup: Map<string, string>,
 ) {
-	return renderValue(value ? (labelLookup.get(value) ?? value) : value);
+	return value
+		? getDisplayText(labelLookup.get(value) ?? value, "Unnamed")
+		: "—";
 }
 
 function formatMultiLookupValue(
 	value: string[] | undefined,
 	labelLookup: Map<string, string>,
 ) {
-	return renderValue((value ?? []).map((id) => labelLookup.get(id) ?? id));
+	return renderValue(
+		(value ?? []).map((id) =>
+			getDisplayText(labelLookup.get(id) ?? id, "Unnamed"),
+		),
+	);
 }
 
 export function SpecimenEditForm({
@@ -96,14 +108,15 @@ export function SpecimenEditForm({
 		() => getSpecimenFormValues(specimen),
 		[specimen],
 	);
-	const { data: pendingSpecimensData } = usePendingSpecimensListPendingSpecimens(
-		{ status: "pending" },
-		{
-			query: {
-				enabled: isLoggedIn,
+	const { data: pendingSpecimensData } =
+		usePendingSpecimensListPendingSpecimens(
+			{ status: "pending" },
+			{
+				query: {
+					enabled: isLoggedIn,
+				},
 			},
-		},
-	);
+		);
 	const activePendingSpecimen = useMemo(
 		() =>
 			pendingSpecimensData?.pending_specimens.find(
@@ -115,7 +128,9 @@ export function SpecimenEditForm({
 		() =>
 			mergeSpecimenFormValuesWithPendingChanges(
 				originalValues,
-				activePendingSpecimen?.changed_data as Record<string, unknown> | undefined,
+				activePendingSpecimen?.changed_data as
+					| Record<string, unknown>
+					| undefined,
 			),
 		[activePendingSpecimen?.changed_data, originalValues],
 	);
@@ -137,45 +152,65 @@ export function SpecimenEditForm({
 	);
 	const changedFields = useMemo(
 		() =>
-			Object.keys(pendingDiff) as Array<keyof typeof pendingDiff & keyof AddNewSpecimenFormValues>,
+			Object.keys(pendingDiff) as Array<
+				keyof typeof pendingDiff & keyof AddNewSpecimenFormValues
+			>,
 		[pendingDiff],
 	);
 	const hasChanges = Object.keys(pendingDiff).length > 0;
-	const changedFieldSet = useMemo(() => new Set(changedFields), [changedFields]);
+	const changedFieldSet = useMemo(
+		() => new Set(changedFields),
+		[changedFields],
+	);
 	const { data: joineryData } = useJoinerytypeGetJtypes();
 	const { data: subjoineryData } = useSubjoinerytypeGetSjtypes();
 	const { data: fastenerData } = useFastenertypeGetFastenerTypes();
-	const { data: loadingDirectionData } = useLoadingdirectionGetLoadingDirections();
+	const { data: loadingDirectionData } =
+		useLoadingdirectionGetLoadingDirections();
 	const { data: qfmData } = useFailuremodeGetModes(
 		{
 			connector: currentValues.connector,
 			dowel: currentValues.dowel,
 		},
-		{ query: { queryKey: ["editQfmTypes", currentValues.connector, currentValues.dowel] } },
+		{
+			query: {
+				queryKey: [
+					"editQfmTypes",
+					currentValues.connector,
+					currentValues.dowel,
+				],
+			},
+		},
 	);
 	const originalQfmLookup = useMemo(
 		() =>
 			new Map(
-				specimen.e_qualitative_failure_measure.map((item) => [item.id, item.label]),
+				specimen.e_qualitative_failure_measure.map((item) => [
+					item.id,
+					item.label,
+				]),
 			),
 		[specimen.e_qualitative_failure_measure],
 	);
 	const currentQfmLookup = useMemo(
-		() =>
-			new Map((qfmData?.data ?? []).map((item) => [item.id, item.label])),
+		() => new Map((qfmData?.data ?? []).map((item) => [item.id, item.label])),
 		[qfmData?.data],
 	);
 	const joineryLookup = useMemo(
-		() => new Map((joineryData?.data ?? []).map((item) => [item.id, item.label])),
+		() =>
+			new Map((joineryData?.data ?? []).map((item) => [item.id, item.label])),
 		[joineryData?.data],
 	);
 	const subjoineryLookup = useMemo(
 		() =>
-			new Map((subjoineryData?.data ?? []).map((item) => [item.id, item.label])),
+			new Map(
+				(subjoineryData?.data ?? []).map((item) => [item.id, item.label]),
+			),
 		[subjoineryData?.data],
 	);
 	const fastenerLookup = useMemo(
-		() => new Map((fastenerData?.data ?? []).map((item) => [item.id, item.label])),
+		() =>
+			new Map((fastenerData?.data ?? []).map((item) => [item.id, item.label])),
 		[fastenerData?.data],
 	);
 	const loadingDirectionLookup = useMemo(
@@ -191,7 +226,10 @@ export function SpecimenEditForm({
 		qfmLookup: Map<string, string>,
 	) => {
 		if (field === "e_qualitative_failure_measure") {
-			return formatMultiLookupValue(values.e_qualitative_failure_measure, qfmLookup);
+			return formatMultiLookupValue(
+				values.e_qualitative_failure_measure,
+				qfmLookup,
+			);
 		}
 
 		if (field === "joinery_type_id") {
@@ -199,7 +237,10 @@ export function SpecimenEditForm({
 		}
 
 		if (field === "sub_joinery_type_id") {
-			return formatSingleLookupValue(values.sub_joinery_type_id, subjoineryLookup);
+			return formatSingleLookupValue(
+				values.sub_joinery_type_id,
+				subjoineryLookup,
+			);
 		}
 
 		if (field === "fastener_type_ids") {
@@ -270,9 +311,7 @@ export function SpecimenEditForm({
 				<Card className="border-emerald-200 bg-emerald-50/70">
 					<CardHeader>
 						<CardTitle className="text-base">Pending update created</CardTitle>
-						<CardDescription>
-							Pending specimen ID: {lastPendingId}
-						</CardDescription>
+						<CardDescription>Your changes are pending review.</CardDescription>
 					</CardHeader>
 				</Card>
 			) : null}
@@ -288,6 +327,10 @@ export function SpecimenEditForm({
 					<SpecimenDetailsFields
 						control={form.control}
 						changedFields={changedFieldSet}
+						initialJoineryOptions={[specimen.joinery_type]}
+						initialSubJoineryOptions={[specimen.sub_joinery_type]}
+						initialFastenerOptions={specimen.fastener_types}
+						initialLoadingDirectionOptions={specimen.loading_directions}
 					/>
 				</CardContent>
 			</Card>
@@ -312,6 +355,7 @@ export function SpecimenEditForm({
 					<SpecimenExperimentalFields
 						control={form.control}
 						changedFields={changedFieldSet}
+						initialQFMOptions={specimen.e_qualitative_failure_measure}
 					/>
 				</CardContent>
 			</Card>
@@ -332,7 +376,10 @@ export function SpecimenEditForm({
 				{hasChanges ? (
 					<CardContent className="grid gap-3">
 						{changedFields.map((field) => (
-							<div key={field} className="grid gap-1 rounded-md border px-3 py-2">
+							<div
+								key={field}
+								className="grid gap-1 rounded-md border px-3 py-2"
+							>
 								<span className="text-[10px] tracking-wide text-muted-foreground uppercase">
 									{getFieldLabel(field)}
 								</span>

@@ -2,6 +2,7 @@ import type { SpecimenPublic } from "@/api/model";
 import { LabelValue } from "@/components/Common/LabelValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSpecimenDisplayLabel } from "@/lib/utils";
 import { BackboneChart } from "./BackboneChart";
 import { buildSpecimenBackboneModel } from "./buildSpecimenBackboneModel";
 import { SpecimenFailureModeLinks } from "./SpecimenFailureModeLinks";
@@ -24,7 +25,7 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 	return (
 		<>
 			<SpecimenHeader
-				id={data.specimen_reference_id ?? data.id}
+				title={getSpecimenDisplayLabel(data)}
 				onEditClick={onEditClick}
 			/>
 

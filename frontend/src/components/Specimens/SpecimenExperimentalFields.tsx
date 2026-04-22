@@ -1,7 +1,8 @@
-import { type Control, Controller, useWatch } from "react-hook-form";
 import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { type Control, Controller, useWatch } from "react-hook-form";
 import { useFailuremodeGetModes } from "@/api/endpoints/failuremode/failuremode";
+import type { FailureMode } from "@/api/model";
 import QFMTypes from "@/assets/failures.svg?react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,7 +15,11 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -23,6 +28,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 import {
 	Combobox,
 	ComboboxChip,
@@ -35,13 +41,13 @@ import {
 	ComboboxValue,
 	useComboboxAnchor,
 } from "../ui/combobox";
-import { cn } from "@/lib/utils";
 import { FieldHelpHover } from "./FieldHelpHover";
 import { TextField } from "./SpecimenStructuralFields";
 
 interface SpecimenExperimentalFormProps {
 	control: Control<AddNewSpecimenFormValues>;
 	changedFields?: Set<keyof AddNewSpecimenFormValues>;
+	initialQFMOptions?: FailureMode[];
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -99,7 +105,10 @@ function NumericField({
 							)
 						}
 						aria-invalid={fieldState.invalid}
-						className={cn("w-full max-w-48", changed && changedControlClassName)}
+						className={cn(
+							"w-full max-w-48",
+							changed && changedControlClassName,
+						)}
 					/>
 					{description && <FieldDescription>{description}</FieldDescription>}
 					{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -114,6 +123,7 @@ function NumericField({
 export function SpecimenExperimentalFields({
 	control,
 	changedFields,
+	initialQFMOptions = [],
 }: SpecimenExperimentalFormProps) {
 	const anchor = useComboboxAnchor();
 	const hasConnector = useWatch({
@@ -126,9 +136,17 @@ export function SpecimenExperimentalFields({
 	});
 	const { data: QFMData, refetch: refetchQFM } = useFailuremodeGetModes(
 		{ connector: hasConnector, dowel: hasDowel },
-		{ query: { enabled: false } },
+		{
+			query: {
+				enabled:
+					typeof hasConnector === "boolean" && typeof hasDowel === "boolean",
+			},
+		},
 	);
-	const QFMList = QFMData?.data || [];
+	const QFMList = [...initialQFMOptions, ...(QFMData?.data ?? [])].filter(
+		(qfm, index, list) =>
+			list.findIndex((candidate) => candidate.id === qfm.id) === index,
+	);
 	return (
 		<FieldGroup>
 			{/* ── Experimental Results ─────────────────────────────────────── */}
@@ -335,7 +353,7 @@ export function SpecimenExperimentalFields({
 									field.onChange(selectedValues)
 								}
 								onOpenChange={(isOpen) => {
-									if (isOpen && !QFMList.length) {
+									if (isOpen && !QFMData?.data?.length) {
 										// Trigger fetch when opened AND no data
 										refetchQFM(); // your query refetch function
 									}
@@ -359,7 +377,7 @@ export function SpecimenExperimentalFields({
 													const qfm = QFMList.find((f) => f.id === chipId);
 													return (
 														<ComboboxChip key={chipId}>
-															{qfm?.label || chipId}
+															{qfm?.label ?? ""}
 														</ComboboxChip>
 													);
 												})}
