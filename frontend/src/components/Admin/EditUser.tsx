@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { UserPenIcon } from "lucide-react";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -34,6 +34,8 @@ import { Input } from "../ui/input";
 
 interface EditUserProps {
 	user: UserPublic;
+	disabled?: boolean;
+	trigger?: ReactNode;
 }
 
 interface UserUpdateForm extends UserUpdate {
@@ -41,7 +43,7 @@ interface UserUpdateForm extends UserUpdate {
 	confirm_password?: string;
 }
 
-const EditUser = ({ user }: EditUserProps) => {
+const EditUser = ({ user, disabled, trigger }: EditUserProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const queryClient = useQueryClient();
 	const form = useForm<UserUpdateForm>({
@@ -80,10 +82,12 @@ const EditUser = ({ user }: EditUserProps) => {
 			<Form {...form}>
 				<form id="editUserForm" onSubmit={form.handleSubmit(onSubmit)}>
 					<DialogTrigger asChild>
-						<Button variant="ghost" size="sm">
-							<UserPenIcon fontSize="16px" />
-							Edit User
-						</Button>
+						{trigger ?? (
+							<Button variant="ghost" size="sm" disabled={disabled}>
+								<UserPenIcon fontSize="16px" />
+								Edit User
+							</Button>
+						)}
 					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>

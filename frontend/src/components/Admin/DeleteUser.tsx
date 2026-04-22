@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2Icon } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useUsersDeleteUser } from "@/api/endpoints/users/users";
@@ -17,7 +17,13 @@ import {
 import { Button } from "../ui/button";
 import { Form } from "../ui/form";
 
-const DeleteUser = ({ id }: { id: string }) => {
+interface DeleteUserProps {
+	id: string;
+	disabled?: boolean;
+	trigger?: ReactNode;
+}
+
+const DeleteUser = ({ id, disabled, trigger }: DeleteUserProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const queryClient = useQueryClient();
 	const form = useForm();
@@ -46,10 +52,12 @@ const DeleteUser = ({ id }: { id: string }) => {
 			<Form {...form}>
 				<form id="deleteUserForm" onSubmit={form.handleSubmit(onSubmit)}>
 					<DialogTrigger asChild>
-						<Button variant="ghost" size="sm">
-							<Trash2Icon />
-							Delete User
-						</Button>
+						{trigger ?? (
+							<Button variant="ghost" size="sm" disabled={disabled}>
+								<Trash2Icon />
+								Delete User
+							</Button>
+						)}
 					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>

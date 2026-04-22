@@ -1,14 +1,32 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import type { PaginationState, Row } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import type { PaginationState } from "@tanstack/react-table";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useState } from "react";
 import { z } from "zod/v4";
 import { useUsersReadUsers } from "@/api/endpoints/users/users";
 import type { UserPublic } from "@/api/model";
 import AddUser from "@/components/Admin/AddUser";
+import DeleteUser from "@/components/Admin/DeleteUser";
+import EditUser from "@/components/Admin/EditUser";
 import ReferenceDataManager from "@/components/Admin/ReferenceDataManager";
-import { createColumns } from "@/components/Data-Table/columns";
-import { DataTable } from "@/components/Data-Table/DataTable";
 import SkeletonUsersTable from "@/components/Skeleton/SkeletonUsersTable";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -37,10 +55,6 @@ function UsersTable() {
 	const { data: currentUser } = useCurrentUser();
 	const navigate = useNavigate({ from: Route.fullPath });
 	const { page } = Route.useSearch();
-	const columns = useMemo(
-		() => createColumns<UserPublic>(currentUser),
-		[currentUser],
-	);
 
 	const [pagination, setPagination] = useState<PaginationState>({
 		pageIndex: page - 1,
@@ -78,85 +92,249 @@ function UsersTable() {
 	};
 
 	const count = data?.count ?? 0;
+	const users = data?.data ?? [];
+	const totalPages = Math.max(Math.ceil(count / pagination.pageSize), 1);
+	const canPreviousPage = pagination.pageIndex > 0;
+	const canNextPage = pagination.pageIndex + 1 < totalPages;
 
 	if (isLoading && !isPlaceholderData) {
 		return <SkeletonUsersTable />;
 	}
 
-	const getRowStyle = <TData extends UserPublic>(row: Row<TData>) => {
-		return !row.original.is_active
-			? { color: "gray", opacity: 0.6 } // gray out inactive user
-			: {};
+	const goToPage = (nextPageIndex: number) => {
+		handlePaginationChange((prev) => ({
+			...prev,
+			pageIndex: nextPageIndex,
+		}));
 	};
 
 	return (
-		<>
-			<DataTable<UserPublic, unknown>
-				columns={columns}
-				data={data?.data ?? []}
-				isPlaceholderData={isPlaceholderData}
-				getRowStyle={getRowStyle}
-				rowCount={count}
-				pagination={pagination}
-				setPagination={handlePaginationChange}
-			/>
-			{/* <Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>Full name</TableHead>
-						<TableHead>Email</TableHead>
-						<TableHead>Role</TableHead>
-						<TableHead>Status</TableHead>
-						<TableHead>Actions</TableHead>
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{users?.map((user) => (
-						<TableRow
-							key={user.id}
-							className={isPlaceholderData ? "opacity-50" : "opacity-100"}
+		<Card>
+			<CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+				<div className="space-y-1">
+					<CardTitle>User management</CardTitle>
+					<CardDescription>
+						Manage user accounts, access levels, and account status.
+					</CardDescription>
+				</div>
+				<AddUser
+					trigger={
+						<Button type="button">
+							<Plus className="size-4" />
+							Add User
+						</Button>
+					}
+				/>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<div className="md:hidden">
+					{users.length === 0 ? (
+						<div className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+							No users yet.
+						</div>
+					) : (
+						<div className="space-y-3">
+							{users.map((user) => {
+								const isCurrentUser = currentUser?.id === user.id;
+
+								return (
+									<div
+										key={user.id}
+										className={`space-y-3 rounded-lg border bg-muted/20 p-4 ${
+											!user.is_active ? "opacity-60" : ""
+										} ${isPlaceholderData ? "opacity-50" : ""}`}
+									>
+										<div className="space-y-1">
+											<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+												Full name
+											</p>
+											<div className="flex flex-wrap items-center gap-2">
+												<span>{user.full_name || "N/A"}</span>
+												{isCurrentUser && (
+													<Badge variant="destructive">You</Badge>
+												)}
+											</div>
+										</div>
+										<div className="space-y-1">
+											<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+												Email
+											</p>
+											<p className="break-all">{user.email}</p>
+										</div>
+										<div className="grid gap-3 sm:grid-cols-2">
+											<div className="space-y-1">
+												<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+													Role
+												</p>
+												<Badge>
+													{user.is_superuser ? "Superuser" : "User"}
+												</Badge>
+											</div>
+											<div className="space-y-1">
+												<p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+													Status
+												</p>
+												<p>{user.is_active ? "Active" : "Inactive"}</p>
+											</div>
+										</div>
+										<div className="flex flex-col gap-2">
+											<EditUser
+												user={user}
+												disabled={isCurrentUser}
+												trigger={
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														className="w-full justify-center"
+														disabled={isCurrentUser}
+													>
+														Edit
+													</Button>
+												}
+											/>
+											<DeleteUser
+												id={user.id}
+												disabled={isCurrentUser}
+												trigger={
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														className="w-full justify-center text-destructive hover:text-destructive"
+														disabled={isCurrentUser}
+													>
+														Delete
+													</Button>
+												}
+											/>
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</div>
+
+				<div className="hidden md:block">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Full name</TableHead>
+								<TableHead>Email</TableHead>
+								<TableHead>Role</TableHead>
+								<TableHead>Status</TableHead>
+								<TableHead className="w-[180px] text-right">Actions</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{users.length === 0 ? (
+								<TableRow>
+									<TableCell
+										colSpan={5}
+										className="py-6 text-center text-muted-foreground"
+									>
+										No users yet.
+									</TableCell>
+								</TableRow>
+							) : (
+								users.map((user) => {
+									const isCurrentUser = currentUser?.id === user.id;
+
+									return (
+										<TableRow
+											key={user.id}
+											className={`${!user.is_active ? "opacity-60" : ""} ${
+												isPlaceholderData ? "opacity-50" : ""
+											}`}
+										>
+											<TableCell>
+												<div className="flex flex-wrap items-center gap-2">
+													<span>{user.full_name || "N/A"}</span>
+													{isCurrentUser && (
+														<Badge variant="destructive">You</Badge>
+													)}
+												</div>
+											</TableCell>
+											<TableCell>{user.email}</TableCell>
+											<TableCell>
+												<Badge>
+													{user.is_superuser ? "Superuser" : "User"}
+												</Badge>
+											</TableCell>
+											<TableCell>
+												{user.is_active ? "Active" : "Inactive"}
+											</TableCell>
+											<TableCell className="text-right">
+												<div className="flex justify-end gap-2">
+													<EditUser
+														user={user}
+														disabled={isCurrentUser}
+														trigger={
+															<Button
+																type="button"
+																variant="ghost"
+																size="sm"
+																disabled={isCurrentUser}
+															>
+																Edit
+															</Button>
+														}
+													/>
+													<DeleteUser
+														id={user.id}
+														disabled={isCurrentUser}
+														trigger={
+															<Button
+																type="button"
+																variant="ghost"
+																size="sm"
+																className="text-destructive hover:text-destructive"
+																disabled={isCurrentUser}
+															>
+																Delete
+															</Button>
+														}
+													/>
+												</div>
+											</TableCell>
+										</TableRow>
+									);
+								})
+							)}
+						</TableBody>
+					</Table>
+				</div>
+
+				<div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+					<p className="text-sm text-muted-foreground">
+						Page {pagination.pageIndex + 1} of {totalPages}
+					</p>
+					<div className="flex items-center justify-end gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={() => goToPage(pagination.pageIndex - 1)}
+							disabled={!canPreviousPage}
 						>
-							<TableCell color={!user.full_name ? "gray" : "inherit"}>
-								{user.full_name || "N/A"}
-								{currentUser?.id === user.id && (
-									<Badge variant="destructive" className="ml-1">
-										You
-									</Badge>
-								)}
-							</TableCell>
-							<TableCell>{user.email}</TableCell>
-							<TableCell>{user.is_superuser ? "Superuser" : "User"}</TableCell>
-							<TableCell>{user.is_active ? "Active" : "Inactive"}</TableCell>
-							<TableCell>
-								<UserActionsMenu
-									user={user}
-									disabled={currentUser?.id === user.id}
-								/>
-							</TableCell>
-						</TableRow>
-					))}
-				</TableBody>
-			</Table>
-			<Pagination>
-				<PaginationContent>
-					<PaginationItem>
-						{page === 1 ? (
-							<PaginationPrevious href="#" className="opacity-25" />
-						) : (
-							<PaginationPrevious href="#" onClick={() => setPage(page - 1)} />
-						)}
-					</PaginationItem>
-					{page}
-					<PaginationItem>
-						{count <= page * PER_PAGE ? (
-							<PaginationNext href="#" className="opacity-25" />
-						) : (
-							<PaginationNext href="#" onClick={() => setPage(page + 1)} />
-						)}
-					</PaginationItem>
-				</PaginationContent>
-			</Pagination> */}
-		</>
+							<ChevronLeft className="size-4" />
+							Previous
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={() => goToPage(pagination.pageIndex + 1)}
+							disabled={!canNextPage}
+						>
+							Next
+							<ChevronRight className="size-4" />
+						</Button>
+					</div>
+				</div>
+			</CardContent>
+		</Card>
 	);
 }
 
@@ -176,7 +354,6 @@ function Admin() {
 					</div>
 				</TabsContent>
 				<TabsContent value="user-management" className="space-y-4 pt-4">
-					<AddUser />
 					<UsersTable />
 				</TabsContent>
 				<TabsContent value="reference-data" className="pt-4">
