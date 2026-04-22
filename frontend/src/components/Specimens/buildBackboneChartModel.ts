@@ -1,4 +1,3 @@
-import { YieldPointMethod } from "@/api/model";
 import type {
 	BackboneChartInput,
 	BackboneChartMetadata,
@@ -130,7 +129,7 @@ function createMetadata(
 	axes: AxisSet,
 	notes?: string[],
 ): BackboneChartMetadata {
-	const methodLabel = method ?? "Direct Tri-Linear";
+	const methodLabel = method ?? "CEN 1/6";
 	const xAxisLabel = axes.xUnit
 		? `${axes.xAxisTitle} (${axes.xUnit})`
 		: axes.xAxisTitle;
@@ -196,7 +195,7 @@ function createSegment(
 }
 
 // The standard backbone: origin -> yield -> peak -> ultimate.
-function buildDirectModel(
+function buildCenModel(
 	mode: BackboneChartMode,
 	method: BackboneChartInput["method"],
 	axes: AxisSet,
@@ -251,94 +250,6 @@ function buildDirectModel(
 			),
 		],
 		createMetadata(method, axes),
-	);
-}
-
-// CEN 1/6 uses Ks / 6 to derive the post-yield peak location.
-function buildCenModel(
-	mode: BackboneChartMode,
-	method: BackboneChartInput["method"],
-	axes: AxisSet,
-): BackboneChartModel {
-	if (
-		!isFiniteNumber(axes.stiffness) ||
-		!isFiniteNumber(axes.xYield) ||
-		!isFiniteNumber(axes.yYield) ||
-		!isFiniteNumber(axes.yMax) ||
-		!isFiniteNumber(axes.xUltimate) ||
-		!isFiniteNumber(axes.yUltimate)
-	) {
-		return createEmptyModel(
-			mode,
-			method,
-			"CEN 1/6 backbone unavailable",
-			"CEN 1/6 needs Ks, yield coordinates, maximum force, and ultimate coordinates.",
-		);
-	}
-
-	const secondarySlope = axes.stiffness / 6;
-	if (secondarySlope <= 0 || axes.yMax < axes.yYield) {
-		return createEmptyModel(
-			mode,
-			method,
-			"CEN 1/6 backbone unavailable",
-			"The available values do not produce a valid CEN 1/6 post-yield slope.",
-		);
-	}
-
-	const derivedPeakX = axes.xYield + (axes.yMax - axes.yYield) / secondarySlope;
-	if (!Number.isFinite(derivedPeakX) || derivedPeakX <= axes.xYield) {
-		return createEmptyModel(
-			mode,
-			method,
-			"CEN 1/6 backbone unavailable",
-			"The available values do not produce a valid CEN 1/6 peak displacement.",
-		);
-	}
-
-	const points: BackboneChartPoint[] = [
-		createPoint("origin", 0, 0, "(0, 0)"),
-		createPoint("yield", axes.xYield, axes.yYield, axes.ySymbolYield),
-		createPoint("peak", derivedPeakX, axes.yMax, `${axes.ySymbolMax} (CEN)`),
-		createPoint(
-			"ultimate",
-			axes.xUltimate,
-			axes.yUltimate,
-			axes.ySymbolUltimate,
-		),
-	];
-
-	if (
-		isFiniteNumber(axes.xMax) &&
-		Math.abs(axes.xMax - derivedPeakX) > Math.max(1e-6, derivedPeakX * 0.02)
-	) {
-		points.push(
-			createPoint("measured-max", axes.xMax, axes.yMax, "Measured Δmax", false),
-		);
-	}
-
-	return createReadyModel(
-		mode,
-		method,
-		points,
-		[
-			createSegment(
-				{ x: 0, y: 0 },
-				{ x: axes.xYield, y: axes.yYield },
-				"elastic",
-			),
-			createSegment(
-				{ x: axes.xYield, y: axes.yYield },
-				{ x: derivedPeakX, y: axes.yMax },
-				"hardening",
-			),
-			createSegment(
-				{ x: derivedPeakX, y: axes.yMax },
-				{ x: axes.xUltimate, y: axes.yUltimate },
-				"softening",
-			),
-		],
-		createMetadata(method, axes, ["Secondary slope = Ks / 6"]),
 	);
 }
 
@@ -419,11 +330,9 @@ export function buildBackboneChartModel(
 	const axes = getAxisSet(input, mode);
 
 	switch (input.method) {
-		case YieldPointMethod["CEN_1/6"]:
-			return buildCenModel(mode, input.method, axes);
-		case YieldPointMethod.EEEP:
+		case "EEEP":
 			return buildEeepModel(mode, input.method, axes);
 		default:
-			return buildDirectModel(mode, input.method, axes);
+			return buildCenModel(mode, input.method, axes);
 	}
 }

@@ -786,6 +786,7 @@ function SpecimensKitTable() {
           totalRows={rows.length}
           filteredRows={filteredRows.length}
           controlsOpen={controlsOpen}
+          hasActiveSidebarFilters={hasActiveSidebarFilters}
           onToggleControls={() => setControlsOpen((prev) => !prev)}
           onResetColumns={() => setColumnVisibility(getInitialColumnVisibility())}
           specimens={data?.data}
@@ -841,7 +842,7 @@ function SpecimensKitTable() {
 
       {controlsOpen ? (
         <SpecimenTableSideBar
-          className="hidden md:col-start-2 md:row-start-2 md:flex md:max-w-[24rem]"
+          className="hidden md:col-start-2 md:row-start-2 md:flex md:self-start md:max-w-[24rem]"
           onClearAll={clearAllFilters}
           hasActiveSidebarFilters={hasActiveSidebarFilters}
           fields={filterFields}

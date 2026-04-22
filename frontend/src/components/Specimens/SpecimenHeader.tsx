@@ -13,9 +13,34 @@ export function SpecimenHeader({
 	onEditClick,
 	onBackClick,
 }: SpecimenHeaderProps) {
+	const backButton = onBackClick ? (
+		<Button
+			variant="outline"
+			size="icon"
+			onClick={onBackClick}
+			aria-label="Back to specimens"
+			title="Back to specimens"
+		>
+			<ArrowLeft className="h-4 w-4" />
+		</Button>
+	) : (
+		<Button
+			variant="outline"
+			size="icon"
+			asChild
+			aria-label="Back to specimens"
+			title="Back to specimens"
+		>
+			<Link to="/specimens">
+				<ArrowLeft className="h-4 w-4" />
+			</Link>
+		</Button>
+	);
+
 	return (
 		<div className="flex items-center justify-between">
-			<div>
+			<div className="flex items-center gap-3">
+				{backButton}
 				<h1 className="text-4xl font-semibold">{id}</h1>
 			</div>
 			<div className="flex items-center gap-2">
@@ -29,29 +54,6 @@ export function SpecimenHeader({
 						<Pencil className="h-4 w-4" />
 					</Button>
 				) : null}
-				{onBackClick ? (
-					<Button
-						variant="outline"
-						size="icon"
-						onClick={onBackClick}
-						aria-label="Back to specimens"
-						title="Back to specimens"
-					>
-						<ArrowLeft className="h-4 w-4" />
-					</Button>
-				) : (
-					<Button
-						variant="outline"
-						size="icon"
-						asChild
-						aria-label="Back to specimens"
-						title="Back to specimens"
-					>
-						<Link to="/specimens">
-							<ArrowLeft className="h-4 w-4" />
-						</Link>
-					</Button>
-				)}
 			</div>
 		</div>
 	);

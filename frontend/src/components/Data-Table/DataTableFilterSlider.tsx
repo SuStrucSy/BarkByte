@@ -31,10 +31,12 @@ export function DataTableFilterSlider({
 
 	const [draftMin, setDraftMin] = useState(() => formatValue(value[0]));
 	const [draftMax, setDraftMax] = useState(() => formatValue(value[1]));
+	const [draftRange, setDraftRange] = useState<[number, number]>(value);
 
 	useEffect(() => {
 		setDraftMin(formatValue(value[0]));
 		setDraftMax(formatValue(value[1]));
+		setDraftRange(value);
 	}, [formatValue, value]);
 
 	const clampValue = (nextValue: number) =>
@@ -82,7 +84,7 @@ export function DataTableFilterSlider({
 						}
 					}}
 					aria-label={`${field} minimum value`}
-					className="h-8 text-xs"
+					className="h-8 border-transparent bg-transparent px-2 text-xs shadow-none focus-visible:border-transparent focus-visible:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 				/>
 				<Input
 					type="number"
@@ -100,15 +102,22 @@ export function DataTableFilterSlider({
 						}
 					}}
 					aria-label={`${field} maximum value`}
-					className="h-8 text-xs"
+					className="h-8 border-transparent bg-transparent px-2 text-right text-xs shadow-none focus-visible:border-transparent focus-visible:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 				/>
 			</div>
 			<Slider
 				min={min}
 				max={max}
 				step={step}
-				value={value}
-				onValueChange={(next) => onChange(field, [next[0], next[1]])}
+				value={draftRange}
+				className="mb-4 px-2 py-1"
+				onValueChange={(next) => {
+					const nextRange: [number, number] = [next[0], next[1]];
+					setDraftRange(nextRange);
+					setDraftMin(formatValue(nextRange[0]));
+					setDraftMax(formatValue(nextRange[1]));
+				}}
+				onValueCommit={(next) => onChange(field, [next[0], next[1]])}
 			/>
 		</div>
 	);

@@ -64,7 +64,7 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 									</div>
 								</div>
 								<div className="grid h-full w-full justify-self-stretch gap-6">
-									<div className="grid h-full min-w-0 gap-2 overflow-hidden">
+									<div className="grid h-full min-w-0 gap-2">
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">
 											Quantitative Mechanical Measures
 										</h3>

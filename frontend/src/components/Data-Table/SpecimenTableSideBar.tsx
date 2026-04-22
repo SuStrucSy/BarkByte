@@ -5,7 +5,6 @@ import {
 } from "@/components/Data-Table/DataTableFilterControls";
 import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 /**
@@ -65,7 +64,7 @@ export function SpecimenTableSideBar({
 	return (
 		<aside
 			className={cn(
-				"flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200 bg-muted",
+				"flex h-auto max-h-full w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200 bg-muted",
 				className,
 			)}
 		>
@@ -96,7 +95,7 @@ export function SpecimenTableSideBar({
 				</div>
 			</div>
 			{/* Scrollable body that renders all checkbox + slider filter controls. */}
-			<ScrollArea className="min-h-0 flex-1 bg-muted">
+			<div className="min-h-0 flex-1 overflow-y-auto bg-muted [scrollbar-color:#d7d7d7_transparent] [&::-webkit-scrollbar-thumb]:bg-[#d7d7d7]">
 				<DataTableFilterControls
 					fields={fields}
 					openByField={openByField}
@@ -111,7 +110,7 @@ export function SpecimenTableSideBar({
 					onFailureModeFilterModeChange={onFailureModeFilterModeChange}
 					onResetField={onResetField}
 				/>
-			</ScrollArea>
+			</div>
 		</aside>
 	);
 }

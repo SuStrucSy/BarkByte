@@ -1,8 +1,13 @@
-import { ChevronDown } from "lucide-react";
 import { DataTableFilterCheckbox } from "@/components/Data-Table/DataTableFilterCheckbox";
 import { DataTableFilterResetButton } from "@/components/Data-Table/DataTableFilterResetButton";
 import { DataTableFilterSlider } from "@/components/Data-Table/DataTableFilterSlider";
 import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export interface DataTableCheckboxFilterField {
 	type: "checkbox";
@@ -49,78 +54,84 @@ export function DataTableFilterControls({
 	onFailureModeFilterModeChange,
 	onResetField,
 }: DataTableFilterControlsProps) {
+	const openValues = fields
+		.filter((field) => openByField[field.value])
+		.map((field) => field.value);
+
 	return (
 		<div className="min-w-0 bg-muted">
-			{fields.map((field) => (
-				<details
-					key={field.value}
-					className="group min-w-0 border-b border-border bg-muted open:bg-background last:border-b-0"
-					open={openByField[field.value] ?? false}
-					onToggle={(event) => {
-						const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-						onFieldOpenChange(field.value, isOpen);
-					}}
-				>
-					<summary className="flex min-h-12 min-w-0 cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-background group-open:hover:bg-transparent">
-						<div className="flex min-w-0 items-center gap-2">
-							<ChevronDown
-								className={`h-4 w-4 text-muted-foreground transition-transform ${
-									openByField[field.value] ? "rotate-180" : ""
-								}`}
-							/>
-							<p className="truncate text-sm font-medium text-foreground/80">
-								{field.label}
-							</p>
-						</div>
-						<div className="shrink-0">
-							<DataTableFilterResetButton
-								field={field.value}
-								count={
-									field.type === "checkbox"
-										? (selectedByField[field.value]?.length ?? 0)
-										: sliderValuesByField[field.value] &&
-												(sliderValuesByField[field.value][0] !== field.min ||
-													sliderValuesByField[field.value][1] !== field.max)
-											? 1
-											: 0
-								}
-								onReset={onResetField}
-							/>
-						</div>
-					</summary>
-					<div className="min-w-0 px-4 pb-3 pt-1">
-						{field.type === "checkbox" ? (
-							<DataTableFilterCheckbox
-								field={field.value}
-								options={field.options}
-								selected={selectedByField[field.value] ?? []}
-								failureModeFilterMode={
-									field.value === "failure_modes"
-										? failureModeFilterMode
-										: undefined
-								}
-								onToggle={onToggleOption}
-								onFailureModeFilterModeChange={
-									field.value === "failure_modes"
-										? onFailureModeFilterModeChange
-										: undefined
-								}
-							/>
-						) : (
-							<DataTableFilterSlider
-								field={field.value}
-								min={field.min}
-								max={field.max}
-								step={field.step}
-								value={
-									sliderValuesByField[field.value] ?? [field.min, field.max]
-								}
-								onChange={onSliderChange}
-							/>
-						)}
-					</div>
-				</details>
-			))}
+			<Accordion
+				type="multiple"
+				value={openValues}
+				onValueChange={(values) => {
+					const nextOpenSet = new Set(values);
+					for (const field of fields) {
+						onFieldOpenChange(field.value, nextOpenSet.has(field.value));
+					}
+				}}
+			>
+				{fields.map((field) => (
+					<AccordionItem
+						key={field.value}
+						value={field.value}
+						className="min-w-0 border-border bg-muted data-[state=open]:bg-background"
+					>
+						<AccordionTrigger className="h-12 px-4 py-0 font-normal no-underline transition-colors hover:bg-background hover:no-underline data-[state=open]:hover:bg-transparent">
+							<div className="flex min-w-0 flex-1 items-center justify-between gap-2 pr-2">
+								<p className="truncate text-sm font-medium text-foreground/80">
+									{field.label}
+								</p>
+								<div className="shrink-0">
+									<DataTableFilterResetButton
+										field={field.value}
+										count={
+											field.type === "checkbox"
+												? (selectedByField[field.value]?.length ?? 0)
+												: sliderValuesByField[field.value] &&
+														(sliderValuesByField[field.value][0] !== field.min ||
+															sliderValuesByField[field.value][1] !== field.max)
+													? 1
+													: 0
+										}
+										onReset={onResetField}
+									/>
+								</div>
+							</div>
+						</AccordionTrigger>
+						<AccordionContent className="min-w-0 px-4 pb-3 pt-1">
+							{field.type === "checkbox" ? (
+								<DataTableFilterCheckbox
+									field={field.value}
+									options={field.options}
+									selected={selectedByField[field.value] ?? []}
+									failureModeFilterMode={
+										field.value === "failure_modes"
+											? failureModeFilterMode
+											: undefined
+									}
+									onToggle={onToggleOption}
+									onFailureModeFilterModeChange={
+										field.value === "failure_modes"
+											? onFailureModeFilterModeChange
+											: undefined
+									}
+								/>
+							) : (
+								<DataTableFilterSlider
+									field={field.value}
+									min={field.min}
+									max={field.max}
+									step={field.step}
+									value={
+										sliderValuesByField[field.value] ?? [field.min, field.max]
+									}
+									onChange={onSliderChange}
+								/>
+							)}
+						</AccordionContent>
+					</AccordionItem>
+				))}
+			</Accordion>
 		</div>
 	);
 }

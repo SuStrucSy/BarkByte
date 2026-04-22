@@ -103,9 +103,9 @@ export function SpecimenVersionHistory({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-2xl">Version History</CardTitle>
+				<CardTitle className="text-2xl">Revision History</CardTitle>
 				<CardDescription>
-					Approved pending specimen changes applied to this record.
+					Approved changes applied to this record.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
