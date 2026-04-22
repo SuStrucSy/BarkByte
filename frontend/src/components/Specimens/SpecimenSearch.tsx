@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { matchSorter, rankings } from "match-sorter";
+import { matchSorter } from "match-sorter";
 import {
-  CommandDialog,
+  Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -13,6 +13,13 @@ import type { SpecimenPublic } from "@/api/model";
 import { Button } from "../ui/button";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 interface SpecimenSearchProps {
   specimens: SpecimenPublic[] | undefined;
@@ -60,6 +67,7 @@ export default function SpecimenSearch({
 }: SpecimenSearchProps) {
   const [open, setOpen] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Open with ⌘K / Ctrl+K
   useEffect(() => {
@@ -71,6 +79,21 @@ export default function SpecimenSearch({
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+    const updateViewportFlags = () => {
+      setIsMobile(mobileQuery.matches);
+    };
+
+    updateViewportFlags();
+    mobileQuery.addEventListener("change", updateViewportFlags);
+    return () => {
+      mobileQuery.removeEventListener("change", updateViewportFlags);
+    };
   }, []);
 
   const specimenList = useMemo<SpecimenPublic[]>(
@@ -99,36 +122,26 @@ export default function SpecimenSearch({
     if (!value) setQuery("");
   }, []);
 
-  return (
-    <>
-      <Button
-        variant="outline"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "flex max-w-xs items-center gap-2 text-muted-foreground",
-          buttonClassName,
-        )}
-      >
-        <Search className="h-4 w-4" />
-        <span className={cn(labelClassName)}>Search specimens</span>
-        <span className="sr-only">Search specimens</span>
-        <kbd
-          className={cn(
-            "ml-2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex",
-            shortcutClassName,
-          )}
-        >
-          <span className="text-xs">⌘</span>K
-        </kbd>
-      </Button>
+  const commandSurfaceClassName = cn(
+    "flex w-full min-w-0 max-w-full flex-col rounded-none",
+    isMobile ? "h-[75dvh]" : "h-[60dvh]",
+  );
+  const drawerContentClassName = cn(
+    "overflow-hidden p-0",
+    isMobile
+      ? "h-[75dvh]"
+      : "mt-8 h-[60dvh] md:!inset-x-auto md:!left-1/2 md:!right-auto md:top-[20dvh] md:mb-0 md:w-[min(calc(100vw-2rem),42rem)] md:max-w-none md:-translate-x-1/2 md:rounded-lg md:border",
+  );
 
-      <CommandDialog open={open} onOpenChange={handleOpenChange}>
-        <CommandInput
-          placeholder="Search by specimen reference ID"
-          value={query}
-          onValueChange={setQuery}
-        />
-        <CommandList>
+  const searchContent = (
+    <>
+      <CommandInput
+        placeholder="Search by specimen reference ID"
+        value={query}
+        onValueChange={setQuery}
+      />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y">
+        <CommandList className="max-w-full">
           <CommandEmpty>No specimens found.</CommandEmpty>
 
           {results.length > 0 && (
@@ -138,16 +151,16 @@ export default function SpecimenSearch({
                   key={specimen.id}
                   value={specimen.specimen_reference_id}
                   onSelect={() => handleSelect(specimen)}
-                  className="flex flex-col items-start gap-1 py-2"
+                  className="flex min-w-0 max-w-full flex-col items-start gap-1 py-2"
                 >
-                  <div className="flex w-full items-center justify-between">
-                    <span className="font-medium text-sm">
+                  <div className="flex w-full min-w-0 flex-wrap items-start justify-between gap-2">
+                    <span className="min-w-0 flex-1 break-words font-medium text-sm">
                       <HighlightedText
                         text={specimen.specimen_reference_id ?? "(no ID)"}
                         query={query}
                       />
                     </span>
-                    <div className="flex gap-1">
+                    <div className="flex max-w-full flex-wrap gap-1">
                       {specimen.assembly_type && (
                         <Badge variant="secondary" className="text-xs">
                           {specimen.assembly_type}
@@ -175,7 +188,51 @@ export default function SpecimenSearch({
             </CommandGroup>
           )}
         </CommandList>
-      </CommandDialog>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        className={cn(
+          "flex max-w-xs items-center gap-2 text-muted-foreground",
+          buttonClassName,
+        )}
+      >
+        <Search className="h-4 w-4" />
+        <span className={cn(labelClassName)}>Search specimens</span>
+        <span className="sr-only">Search specimens</span>
+        <kbd
+          className={cn(
+            "ml-2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex",
+            shortcutClassName,
+          )}
+        >
+          <span className="text-xs">⌘</span>K
+        </kbd>
+      </Button>
+
+      <Drawer
+        open={open}
+        onOpenChange={handleOpenChange}
+        direction="top"
+        modal
+      >
+        <DrawerContent className={drawerContentClassName}>
+          <DrawerHeader className="sr-only">
+            <DrawerTitle>Search specimens</DrawerTitle>
+            <DrawerDescription>
+              Search by specimen reference ID.
+            </DrawerDescription>
+          </DrawerHeader>
+          <Command className={commandSurfaceClassName}>
+            {searchContent}
+          </Command>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }

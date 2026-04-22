@@ -779,7 +779,9 @@ function SpecimensKitTable() {
 
         {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
         <DataTableToolbar
-          className="hidden md:col-span-full md:row-start-1 md:flex md:pb-1"
+          className="md:col-span-full md:row-start-1 md:pb-1"
+          viewOptionsClassName="hidden md:inline-flex"
+          controlsToggleClassName="hidden md:inline-flex"
           table={table}
           totalRows={rows.length}
           filteredRows={filteredRows.length}
@@ -792,8 +794,8 @@ function SpecimensKitTable() {
         />
 
         {/* Mobile Specimen Table */}
-        <div className="min-h-0 md:hidden">
-          <ItemGroup className="gap-3">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:hidden">
+          <ItemGroup className="min-h-0 flex-1 gap-3 overflow-y-auto pr-1">
             {paginatedRows.map((row) => (
               <MobileSpecimenListItem
                 key={row.original.id}
