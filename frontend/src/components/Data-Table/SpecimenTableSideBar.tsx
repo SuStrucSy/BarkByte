@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
 	DataTableFilterControls,
 	type DataTableFilterField,
@@ -13,7 +13,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
  * while keeping only UI-local accordion state inside this component.
  */
 interface SpecimenTableSideBarProps {
-	controlsOpen: boolean;
 	onClearAll: () => void;
 	hasActiveSidebarFilters: boolean;
 	fields: DataTableFilterField[];
@@ -26,19 +25,11 @@ interface SpecimenTableSideBarProps {
 	onResetField: (field: string) => void;
 }
 
-function getDefaultOpenByField(fields: DataTableFilterField[]) {
-	return fields.reduce<Record<string, boolean>>((acc, field, index) => {
-		acc[field.value] = index < 2;
-		return acc;
-	}, {});
-}
-
 /**
  * Displays the filter panel next to the specimens table.
  * Parent provides filter data/state; this component owns only the sidebar section UI state.
  */
 export function SpecimenTableSideBar({
-	controlsOpen,
 	onClearAll,
 	hasActiveSidebarFilters,
 	fields,
@@ -50,28 +41,7 @@ export function SpecimenTableSideBar({
 	onFailureModeFilterModeChange,
 	onResetField,
 }: SpecimenTableSideBarProps) {
-	const [openByField, setOpenByField] = useState<Record<string, boolean>>(() =>
-		getDefaultOpenByField(fields),
-	);
-
-	useEffect(() => {
-		setOpenByField((prev) => {
-			const next = { ...prev };
-			fields.forEach((field, index) => {
-				if (typeof next[field.value] === "undefined") {
-					next[field.value] = index < 2;
-				}
-			});
-
-			Object.keys(next).forEach((fieldValue) => {
-				if (!fields.some((field) => field.value === fieldValue)) {
-					delete next[fieldValue];
-				}
-			});
-
-			return next;
-		});
-	}, [fields]);
+	const [openByField, setOpenByField] = useState<Record<string, boolean>>({});
 
 	const allControlsCollapsed = useMemo(
 		() =>
@@ -90,11 +60,7 @@ export function SpecimenTableSideBar({
 	};
 
 	return (
-		<aside
-			className={`h-full min-h-0 w-full min-w-0 overflow-hidden rounded-md border md:flex md:flex-[0_1_24rem] md:flex-col md:max-w-[24rem] ${
-				controlsOpen ? "block" : "hidden"
-			}`}
-		>
+		<aside className="h-full min-h-0 w-full min-w-0 overflow-hidden rounded-md border border-gray-200">
 			{/* Sticky header keeps global filter actions visible while sidebar content scrolls. */}
 			<div className="sticky top-0 z-10 border-b bg-background p-3">
 				<div className="flex items-center justify-between gap-2">
@@ -114,23 +80,23 @@ export function SpecimenTableSideBar({
 				</div>
 			</div>
 			{/* Scrollable body that renders all checkbox + slider filter controls. */}
-			<ScrollArea className="bg-background overflow-x-hidden md:min-h-0 md:flex-1 [&>[data-slot=scroll-area-scrollbar][data-orientation=horizontal]]:hidden [&>[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:w-3 [&>[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:border-l [&>[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:border-border/60 [&>[data-slot=scroll-area-thumb]]:bg-muted-foreground/50 hover:[&>[data-slot=scroll-area-thumb]]:bg-muted-foreground/70 [&>[data-slot=scroll-area-viewport]]:overflow-x-hidden">
-				<div className="min-w-0">
-					<DataTableFilterControls
-						fields={fields}
-						openByField={openByField}
-						selectedByField={selectedByField}
-						sliderValuesByField={sliderValuesByField}
-						failureModeFilterMode={failureModeFilterMode}
-						onFieldOpenChange={(field, open) =>
-							setOpenByField((prev) => ({ ...prev, [field]: open }))
-						}
-						onToggleOption={onToggleOption}
-						onSliderChange={onSliderChange}
-						onFailureModeFilterModeChange={onFailureModeFilterModeChange}
-						onResetField={onResetField}
-					/>
-				</div>
+			<ScrollArea>
+
+				<DataTableFilterControls
+					fields={fields}
+					openByField={openByField}
+					selectedByField={selectedByField}
+					sliderValuesByField={sliderValuesByField}
+					failureModeFilterMode={failureModeFilterMode}
+					onFieldOpenChange={(field, open) =>
+						setOpenByField((prev) => ({ ...prev, [field]: open }))
+					}
+					onToggleOption={onToggleOption}
+					onSliderChange={onSliderChange}
+					onFailureModeFilterModeChange={onFailureModeFilterModeChange}
+					onResetField={onResetField}
+				/>
+	
 			</ScrollArea>
 		</aside>
 	);

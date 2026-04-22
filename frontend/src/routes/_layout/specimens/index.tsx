@@ -759,11 +759,12 @@ function SpecimensKitTable() {
 
   return (
     <div className="flex w-full min-h-0 flex-1 flex-col gap-3 sm:flex-row">
+      
       <div
         className={`flex w-full min-h-0 flex-1 flex-col gap-4 md:overflow-hidden ${TABLE_PANEL_HEIGHT}`}
       >
         {/* Quick search bar: users type plain text or field:value commands to narrow results. */}
-        {/*<DataTableFilterCommand
+        {/* <DataTableFilterCommand
 					value={searchTerm}
 					onValueChange={(value) => {
 						searchTermRef.current = value;
@@ -773,7 +774,9 @@ function SpecimensKitTable() {
 					searchField="all"
 					onSearchFieldChange={() => {}}
 					fieldOptions={fieldOptions}
-				/>*/}
+				/> */}
+
+
         {/* Control strip above the table: shows counts and gives users reset/toggle actions. */}
         <div className="hidden md:flex md:items-center md:justify-between md:gap-3 md:pb-1">
           <Button
@@ -800,6 +803,7 @@ function SpecimensKitTable() {
           />
         </div>
 
+        {/* Mobile Specimen Table */}
         <div className="min-h-0 md:hidden">
           <ItemGroup className="gap-3">
             {paginatedRows.map((row) => (
@@ -833,53 +837,58 @@ function SpecimensKitTable() {
             }
           />
         </div>
+
+
         {/* Bottom pager: lets users move between pages and control how many rows are shown. */}
         <div className="hidden shrink-0 md:block">
           <DataTablePagination table={table} pagination={pagination} />
         </div>
+
+
       </div>
 
-      <div className="hidden min-h-0 min-w-0 md:ml-6 md:block md:w-full md:max-w-[24rem]">
-        <SpecimenTableSideBar
-          controlsOpen={controlsOpen}
-          onClearAll={clearAllFilters}
-          hasActiveSidebarFilters={hasActiveSidebarFilters}
-          fields={filterFields}
-          selectedByField={selectedFilters}
-          sliderValuesByField={sliderValuesByField}
-          failureModeFilterMode={failureModeFilterMode}
-          onToggleOption={handleToggleOption}
-          onSliderChange={(field, value) => {
-            setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
-            syncSearchState({
-              [field]:
-                value[0] !== sliderDefaults[field as SliderField][0] ||
-                value[1] !== sliderDefaults[field as SliderField][1]
-                  ? serializeSliderParam(value)
-                  : undefined,
-            });
-          }}
-          onFailureModeFilterModeChange={(mode) => {
-            setFailureModeFilterMode(mode);
-            if (selectedFilters.failure_modes.length > 0) {
-              updateCheckboxSearchClause(
-                "failure_modes",
-                selectedFilters.failure_modes,
-                mode,
-              );
-            }
-          }}
-          onResetField={handleResetField}
-        />
-      </div>
+      {controlsOpen ? (
+        <div className="hidden min-h-0 min-w-0 md:ml-6 md:block md:w-full md:max-w-[24rem]">
+          <SpecimenTableSideBar
+            onClearAll={clearAllFilters}
+            hasActiveSidebarFilters={hasActiveSidebarFilters}
+            fields={filterFields}
+            selectedByField={selectedFilters}
+            sliderValuesByField={sliderValuesByField}
+            failureModeFilterMode={failureModeFilterMode}
+            onToggleOption={handleToggleOption}
+            onSliderChange={(field, value) => {
+              setSliderValuesByField((prev) => ({ ...prev, [field]: value }));
+              syncSearchState({
+                [field]:
+                  value[0] !== sliderDefaults[field as SliderField][0] ||
+                  value[1] !== sliderDefaults[field as SliderField][1]
+                    ? serializeSliderParam(value)
+                    : undefined,
+              });
+            }}
+            onFailureModeFilterModeChange={(mode) => {
+              setFailureModeFilterMode(mode);
+              if (selectedFilters.failure_modes.length > 0) {
+                updateCheckboxSearchClause(
+                  "failure_modes",
+                  selectedFilters.failure_modes,
+                  mode,
+                );
+              }
+            }}
+            onResetField={handleResetField}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
 
 function Specimens() {
   return (
-    <div className="flex w-full min-h-0 flex-1 flex-col">
+    
       <SpecimensKitTable />
-    </div>
+    
   );
 }
