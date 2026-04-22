@@ -60,9 +60,9 @@ export function SpecimenTableSideBar({
 	};
 
 	return (
-		<aside className="h-full min-h-0 w-full min-w-0 overflow-hidden rounded-md border border-gray-200">
+		<aside className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200">
 			{/* Sticky header keeps global filter actions visible while sidebar content scrolls. */}
-			<div className="sticky top-0 z-10 border-b bg-background p-3">
+			<div className="shrink-0 border-b bg-background p-3">
 				<div className="flex items-center justify-between gap-2">
 					<h3 className="text-sm font-medium">Filters</h3>
 					<div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
@@ -80,8 +80,7 @@ export function SpecimenTableSideBar({
 				</div>
 			</div>
 			{/* Scrollable body that renders all checkbox + slider filter controls. */}
-			<ScrollArea>
-
+			<ScrollArea className="min-h-0 flex-1">
 				<DataTableFilterControls
 					fields={fields}
 					openByField={openByField}
@@ -96,7 +95,6 @@ export function SpecimenTableSideBar({
 					onFailureModeFilterModeChange={onFailureModeFilterModeChange}
 					onResetField={onResetField}
 				/>
-	
 			</ScrollArea>
 		</aside>
 	);
