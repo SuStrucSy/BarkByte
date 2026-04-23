@@ -71,7 +71,7 @@ export function SpecimenTabMeta({ data, setSheetOpen }: SpecimenTabMetaProps) {
 						<Item variant="outline" asChild>
 							<div>
 								<ItemContent>
-									<ItemTitle>Specimen Address</ItemTitle>
+									<ItemTitle>Specimen Link</ItemTitle>
 									<ItemDescription>{specimenAddress}</ItemDescription>
 								</ItemContent>
 								<ItemActions>
@@ -80,8 +80,8 @@ export function SpecimenTabMeta({ data, setSheetOpen }: SpecimenTabMetaProps) {
 										size="icon"
 										type="button"
 										onClick={() => void handleCopySpecimenAddress()}
-										aria-label="Copy specimen address"
-										title="Copy specimen address"
+										aria-label="Copy specimen link"
+										title="Copy specimen link"
 									>
 										<Copy className="h-4 w-4" />
 									</Button>
