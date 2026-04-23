@@ -4,6 +4,9 @@ from typing import Any, Optional
 from sqlmodel import func, select, Session
 from sqlalchemy.exc import IntegrityError
 
+from app.enums import PendingStatus
+from app.models.pendingspecimen import PendingSpecimen
+from app.models.specimen import Specimen
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UsersPublic
@@ -31,7 +34,8 @@ def get_all_users(*, session: Session, skip: int = 0, limit: int = 100) -> Users
 def get_user_by_email(*, session: Session, email: str) -> User | None:
     statement = select(User).where(User.email == email)
     return session.exec(statement).first()
-    
+
+
 def is_email_taken(
     *,
     session: Session,
@@ -66,6 +70,25 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> User
     session.commit()
     session.refresh(db_user)
     return db_user
+
+
+def has_specimens(*, session: Session, user_id: uuid.UUID) -> bool:
+    statement = (
+        select(func.count())
+        .select_from(Specimen)
+        .where(Specimen.uploader_id == user_id)
+    )
+    return session.exec(statement).one() > 0
+
+
+def has_pending_specimen_records(*, session: Session, user_id: uuid.UUID) -> bool:
+    statement = (
+        select(func.count())
+        .select_from(PendingSpecimen)
+        .where(PendingSpecimen.changed_by_user_id == user_id)
+    )
+    return session.exec(statement).one() > 0
+
 
 def delete_user(*, session: Session, user: User) -> None:
     session.delete(user)

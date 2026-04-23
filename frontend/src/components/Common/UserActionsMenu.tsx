@@ -16,6 +16,8 @@ interface UserActionsMenuProps {
 }
 
 export const UserActionsMenu = ({ user, disabled }: UserActionsMenuProps) => {
+	const isInactiveUser = user.is_active !== true;
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -25,8 +27,12 @@ export const UserActionsMenu = ({ user, disabled }: UserActionsMenuProps) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-24" align="start">
 				<EditUser user={user} />
-				<DropdownMenuSeparator />
-				<DeleteUser id={user.id} />
+				{!isInactiveUser ? (
+					<>
+						<DropdownMenuSeparator />
+						<DeleteUser id={user.id} />
+					</>
+				) : null}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

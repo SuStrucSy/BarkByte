@@ -3,7 +3,7 @@ import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { dispatchAuthChange } from "./hooks/useIsLoggedIn";
 
-const handleApiError = (error: Error) => {
+const handleApiError = (error: Error, options?: { dispatchForbidden?: boolean }) => {
 	if (error instanceof AxiosError) {
 		const status = error.response?.status;
 
@@ -15,7 +15,7 @@ const handleApiError = (error: Error) => {
 			window.location.href = "/login";
 		}
 
-		if (status === 403) {
+		if (status === 403 && options?.dispatchForbidden) {
 			window.dispatchEvent(
 				new CustomEvent("forbidden", {
 					detail: { error },
@@ -31,8 +31,12 @@ export const queryClient = new QueryClient({
 			staleTime: 5 * 60 * 1000,
 			gcTime: 30 * 60 * 1000,
 			refetchOnWindowFocus: false,
-		},
 	},
-	queryCache: new QueryCache({ onError: handleApiError }),
-	mutationCache: new MutationCache({ onError: handleApiError }),
+	},
+	queryCache: new QueryCache({
+		onError: (error) => handleApiError(error, { dispatchForbidden: true }),
+	}),
+	mutationCache: new MutationCache({
+		onError: (error) => handleApiError(error, { dispatchForbidden: false }),
+	}),
 });

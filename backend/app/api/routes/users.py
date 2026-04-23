@@ -3,7 +3,6 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from jwt.exceptions import ExpiredSignatureError
-from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core.config import settings
@@ -172,6 +171,7 @@ def update_user(
     """
     Update a user.
     """
+
     db_user = user_crud.get_user(session=session, user_id=user_id)
     if not db_user:
         raise HTTPException(
@@ -219,15 +219,24 @@ def delete_user(
             status_code=403,
             detail="You cannot delete another superuser. Superusers must delete their own account.",
         )
-    try:
-        user_crud.delete_user(session=session, user=user)
-    except IntegrityError:
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete user: it is still referenced by one or more specimens.",
-        )
 
-    return Message(message="User deleted successfully")
+    has_pending_specimen_records = user_crud.has_pending_specimen_records(
+        session=session, user_id=user.id
+    )
+    has_specimens = user_crud.has_specimens(session=session, user_id=user.id)
+
+    if has_pending_specimen_records or has_specimens:
+        user_crud.update_user(
+            session=session,
+            db_user=user,
+            user_in=UserUpdate(is_active=False),
+        )
+        return Message(
+            message="This user cannot be deleted because they have revision history or specimens associated with them. They have been deactivated instead."
+        )
+    else:
+        user_crud.delete_user(session=session, user=user)
+        return Message(message="User deleted successfully")
 
 
 # ------------ Authentication related endpoints ------------

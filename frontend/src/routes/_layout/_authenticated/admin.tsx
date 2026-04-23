@@ -108,6 +108,8 @@ function UsersTable() {
 		}));
 	};
 
+	const isUserInactive = (user: UserPublic) => user.is_active !== true;
+
 	return (
 		<Card>
 			<CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -136,12 +138,14 @@ function UsersTable() {
 						<div className="space-y-3">
 							{users.map((user) => {
 								const isCurrentUser = currentUser?.id === user.id;
+								const isInactiveUser = isUserInactive(user);
+								const disableDelete = isCurrentUser;
 
 								return (
 									<div
 										key={user.id}
 										className={`space-y-3 rounded-lg border bg-muted/20 p-4 ${
-											!user.is_active ? "opacity-60" : ""
+											isInactiveUser ? "opacity-60" : ""
 										} ${isPlaceholderData ? "opacity-50" : ""}`}
 									>
 										<div className="space-y-1">
@@ -193,21 +197,23 @@ function UsersTable() {
 													</Button>
 												}
 											/>
-											<DeleteUser
-												id={user.id}
-												disabled={isCurrentUser}
-												trigger={
-													<Button
-														type="button"
-														variant="outline"
-														size="sm"
-														className="w-full justify-center text-destructive hover:text-destructive"
-														disabled={isCurrentUser}
-													>
-														Delete
-													</Button>
-												}
-											/>
+											{!isInactiveUser ? (
+												<DeleteUser
+													id={user.id}
+													disabled={disableDelete}
+													trigger={
+														<Button
+															type="button"
+															variant="outline"
+															size="sm"
+															className="w-full justify-center text-destructive hover:text-destructive"
+															disabled={disableDelete}
+														>
+															Delete
+														</Button>
+													}
+												/>
+											) : null}
 										</div>
 									</div>
 								);
@@ -240,11 +246,13 @@ function UsersTable() {
 							) : (
 								users.map((user) => {
 									const isCurrentUser = currentUser?.id === user.id;
+									const isInactiveUser = isUserInactive(user);
+									const disableDelete = isCurrentUser;
 
 									return (
 										<TableRow
 											key={user.id}
-											className={`${!user.is_active ? "opacity-60" : ""} ${
+											className={`${isInactiveUser ? "opacity-60" : ""} ${
 												isPlaceholderData ? "opacity-50" : ""
 											}`}
 										>
@@ -281,21 +289,23 @@ function UsersTable() {
 															</Button>
 														}
 													/>
-													<DeleteUser
-														id={user.id}
-														disabled={isCurrentUser}
-														trigger={
-															<Button
-																type="button"
-																variant="ghost"
-																size="sm"
-																className="text-destructive hover:text-destructive"
-																disabled={isCurrentUser}
-															>
-																Delete
-															</Button>
-														}
-													/>
+													{!isInactiveUser ? (
+														<DeleteUser
+															id={user.id}
+															disabled={disableDelete}
+															trigger={
+																<Button
+																	type="button"
+																	variant="ghost"
+																	size="sm"
+																	className="text-destructive hover:text-destructive"
+																	disabled={disableDelete}
+																>
+																	Delete
+																</Button>
+															}
+														/>
+													) : null}
 												</div>
 											</TableCell>
 										</TableRow>

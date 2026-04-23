@@ -43,20 +43,36 @@ interface UserUpdateForm extends UserUpdate {
 	confirm_password?: string;
 }
 
+const getFormValues = (user: UserPublic): UserUpdateForm => ({
+	email: user.email,
+	full_name: user.full_name ?? "",
+	is_active: user.is_active,
+	is_superuser: user.is_superuser,
+	password: "",
+	confirm_password: "",
+});
+
+const toBoolean = (checked: boolean | "indeterminate") => checked === true;
+
 const EditUser = ({ user, disabled, trigger }: EditUserProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const queryClient = useQueryClient();
+	const formId = `editUserForm-${user.id}`;
+	const isSuperuserFieldId = `${formId}-is-superuser`;
+	const isActiveFieldId = `${formId}-is-active`;
 	const form = useForm<UserUpdateForm>({
 		mode: "onBlur",
 		criteriaMode: "all",
-		defaultValues: user,
+		defaultValues: getFormValues(user),
 	});
+	const isSuperuserValue = form.watch("is_superuser") ?? false;
+	const isActiveValue = form.watch("is_active") ?? false;
 
 	const mutation = useUsersUpdateUser({
 		mutation: {
-			onSuccess: () => {
+			onSuccess: (updatedUser) => {
 				toast.success("User updated successfully.");
-				form.reset();
+				form.reset(getFormValues(updatedUser));
 				setIsOpen(false);
 			},
 			onError: (err: undefined | HTTPValidationError) => {
@@ -71,25 +87,37 @@ const EditUser = ({ user, disabled, trigger }: EditUserProps) => {
 	});
 
 	const onSubmit: SubmitHandler<UserUpdateForm> = async (data) => {
-		if (data.password === "") {
-			data.password = undefined;
-		}
-		mutation.mutate({ data: data, userId: user.id });
+		const payload: UserUpdate = {
+			email: data.email,
+			full_name: data.full_name,
+			is_active: data.is_active,
+			is_superuser: data.is_superuser,
+		};
+
+		mutation.mutate({ data: payload, userId: user.id });
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-			<Form {...form}>
-				<form id="editUserForm" onSubmit={form.handleSubmit(onSubmit)}>
-					<DialogTrigger asChild>
-						{trigger ?? (
-							<Button variant="ghost" size="sm" disabled={disabled}>
-								<UserPenIcon fontSize="16px" />
-								Edit User
-							</Button>
-						)}
-					</DialogTrigger>
-					<DialogContent>
+		<Dialog
+			open={isOpen}
+			onOpenChange={(open) => {
+				if (open) {
+					form.reset(getFormValues(user));
+				}
+				setIsOpen(open);
+			}}
+		>
+			<DialogTrigger asChild>
+				{trigger ?? (
+					<Button variant="ghost" size="sm" disabled={disabled}>
+						<UserPenIcon fontSize="16px" />
+						Edit User
+					</Button>
+				)}
+			</DialogTrigger>
+			<DialogContent>
+				<Form {...form}>
+					<form id={formId} onSubmit={form.handleSubmit(onSubmit)}>
 						<DialogHeader>
 							<DialogTitle>Edit User</DialogTitle>
 							<DialogDescription>
@@ -166,46 +194,50 @@ const EditUser = ({ user, disabled, trigger }: EditUserProps) => {
 									</FormItem>
 								)}
 							/>
-							<FormField
-								control={form.control}
-								name="is_superuser"
-								render={({ field }) => {
-									return (
-										<FormItem className="flex flex-row items-center gap-2">
-											<FormControl>
-												<Checkbox
-													disabled={field.disabled}
-													checked={field.value ?? false}
-													onCheckedChange={(checked) => field.onChange(checked)}
-												/>
-											</FormControl>
-											<FormLabel className="text-sm font-normal">
-												Is superuser?
-											</FormLabel>
-										</FormItem>
-									);
-								}}
-							/>
-							<FormField
-								control={form.control}
-								name="is_active"
-								render={({ field }) => {
-									return (
-										<FormItem className="flex flex-row items-center gap-2">
-											<FormControl>
-												<Checkbox
-													disabled={field.disabled}
-													checked={field.value ?? false}
-													onCheckedChange={(checked) => field.onChange(checked)}
-												/>
-											</FormControl>
-											<FormLabel className="text-sm font-normal">
-												Is active?
-											</FormLabel>
-										</FormItem>
-									);
-								}}
-							/>
+							<FormItem className="flex flex-row items-center gap-2">
+								<FormControl>
+									<Checkbox
+										id={isSuperuserFieldId}
+										checked={isSuperuserValue}
+										onCheckedChange={(checked) => {
+											const value = toBoolean(checked);
+											form.setValue("is_superuser", value, {
+												shouldDirty: true,
+												shouldTouch: true,
+												shouldValidate: true,
+											});
+										}}
+									/>
+								</FormControl>
+								<FormLabel
+									htmlFor={isSuperuserFieldId}
+									className="text-sm font-normal"
+								>
+									Is superuser?
+								</FormLabel>
+							</FormItem>
+							<FormItem className="flex flex-row items-center gap-2">
+								<FormControl>
+									<Checkbox
+										id={isActiveFieldId}
+										checked={isActiveValue}
+										onCheckedChange={(checked) => {
+											const value = toBoolean(checked);
+											form.setValue("is_active", value, {
+												shouldDirty: true,
+												shouldTouch: true,
+												shouldValidate: true,
+											});
+										}}
+									/>
+								</FormControl>
+								<FormLabel
+									htmlFor={isActiveFieldId}
+									className="text-sm font-normal"
+								>
+									Is active?
+								</FormLabel>
+							</FormItem>
 						</div>
 						<DialogFooter>
 							<DialogClose asChild>
@@ -213,17 +245,13 @@ const EditUser = ({ user, disabled, trigger }: EditUserProps) => {
 									Cancel
 								</Button>
 							</DialogClose>
-							<Button
-								form="editUserForm"
-								type="submit"
-								disabled={form.formState.isSubmitting}
-							>
+							<Button type="submit" disabled={form.formState.isSubmitting}>
 								Save
 							</Button>
 						</DialogFooter>
-					</DialogContent>
-				</form>
-			</Form>
+					</form>
+				</Form>
+			</DialogContent>
 		</Dialog>
 	);
 };

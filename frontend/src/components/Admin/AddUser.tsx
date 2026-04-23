@@ -42,6 +42,8 @@ interface AddUserProps {
 	trigger?: ReactNode;
 }
 
+const toBoolean = (checked: boolean | "indeterminate") => checked === true;
+
 const AddUser = ({ trigger }: AddUserProps) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const queryClient = useQueryClient();
@@ -180,7 +182,9 @@ const AddUser = ({ trigger }: AddUserProps) => {
 												<Checkbox
 													disabled={field.disabled}
 													checked={field.value ?? false}
-													onCheckedChange={(checked) => field.onChange(checked)}
+													onCheckedChange={(checked) =>
+														field.onChange(toBoolean(checked))
+													}
 												/>
 											</FormControl>
 											<FormLabel className="text-sm font-normal">
@@ -200,7 +204,9 @@ const AddUser = ({ trigger }: AddUserProps) => {
 												<Checkbox
 													disabled={field.disabled}
 													checked={field.value ?? false}
-													onCheckedChange={(checked) => field.onChange(checked)}
+													onCheckedChange={(checked) =>
+														field.onChange(toBoolean(checked))
+													}
 												/>
 											</FormControl>
 											<FormLabel className="text-sm font-normal">
