@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import type { PaginationState } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useState } from "react";
+import { type ReactElement, useState } from "react";
 import { z } from "zod/v4";
 import { useUsersReadUsers } from "@/api/endpoints/users/users";
 import type { UserPublic } from "@/api/model";
@@ -28,6 +28,11 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const usersSearchSchema = z.object({
@@ -110,6 +115,28 @@ function UsersTable() {
 
 	const isUserInactive = (user: UserPublic) => user.is_active !== true;
 
+	const renderEditTrigger = (
+		user: UserPublic,
+		trigger: ReactElement<{ disabled?: boolean }>,
+	) => {
+		const isCurrentUser = currentUser?.id === user.id;
+
+		if (!isCurrentUser) {
+			return trigger;
+		}
+
+		return (
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<span tabIndex={0} className="inline-flex">
+						{trigger}
+					</span>
+				</TooltipTrigger>
+				<TooltipContent>Go to 'Account Settings'</TooltipContent>
+			</Tooltip>
+		);
+	};
+
 	return (
 		<Card>
 			<CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -185,7 +212,8 @@ function UsersTable() {
 											<EditUser
 												user={user}
 												disabled={isCurrentUser}
-												trigger={
+												trigger={renderEditTrigger(
+													user,
 													<Button
 														type="button"
 														variant="outline"
@@ -195,7 +223,7 @@ function UsersTable() {
 													>
 														Edit
 													</Button>
-												}
+												)}
 											/>
 											{!isInactiveUser ? (
 												<DeleteUser
@@ -278,7 +306,8 @@ function UsersTable() {
 													<EditUser
 														user={user}
 														disabled={isCurrentUser}
-														trigger={
+														trigger={renderEditTrigger(
+															user,
 															<Button
 																type="button"
 																variant="ghost"
@@ -287,7 +316,7 @@ function UsersTable() {
 															>
 																Edit
 															</Button>
-														}
+														)}
 													/>
 													{!isInactiveUser ? (
 														<DeleteUser
@@ -352,17 +381,11 @@ function Admin() {
 	return (
 		<div className="max-w-full">
 			<h1 className="pt-3 text-3xl">Admin settings</h1>
-			<Tabs defaultValue="general" className="pt-4">
+			<Tabs defaultValue="user-management" className="pt-4">
 				<TabsList>
-					<TabsTrigger value="general">General</TabsTrigger>
 					<TabsTrigger value="user-management">User management</TabsTrigger>
 					<TabsTrigger value="reference-data">Reference data</TabsTrigger>
 				</TabsList>
-				<TabsContent value="general" className="pt-4">
-					<div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
-						Admin-only configuration lives here.
-					</div>
-				</TabsContent>
 				<TabsContent value="user-management" className="space-y-4 pt-4">
 					<UsersTable />
 				</TabsContent>

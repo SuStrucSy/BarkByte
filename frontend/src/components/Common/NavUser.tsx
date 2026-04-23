@@ -80,14 +80,14 @@ export function NavUser() {
 							<DropdownMenuItem asChild>
 								<Link to="/settings">
 									<Settings />
-									Account
+									Account Settings
 								</Link>
 							</DropdownMenuItem>
 							{currentUser?.is_superuser ? (
 								<DropdownMenuItem asChild>
 									<Link to="/admin">
 										<Shield />
-										Admin settings
+										Admin Settings
 									</Link>
 								</DropdownMenuItem>
 							) : null}
