@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.3.0](https://github.com/SuStrucSy/BarkByte/compare/v2.2.0...v2.3.0) (2026-04-23)
+
+
+### Features
+
+* add ability to resend email verification if token expired ([d9bde0d](https://github.com/SuStrucSy/BarkByte/commit/d9bde0de19dad77a653fec2dbccf666cdefebb46))
+* add download csv from specimens table ([0149657](https://github.com/SuStrucSy/BarkByte/commit/0149657355bcdaf6484867ee264221952309dd8a))
+* add search by specimen id to specimens page ([3b1bb15](https://github.com/SuStrucSy/BarkByte/commit/3b1bb15819c00932ee4f63b4cace9d4c806ea942))
+
+
+### Bug Fixes
+
+* "add" page now fits mobile. ([543192f](https://github.com/SuStrucSy/BarkByte/commit/543192f3fa5cb61a559ab57be84b222fcb3308ae))
+* adding scrollarea to pending specimen under the tabs. ([d380e0e](https://github.com/SuStrucSy/BarkByte/commit/d380e0ea463943bf3cb260d8d1ed5fac3c1fd551))
+* Adjust specimens page mobile layout and pagination ([83e3aa5](https://github.com/SuStrucSy/BarkByte/commit/83e3aa5a6968dc32881792243d0b5f260edf900d))
+* admin settings better view on mobile ([dedabe6](https://github.com/SuStrucSy/BarkByte/commit/dedabe62b631f003dc95dc51c3646605126ae3a5))
+* auth routes and pages ([1b75349](https://github.com/SuStrucSy/BarkByte/commit/1b75349f0a663a534fef97e5aa6d73c2f87732e3))
+* boxplot tooltip background color ([a039579](https://github.com/SuStrucSy/BarkByte/commit/a039579250bbd4b029e82924460ddee0755860ac))
+* clean up styling for specimens filtering ([4253b30](https://github.com/SuStrucSy/BarkByte/commit/4253b30e698798f9153e33feabb30e5d2729d9b8))
+* combo box border is now showing. ([8957d1a](https://github.com/SuStrucSy/BarkByte/commit/8957d1ae26afae82bcd0172483c0c70a75447161))
+* constrain specimens table scroll area ([47daeda](https://github.com/SuStrucSy/BarkByte/commit/47daeda92101d8c73c45157328455036726990d1))
+* disable joinery reference controls on touch devices ([fa485e1](https://github.com/SuStrucSy/BarkByte/commit/fa485e17e373fabdbf7650d5e58f43ce0cddd73f))
+* disclaimer should be a gentle reminder ([25261ee](https://github.com/SuStrucSy/BarkByte/commit/25261ee9820fdab83eca1e0203fb26ae32d95203))
+* disclaimer UI getting better. ([6ae50c7](https://github.com/SuStrucSy/BarkByte/commit/6ae50c78e6314a86b4d73ab363be3eb0cabb5256))
+* fixing table UI/UX and sidebar ([b8bbb2e](https://github.com/SuStrucSy/BarkByte/commit/b8bbb2ee916115d999581098744fce71881667fb))
+* homepage UI mobile tweak ([4bf0594](https://github.com/SuStrucSy/BarkByte/commit/4bf05940474956992821abf429be3dff6846b294))
+* improve dashboard and drawer mobile responsiveness ([9fb26d9](https://github.com/SuStrucSy/BarkByte/commit/9fb26d9edf42697ceaf720d70b1c8eb99a630995))
+* Improve home page mobile/tablet layout and responsive styling ([deea1e1](https://github.com/SuStrucSy/BarkByte/commit/deea1e18b17d722bbe7b97bdb9e90c10d6ab2f7e))
+* improve set password form to show email ([262c4ce](https://github.com/SuStrucSy/BarkByte/commit/262c4ceaa01461a84fb4312c6e3c7ede8c0f11f5))
+* isolate mobile specimen drawer from shared sheet behavior ([579ac82](https://github.com/SuStrucSy/BarkByte/commit/579ac82b53dc70174c3095be92c2c2ffc53b58af))
+* let backbone chart fill available panel height ([476e794](https://github.com/SuStrucSy/BarkByte/commit/476e7944fdb231700e85da748083c4297d8de5e0))
+* making search mobile friendly. ([17d01b4](https://github.com/SuStrucSy/BarkByte/commit/17d01b431bf9953051307142dbe66f2efc6d0291))
+* Match user management UI to reference data layout ([e3943d2](https://github.com/SuStrucSy/BarkByte/commit/e3943d2d5cc0ecc3ea4b4bc94efb48241ba95af7))
+* mobile css for home and team pages ([201a70f](https://github.com/SuStrucSy/BarkByte/commit/201a70ffc1feaa5eee2a8ba9d60c69d345568c73))
+* move disclaimer to own component and clean up css ([d86ba6c](https://github.com/SuStrucSy/BarkByte/commit/d86ba6c8169801be2e114f3862d7696b6987257a))
+* pending specimen drawer size and mobile view. ([d6de496](https://github.com/SuStrucSy/BarkByte/commit/d6de49617ddc507c201386b435829c4c8105337c))
+* Refine specimen filters, sidebar behavior, and backbone chart UI ([a7a80b4](https://github.com/SuStrucSy/BarkByte/commit/a7a80b4fd834a615e56da94bd81cfbb3438cc972))
+* Refine specimens sidebar filter hover states ([cdcdcdb](https://github.com/SuStrucSy/BarkByte/commit/cdcdcdb7fd74c621dd49b972e9550528d57f73f0))
+* refine table layout and responsive controls ([addb7b6](https://github.com/SuStrucSy/BarkByte/commit/addb7b6163f7ab9c5622dc871ec468c672905837))
+* Refine team page for tablet/mobile and add team photos. ([74a7970](https://github.com/SuStrucSy/BarkByte/commit/74a797016b421e015b98e5cb5b6d79032a6c2022))
+* removing stat strip and centering main card in home. ([6518a01](https://github.com/SuStrucSy/BarkByte/commit/6518a0182670f8d8ac047ad3ddd76804394cae6e))
+* scrolling in the specimen page. ([3ac7f64](https://github.com/SuStrucSy/BarkByte/commit/3ac7f64616017bcb9f615dc30439210c61bb1018))
+* show controls default value is now dependant on how much screen area there is ([0674184](https://github.com/SuStrucSy/BarkByte/commit/06741845a5f05bfd64ca2b65a19489f64026871f))
+* Show/Hide Controls buttons now working. ([f5a0076](https://github.com/SuStrucSy/BarkByte/commit/f5a007616e2a9c1654ce10ce12088e78ffe87f64))
+* side bar can now scroll properly again. ([d2eff29](https://github.com/SuStrucSy/BarkByte/commit/d2eff297c2ab85be882887a46b5dcf9cb361dbf9))
+* sidebar tweaks ([cb4ff8f](https://github.com/SuStrucSy/BarkByte/commit/cb4ff8ffe0473f3ed0ebea03b762af7d0c2f35e5))
+* small change. ([c2115d7](https://github.com/SuStrucSy/BarkByte/commit/c2115d7f2e990ba25fa77d31c27449017513b953))
+* streamline compare layout and slot rendering ([5a932b5](https://github.com/SuStrucSy/BarkByte/commit/5a932b55b6744f0c57401e01779b99ec9fb86247))
+* tablet compare page radar chart tooltips don't have enough space to show relative info. Making portrait mode 2 columns. ([48e0381](https://github.com/SuStrucSy/BarkByte/commit/48e03817fdf15e3c46c8ae37314d11e3f40b0eda))
+* url fix ([b04e732](https://github.com/SuStrucSy/BarkByte/commit/b04e73217c660eccab24cb8947e51f0790805a9c))
+* user logic ([d7fe815](https://github.com/SuStrucSy/BarkByte/commit/d7fe815d0685e14c2ca8bb9806e77c5c4cdb8e42))
+* UUID hydration issue fixed. ([dc0f4a6](https://github.com/SuStrucSy/BarkByte/commit/dc0f4a646910fc9c165ce9d289fea0f28e57b885))
+
 ## [2.2.0](https://github.com/SuStrucSy/BarkByte/compare/v2.1.1...v2.2.0) (2026-04-17)
 
 
