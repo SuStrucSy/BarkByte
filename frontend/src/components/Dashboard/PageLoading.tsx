@@ -3,7 +3,7 @@ import { Skeleton } from "../ui/skeleton";
 
 export function PageLoading() {
 	return (
-		<div className="space-y-4">
+		<div className="p-4 space-y-4">
 			<Card className="w-full">
 				<CardHeader>
 					<Skeleton className="h-4 w-2/3" />
@@ -20,6 +20,8 @@ export function PageLoading() {
 						<Skeleton className="aspect-video w-full" />
 					</CardContent>
 				</Card>
+				
+				
 				<Card className="w-full">
 					<CardHeader>
 						<Skeleton className="h-4 w-2/3" />
@@ -29,7 +31,19 @@ export function PageLoading() {
 						<Skeleton className="aspect-video w-full" />
 					</CardContent>
 				</Card>
-				<Card className="w-full col-span-2">
+				
+				
+				
+				<Card className="w-full">
+					<CardHeader>
+						<Skeleton className="h-4 w-2/3" />
+						<Skeleton className="h-4 w-1/2" />
+					</CardHeader>
+					<CardContent>
+						<Skeleton className="aspect-video w-full" />
+					</CardContent>
+				</Card>
+				<Card className="w-full">
 					<CardHeader>
 						<Skeleton className="h-4 w-2/3" />
 						<Skeleton className="h-4 w-1/2" />

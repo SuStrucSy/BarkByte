@@ -9,9 +9,30 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { countByArrayAttribute, countByAttribute } from "@/lib/utils";
 
-export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
+function DemographyCardSkeleton() {
+	return (
+		<Card className="col-span-1">
+			<CardHeader className="pb-4">
+				<Skeleton className="h-5 w-52" />
+				<Skeleton className="h-4 w-64 max-w-full" />
+			</CardHeader>
+			<CardContent className="flex items-center justify-center px-0 pb-0">
+				<Skeleton className="h-56 w-56 rounded-full" />
+			</CardContent>
+		</Card>
+	);
+}
+
+export function DemographyGrid({
+	specimens,
+	isLoading = false,
+}: {
+	specimens: SpecimenPublic[];
+	isLoading?: boolean;
+}) {
 	const joineryCounts = useMemo(
 		() => countByAttribute(specimens, (s) => s.joinery_type.label),
 		[specimens],
@@ -44,6 +65,22 @@ export function DemographyGrid({ specimens }: { specimens: SpecimenPublic[] }) {
 		() => countByAttribute(specimens, (s) => s.sub_joinery_type.label),
 		[specimens],
 	);
+
+	if (isLoading) {
+		return (
+			<>
+				{[
+					"demography-joinery",
+					"demography-fastener",
+					"demography-loading",
+					"demography-assembly",
+					"demography-subjoinery",
+				].map((key) => (
+					<DemographyCardSkeleton key={key} />
+				))}
+			</>
+		);
+	}
 
 	return (
 		<>

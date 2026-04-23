@@ -139,8 +139,8 @@ function UsersTable() {
 
 	return (
 		<Card>
-			<CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-				<div className="space-y-1">
+			<CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-start sm:justify-between">
+				<div className="">
 					<CardTitle>User management</CardTitle>
 					<CardDescription>
 						Manage user accounts, access levels, and account status.
@@ -155,7 +155,7 @@ function UsersTable() {
 					}
 				/>
 			</CardHeader>
-			<CardContent className="space-y-4">
+			<CardContent className="">
 				<div className="md:hidden">
 					{users.length === 0 ? (
 						<div className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
@@ -379,8 +379,8 @@ function UsersTable() {
 
 function Admin() {
 	return (
-		<div className="max-w-full">
-			<h1 className="pt-3 text-3xl">Admin settings</h1>
+		<div className="max-w-full p-4">
+			<h1 className="pt-3 text-3xl">Admin Settings</h1>
 			<Tabs defaultValue="user-management" className="pt-4">
 				<TabsList>
 					<TabsTrigger value="user-management">User management</TabsTrigger>

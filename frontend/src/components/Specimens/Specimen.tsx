@@ -29,7 +29,7 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 				onEditClick={onEditClick}
 			/>
 
-			<div className="grid gap-6 text-sm">
+			<div className="grid gap-6 text-sm px-4 md:p-0">
 				<Tabs defaultValue="Meta Data">
 					<TabsList>
 						<TabsTrigger value="Meta Data">Meta Data</TabsTrigger>

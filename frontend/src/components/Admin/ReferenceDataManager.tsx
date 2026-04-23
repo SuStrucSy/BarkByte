@@ -251,7 +251,7 @@ function ReferenceSection<
 					<Form {...createForm}>
 						<form id={`${title}-create-form`} onSubmit={handleCreate}>
 							<DialogTrigger asChild>
-								<Button type="button">
+								<Button type="button" className="mb-4">
 									<Plus className="size-4" />
 									{createLabel}
 								</Button>

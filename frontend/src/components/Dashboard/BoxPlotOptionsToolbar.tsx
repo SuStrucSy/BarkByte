@@ -14,6 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -145,6 +146,7 @@ type BoxPlotOptionsToolbarProps = {
 	selectedFastener: string;
 	onFastenerChange: (value: string) => void;
 	containerRef?: (node: HTMLDivElement | null) => void;
+	isLoading?: boolean;
 };
 
 export function BoxPlotOptionsToolbar({
@@ -155,6 +157,7 @@ export function BoxPlotOptionsToolbar({
 	selectedFastener,
 	onFastenerChange,
 	containerRef,
+	isLoading = false,
 }: BoxPlotOptionsToolbarProps) {
 	const layoutRef = useRef<HTMLDivElement | null>(null);
 	const measurementRef = useRef<HTMLDivElement | null>(null);
@@ -197,26 +200,80 @@ export function BoxPlotOptionsToolbar({
 		<div ref={containerRef} className={className}>
 			<Card>
 				<CardHeader>
-					<div
-						ref={layoutRef}
-						className={
-							useCompactControls
-								? "relative mx-auto flex w-full max-w-full flex-col gap-4"
-								: "relative mx-auto flex w-full max-w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-6"
-						}
-					>
+					{isLoading ? (
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<Skeleton className="h-5 w-40" />
+								<Skeleton className="h-4 w-72 max-w-full" />
+							</div>
+							<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+								<div className="space-y-2">
+									<Skeleton className="h-4 w-24" />
+									<Skeleton className="h-8 w-36" />
+								</div>
+								<div className="space-y-2">
+									<Skeleton className="h-4 w-28" />
+									<Skeleton className="h-10 w-full max-w-56" />
+								</div>
+							</div>
+						</div>
+					) : (
 						<div
-							ref={measurementRef}
-							aria-hidden="true"
-							className="pointer-events-none absolute left-0 top-0 invisible flex w-max max-w-none flex-row items-center gap-6"
+							ref={layoutRef}
+							className={
+								useCompactControls
+									? "relative mx-auto flex w-full max-w-full flex-col gap-4"
+									: "relative mx-auto flex w-full max-w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-6"
+							}
 						>
-							<div className="flex max-w-xs flex-col text-left shrink-0">
+							<div
+								ref={measurementRef}
+								aria-hidden="true"
+								className="pointer-events-none absolute left-0 top-0 invisible flex w-max max-w-none flex-row items-center gap-6"
+							>
+								<div className="flex max-w-xs flex-col text-left shrink-0">
+									<CardTitle>Box Plot Options</CardTitle>
+									<CardDescription className="mt-1">
+										Choose the chart type and active fastener filter.
+									</CardDescription>
+								</div>
+								<div className="flex max-w-full flex-row items-start gap-5">
+									<div className="flex shrink-0 flex-col items-start gap-2">
+										<ChartOptionsLabel>Chart Type</ChartOptionsLabel>
+										<ChartTypeSwitchControl
+											value={selectedChartType}
+											onChange={onChartTypeChange}
+										/>
+									</div>
+									<div className="flex max-w-full flex-col items-start gap-2">
+										<ChartOptionsLabel>Fastener Type</ChartOptionsLabel>
+										<FastenerToggleControl
+											fastenerTypes={fastenerTypes}
+											value={selectedFastener}
+											onChange={onFastenerChange}
+										/>
+									</div>
+								</div>
+							</div>
+							<div
+								className={
+									useCompactControls
+										? "flex max-w-xs flex-col text-left"
+										: "flex max-w-xs flex-col text-left lg:shrink-0"
+								}
+							>
 								<CardTitle>Box Plot Options</CardTitle>
 								<CardDescription className="mt-1">
 									Choose the chart type and active fastener filter.
 								</CardDescription>
 							</div>
-							<div className="flex max-w-full flex-row items-start gap-5">
+							<div
+								className={
+									useCompactControls
+										? "hidden"
+										: "flex max-w-full flex-row items-start justify-center gap-5"
+								}
+							>
 								<div className="flex shrink-0 flex-col items-start gap-2">
 									<ChartOptionsLabel>Chart Type</ChartOptionsLabel>
 									<ChartTypeSwitchControl
@@ -233,72 +290,37 @@ export function BoxPlotOptionsToolbar({
 									/>
 								</div>
 							</div>
-						</div>
-						<div
-							className={
-								useCompactControls
-									? "flex max-w-xs flex-col text-left"
-									: "flex max-w-xs flex-col text-left lg:shrink-0"
-							}
-						>
-							<CardTitle>Box Plot Options</CardTitle>
-							<CardDescription className="mt-1">
-								Choose the chart type and active fastener filter.
-							</CardDescription>
-						</div>
-						<div
-							className={
-								useCompactControls
-									? "hidden"
-									: "flex max-w-full flex-row items-start justify-center gap-5"
-							}
-						>
-							<div className="flex shrink-0 flex-col items-start gap-2">
-								<ChartOptionsLabel>Chart Type</ChartOptionsLabel>
-								<ChartTypeSwitchControl
-									value={selectedChartType}
-									onChange={onChartTypeChange}
-								/>
-							</div>
-							<div className="flex max-w-full flex-col items-start gap-2">
-								<ChartOptionsLabel>Fastener Type</ChartOptionsLabel>
-								<FastenerToggleControl
-									fastenerTypes={fastenerTypes}
-									value={selectedFastener}
-									onChange={onFastenerChange}
-								/>
-							</div>
-						</div>
-						<div
-							className={
-								useCompactControls
-									? "grid max-w-full grid-cols-[max-content_max-content] justify-between gap-x-4 gap-y-3"
-									: "hidden"
-							}
-						>
-							<div className="flex min-w-0 flex-col gap-2 items-start">
-								<ChartOptionsLabel className="w-auto shrink-0">
-									Chart Type
-								</ChartOptionsLabel>
-								<ChartTypeSwitchControl
-									value={selectedChartType}
-									onChange={onChartTypeChange}
-								/>
-							</div>
-							<div className="flex min-w-0 flex-col gap-2 items-start">
-								<ChartOptionsLabel className="w-auto">
-									Fastener Type
-								</ChartOptionsLabel>
-								<div className="w-fit max-w-full">
-									<FastenerSelectControl
-										fastenerTypes={fastenerTypes}
-										value={selectedFastener}
-										onChange={onFastenerChange}
+							<div
+								className={
+									useCompactControls
+										? "grid max-w-full grid-cols-[max-content_max-content] justify-between gap-x-4 gap-y-3"
+										: "hidden"
+								}
+							>
+								<div className="flex min-w-0 flex-col gap-2 items-start">
+									<ChartOptionsLabel className="w-auto shrink-0">
+										Chart Type
+									</ChartOptionsLabel>
+									<ChartTypeSwitchControl
+										value={selectedChartType}
+										onChange={onChartTypeChange}
 									/>
+								</div>
+								<div className="flex min-w-0 flex-col gap-2 items-start">
+									<ChartOptionsLabel className="w-auto">
+										Fastener Type
+									</ChartOptionsLabel>
+									<div className="w-fit max-w-full">
+										<FastenerSelectControl
+											fastenerTypes={fastenerTypes}
+											value={selectedFastener}
+											onChange={onFastenerChange}
+										/>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
+					)}
 				</CardHeader>
 			</Card>
 		</div>

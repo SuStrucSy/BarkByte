@@ -75,7 +75,7 @@ const joineryHotspots = [
 
 function Home() {
   return (
-    <div className="flex min-h-[calc(100svh-7rem)] items-center justify-center md:min-h-[calc(100svh-10rem)] lg:min-h-[calc(100svh-12rem)]">
+    <div className="flex min-h-[calc(100svh-7rem)] items-center justify-center p-4 md:min-h-[calc(100svh-10rem)] md:p-0 lg:min-h-[calc(100svh-12rem)]">
       <Card className="w-full max-w-6xl overflow-hidden border-border/60 py-0 shadow-2xl md:w-auto md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
       
         <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.2fr_0.8fr] xl:grid-cols-[1fr_1.25fr]">

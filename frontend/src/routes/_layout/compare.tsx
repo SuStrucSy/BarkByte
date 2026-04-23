@@ -524,10 +524,10 @@ function ComparePage() {
 	);
 
 	return (
-		<div className="flex min-h-0 flex-col gap-6 px-2 sm:px-2 md:px-4 xl:h-full xl:overflow-hidden">
+		<div className="flex min-h-0 flex-col gap-4 p-4 sm:px-2 md:px-4 xl:h-full xl:overflow-hidden">
 			<div
 				className={cn(
-					"grid gap-3 md:gap-4",
+					"grid gap-4",
 					useTwoColumnCompare ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3",
 				)}
 			>
@@ -565,7 +565,7 @@ function ComparePage() {
 							</ItemActions>
 						</Item>
 					) : (
-						<div key={`compare-slot-${slotIndex}`} className="min-w-0 p-1">
+						<div key={`compare-slot-${slotIndex}`} className="min-w-0">
 							<Combobox
 								items={availableSpecimens}
 								itemToStringValue={(item: SpecimenPublic) => item.id}

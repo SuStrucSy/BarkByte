@@ -38,7 +38,7 @@ export function SpecimenHeader({
 	);
 
 	return (
-		<div className="flex items-center justify-between">
+		<div className="flex items-center justify-between p-4 md:px-0">
 			<div className="flex items-center gap-3">
 				{backButton}
 				<h1 className="text-4xl font-semibold">{title}</h1>

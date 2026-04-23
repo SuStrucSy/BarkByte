@@ -14,7 +14,7 @@ import {
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic, SpecimensReadSpecimensParams } from "@/api/model";
-import joineryTypesReference from "@/assets/joineryTypes.svg";
+import joineryTypesReference from "@/assets/joineryTypes.webp";
 import { ChartErrorBoundary } from "@/components/Charts/ChartErrorBoundary";
 import { ExpandableChart } from "@/components/Charts/ExpandableChart";
 import { BoxPlot } from "@/components/Dashboard/BoxPlot";
@@ -23,7 +23,6 @@ import {
 	BoxPlotOptionsToolbar,
 } from "@/components/Dashboard/BoxPlotOptionsToolbar";
 import { DemographyGrid } from "@/components/Dashboard/DemographyGrid";
-import { PageLoading } from "@/components/Dashboard/PageLoading";
 import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +38,7 @@ import {
 } from "@/components/ui/card";
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { useChartHeight } from "@/hooks/useChartHeight";
 import {
@@ -82,6 +82,7 @@ function MetricScatterCard({
 	pointCount,
 	expandableTitle,
 	chartName,
+	isLoading = false,
 	children,
 }: {
 	title: string;
@@ -89,6 +90,7 @@ function MetricScatterCard({
 	pointCount: number;
 	expandableTitle: string;
 	chartName: string;
+	isLoading?: boolean;
 	children: ReactNode;
 }) {
 	return (
@@ -104,16 +106,92 @@ function MetricScatterCard({
 					)}
 				</CardDescription>
 				<CardAction className="hidden lg:block">
-					<ExpandableChart title={expandableTitle}>
-						{() => children}
-					</ExpandableChart>
+					{isLoading ? (
+						<Skeleton className="h-9 w-9 rounded-full" />
+					) : (
+						<ExpandableChart title={expandableTitle}>
+							{() => children}
+						</ExpandableChart>
+					)}
 				</CardAction>
 			</CardHeader>
 			<CardContent className="pb-4">
-				<ChartErrorBoundary chartName={chartName}>
-					{children}
-				</ChartErrorBoundary>
+				{isLoading ? (
+					<div className="space-y-4">
+						<Skeleton className="h-[280px] w-full rounded-xl" />
+						<div className="flex flex-wrap justify-center gap-3 pt-1">
+							{["legend-1", "legend-2", "legend-3"].map((id) => (
+								<div key={id} className="flex items-center gap-2">
+									<Skeleton className="h-4 w-4 rounded-full" />
+									<Skeleton className="h-4 w-24" />
+								</div>
+							))}
+						</div>
+					</div>
+				) : (
+					<ChartErrorBoundary chartName={chartName}>
+						{children}
+					</ChartErrorBoundary>
+				)}
 			</CardContent>
+		</Card>
+	);
+}
+
+function DashboardBoxPlotCard({
+	title,
+	description,
+	badgeLabel,
+	specimenCount,
+	isLoading = false,
+	children,
+}: {
+	title: string;
+	description: string;
+	badgeLabel: string | null;
+	specimenCount: number;
+	isLoading?: boolean;
+	children: ReactNode;
+}) {
+	return (
+		<Card className="col-span-1">
+			<CardHeader className="grid-cols-1 gap-y-2 pb-4 has-data-[slot=card-action]:grid-cols-1 sm:gap-y-1.5">
+				<div className="col-start-1 row-start-1 flex items-start justify-between gap-3">
+					<CardTitle>{title}</CardTitle>
+					{isLoading ? (
+						<Skeleton className="h-6 w-32 rounded-full" />
+					) : badgeLabel ? (
+						<Badge className="border-[color:var(--failure-badge-border)] bg-[color:var(--failure-badge-bg)] text-[color:var(--failure-badge-text)]">
+							{badgeLabel}
+						</Badge>
+					) : null}
+				</div>
+				<CardDescription className="col-start-1 row-start-2">
+					{description}
+					{!isLoading && specimenCount > 0 && (
+						<span className="ml-2 text-xs">
+							({specimenCount.toLocaleString()} specimens)
+						</span>
+					)}
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="min-w-0 pb-4">
+				{isLoading ? (
+					<div className="space-y-4">
+						<Skeleton className="h-[280px] w-full rounded-xl" />
+						<div className="flex justify-center gap-3">
+							{["axis-1", "axis-2", "axis-3", "axis-4"].map((id) => (
+								<Skeleton key={id} className="h-4 w-16" />
+							))}
+						</div>
+					</div>
+				) : (
+					<ChartErrorBoundary chartName="Box Plot">
+						{children}
+					</ChartErrorBoundary>
+				)}
+			</CardContent>
+			<CardFooter />
 		</Card>
 	);
 }
@@ -298,6 +376,7 @@ function JoineryReferenceViewer() {
 						src={joineryTypesReference}
 						alt="Reference sheet showing timber joinery and connection types"
 						className="h-auto max-h-[620px] w-full object-contain"
+						decoding="async"
 					/>
 				</div>
 			</div>
@@ -370,6 +449,7 @@ function JoineryReferenceViewer() {
 					src={joineryTypesReference}
 					alt="Reference sheet showing timber joinery and connection types"
 					className="pointer-events-none h-auto max-h-[620px] w-full object-contain"
+					decoding="async"
 					style={{
 						transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
 						transformOrigin: "center center",
@@ -573,11 +653,6 @@ function Dashboard() {
 		};
 	}, [chartOptionsCardElement]);
 
-	// Loading state
-	if (isLoading || isFastenerLoading) {
-		return <PageLoading />;
-	}
-
 	// Error state
 	if (isError) {
 		return (
@@ -591,10 +666,10 @@ function Dashboard() {
 	}
 
 	return (
-		<div className="space-y-4 px-2 sm:px-2 md:px-4">
+		<div className="flex flex-col gap-3 p-4">
 			{/* Header */}
-			<Card>
-				<CardHeader>
+			<Card className="py-0">
+				<CardHeader className="p-6">
 					<CardTitle>Specimen Analysis Dashboard</CardTitle>
 					<CardDescription className="flex flex-wrap items-center gap-1">
 						This is the dashboard page, where key data is visualized through
@@ -604,37 +679,47 @@ function Dashboard() {
 						insights.{" "}
 					</CardDescription>
 					<CardDescription className="flex flex-wrap items-center gap-1">
-						{loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
-						specimens
-						{isLoadingAll ? (
-							<Badge
-								variant="secondary"
-								className="animate-pulse"
-								aria-live="polite"
-							>
-								Loading... {loadingProgress}%
-							</Badge>
+						{isLoading ? (
+							<>
+								<Skeleton className="h-5 w-28" />
+								<Skeleton className="h-6 w-28 rounded-full" />
+							</>
 						) : (
-							<Badge aria-label="All specimens loaded">✓ Complete</Badge>
+							<>
+								{loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
+								specimens
+							</>
 						)}
+						{!isLoading &&
+							(isLoadingAll ? (
+								<Badge
+									variant="secondary"
+									className="animate-pulse"
+									aria-live="polite"
+								>
+									Loading... {loadingProgress}%
+								</Badge>
+							) : (
+								<Badge aria-label="All specimens loaded">✓ Complete</Badge>
+							))}
 					</CardDescription>
 				</CardHeader>
 			</Card>
 
-			<Card>
-				<CardHeader className="pb-4">
+			<Card className="py-0">
+				<CardHeader className="p-6">
 					<CardTitle>Joinery Types Reference</CardTitle>
 					<CardDescription>
 						Quick visual guide to the timber joinery and connection details used
 						throughout the specimen dataset.
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="pb-4">
+				<CardContent className="p-6 pt-0">
 					<JoineryReferenceViewer />
 				</CardContent>
 			</Card>
 
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+			<div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
 				{/* Stiffness vs Ductility */}
 				<MetricScatterCard
 					title="Stiffness vs Ductility"
@@ -642,6 +727,7 @@ function Dashboard() {
 					pointCount={stiffnessDuctilityData.length}
 					expandableTitle="Stiffness vs Ductility"
 					chartName="Stiffness vs Ductility"
+					isLoading={isLoading || isFastenerLoading}
 				>
 					<ScatterPlotD3 {...stiffnessDuctilityProps} height={chartHeight} />
 				</MetricScatterCard>
@@ -653,11 +739,12 @@ function Dashboard() {
 					pointCount={stiffnessYieldData.length}
 					expandableTitle="Stiffness vs Yield Force"
 					chartName="Stiffness vs Yield Force"
+					isLoading={isLoading || isFastenerLoading}
 				>
 					<ScatterPlotD3 {...stiffnessYieldProps} height={chartHeight} />
 				</MetricScatterCard>
 
-				<div className="col-span-1 grid grid-cols-1 gap-4 lg:col-span-2 lg:grid-cols-2">
+				<div className="col-span-1 grid grid-cols-1 gap-3 lg:col-span-2 lg:grid-cols-2">
 					{/* Chart Options */}
 					<BoxPlotOptionsToolbar
 						className={CHART_OPTIONS_CARD_CLASSNAME}
@@ -669,44 +756,28 @@ function Dashboard() {
 						onFastenerChange={(value) =>
 							setSelectedFastenerOverride(value || null)
 						}
+						isLoading={isLoading || isFastenerLoading}
 					/>
 
 					{/* Box plots */}
 					{BOX_PLOT_LABELS.map((ylabel) => (
-						<Card key={ylabel.key} className="col-span-1">
-							<CardHeader className="grid-cols-1 gap-y-2 pb-4 has-data-[slot=card-action]:grid-cols-1 sm:gap-y-1.5">
-								<div className="col-start-1 row-start-1 flex items-start justify-between gap-3">
-									<CardTitle>Box Plot Distribution</CardTitle>
-									{selectedFastenerBadgeLabel ? (
-										<Badge className="border-[color:var(--failure-badge-border)] bg-[color:var(--failure-badge-bg)] text-[color:var(--failure-badge-text)]">
-											{selectedFastenerBadgeLabel}
-										</Badge>
-									) : null}
-								</div>
-								<CardDescription className="col-start-1 row-start-2">
-									Summarizes the distribution of {ylabel.label} grouped by
-									joinery type
-									{selectedSpecimens.length > 0 && (
-										<span className="ml-2 text-xs">
-											({selectedSpecimens.length.toLocaleString()} specimens)
-										</span>
-									)}
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="pb-4 min-w-0">
-								<ChartErrorBoundary chartName="Box Plot">
-									<BoxPlot
-										selectedSpecimens={selectedSpecimens}
-										yKey={ylabel.key}
-										yLabel={getFullLabel(ylabel.key)}
-										height={chartHeight}
-										mirrorPosition={mirrorPosition}
-										onPointClick={handlePointClick}
-									/>
-								</ChartErrorBoundary>
-							</CardContent>
-							<CardFooter />
-						</Card>
+						<DashboardBoxPlotCard
+							key={ylabel.key}
+							title="Box Plot Distribution"
+							description={`Summarizes the distribution of ${ylabel.label} grouped by joinery type`}
+							badgeLabel={selectedFastenerBadgeLabel}
+							specimenCount={selectedSpecimens.length}
+							isLoading={isLoading || isFastenerLoading}
+						>
+							<BoxPlot
+								selectedSpecimens={selectedSpecimens}
+								yKey={ylabel.key}
+								yLabel={getFullLabel(ylabel.key)}
+								height={chartHeight}
+								mirrorPosition={mirrorPosition}
+								onPointClick={handlePointClick}
+							/>
+						</DashboardBoxPlotCard>
 					))}
 					<div
 						className="hidden col-span-1 lg:col-span-2 lg:block"
@@ -715,7 +786,10 @@ function Dashboard() {
 				</div>
 
 				<Separator className="col-span-1 lg:col-span-2" />
-				<DemographyGrid specimens={allSpecimens} />
+				<DemographyGrid
+					specimens={allSpecimens}
+					isLoading={isLoading || isFastenerLoading}
+				/>
 			</div>
 
 			{selectedSpecimen && (

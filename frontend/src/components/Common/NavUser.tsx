@@ -24,10 +24,15 @@ import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
 	const { data: currentUser } = useCurrentUser();
-	const { isMobile, state } = useSidebar();
+	const { isMobile, setOpenMobile, state } = useSidebar();
 	const { logout } = useAuth();
 
 	const side = state === "collapsed" && !isMobile ? "right" : "top";
+	const handleNavigation = () => {
+		if (isMobile) {
+			setOpenMobile(false);
+		}
+	};
 
 	return (
 		<SidebarMenu>
@@ -78,14 +83,14 @@ export function NavUser() {
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
 							<DropdownMenuItem asChild>
-								<Link to="/settings">
+								<Link to="/settings" onClick={handleNavigation}>
 									<Settings />
 									Account Settings
 								</Link>
 							</DropdownMenuItem>
 							{currentUser?.is_superuser ? (
 								<DropdownMenuItem asChild>
-									<Link to="/admin">
+									<Link to="/admin" onClick={handleNavigation}>
 										<Shield />
 										Admin Settings
 									</Link>

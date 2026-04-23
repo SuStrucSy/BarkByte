@@ -226,23 +226,25 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 
 	if (!data?.pending_specimens.length) {
 		return (
-			<Empty className="border border-dashed">
-				<EmptyHeader>
-					<EmptyMedia variant="icon">
-						<Layers />
-					</EmptyMedia>
-					<EmptyTitle>No Specimens Found</EmptyTitle>
-					<EmptyDescription className="max-w-xs text-pretty">
-						There are no {status} specimens.
-					</EmptyDescription>
-				</EmptyHeader>
-				<EmptyContent>
-					<div className="flex max-w-xs items-center gap-2 text-sm text-muted-foreground">
-						<ArrowUpRight className="size-4 shrink-0" />
-						<span>Use the "Refresh" button in the top right.</span>
-					</div>
-				</EmptyContent>
-			</Empty>
+			<div className="px-4 md:px-0">
+				<Empty className="border border-dashed">
+					<EmptyHeader>
+						<EmptyMedia variant="icon">
+							<Layers />
+						</EmptyMedia>
+						<EmptyTitle>No Specimens Found</EmptyTitle>
+						<EmptyDescription className="max-w-xs text-pretty">
+							There are no {status} specimens.
+						</EmptyDescription>
+					</EmptyHeader>
+					<EmptyContent>
+						<div className="flex max-w-xs items-center gap-2 text-sm text-muted-foreground">
+							<ArrowUpRight className="size-4 shrink-0" />
+							<span>Use the "Refresh" button in the top right.</span>
+						</div>
+					</EmptyContent>
+				</Empty>
+			</div>
 		);
 	}
 
@@ -391,7 +393,7 @@ function PendingSpecimensGrid({ status }: { status: SpecimenStatus }) {
 	};
 
 	return (
-		<div className="grid gap-6 xl:grid-cols-2">
+		<div className="px-4 md:px-0 grid gap-6 xl:grid-cols-2">
 			{groupedStacks.map((stack) => {
 				const lead = stack[0];
 				const isOpen = openStacks.includes(lead.stackId);
@@ -549,8 +551,8 @@ function PendingSpecimens() {
 	}
 
 	return (
-		<div className="space-y-4">
-			<div className="flex items-end justify-between gap-3">
+		<div>
+			<div className="flex items-end justify-between gap-3 p-4 md:p-0">
 				<div className="space-y-3">
 					<div>
 						<h1 className="text-xl font-semibold">Specimens</h1>

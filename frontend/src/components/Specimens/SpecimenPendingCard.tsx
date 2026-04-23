@@ -801,7 +801,7 @@ export function SpecimenPendingCard({
 
 	return (
 		<Card className="w-full max-w-3xl">
-			<CardHeader>
+			<CardHeader className="gap-3">
 				<div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
 					<div className="min-w-0 space-y-1">
 						<CardTitle>
@@ -894,7 +894,7 @@ export function SpecimenPendingCard({
 				<Card>
 					<CardHeader>
 						<div className="flex items-start justify-between gap-3">
-							<div className="space-y-1">
+							<div>
 								<CardTitle className="text-base">Changed Attributes</CardTitle>
 								<CardDescription>
 									A compact review of the submitted changes.

@@ -16,7 +16,7 @@ import plate from "@/assets/joineryTypes/Plate.png";
 import slotJoint from "@/assets/joineryTypes/Slot-Joint.png";
 import splineJoint from "@/assets/joineryTypes/Spline-Joint.png";
 import throughTenon from "@/assets/joineryTypes/Through-Tenon.png";
-import JoineryTypes from "@/assets/joineryTypes.svg?react";
+import joineryTypesReference from "@/assets/joineryTypes.webp";
 import {
 	Field,
 	FieldDescription,
@@ -220,7 +220,12 @@ export function SpecimenDetailsFields({
 												className="w-48 h-auto"
 											/>
 										) : (
-											<JoineryTypes className="w-4xl h-auto" />
+											<img
+												src={joineryTypesReference}
+												alt="Reference sheet showing timber joinery and connection types"
+												className="w-4xl h-auto"
+												decoding="async"
+											/>
 										) // fallback when nothing selected
 									}
 								/>
