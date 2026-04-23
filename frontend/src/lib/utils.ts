@@ -16,6 +16,10 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+export function clamp(value: number, min: number, max: number) {
+	return Math.min(Math.max(value, min), max);
+}
+
 export function groupSpecimensByFastener(
 	specimensPublic: SpecimensPublic,
 	fastenerTypes: FastenerTypes | undefined,

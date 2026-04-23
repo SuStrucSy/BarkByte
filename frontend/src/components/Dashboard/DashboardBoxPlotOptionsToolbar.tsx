@@ -138,7 +138,7 @@ function FastenerSelectControl({
 	);
 }
 
-type BoxPlotOptionsToolbarProps = {
+type DashboardBoxPlotOptionsToolbarProps = {
 	className?: string;
 	selectedChartType: BoxPlotChartType;
 	onChartTypeChange: (value: BoxPlotChartType) => void;
@@ -149,7 +149,7 @@ type BoxPlotOptionsToolbarProps = {
 	isLoading?: boolean;
 };
 
-export function BoxPlotOptionsToolbar({
+export function DashboardBoxPlotOptionsToolbar({
 	className,
 	selectedChartType,
 	onChartTypeChange,
@@ -158,7 +158,7 @@ export function BoxPlotOptionsToolbar({
 	onFastenerChange,
 	containerRef,
 	isLoading = false,
-}: BoxPlotOptionsToolbarProps) {
+}: DashboardBoxPlotOptionsToolbarProps) {
 	const layoutRef = useRef<HTMLDivElement | null>(null);
 	const measurementRef = useRef<HTMLDivElement | null>(null);
 	const [useCompactControls, setUseCompactControls] = useState(true);
