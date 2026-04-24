@@ -22,7 +22,6 @@ type CompareSlotViewModel = {
 	specimen: SpecimenPublic | null;
 	availableSpecimens: SpecimenPublic[];
 };
-
 /**
  * Loads the full specimen list for the compare page by paging through the API
  * until all available specimens have been collected.
