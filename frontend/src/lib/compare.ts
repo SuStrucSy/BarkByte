@@ -5,8 +5,6 @@ export type CompareSectionTitle =
 	| "Structural Data"
 	| "Experimental Data";
 
-export const COMPARE_SLOT_COUNT = 3;
-
 export const META_COMPARE_FIELDS: Array<keyof SpecimenPublic> = [
 	"specimen_reference_id",
 	"assembly_type",
