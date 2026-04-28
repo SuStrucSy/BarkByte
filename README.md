@@ -32,6 +32,12 @@ This work is licensed under a
 - 🚢 Deployment instructions using Docker Compose, including how to set up a frontend Traefik proxy to handle automatic HTTPS certificates.
 - 🏭 CI (continuous integration) and CD (continuous deployment) based on GitHub Actions.
 
+### Entity Relationship Diagram
+
+The Entity Relationship Diagram (ERD) gives a high-level view of the Timverse database schema, showing the main data models and how they connect across users, specimens, DOI references, pending specimen reviews, and supporting classification tables. It is useful for understanding how backend API routes map to stored data and for planning database or integration-test changes.
+
+![Timverse ERD diagram](./timverse_erd_diagram.png)
+
 
 
 ### Configure
