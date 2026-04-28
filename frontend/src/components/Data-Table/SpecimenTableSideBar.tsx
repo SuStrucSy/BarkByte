@@ -5,7 +5,17 @@ import {
 } from "@/components/Data-Table/DataTableFilterControls";
 import type { FailureModeFilterMode } from "@/components/Data-Table/specimenTableFilters";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+const SIDEBAR_SKELETON_ITEMS = [
+	"joinery",
+	"sub-joinery",
+	"loading",
+	"fastener",
+	"failure",
+	"measurements",
+] as const;
 
 /**
  * Sidebar container for specimens filters.
@@ -14,6 +24,7 @@ import { cn } from "@/lib/utils";
  */
 interface SpecimenTableSideBarProps {
 	className?: string;
+	isLoading?: boolean;
 	onClearAll: () => void;
 	hasActiveSidebarFilters: boolean;
 	fields: DataTableFilterField[];
@@ -32,6 +43,7 @@ interface SpecimenTableSideBarProps {
  */
 export function SpecimenTableSideBar({
 	className,
+	isLoading = false,
 	onClearAll,
 	hasActiveSidebarFilters,
 	fields,
@@ -60,6 +72,40 @@ export function SpecimenTableSideBar({
 			}, {}),
 		);
 	};
+
+	if (isLoading) {
+		return (
+			<aside
+				className={cn(
+					"flex h-auto max-h-full w-full min-w-0 flex-col overflow-hidden rounded-md border border-gray-200 bg-muted",
+					className,
+				)}
+			>
+				<div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b bg-muted p-3">
+					<Skeleton className="h-4 w-14" />
+					<Skeleton className="h-8 w-24" />
+				</div>
+				<div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-muted p-3">
+					{SIDEBAR_SKELETON_ITEMS.map((itemKey) => (
+						<div
+							key={itemKey}
+							className="space-y-3 rounded-md border border-border/50 bg-background/60 p-3"
+						>
+							<div className="flex items-center justify-between gap-3">
+								<Skeleton className="h-4 w-28" />
+								<Skeleton className="h-8 w-8" />
+							</div>
+							<div className="space-y-2">
+								<Skeleton className="h-4 w-full" />
+								<Skeleton className="h-4 w-5/6" />
+								<Skeleton className="h-4 w-2/3" />
+							</div>
+						</div>
+					))}
+				</div>
+			</aside>
+		);
+	}
 
 	return (
 		<aside

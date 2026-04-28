@@ -67,7 +67,7 @@ export function DataTableFilterSlider({
 
 	return (
 		<div className="space-y-2">
-			<div className="grid grid-cols-2 gap-2">
+			<div className="flex items-center justify-between gap-2">
 				<Input
 					type="number"
 					inputMode="decimal"
@@ -84,7 +84,7 @@ export function DataTableFilterSlider({
 						}
 					}}
 					aria-label={`${field} minimum value`}
-					className="h-8 border-transparent bg-transparent px-2 text-xs shadow-none focus-visible:border-transparent focus-visible:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+					className="h-8 w-20 border-transparent bg-transparent px-2 text-xs tabular-nums shadow-none transition-colors hover:bg-muted/70 focus-visible:border-transparent focus-visible:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 				/>
 				<Input
 					type="number"
@@ -102,7 +102,7 @@ export function DataTableFilterSlider({
 						}
 					}}
 					aria-label={`${field} maximum value`}
-					className="h-8 border-transparent bg-transparent px-2 text-right text-xs shadow-none focus-visible:border-transparent focus-visible:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+					className="h-8 w-20 border-transparent bg-transparent px-2 text-right text-xs tabular-nums shadow-none transition-colors hover:bg-muted/70 focus-visible:border-transparent focus-visible:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 				/>
 			</div>
 			<Slider
