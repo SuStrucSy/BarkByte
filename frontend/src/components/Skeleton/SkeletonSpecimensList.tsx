@@ -28,12 +28,10 @@ export default function SkeletonSpecimensList() {
 						<ItemTitle>
 							<Skeleton className="h-4 w-40" />
 						</ItemTitle>
-						<ItemDescription>
-							<Skeleton className="h-3 w-52" />
-						</ItemDescription>
-						<ItemDescription>
-							<Skeleton className="h-3 w-28" />
-						</ItemDescription>
+
+						<Skeleton className="h-3 w-52" />
+
+						<Skeleton className="h-3 w-28" />
 					</ItemContent>
 					<ItemActions>
 						<ChevronRightIcon className="text-muted-foreground" />
