@@ -813,9 +813,9 @@ jobs:
 
             docker compose -f docker-compose.yml up -d db
 
-            echo "Staring up backend and frontend containers"
+            echo "Running database migrations"
 
-            docker compose -f docker-compose.yml up -d --force-recreate backend frontend
+            docker compose -f docker-compose.yml run --rm prestart
 
             sleep 10
             echo "Validating deployment"
@@ -829,7 +829,47 @@ jobs:
               if [ -f .env.rollback ]; then
                 mv .env.rollback .env
               fi
-              docker compose -f docker-compose.yml up -d --force-recreate backend frontend
+              docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
+              exit 1
+            fi
+
+            for i in \$(seq 1 30); do
+              BACKEND_HEALTH=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "\$BACKEND_CONTAINER")
+              FRONTEND_STATUS=\$(docker inspect --format='{{.State.Status}}' "\$FRONTEND_CONTAINER")
+
+              if [ "\$BACKEND_HEALTH" = "healthy" ] && [ "\$FRONTEND_STATUS" = "running" ]; then
+                break
+              fi
+
+              if [ "\$BACKEND_HEALTH" = "unhealthy" ] || [ "\$FRONTEND_STATUS" != "running" ]; then
+                echo "Backend health: \$BACKEND_HEALTH"
+                echo "Frontend status: \$FRONTEND_STATUS"
+                docker compose -f docker-compose.yml logs --tail=100 backend frontend
+                echo "Rolling back..."
+                git checkout \$(cat .last_deploy)
+                if [ -f .env.rollback ]; then
+                  mv .env.rollback .env
+                fi
+                docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
+                exit 1
+              fi
+
+              sleep 2
+            done
+
+            BACKEND_HEALTH=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "\$BACKEND_CONTAINER")
+            FRONTEND_STATUS=\$(docker inspect --format='{{.State.Status}}' "\$FRONTEND_CONTAINER")
+
+            if [ "\$BACKEND_HEALTH" != "healthy" ] || [ "\$FRONTEND_STATUS" != "running" ]; then
+              echo "Backend health: \$BACKEND_HEALTH"
+              echo "Frontend status: \$FRONTEND_STATUS"
+              docker compose -f docker-compose.yml logs --tail=100 backend frontend
+              echo "Rolling back..."
+              git checkout \$(cat .last_deploy)
+              if [ -f .env.rollback ]; then
+                mv .env.rollback .env
+              fi
+              docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
               exit 1
             fi
 
@@ -938,7 +978,7 @@ Backups run automatically via a cron job on the server and are stored on the per
 ### Setup (One-Time Only)
 
 ```bash
-scp -i your-key.pem scripts/backup-db.sh ubuntu@<floating-ip>:~/backup-db.sh
+scp -i your-key.pem backup-db.sh ubuntu@<floating-ip>:~/backup-db.sh
 ssh -i your-key.pem ubuntu@<floating-ip>
 chmod +x ~/backup-db.sh
 ```
