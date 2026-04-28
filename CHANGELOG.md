@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/SuStrucSy/BarkByte/compare/v2.3.1...v2.3.2) (2026-04-28)
+
+
+### Bug Fixes
+
+* layout fix on desktop. ([72d4172](https://github.com/SuStrucSy/BarkByte/commit/72d417216b2e1433b5df9cd63dde4a3b1a3a30e7))
+
 ## [2.3.1](https://github.com/SuStrucSy/BarkByte/compare/v2.3.0...v2.3.1) (2026-04-28)
 
 
