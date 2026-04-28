@@ -16,9 +16,15 @@ type SpecimenProps = {
 	data: SpecimenPublic;
 	setSheetOpen: (open: boolean) => void;
 	onEditClick: () => void;
+	onBackClick?: () => void;
 };
 
-export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
+export function Specimen({
+	data,
+	setSheetOpen,
+	onEditClick,
+	onBackClick,
+}: SpecimenProps) {
 	// Build the chart model once from this specimen's experimental values.
 	const backboneModel = buildSpecimenBackboneModel(data);
 
@@ -27,6 +33,7 @@ export function Specimen({ data, setSheetOpen, onEditClick }: SpecimenProps) {
 			<SpecimenHeader
 				title={getSpecimenDisplayLabel(data)}
 				onEditClick={onEditClick}
+				onBackClick={onBackClick}
 			/>
 
 			<div className="grid gap-6 text-sm px-4 md:p-0">

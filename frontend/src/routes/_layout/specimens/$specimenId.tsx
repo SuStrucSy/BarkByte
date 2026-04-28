@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { z } from "zod/v4";
 import { useDoiGetDoiById } from "@/api/endpoints/doi/doi";
 import { useSpecimensReadSpecimen } from "@/api/endpoints/specimens/specimens";
+import { readSpecimensTableSearch } from "@/components/Data-Table/specimensTableNavigation";
 import SkeletonSpecimen from "@/components/Skeleton/SkeletonSpecimen";
 import { Specimen } from "@/components/Specimens/Specimen";
 import { SpecimenEditForm } from "@/components/Specimens/SpecimenEditForm";
@@ -48,6 +49,13 @@ function SpecimenDetails() {
 		},
 	});
 
+	const handleBackToSpecimensTable = useCallback(() => {
+		navigate({
+			to: "/specimens",
+			search: readSpecimensTableSearch(),
+		});
+	}, [navigate]);
+
 	if (isLoading || doiLoading) {
 		return <SkeletonSpecimen />;
 	}
@@ -90,13 +98,7 @@ function SpecimenDetails() {
 				<>
 					<SpecimenHeader
 						title={getSpecimenDisplayLabel(data)}
-						onBackClick={() =>
-							navigate({
-								to: Route.fullPath,
-								params: { specimenId },
-								search: {},
-							})
-						}
+						onBackClick={handleBackToSpecimensTable}
 					/>
 					<SpecimenEditForm
 						specimen={data}
@@ -122,6 +124,7 @@ function SpecimenDetails() {
 						data={data}
 						setSheetOpen={setSheetOpen}
 						onEditClick={handleStartEditing}
+						onBackClick={handleBackToSpecimensTable}
 					/>
 					<SpecimenReferenceSheet
 						specimen={data}

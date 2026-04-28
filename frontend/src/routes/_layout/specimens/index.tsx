@@ -6,7 +6,7 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useSpecimensReadSpecimenFilterOptions } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
 import type { DataTableFilterField } from "@/components/Data-Table/DataTableFilterControls";
@@ -15,6 +15,7 @@ import { SpecimensTableFooter } from "@/components/Data-Table/SpecimensTableFoot
 import { SpecimensTablePanel } from "@/components/Data-Table/SpecimensTablePanel";
 import { SpecimenTableSideBar } from "@/components/Data-Table/SpecimenTableSideBar";
 import { createColumns } from "@/components/Data-Table/specimenColumns";
+import { saveSpecimensTableSearch } from "@/components/Data-Table/specimensTableNavigation";
 import {
 	CHECKBOX_FILTER_CONFIG,
 	type CheckboxField,
@@ -157,6 +158,10 @@ function SpecimensKitTable() {
 		sliderDefaults,
 		replaceSearch,
 	});
+
+	useEffect(() => {
+		saveSpecimensTableSearch(search);
+	}, [search]);
 
 	// Memoized table column definitions.
 	const kitColumns = useMemo<ColumnDef<SpecimenPublic>[]>(
