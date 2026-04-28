@@ -36,22 +36,22 @@ function MobileSpecimenListItem({
 		<Item
 			variant="outline"
 			asChild
-			className="group/item rounded-xl border-border/70"
+			className="group/item w-full min-w-0 overflow-hidden rounded-xl border-border/70"
 		>
 			<button
 				type="button"
 				onClick={onSelect}
 				className="w-full min-w-0 text-left"
 			>
-				<ItemContent className="min-w-0">
+				<ItemContent className="min-w-0 overflow-hidden">
 					<div className="flex min-w-0 items-start justify-between gap-3">
-						<ItemTitle className="min-w-0 text-base leading-snug group-hover/item:text-primary">
+						<ItemTitle className="min-w-0 flex-1 text-base leading-snug group-hover/item:text-primary">
 							<span className="block min-w-0 truncate">
 								{row.specimen_reference_id}
 							</span>
 						</ItemTitle>
-						<Badge variant="secondary" className="shrink-0 text-xs">
-							{row.joinery_type.label}
+						<Badge variant="secondary" className="max-w-[45%] shrink text-xs">
+							<span className="truncate">{row.joinery_type.label}</span>
 						</Badge>
 					</div>
 					<ItemDescription className="min-w-0 truncate text-sm">
@@ -65,13 +65,13 @@ function MobileSpecimenListItem({
 							<Badge
 								key={failureMode}
 								variant="outline"
-								className="max-w-full text-xs"
+								className="max-w-full shrink text-xs"
 							>
 								<span className="truncate">{failureMode}</span>
 							</Badge>
 						))}
-						<Badge variant="secondary" className="text-xs">
-							{row.practice}
+						<Badge variant="secondary" className="max-w-full shrink text-xs">
+							<span className="truncate">{row.practice}</span>
 						</Badge>
 					</div>
 				</ItemContent>
