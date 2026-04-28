@@ -28,8 +28,8 @@ export function DataTablePagination<TData>({
 	const pageCount = Math.max(table.getPageCount(), 1);
 
 	return (
-		<div className="flex items-center justify-end space-x-4 md:space-x-6 lg:space-x-8">
-			<div className="flex items-center space-x-2">
+		<div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-end sm:gap-4 md:w-auto md:gap-6 lg:gap-8">
+			<div className="hidden items-center gap-2 sm:flex">
 				<p className="text-sm font-medium">Rows per page</p>
 				<Select
 					value={`${pagination.pageSize}`}
@@ -49,10 +49,10 @@ export function DataTablePagination<TData>({
 					</SelectContent>
 				</Select>
 			</div>
-			<div className="flex items-center justify-center text-sm font-medium">
+			<div className="min-w-0 text-sm font-medium whitespace-nowrap">
 				Page {pagination.pageIndex + 1} of {pageCount}
 			</div>
-			<div className="flex items-center space-x-2">
+			<div className="flex shrink-0 items-center gap-2">
 				<Button
 					variant="outline"
 					className="hidden h-8 w-8 p-0 lg:flex"
