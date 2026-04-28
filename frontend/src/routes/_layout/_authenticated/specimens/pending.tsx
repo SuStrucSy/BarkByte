@@ -50,7 +50,7 @@ function PendingSpecimensContent({ status }: { status: SpecimenStatus }) {
 
 	if (!data?.pending_specimens.length) {
 		return (
-			<div className="px-4 md:px-0">
+			<div className="p-4 md:px-0">
 				<Empty className="border border-dashed">
 					<EmptyHeader>
 						<EmptyMedia variant="icon">
