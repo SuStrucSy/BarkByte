@@ -242,14 +242,18 @@ docker compose version
 sudo apt install git -y
 
 # Mount the data volume (find device name first)
-lsblk
-# Usually /dev/vdb — format and mount it
-sudo mkfs.ext4 /dev/vdb
+lsblk -f
+
+# Usually /dev/vdb. Only format it if it has no existing filesystem.
+# WARNING: mkfs destroys all data on the device.
+sudo blkid /dev/vdb || sudo mkfs.ext4 /dev/vdb
 sudo mkdir -p /mnt/data
 sudo mount /dev/vdb /mnt/data
 
 # Make mount persistent across reboots
-echo '/dev/vdb /mnt/data ext4 defaults 0 2' | sudo tee -a /etc/fstab
+DATA_UUID=$(sudo blkid -s UUID -o value /dev/vdb)
+echo "UUID=$DATA_UUID /mnt/data ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
+sudo mount -a
 
 # Create dirs for postgres data and backups
 sudo mkdir -p /mnt/data/postgres /mnt/data/backups
@@ -267,6 +271,8 @@ cat ~/.ssh/id_ed25519.pub
 # Clone your repo using SSH (not HTTPS)
 git clone git@github.com:your-org/your-repo.git ~/timverse-app
 ```
+
+This server-side GitHub deploy key is only for `git fetch` / `git checkout` on the VM. The `SSH_PRIVATE_KEY` GitHub Actions secret added later is a different key: it is the private key that lets GitHub Actions SSH into the VM as `ubuntu`.
 
 ---
 
@@ -503,7 +509,7 @@ Add each of the following secrets:
 | `SECRET_KEY` | *(run `openssl rand -hex 32`)* |
 | `FIRST_SUPERUSER` | `admin@timverse.ca` |
 | `FIRST_SUPERUSER_PASSWORD` | *(strong password)* |
-| `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://timverse.ca` |
+| `BACKEND_CORS_ORIGINS` | `https://timverse.ca,https://www.timverse.ca` |
 | `POSTGRES_DB` | *(your db name)* |
 | `POSTGRES_USER` | *(your db user)* |
 | `POSTGRES_PASSWORD` | *(run `openssl rand -hex 32`)* |
@@ -694,12 +700,25 @@ jobs:
             set -e
 
             cd ~/timverse-app
+
+            if [ ! -f .env ]; then
+              echo "No existing .env found; assuming first deploy and skipping pre-deploy backup."
+              exit 0
+            fi
+
             source .env
 
             # Silence Compose warnings about TAG not being set
             export TAG=\$DEPLOY_TAG
 
             TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
+
+            DB_CONTAINER=\$(docker compose -f docker-compose.yml ps -q db)
+
+            if [ -z "\$DB_CONTAINER" ]; then
+              echo "Existing .env found but no running database container exists; cannot take a pre-deploy backup."
+              exit 1
+            fi
 
             docker compose exec -T db \
               pg_dump -U \$POSTGRES_USER \$POSTGRES_DB \
@@ -737,6 +756,8 @@ jobs:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_TLS: ${{ secrets.SMTP_TLS }}
           EMAILS_FROM_EMAIL: ${{ secrets.EMAILS_FROM_EMAIL }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
@@ -775,6 +796,8 @@ jobs:
           SMTP_HOST=${SMTP_HOST}
           SMTP_USER=${SMTP_USER}
           SMTP_PASSWORD=${SMTP_PASSWORD}
+          SMTP_PORT=${SMTP_PORT}
+          SMTP_TLS=${SMTP_TLS}
           EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
           DOCKER_IMAGE_BACKEND=ghcr.io/\$REPO/backend:\$DEPLOY_TAG
           DOCKER_IMAGE_FRONTEND=ghcr.io/\$REPO/frontend:\$DEPLOY_TAG
@@ -786,24 +809,70 @@ jobs:
 
             docker compose -f docker-compose.yml pull backend frontend
 
-            echo "Staring up db container"
+            echo "Starting db container"
 
             docker compose -f docker-compose.yml up -d db
 
-            echo "Staring up backend and frontend containers"
+            echo "Running database migrations"
 
-            docker compose -f docker-compose.yml up -d --force-recreate backend frontend
+            docker compose -f docker-compose.yml run --rm prestart
 
-            # ✅ real validation
-            sleep 10
+            echo "Starting backend and frontend containers"
 
-            if ! docker compose ps backend | grep -q "Up"; then
+            docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
+
+            echo "Validating deployment"
+
+            BACKEND_CONTAINER=\$(docker compose -f docker-compose.yml ps -q backend)
+            FRONTEND_CONTAINER=\$(docker compose -f docker-compose.yml ps -q frontend)
+
+            if [ -z "\$BACKEND_CONTAINER" ] || [ -z "\$FRONTEND_CONTAINER" ]; then
               echo "Rolling back..."
               git checkout \$(cat .last_deploy)
               if [ -f .env.rollback ]; then
                 mv .env.rollback .env
               fi
-              docker compose -f docker-compose.yml up -d --force-recreate backend frontend
+              docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
+              exit 1
+            fi
+
+            for i in \$(seq 1 30); do
+              BACKEND_HEALTH=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "\$BACKEND_CONTAINER")
+              FRONTEND_STATUS=\$(docker inspect --format='{{.State.Status}}' "\$FRONTEND_CONTAINER")
+
+              if [ "\$BACKEND_HEALTH" = "healthy" ] && [ "\$FRONTEND_STATUS" = "running" ]; then
+                break
+              fi
+
+              if [ "\$BACKEND_HEALTH" = "unhealthy" ] || [ "\$FRONTEND_STATUS" != "running" ]; then
+                echo "Backend health: \$BACKEND_HEALTH"
+                echo "Frontend status: \$FRONTEND_STATUS"
+                docker compose -f docker-compose.yml logs --tail=100 backend frontend
+                echo "Rolling back..."
+                git checkout \$(cat .last_deploy)
+                if [ -f .env.rollback ]; then
+                  mv .env.rollback .env
+                fi
+                docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
+                exit 1
+              fi
+
+              sleep 2
+            done
+
+            BACKEND_HEALTH=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "\$BACKEND_CONTAINER")
+            FRONTEND_STATUS=\$(docker inspect --format='{{.State.Status}}' "\$FRONTEND_CONTAINER")
+
+            if [ "\$BACKEND_HEALTH" != "healthy" ] || [ "\$FRONTEND_STATUS" != "running" ]; then
+              echo "Backend health: \$BACKEND_HEALTH"
+              echo "Frontend status: \$FRONTEND_STATUS"
+              docker compose -f docker-compose.yml logs --tail=100 backend frontend
+              echo "Rolling back..."
+              git checkout \$(cat .last_deploy)
+              if [ -f .env.rollback ]; then
+                mv .env.rollback .env
+              fi
+              docker compose -f docker-compose.yml up -d --no-deps --force-recreate backend frontend
               exit 1
             fi
 
@@ -843,8 +912,11 @@ jobs:
 | Unquoted `<<EOF` with `\$` escapes | Single-quoted `<<'EOF'` sends backslashes literally to the remote, breaking `$(...)` subshell syntax. Unquoted `<<EOF` lets the local shell strip the backslash so a bare `$` reaches the remote |
 | `GH_TOKEN` / `GH_ACTOR` as env vars | Raw `${{ }}` expressions inside a heredoc are expanded before SSH sends it, bypassing Actions' secret masking. Env vars are masked properly |
 | `--no-deps` on final `up` | Without it, Compose re-runs `prestart` when bringing up `backend` (due to `depends_on: prestart: condition: service_completed_successfully`), causing duplicate migration runs |
+| Explicit `docker compose run --rm prestart` | Migrations run once before the app containers are recreated, so deploy behavior is predictable |
 | Cleanup after deploy, not before | If the deploy fails and rolls back, you don't accidentally delete the image you just rolled back to |
 | Lowercase repo name step | GHCR requires all image names to be lowercase; `github.repository` preserves original casing |
+
+> The automatic rollback restores the previous app checkout and `.env`, then restarts backend/frontend containers. It does **not** undo database migrations or data changes. For a failed schema-changing release, restore from the pre-deploy backup after deciding that database rollback is required.
 
 ---
 
@@ -880,7 +952,7 @@ docker compose -f docker-compose.yml logs frontend
 
 Expected states:
 - `db`, `backend`, `frontend` → `running`
-- `prestart` → `exited (0)` — this is normal, it runs once for DB migrations
+- `prestart` does not stay listed after deploy — it runs once with `docker compose run --rm prestart` for DB migrations
 
 ---
 
@@ -888,24 +960,28 @@ Expected states:
 
 ```bash
 ssh -i your-key.pem ubuntu@<floating-ip>
+cd ~/timverse-app
+set -o allexport
+source .env
+set +o allexport
 
 # Open an interactive psql session
-docker exec -it timverse-db-1 psql -U $POSTGRES_USER $POSTGRES_DB
+docker compose -f docker-compose.yml exec db psql -U "$POSTGRES_USER" "$POSTGRES_DB"
 
 # Or run a one-off query
-docker exec timverse-db-1 psql -U $POSTGRES_USER $POSTGRES_DB -c "SELECT * FROM users LIMIT 10;"
+docker compose -f docker-compose.yml exec db psql -U "$POSTGRES_USER" "$POSTGRES_DB" -c "SELECT * FROM users LIMIT 10;"
 ```
 
 ---
 
 ## Database Backups
 
-Backups run automatically via a cron job on the server and are stored on the persistent data volume at `/mnt/data/backups`. A pre-deploy backup is also triggered by GitHub Actions before every deploy.
+Backups run automatically via a cron job on the server and are stored on the persistent data volume at `/mnt/data/backups`. A pre-deploy backup is also triggered by GitHub Actions before every deploy after the first successful deployment.
 
 ### Setup (One-Time Only)
 
 ```bash
-scp -i your-key.pem scripts/backup-db.sh ubuntu@<floating-ip>:~/backup-db.sh
+scp -i your-key.pem backup-db.sh ubuntu@<floating-ip>:~/backup-db.sh
 ssh -i your-key.pem ubuntu@<floating-ip>
 chmod +x ~/backup-db.sh
 ```
@@ -936,9 +1012,13 @@ Add the `aws s3 sync` line to the end of `backup-db.sh` once configured.
 
 ```bash
 ssh -i your-key.pem ubuntu@<floating-ip>
+cd ~/timverse-app
+set -o allexport
+source .env
+set +o allexport
 
 gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
-  | docker exec -i timverse-db-1 psql -U $POSTGRES_USER $POSTGRES_DB
+  | docker compose -f docker-compose.yml exec -T db psql -U "$POSTGRES_USER" "$POSTGRES_DB"
 ```
 
 ### Backup Retention Strategy
@@ -947,7 +1027,7 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 |---|---|
 | Data volume (`/mnt/data/backups`) | 7 days (auto-deleted by script) |
 | Object storage | 30 days (configure lifecycle rules in your bucket) |
-| Pre-deploy snapshots | Keep last 5 manually |
+| Pre-deploy snapshots | Last 5, auto-pruned by the deploy workflow |
 
 ### GHCR Image Retention
 
@@ -964,9 +1044,9 @@ GHCR has no hard limit on versions, and container image storage is currently fre
 | Certificate issued but browser shows error | Cloudflare SSL mode wrong | Set Cloudflare SSL/TLS → Overview to **Full (strict)** |
 | Traefik Docker API version error | Traefik v3 incompatible on Béluga | Use `traefik:v2.11` — v3 has a Docker API issue on this platform |
 | `HASHED_PASSWORD` variable warnings | `$` signs in hash not escaped | Double every `$` in `HASHED_PASSWORD` in `~/traefik/.env` |
-| SSH passphrase prompt in Actions | Deploy key has a passphrase | Generate a new key with `-N ""` (no passphrase) |
-| Actions workflow not appearing | Wrong file path | Must be at exactly `.github/workflows/deploy.yml` |
-| Actions triggers but doesn't deploy | Wrong trigger type | Deploy triggers on `push: tags: v*` — merge the Release PR first |
+| SSH passphrase prompt in Actions | The VM login key stored in `SSH_PRIVATE_KEY` has a passphrase | Use a passphrase-free CI/CD key for Actions, or configure a non-interactive secret handling strategy |
+| Actions workflow not appearing | Wrong file path | Must be at exactly `.github/workflows/release.yml` |
+| Actions triggers but doesn't deploy | No release was created | Deploy runs when Release Please creates a release after merging the Release PR, or when manually triggered with `workflow_dispatch` and a tag |
 | SSH connection drops during build | Long build times out | Add `ServerAliveInterval 60` to SSH config step in workflow |
 | `prestart` keeps restarting | DB not healthy yet | Check `docker compose logs db` |
 | Frontend can't reach API | `VITE_API_URL` wrong | It's a **build-time** arg — ensure secret is `https://api.timverse.ca` and trigger a new deploy |
