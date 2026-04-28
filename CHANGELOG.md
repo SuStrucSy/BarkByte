@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.1](https://github.com/SuStrucSy/BarkByte/compare/v2.3.0...v2.3.1) (2026-04-28)
+
+
+### Bug Fixes
+
+* address to link ([92b0e44](https://github.com/SuStrucSy/BarkByte/commit/92b0e4485c0ca81266af9c78cc07dcab0db54b3c))
+* back button memory ([ff846d7](https://github.com/SuStrucSy/BarkByte/commit/ff846d73b0e349ea11856f1a749dde2594d86330))
+* edit button would disapear ([0a2474c](https://github.com/SuStrucSy/BarkByte/commit/0a2474c5758bb54cf139d8133a7bf3d2e5dec959))
+* Refine frontend spacing, skeletons, and mobile sidebar behavior ([bc5c4f6](https://github.com/SuStrucSy/BarkByte/commit/bc5c4f69793cfdf79cfa720ea67f90dfdbfe7f8b))
+* updating deployment.md ([d18987f](https://github.com/SuStrucSy/BarkByte/commit/d18987ff24acc9518224861cee0a61b08b76bd6b))
+
 ## [2.3.0](https://github.com/SuStrucSy/BarkByte/compare/v2.2.0...v2.3.0) (2026-04-23)
 
 
