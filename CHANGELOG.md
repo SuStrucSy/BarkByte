@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.4](https://github.com/SuStrucSy/BarkByte/compare/v2.3.3...v2.3.4) (2026-04-28)
+
+
+### Bug Fixes
+
+* item specimen width size ([ce62c73](https://github.com/SuStrucSy/BarkByte/commit/ce62c733d59f733a59f81f0657dcc4c377dd296f))
+
 ## [2.3.3](https://github.com/SuStrucSy/BarkByte/compare/v2.3.2...v2.3.3) (2026-04-28)
 
 
