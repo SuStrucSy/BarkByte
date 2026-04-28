@@ -74,17 +74,16 @@ export function AdminUsersDesktopTable({
 								</TableCell>
 								<TableCell>{getUserStatusLabel(user)}</TableCell>
 								<TableCell className="text-right">
-									{!isInactiveUser ? (
-										<div className="flex justify-end gap-2">
-											<AdminUserActions
-												currentUserId={currentUserId}
-												deleteButtonClassName="text-destructive hover:text-destructive"
-												deleteButtonVariant="ghost"
-												editButtonVariant="ghost"
-												user={user}
-											/>
-										</div>
-									) : null}
+									<div className="flex justify-end gap-2">
+										<AdminUserActions
+											currentUserId={currentUserId}
+											deleteButtonClassName="text-destructive hover:text-destructive"
+											deleteButtonVariant="ghost"
+											editButtonVariant="ghost"
+											showDelete={!isInactiveUser}
+											user={user}
+										/>
+									</div>
 								</TableCell>
 							</TableRow>
 						);

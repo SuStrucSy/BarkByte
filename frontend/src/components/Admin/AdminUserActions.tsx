@@ -16,6 +16,7 @@ interface AdminUserActionsProps {
 	deleteButtonVariant: "ghost" | "outline";
 	editButtonClassName?: string;
 	editButtonVariant: "ghost" | "outline";
+	showDelete?: boolean;
 	user: UserPublic;
 }
 
@@ -43,6 +44,7 @@ export function AdminUserActions({
 	deleteButtonVariant,
 	editButtonClassName,
 	editButtonVariant,
+	showDelete = true,
 	user,
 }: AdminUserActionsProps) {
 	const isCurrentUser = isCurrentAdminUser(user, currentUserId);
@@ -66,21 +68,23 @@ export function AdminUserActions({
 					</Button>,
 				)}
 			/>
-			<DeleteUser
-				id={user.id}
-				disabled={disableDelete}
-				trigger={
-					<Button
-						type="button"
-						variant={deleteButtonVariant}
-						size="sm"
-						className={deleteButtonClassName}
-						disabled={disableDelete}
-					>
-						Delete
-					</Button>
-				}
-			/>
+			{showDelete ? (
+				<DeleteUser
+					id={user.id}
+					disabled={disableDelete}
+					trigger={
+						<Button
+							type="button"
+							variant={deleteButtonVariant}
+							size="sm"
+							className={deleteButtonClassName}
+							disabled={disableDelete}
+						>
+							Delete
+						</Button>
+					}
+				/>
+			) : null}
 		</>
 	);
 }

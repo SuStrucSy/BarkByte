@@ -71,18 +71,17 @@ export function AdminUsersMobileList({
 								<p>{getUserStatusLabel(user)}</p>
 							</div>
 						</div>
-						{!isInactiveUser ? (
-							<div className="flex flex-col gap-2">
-								<AdminUserActions
-									currentUserId={currentUserId}
-									deleteButtonClassName="w-full justify-center text-destructive hover:text-destructive"
-									deleteButtonVariant="outline"
-									editButtonClassName="w-full justify-center"
-									editButtonVariant="outline"
-									user={user}
-								/>
-							</div>
-						) : null}
+						<div className="flex flex-col gap-2">
+							<AdminUserActions
+								currentUserId={currentUserId}
+								deleteButtonClassName="w-full justify-center text-destructive hover:text-destructive"
+								deleteButtonVariant="outline"
+								editButtonClassName="w-full justify-center"
+								editButtonVariant="outline"
+								showDelete={!isInactiveUser}
+								user={user}
+							/>
+						</div>
 					</div>
 				);
 			})}
