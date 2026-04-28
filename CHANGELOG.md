@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.5](https://github.com/SuStrucSy/BarkByte/compare/v2.3.4...v2.3.5) (2026-04-28)
+
+
+### Bug Fixes
+
+* horizontal scroll in specimens mobile ([50a7e5f](https://github.com/SuStrucSy/BarkByte/commit/50a7e5f9ff0d7b47d27960b092db995fa9fd08df))
+
 ## [2.3.4](https://github.com/SuStrucSy/BarkByte/compare/v2.3.3...v2.3.4) (2026-04-28)
 
 
