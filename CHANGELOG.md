@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.3](https://github.com/SuStrucSy/BarkByte/compare/v2.3.2...v2.3.3) (2026-04-28)
+
+
+### Bug Fixes
+
+* mobile specimen list view ([73c4aa6](https://github.com/SuStrucSy/BarkByte/commit/73c4aa6b5923187f3c65a5abe84f167f6b713980))
+
 ## [2.3.2](https://github.com/SuStrucSy/BarkByte/compare/v2.3.1...v2.3.2) (2026-04-28)
 
 
