@@ -21,17 +21,18 @@ import {
 	FieldSet,
 } from "../ui/field";
 
-interface NewPasswordForm {
+interface SetPasswordForm {
 	new_password: string;
 	confirm_password: string;
 }
 
-interface ResetPasswordFormProps {
-	onSubmit: SubmitHandler<NewPasswordForm>;
+interface SetPasswordFormProps {
+	onSubmit: SubmitHandler<SetPasswordForm>;
+	email: string;
 }
 
-export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
-	const form = useForm<NewPasswordForm>({
+export function SetPassword({ onSubmit, email }: SetPasswordFormProps) {
+	const form = useForm<SetPasswordForm>({
 		resolver: zodResolver(resetPasswordSchema),
 		mode: "onBlur",
 		criteriaMode: "all",
@@ -40,16 +41,21 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
 	return (
 		<Form {...form}>
 			<form
-				id="resetPasswordForm"
+				id="setPasswordForm"
 				onSubmit={form.handleSubmit(onSubmit)}
 				className="space-y-8"
 			>
 				<FieldSet>
 					<FieldGroup>
 						<div className="flex flex-col items-center gap-1 text-center">
-							<h1 className="text-2xl font-bold">Reset Password</h1>
+							<h1 className="text-2xl font-bold">
+								Activate Account for{" "}
+								<span className="dark:text-indigo-300 text-indigo-600 font-extrabold">
+									{email}
+								</span>
+							</h1>
 							<p className="text-sm text-balance text-muted-foreground">
-								Enter your new password and confirm it to complete the reset.
+								Enter your new password and confirm it to activate your account.
 							</p>
 						</div>
 
@@ -82,14 +88,14 @@ export function ResetPasswordForm({ onSubmit }: ResetPasswordFormProps) {
 						<Field>
 							<Button
 								type="submit"
-								form="resetPasswordForm"
+								form="setPasswordForm"
 								className="w-full"
 								disabled={form.formState.isSubmitting}
 							>
 								{form.formState.isSubmitting && (
 									<Loader2 className="animate-spin" />
 								)}
-								Reset Password
+								Set Password
 							</Button>
 						</Field>
 						<FieldSeparator></FieldSeparator>

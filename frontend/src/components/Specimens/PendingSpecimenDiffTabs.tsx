@@ -1,10 +1,8 @@
 import { Info, Pyramid, RulerDimensionLine } from "lucide-react";
-import type { RefObject } from "react";
 import type {
 	PendingSpecimenPublicChangedData,
 	SpecimenPublic,
 } from "@/api/model";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	allSectionFields,
@@ -118,29 +116,17 @@ export function PendingSpecimenChangedOnly({
 
 interface PendingSpecimenDiffTabsProps {
 	changedData: PendingSpecimenPublicChangedData;
-	hasSideBySideReviewLayout: boolean;
 	isNew: boolean;
 	originalSpecimen?: SpecimenPublic;
-	sideBySideTabContentHeight: number;
-	sideBySideTabsHeaderRef: RefObject<HTMLDivElement | null>;
 	specimen: Partial<SpecimenPublic>;
-	usesStackedReviewLayout: boolean;
 }
 
 export function PendingSpecimenDiffTabs({
 	changedData,
-	hasSideBySideReviewLayout,
 	isNew,
 	originalSpecimen,
-	sideBySideTabContentHeight,
-	sideBySideTabsHeaderRef,
 	specimen,
-	usesStackedReviewLayout,
 }: PendingSpecimenDiffTabsProps) {
-	const sideBySideTabScrollStyle = {
-		WebkitOverflowScrolling: "touch" as const,
-	};
-
 	const renderSection = (section: keyof typeof sectionFields) => (
 		<PendingSpecimenDiffGrid
 			changedData={changedData}
@@ -152,79 +138,38 @@ export function PendingSpecimenDiffTabs({
 		/>
 	);
 
-	const renderTabContent = (section: keyof typeof sectionFields) =>
-		hasSideBySideReviewLayout ? (
-			<div
-				data-vaul-no-drag
-				className="h-full touch-pan-y overflow-y-auto pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-				style={sideBySideTabScrollStyle}
-			>
-				<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-					<div className="grid gap-3">{renderSection(section)}</div>
-				</div>
-			</div>
-		) : (
-			<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
-				<div className="grid gap-3">{renderSection(section)}</div>
-			</div>
-		);
+	const renderTabContent = (section: keyof typeof sectionFields) => (
+		<div className="px-4 pb-6 sm:px-6 lg:px-8 lg:pb-8">
+			{renderSection(section)}
+		</div>
+	);
 
 	return (
-		<Tabs
-			defaultValue="Meta Data"
-			className={
-				hasSideBySideReviewLayout
-					? "grid min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4"
-					: "gap-4"
-			}
-		>
-			<div
-				ref={hasSideBySideReviewLayout ? sideBySideTabsHeaderRef : undefined}
-				className="overflow-x-auto"
-			>
-				<TabsList>
-					<TabsTrigger value="Meta Data">
-						<Info /> {usesStackedReviewLayout ? "Meta" : "Meta Data"}
-					</TabsTrigger>
-					<TabsTrigger value="Structural Data">
-						<Pyramid />{" "}
-						{usesStackedReviewLayout ? "Structural" : "Structural Data"}
-					</TabsTrigger>
-					<TabsTrigger value="Experimental Data">
-						<RulerDimensionLine />
-						{usesStackedReviewLayout ? "Experimental" : "Experimental Data"}
-					</TabsTrigger>
-				</TabsList>
-			</div>
-			<ScrollArea>
-				<div
-					className={hasSideBySideReviewLayout ? "min-h-0" : ""}
-					style={
-						hasSideBySideReviewLayout && sideBySideTabContentHeight > 0
-							? { height: `${sideBySideTabContentHeight}px` }
-							: undefined
-					}
-				>
-					<TabsContent
-						value="Meta Data"
-						className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
-					>
-						{renderTabContent("Meta Data")}
-					</TabsContent>
-					<TabsContent
-						value="Structural Data"
-						className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
-					>
-						{renderTabContent("Structural Data")}
-					</TabsContent>
-					<TabsContent
-						value="Experimental Data"
-						className={hasSideBySideReviewLayout ? "h-full min-h-0" : ""}
-					>
-						{renderTabContent("Experimental Data")}
-					</TabsContent>
-				</div>
-			</ScrollArea>
+		<Tabs defaultValue="Meta Data">
+			<TabsList>
+				<TabsTrigger value="Meta Data">
+					<Info /> <span className="hidden sm:inline">Meta Data</span>{" "}
+					<span className="sm:hidden">Meta</span>
+				</TabsTrigger>
+				<TabsTrigger value="Structural Data">
+					<Pyramid /> <span className="hidden sm:inline">Structural Data</span>{" "}
+					<span className="sm:hidden">Structural</span>
+				</TabsTrigger>
+				<TabsTrigger value="Experimental Data">
+					<RulerDimensionLine />
+					<span className="hidden sm:inline">Experimental Data</span>{" "}
+					<span className="sm:hidden">Experimental</span>
+				</TabsTrigger>
+			</TabsList>
+			<TabsContent value="Meta Data">
+				{renderTabContent("Meta Data")}
+			</TabsContent>
+			<TabsContent value="Structural Data">
+				{renderTabContent("Structural Data")}
+			</TabsContent>
+			<TabsContent value="Experimental Data">
+				{renderTabContent("Experimental Data")}
+			</TabsContent>
 		</Tabs>
 	);
 }

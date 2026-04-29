@@ -14,11 +14,15 @@
 	--secondary: oklch(0.97 0 0);
 	--secondary-foreground: oklch(0.205 0 0);
 	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.42 0 0); /* ✱ was 0.556 – ~3:1 on white, now ~7:1 */
+	--muted-foreground: oklch(
+		0.42 0 0
+	); /* ✱ was 0.556 – ~3:1 on white, now ~7:1 */
 	--accent: oklch(0.97 0 0);
 	--accent-foreground: oklch(0.205 0 0);
 	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.88 0 0); /* ✱ was 0.922 – 3:1 against white for UI components */
+	--border: oklch(
+		0.88 0 0
+	); /* ✱ was 0.922 – 3:1 against white for UI components */
 	--input: oklch(0.88 0 0); /* ✱ was 0.922 */
 	--ring: oklch(0.35 0 0); /* ✱ was 0.708 – 3:1+ focus ring against white */
 	--chart-1: oklch(0.646 0.222 41.116);
@@ -57,7 +61,9 @@
 	--secondary: oklch(0.269 0 0);
 	--secondary-foreground: oklch(0.985 0 0);
 	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.72 0 0); /* ✱ was 0.708 – ensures 4.5:1 on card bg */
+	--muted-foreground: oklch(
+		0.72 0 0
+	); /* ✱ was 0.708 – ensures 4.5:1 on card bg */
 	--accent: oklch(0.269 0 0);
 	--accent-foreground: oklch(0.985 0 0);
 	--destructive: oklch(0.704 0.191 22.216);

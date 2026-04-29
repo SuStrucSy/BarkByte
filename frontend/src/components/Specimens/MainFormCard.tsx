@@ -21,7 +21,7 @@ type MainFormCardProps = {
 	isSubmitting: boolean;
 	onBack: () => void;
 	onNext: () => void;
-	onSubmit: React.FormEventHandler<HTMLFormElement>;
+	onSubmit: React.SubmitEventHandler<HTMLFormElement>;
 	children: ReactNode;
 };
 

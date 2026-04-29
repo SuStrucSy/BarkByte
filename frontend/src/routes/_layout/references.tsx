@@ -126,7 +126,6 @@ function References() {
 	return (
 		<>
 			<div className="flex h-full flex-col sm:px-2 md:px-4">
-					
 				<p className="text-sm text-muted-foreground px-4 py-2">
 					{allReferences.length > 0
 						? `${allReferences.length} papers loaded`

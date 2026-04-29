@@ -3,7 +3,10 @@ import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { dispatchAuthChange } from "./hooks/useIsLoggedIn";
 
-const handleApiError = (error: Error, options?: { dispatchForbidden?: boolean }) => {
+const handleApiError = (
+	error: Error,
+	options?: { dispatchForbidden?: boolean },
+) => {
 	if (error instanceof AxiosError) {
 		const status = error.response?.status;
 
@@ -31,7 +34,7 @@ export const queryClient = new QueryClient({
 			staleTime: 5 * 60 * 1000,
 			gcTime: 30 * 60 * 1000,
 			refetchOnWindowFocus: false,
-	},
+		},
 	},
 	queryCache: new QueryCache({
 		onError: (error) => handleApiError(error, { dispatchForbidden: true }),

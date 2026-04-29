@@ -29,7 +29,9 @@ const items = [
 	{ icon: Columns3, title: "Compare", path: "/compare" },
 ];
 
-const groupTwoItems = [{ icon: Layers, title: "All Specimens", path: "/specimens" }];
+const groupTwoItems = [
+	{ icon: Layers, title: "All Specimens", path: "/specimens" },
+];
 
 interface Item {
 	icon: LucideIcon;

@@ -9,11 +9,11 @@ import "./styles/index.css";
 const root = document.getElementById("root") as HTMLElement;
 
 ReactDOM.createRoot(root).render(
-  <StrictMode>
-    <ThemeProvider defaultMode="dark" storageKey="vite-ui-theme">
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </ThemeProvider>
-  </StrictMode>,
+	<StrictMode>
+		<ThemeProvider defaultMode="dark" storageKey="vite-ui-theme">
+			<QueryClientProvider client={queryClient}>
+				<App />
+			</QueryClientProvider>
+		</ThemeProvider>
+	</StrictMode>,
 );

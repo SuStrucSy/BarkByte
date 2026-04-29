@@ -7,8 +7,8 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 
 interface SpecimenStructuralFormProps {
 	control: Control<AddNewSpecimenFormValues>;

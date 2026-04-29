@@ -1,10 +1,10 @@
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { Badge } from "@/components/ui/badge";
 import {
 	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type {
 	BackboneChartEmptyModel,
@@ -58,7 +58,9 @@ function formatBadgeValue(symbol: string, value: number, unit: string | null) {
 	const renderedValue = Number.isInteger(value)
 		? value.toString()
 		: value.toFixed(2);
-	return unit ? `${symbol} = ${renderedValue} ${unit}` : `${symbol} = ${renderedValue}`;
+	return unit
+		? `${symbol} = ${renderedValue} ${unit}`
+		: `${symbol} = ${renderedValue}`;
 }
 
 // Finds a rounded axis step like 1, 2, 5, 10, 20, etc.
@@ -153,7 +155,7 @@ function BackboneTooltipContent({
 	const yAxisInfo = splitAxisLabel(yAxisLabel);
 
 	return (
-		<div className="border-border/50 bg-background grid min-w-[12rem] gap-2 rounded-lg border px-3 py-2 text-xs shadow-xl">
+		<div className="border-border/50 bg-background grid min-w-48 gap-2 rounded-lg border px-3 py-2 text-xs shadow-xl">
 			<p className="font-medium text-foreground">{datum.label}</p>
 			<div className="flex items-stretch gap-2">
 				<span
@@ -186,7 +188,7 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 		return (
 			<div
 				className={cn(
-					"flex min-h-[320px] items-center justify-center rounded-md border border-dashed border-border px-4 py-6 text-sm text-muted-foreground",
+					"flex min-h-80 items-center justify-center rounded-md border border-dashed border-border px-4 py-6 text-sm text-muted-foreground",
 					className,
 				)}
 			>
@@ -208,37 +210,46 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 	const xAxisInfo = splitAxisLabel(model.metadata.xAxisLabel);
 	const yAxisInfo = splitAxisLabel(model.metadata.yAxisLabel);
 	const pointByKey = new Map(model.points.map((point) => [point.key, point]));
-	const maxPoint =
-		pointByKey.get("peak") ?? pointByKey.get("measured-max");
+	const maxPoint = pointByKey.get("peak") ?? pointByKey.get("measured-max");
 	const measureBadges = [
 		model.metadata.stiffnessLabel,
 		model.metadata.ductilityLabel,
 		pointByKey.get("yield")
-			? formatBadgeValue("Δy", pointByKey.get("yield")!.x, xAxisInfo.unit)
+			? formatBadgeValue("Δy", pointByKey.get("yield")?.x || 0, xAxisInfo.unit)
 			: undefined,
 		pointByKey.get("yield")
-			? formatBadgeValue("Fy", pointByKey.get("yield")!.y, yAxisInfo.unit)
+			? formatBadgeValue("Fy", pointByKey.get("yield")?.y || 0, yAxisInfo.unit)
 			: undefined,
-		maxPoint
-			? formatBadgeValue("Δmax", maxPoint.x, xAxisInfo.unit)
-			: undefined,
-		maxPoint
-			? formatBadgeValue("Fmax", maxPoint.y, yAxisInfo.unit)
+		maxPoint ? formatBadgeValue("Δmax", maxPoint.x, xAxisInfo.unit) : undefined,
+		maxPoint ? formatBadgeValue("Fmax", maxPoint.y, yAxisInfo.unit) : undefined,
+		pointByKey.get("ultimate")
+			? formatBadgeValue(
+					"Δu",
+					pointByKey.get("ultimate")?.x || 0,
+					xAxisInfo.unit,
+				)
 			: undefined,
 		pointByKey.get("ultimate")
-			? formatBadgeValue("Δu", pointByKey.get("ultimate")!.x, xAxisInfo.unit)
-			: undefined,
-		pointByKey.get("ultimate")
-			? formatBadgeValue("Fu", pointByKey.get("ultimate")!.y, yAxisInfo.unit)
+			? formatBadgeValue(
+					"Fu",
+					pointByKey.get("ultimate")?.y || 0,
+					yAxisInfo.unit,
+				)
 			: undefined,
 	].filter(Boolean);
 
 	return (
-		<div className={cn("flex h-full min-h-[380px] w-full min-w-0 flex-col", className)}>
+		<div
+			className={cn("flex h-full min-h-95 w-full min-w-0 flex-col", className)}
+		>
 			{measureBadges.length > 0 ? (
 				<div className="flex flex-wrap gap-2 pb-3">
 					{measureBadges.map((label) => (
-						<Badge key={label} variant="secondary" className="bg-muted text-foreground">
+						<Badge
+							key={label}
+							variant="secondary"
+							className="bg-muted text-foreground"
+						>
 							{label}
 						</Badge>
 					))}
@@ -249,7 +260,7 @@ export function BackboneChart({ model, className }: BackboneChartProps) {
 			</p>
 			<ChartContainer
 				config={chartConfig}
-				className="h-full min-h-[380px] w-full min-w-0 max-w-full overflow-visible touch-pan-y"
+				className="h-full min-h-95 w-full min-w-0 max-w-full overflow-visible touch-pan-y"
 			>
 				<LineChart
 					accessibilityLayer

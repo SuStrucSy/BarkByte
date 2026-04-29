@@ -20,8 +20,7 @@ export function PageLoading() {
 						<Skeleton className="aspect-video w-full" />
 					</CardContent>
 				</Card>
-				
-				
+
 				<Card className="w-full">
 					<CardHeader>
 						<Skeleton className="h-4 w-2/3" />
@@ -31,9 +30,7 @@ export function PageLoading() {
 						<Skeleton className="aspect-video w-full" />
 					</CardContent>
 				</Card>
-				
-				
-				
+
 				<Card className="w-full">
 					<CardHeader>
 						<Skeleton className="h-4 w-2/3" />

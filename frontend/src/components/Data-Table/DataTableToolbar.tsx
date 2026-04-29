@@ -147,7 +147,7 @@ export function DataTableToolbar<TData>({
 						</DropdownMenuContent>
 					</DropdownMenu>
 				) : null}
-				
+
 				{specimens ? (
 					<SpecimenSearch
 						specimens={specimens}
@@ -176,8 +176,6 @@ export function DataTableToolbar<TData>({
 						) : null}
 					</Button>
 				) : null}
-
-				
 			</div>
 
 			{showControlsToggle ? (

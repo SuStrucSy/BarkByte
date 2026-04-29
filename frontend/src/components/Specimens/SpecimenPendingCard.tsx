@@ -32,7 +32,6 @@ import {
 	rejectSecondaryClassName,
 } from "./PendingSpecimenReviewPanel";
 import { PendingSpecimenSubmissionBadge } from "./PendingSpecimenSubmissionBadge";
-import { usePendingSpecimenDrawerLayout } from "./usePendingSpecimenDrawerLayout";
 
 interface SpecimenPendingCardProps {
 	specimen: Partial<SpecimenPublic>;
@@ -87,18 +86,7 @@ export function SpecimenPendingCard({
 	const [staleReviewWarning, setStaleReviewWarning] = useState<string | null>(
 		null,
 	);
-	const {
-		hasSideBySideReviewLayout,
-		sideBySideDrawerHeight,
-		sideBySideHeaderRef,
-		sideBySideRightPaneRef,
-		sideBySideTabContentHeight,
-		sideBySideTabsHeaderRef,
-		usesStackedReviewLayout,
-	} = usePendingSpecimenDrawerLayout({
-		detailsOpen,
-		staleReviewWarning,
-	});
+
 	const queryClient = useQueryClient();
 	const { data: originalSpecimen } = useSpecimensReadSpecimen(
 		specimenId ?? "",
@@ -208,13 +196,9 @@ export function SpecimenPendingCard({
 	const detailsTabs = (
 		<PendingSpecimenDiffTabs
 			changedData={changedData}
-			hasSideBySideReviewLayout={hasSideBySideReviewLayout}
 			isNew={isNew}
 			originalSpecimen={originalSpecimen}
-			sideBySideTabContentHeight={sideBySideTabContentHeight}
-			sideBySideTabsHeaderRef={sideBySideTabsHeaderRef}
 			specimen={specimen}
-			usesStackedReviewLayout={usesStackedReviewLayout}
 		/>
 	);
 
@@ -235,7 +219,6 @@ export function SpecimenPendingCard({
 			commentByReviewer={commentByReviewer}
 			createdAt={createdAt}
 			detailsLinks={detailsLinks}
-			hasSideBySideReviewLayout={hasSideBySideReviewLayout}
 			isBusy={isBusy}
 			isNew={isNew}
 			onRequestDelete={requestDelete}
@@ -387,13 +370,8 @@ export function SpecimenPendingCard({
 					}
 				}}
 				detailsTabs={detailsTabs}
-				drawerHeight={sideBySideDrawerHeight}
-				hasSideBySideReviewLayout={hasSideBySideReviewLayout}
 				reviewPanel={reviewPanel}
-				sideBySideHeaderRef={sideBySideHeaderRef}
-				sideBySideRightPaneRef={sideBySideRightPaneRef}
 				title={specimen.specimen_reference_id ?? cardTitleFallback}
-				usesStackedReviewLayout={usesStackedReviewLayout}
 			/>
 			<PendingSpecimenReviewDialog
 				comment={comment}

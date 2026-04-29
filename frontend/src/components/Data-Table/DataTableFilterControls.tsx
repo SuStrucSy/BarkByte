@@ -88,7 +88,8 @@ export function DataTableFilterControls({
 											field.type === "checkbox"
 												? (selectedByField[field.value]?.length ?? 0)
 												: sliderValuesByField[field.value] &&
-														(sliderValuesByField[field.value][0] !== field.min ||
+														(sliderValuesByField[field.value][0] !==
+															field.min ||
 															sliderValuesByField[field.value][1] !== field.max)
 													? 1
 													: 0

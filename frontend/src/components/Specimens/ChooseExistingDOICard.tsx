@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react";
-import { useEffect, useState } from "react";
-import { type UseFormReturn, useWatch } from "react-hook-form";
+import { useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
 import { useDoiGetDois } from "@/api/endpoints/doi/doi";
 import type { DOIPublic } from "@/api/model";
 import {
@@ -36,10 +36,6 @@ export function ChooseExistingDOICard({
 	const [selectedDoi, setSelectedDoi] = useState<DOIPublic | null>(null);
 
 	const { data: doisData, isLoading: isDoisLoading } = useDoiGetDois();
-	const doiId = useWatch({
-		control: formToFill.control,
-		name: "doi_id",
-	});
 
 	const handleDoiSelect = (doi: DOIPublic | null) => {
 		setSelectedDoi(doi);
@@ -61,12 +57,6 @@ export function ChooseExistingDOICard({
 		formToFill.setValue("authors", "");
 		formToFill.setValue("pub_year", new Date().getFullYear());
 	};
-
-	useEffect(() => {
-		if (!doiId) {
-			setSelectedDoi(null);
-		}
-	}, [doiId]);
 
 	const dois: DOIPublic[] = doisData?.data ?? [];
 
@@ -110,10 +100,10 @@ export function ChooseExistingDOICard({
 										className="min-w-0 flex-nowrap overflow-hidden p-0"
 									>
 										<ItemContent className="min-w-0 overflow-hidden">
-											<ItemTitle className="w-full min-w-0 break-words">
+											<ItemTitle className="w-full min-w-0 wrap-break-words">
 												{doi.ref_title}
 											</ItemTitle>
-											<ItemDescription className="w-full min-w-0 break-words text-left">
+											<ItemDescription className="w-full min-w-0 wrap-break-words text-left">
 												{doi.link}
 											</ItemDescription>
 										</ItemContent>
@@ -126,14 +116,7 @@ export function ChooseExistingDOICard({
 
 				{selectedDoi && (
 					<p className="mt-2 text-xs text-muted-foreground">
-						Fields below have been pre-filled from the selected DOI.{" "}
-						<button
-							type="button"
-							className="text-primary underline"
-							onClick={() => handleDoiSelect(null)}
-						>
-							Clear selection
-						</button>
+						Fields below have been pre-filled from the selected DOI.
 					</p>
 				)}
 			</CardContent>

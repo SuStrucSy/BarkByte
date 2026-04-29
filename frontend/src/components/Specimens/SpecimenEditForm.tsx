@@ -306,7 +306,10 @@ export function SpecimenEditForm({
 	};
 
 	return (
-		<form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 px-4 md:p-0">
+		<form
+			onSubmit={form.handleSubmit(onSubmit)}
+			className="grid gap-6 px-4 md:p-0"
+		>
 			{lastPendingId ? (
 				<Card className="border-emerald-200 bg-emerald-50/70">
 					<CardHeader>

@@ -36,7 +36,7 @@ type SpecimenReferenceSheetProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	mode?: "doi" | "specimen";
-	specimen?: SpecimenPublic;
+	specimen?: SpecimenPublic | null;
 	doi?: Doi | DOIPublic | DOIDetailPublic;
 	relatedSpecimens?: SpecimenPublic[];
 };

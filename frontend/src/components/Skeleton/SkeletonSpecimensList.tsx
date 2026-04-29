@@ -4,7 +4,6 @@ import {
 	Item,
 	ItemActions,
 	ItemContent,
-	ItemDescription,
 	ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";

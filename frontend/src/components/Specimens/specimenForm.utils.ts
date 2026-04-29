@@ -129,7 +129,10 @@ function normalizeStringForPayload(
 	return trimmed;
 }
 
-function normalizeStringForDiff(field: EditableField, value: string): string | null {
+function normalizeStringForDiff(
+	field: EditableField,
+	value: string,
+): string | null {
 	const normalizedValue = MULTILINE_TEXT_FIELDS.has(field)
 		? value.replace(/\s+/g, "")
 		: value.trim();
@@ -154,7 +157,10 @@ function normalizeFieldValueForPayload(
 	return value ?? null;
 }
 
-function normalizeFieldValueForDiff(field: EditableField, value: unknown): unknown {
+function normalizeFieldValueForDiff(
+	field: EditableField,
+	value: unknown,
+): unknown {
 	if (typeof value === "string") {
 		return normalizeStringForDiff(field, value);
 	}
@@ -230,9 +236,9 @@ function normalizePendingFieldValueForForm(
 	value: unknown,
 ): AddNewSpecimenFormValues[EditableField] {
 	if (typeof value === "string") {
-		return (NULLABLE_STRING_FIELDS.has(field) && value === ""
-			? ""
-			: value) as AddNewSpecimenFormValues[EditableField];
+		return (
+			NULLABLE_STRING_FIELDS.has(field) && value === "" ? "" : value
+		) as AddNewSpecimenFormValues[EditableField];
 	}
 
 	if (value === null && NULLABLE_STRING_FIELDS.has(field)) {

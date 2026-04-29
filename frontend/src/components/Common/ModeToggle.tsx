@@ -25,7 +25,9 @@ const ModeToggle = () => {
 	return (
 		<SidebarGroup className={isCollapsed ? "items-center px-0" : undefined}>
 			<SidebarMenu className={isCollapsed ? "items-center" : undefined}>
-				<SidebarMenuItem className={isCollapsed ? "flex justify-center" : undefined}>
+				<SidebarMenuItem
+					className={isCollapsed ? "flex justify-center" : undefined}
+				>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							{isCollapsed ? (

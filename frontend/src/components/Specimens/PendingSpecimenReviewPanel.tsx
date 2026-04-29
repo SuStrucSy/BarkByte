@@ -9,7 +9,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { PendingSpecimenSubmissionBadge } from "./PendingSpecimenSubmissionBadge";
 import type { SpecimenStatus } from "./SpecimenStatusFilter";
 
@@ -158,7 +157,6 @@ interface PendingSpecimenReviewPanelProps {
 	commentByReviewer?: string | null;
 	createdAt: string;
 	detailsLinks: ReactNode;
-	hasSideBySideReviewLayout: boolean;
 	isBusy: boolean;
 	isNew: boolean;
 	onRequestDelete: () => void;
@@ -178,7 +176,6 @@ export function PendingSpecimenReviewPanel({
 	commentByReviewer,
 	createdAt,
 	detailsLinks,
-	hasSideBySideReviewLayout,
 	isBusy,
 	isNew,
 	onRequestDelete,
@@ -190,7 +187,7 @@ export function PendingSpecimenReviewPanel({
 	submissionPanelTitle,
 }: PendingSpecimenReviewPanelProps) {
 	return (
-		<div className={cn("grid gap-4", hasSideBySideReviewLayout && "pr-4")}>
+		<div className="grid gap-4 pr-4">
 			<Card>
 				<CardHeader>
 					<div className="flex items-start justify-between gap-3">
