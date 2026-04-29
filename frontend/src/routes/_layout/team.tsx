@@ -5,6 +5,7 @@ import {
 	supportingOrganizations,
 	teamMembers,
 } from "@/components/Team/team.constants";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/team")({
 	staticData: {
@@ -14,6 +15,10 @@ export const Route = createFileRoute("/_layout/team")({
 });
 
 function TeamPage() {
+	const linkClasses = cn(
+		"font-medium text-foreground underline underline-offset-4",
+		"hover:text-foreground/70",
+	);
 	return (
 		<div className="p-4 mx-auto w-full max-w-5xl">
 			<div className="mb-12 space-y-3">
@@ -42,12 +47,12 @@ function TeamPage() {
 				))}
 			</div>
 
-			<div className="mt-8 md:mt-16">
+			<div className={cn("mt-8", "md:mt-16")}>
 				<p className="mb-4 text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground">
 					Supported by
 				</p>
 
-				<div className="grid gap-3 sm:grid-cols-2">
+				<div className={cn("grid gap-3", "sm:grid-cols-2")}>
 					{supportingOrganizations.map((organization) => (
 						<SupportCard
 							key={organization.name}
@@ -66,7 +71,7 @@ function TeamPage() {
 						href={supportingOrganizations[0].href}
 						target="_blank"
 						rel="noreferrer"
-						className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/70"
+						className={linkClasses}
 					>
 						Department of Civil and Mineral Engineering
 					</a>
@@ -75,7 +80,7 @@ function TeamPage() {
 						href={supportingOrganizations[1].href}
 						target="_blank"
 						rel="noreferrer"
-						className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/70"
+						className={linkClasses}
 					>
 						Data Sciences Institute
 					</a>{" "}

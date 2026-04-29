@@ -52,7 +52,7 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
 				<FieldSet>
 					<FieldGroup>
 						<div className="flex flex-col items-center gap-1 text-center">
-							<h1 className="text-2xl font-bold">Sign Up</h1>
+							<h1 className="font-bold text-2xl ">Sign Up</h1>
 							<p className="text-sm text-balance text-muted-foreground">
 								Enter details below to create a new account
 							</p>
@@ -132,7 +132,7 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
 								Already have an account?
 								<Button
 									variant="link"
-									className="shrink-0 text-xs no-underline text-muted-foreground"
+									className="shrink-0 text-muted-foreground text-xs no-underline"
 									asChild
 								>
 									<RouterLink to="/login">Log In</RouterLink>

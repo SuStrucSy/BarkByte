@@ -18,16 +18,27 @@ export function VerifyEmailComponent({
 	message,
 	action,
 }: VerifyEmailComponentProps) {
-	const iconWrapperClass = {
-		success:
-			"mb-5 flex size-14 items-center justify-center rounded-full bg-emerald-500/10",
-		failure:
-			"mb-5 flex size-14 items-center justify-center rounded-full bg-red-500/10",
-		email:
-			"mb-5 flex size-14 items-center justify-center rounded-full bg-muted",
-		loading:
-			"mb-5 flex size-14 items-center justify-center rounded-full bg-muted",
-	}[icon];
+	const iconConfig = {
+		success: {
+			wrapper: "bg-emerald-500/10",
+			icon: <CheckCircle2 className="size-7 text-emerald-600" />,
+		},
+		failure: {
+			wrapper: "bg-red-500/10",
+			icon: <CircleX className="size-7 text-red-600" />,
+		},
+		email: {
+			wrapper: "bg-muted",
+			icon: <Mail className="size-6 text-muted-foreground" />,
+		},
+		loading: {
+			wrapper: "bg-muted",
+			icon: <Loader2 className="size-5 animate-spin text-muted-foreground" />,
+		},
+	} as const;
+	const baseClasses =
+		"mb-5 flex size-14 items-center justify-center rounded-full";
+	const config = iconConfig[icon];
 
 	return (
 		<div className="flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
@@ -50,19 +61,8 @@ export function VerifyEmailComponent({
 				</svg>
 				<Card className="relative border bg-card shadow-sm">
 					<CardContent className="flex flex-col items-center px-6 py-8 text-center">
-						<div className={iconWrapperClass}>
-							{icon === "success" && (
-								<CheckCircle2 className="size-7 text-emerald-600" />
-							)}
-							{icon === "failure" && (
-								<CircleX className="size-7 text-red-600" />
-							)}
-							{icon === "email" && (
-								<Mail className="size-6 text-muted-foreground" />
-							)}
-							{icon === "loading" && (
-								<Loader2 className="size-5 animate-spin text-muted-foreground" />
-							)}
+						<div className={`${baseClasses} ${config.wrapper}`}>
+							{config.icon}
 						</div>
 						<h1 className="text-2xl font-bold tracking-tight text-foreground">
 							{title}

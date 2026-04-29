@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 type MemberCardProps = {
 	name: string;
@@ -16,7 +17,12 @@ export function MemberCard({
 	initials,
 }: MemberCardProps) {
 	return (
-		<div className="group -mx-2 grid grid-cols-[4rem_1fr] items-start gap-x-12 border-b border-border px-2 py-7 transition-colors first:border-t hover:bg-muted/40">
+		<div
+			className={cn(
+				"-mx-2 grid grid-cols-[4rem_1fr] items-start gap-x-12 border-b border-border px-2 py-7 transition-colors",
+				"first:border-t hover:bg-muted/40",
+			)}
+		>
 			<Avatar className="size-25 border border-border">
 				<AvatarImage src={image} alt={name} className="object-cover" />
 				<AvatarFallback className="text-xs font-medium tracking-wide">

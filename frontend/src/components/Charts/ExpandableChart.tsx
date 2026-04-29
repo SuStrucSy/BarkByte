@@ -19,11 +19,11 @@ export function ExpandableChart({
 			</Button>
 
 			<Dialog open={open} onOpenChange={setOpen}>
-				<DialogContent className="max-w-none! w-11/12 h-screen flex flex-col rounded-none p-6">
+				<DialogContent className="flex flex-col w-11/12 max-w-none!  h-screen  rounded-none p-6">
 					<DialogHeader>
 						<DialogTitle>{title}</DialogTitle>
 					</DialogHeader>
-					<div className="flex-1 min-h-0">{open && children()}</div>
+					<div className="min-h-0 flex-1">{open && children()}</div>
 				</DialogContent>
 			</Dialog>
 		</>

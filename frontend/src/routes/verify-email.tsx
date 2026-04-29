@@ -10,7 +10,7 @@ import ErrorComponent, { getStatusCode } from "@/components/Common/Error";
 
 const verifyEmailSearchSchema = z.object({
 	token: z.string().min(1).optional(),
-	email: z.email(),
+	email: z.email().optional(),
 });
 
 type VerifyEmailSearch = z.infer<typeof verifyEmailSearchSchema>;

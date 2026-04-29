@@ -36,11 +36,11 @@ export function SignUpSuccessComponent({
 					)}
 				</div>
 
-				<h1 className="text-2xl font-bold tracking-tight text-foreground">
+				<h1 className="font-bold text-2xl text-foreground tracking-tight">
 					{title}
 				</h1>
 
-				<p className="mt-3 text-sm leading-6 text-muted-foreground">
+				<p className="mt-3 text-muted-foreground text-sm leading-6">
 					{message}
 				</p>
 
