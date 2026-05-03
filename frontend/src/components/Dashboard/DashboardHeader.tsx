@@ -9,18 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type DashboardHeaderProps = {
 	isLoading: boolean;
-	isLoadingAll: boolean;
 	loadedCount: number;
 	totalCount: number;
-	loadingProgress: number;
 };
 
 export function DashboardHeader({
 	isLoading,
-	isLoadingAll,
 	loadedCount,
 	totalCount,
-	loadingProgress,
 }: DashboardHeaderProps) {
 	return (
 		<Card className="py-0">
@@ -33,28 +29,14 @@ export function DashboardHeader({
 				</CardDescription>
 				<div className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
 					{isLoading ? (
-						<>
-							<Skeleton className="h-5 w-28" />
-							<Skeleton className="h-6 w-28 rounded-full" />
-						</>
+						<Skeleton className="h-6 w-56 rounded-full" />
 					) : (
 						<>
 							{loadedCount.toLocaleString()} / {totalCount.toLocaleString()}{" "}
 							specimens
+							<Badge aria-label="All specimens loaded">✓ Complete</Badge>
 						</>
 					)}
-					{!isLoading &&
-						(isLoadingAll ? (
-							<Badge
-								variant="secondary"
-								className="animate-pulse"
-								aria-live="polite"
-							>
-								Loading... {loadingProgress}%
-							</Badge>
-						) : (
-							<Badge aria-label="All specimens loaded">✓ Complete</Badge>
-						))}
 				</div>
 			</CardHeader>
 		</Card>

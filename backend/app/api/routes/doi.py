@@ -104,7 +104,7 @@ def delete_doi(
 
     try:
         doi_crud.delete_doi(session=session, doi=doi)
-    except IntegrityError:
+    except ValueError:
         raise HTTPException(
             status_code=409,
             detail="Cannot delete DOI: it is still referenced by one or more specimens."

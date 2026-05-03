@@ -139,24 +139,20 @@ function FastenerSelectControl({
 }
 
 type DashboardBoxPlotOptionsToolbarProps = {
-	className?: string;
 	selectedChartType: BoxPlotChartType;
 	onChartTypeChange: (value: BoxPlotChartType) => void;
 	fastenerTypes: string[];
 	selectedFastener: string;
 	onFastenerChange: (value: string) => void;
-	containerRef?: (node: HTMLDivElement | null) => void;
 	isLoading?: boolean;
 };
 
 export function DashboardBoxPlotOptionsToolbar({
-	className,
 	selectedChartType,
 	onChartTypeChange,
 	fastenerTypes,
 	selectedFastener,
 	onFastenerChange,
-	containerRef,
 	isLoading = false,
 }: DashboardBoxPlotOptionsToolbarProps) {
 	const layoutRef = useRef<HTMLDivElement | null>(null);
@@ -197,7 +193,7 @@ export function DashboardBoxPlotOptionsToolbar({
 	}, []);
 
 	return (
-		<div ref={containerRef} className={className}>
+		<div className="col-span-1 w-full justify-self-center overflow-hidden lg:sticky lg:top-0 lg:z-30 lg:col-span-2 lg:max-w-7xl">
 			<Card>
 				<CardHeader>
 					{isLoading ? (

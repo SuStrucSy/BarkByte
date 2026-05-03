@@ -11,7 +11,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFullLabel } from "@/lib/constants";
+import { getFullLabel, type ExperimentalKey } from "@/lib/constants";
 
 const BOX_PLOT_CARD_HEIGHT = 400;
 type BoxPlotChartType = "boxplot" | "violin";
@@ -21,7 +21,7 @@ type BoxPlotCardProps = {
 	description: string;
 	badgeLabel: string | null;
 	data: SpecimenPublic[];
-	yKey: keyof SpecimenPublic;
+	yKey: ExperimentalKey;
 	chartType?: BoxPlotChartType;
 	onPointClick?: (specimen: SpecimenPublic) => void;
 	isLoading?: boolean;

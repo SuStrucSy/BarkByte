@@ -1,11 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import type { SpecimenPublic } from "@/api/model";
-import joineryTypesReference from "@/assets/joineryTypes.webp";
 import { BoxPlotCard } from "@/components/Common/BoxPlotCard";
 import { ScatterPlotCard } from "@/components/Common/ScatterPlotCard";
-import { ZoomableImageViewer } from "@/components/Common/ZoomableImageViewer";
 import {
 	type BoxPlotChartType,
 	DashboardBoxPlotOptionsToolbar,
@@ -20,18 +18,10 @@ import {
 	BOX_PLOT_LABELS,
 	DONUT_CARD_CONFIGS,
 } from "@/components/Dashboard/dashboard.utils";
+import { JoineryTypesReferenceCard } from "@/components/Dashboard/JoineryTypesReferenceCard";
 import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
 import { useChartHeight } from "@/hooks/useChartHeight";
 
 export const Route = createFileRoute("/_layout/dashboard")({
@@ -41,14 +31,10 @@ export const Route = createFileRoute("/_layout/dashboard")({
 	component: Dashboard,
 });
 
-const CHART_OPTIONS_CARD_CLASSNAME =
-	"col-span-1 w-full justify-self-center overflow-hidden lg:sticky lg:top-0 lg:z-30 lg:col-span-2 lg:max-w-7xl";
-
 function Dashboard() {
 	const PAGE_SIZE = 1000;
-	const chartOptionsStickyBottomGap = 8;
 
-	const [selectedFastenerOverride, setSelectedFastenerOverride] = useState<
+	const [selectedFastenerType, setSelectedFastenerType] = useState<
 		string | null
 	>(null);
 	const [selectedChartType, setSelectedChartType] =
@@ -56,9 +42,6 @@ function Dashboard() {
 	const [selectedSpecimen, setSelectedSpecimen] =
 		useState<SpecimenPublic | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
-	const [chartOptionsHeight, setChartOptionsHeight] = useState(0);
-	const [chartOptionsCardElement, setChartOptionsCardElement] =
-		useState<HTMLDivElement | null>(null);
 
 	const scatterChartHeight = useChartHeight(280, 500);
 
@@ -67,15 +50,8 @@ function Dashboard() {
 		setSheetOpen(true);
 	}, []);
 
-	const {
-		isLoading,
-		isError,
-		error,
-		allSpecimens,
-		totalCount,
-		loadedCount,
-		isLoadingAll,
-	} = useDashboardSpecimenData(PAGE_SIZE);
+	const { isLoading, isError, error, allSpecimens, totalCount, loadedCount } =
+		useDashboardSpecimenData(PAGE_SIZE);
 
 	const { isLoading: isFastenerLoading, data: fastenerTypesData } =
 		useFastenertypeGetFastenerTypes();
@@ -87,15 +63,14 @@ function Dashboard() {
 		stiffnessDuctilityData,
 		stiffnessYieldData,
 		selectedFastenerBadgeLabel,
+		handleFastenerChange,
 	} = useDashboardDerivedData({
 		allSpecimens,
 		totalCount,
 		fastenerTypesData,
-		selectedFastenerOverride,
+		selectedFastenerType,
+		setSelectedFastenerType,
 	});
-
-	const loadingProgress =
-		totalCount > 0 ? Math.round((loadedCount / totalCount) * 100) : 0;
 
 	const stiffnessDuctilityProps = {
 		data: stiffnessDuctilityData,
@@ -118,31 +93,6 @@ function Dashboard() {
 		title: "Stiffness vs Yield Force",
 		onPointClick: handlePointClick,
 	} as const;
-	const chartOptionsSpacerHeight = chartOptionsHeight
-		? `${chartOptionsHeight + chartOptionsStickyBottomGap}px`
-		: undefined;
-
-	useLayoutEffect(() => {
-		if (!chartOptionsCardElement) {
-			return;
-		}
-
-		const updateHeight = () => {
-			setChartOptionsHeight(chartOptionsCardElement.offsetHeight);
-		};
-
-		updateHeight();
-
-		const resizeObserver = new ResizeObserver(() => {
-			updateHeight();
-		});
-
-		resizeObserver.observe(chartOptionsCardElement);
-
-		return () => {
-			resizeObserver.disconnect();
-		};
-	}, [chartOptionsCardElement]);
 
 	// Error state
 	if (isError) {
@@ -160,35 +110,17 @@ function Dashboard() {
 		<div className="flex flex-col gap-3 p-4">
 			<DashboardHeader
 				isLoading={isLoading}
-				isLoadingAll={isLoadingAll}
 				loadedCount={loadedCount}
 				totalCount={totalCount}
-				loadingProgress={loadingProgress}
 			/>
 
-			<Card className="py-0">
-				<CardHeader className="p-6">
-					<CardTitle>Joinery Types Reference</CardTitle>
-					<CardDescription>
-						Quick visual guide to the timber joinery and connection details used
-						throughout the specimen dataset.
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="p-6 pt-0">
-					<ZoomableImageViewer
-						imageSrc={joineryTypesReference}
-						alt="Reference sheet showing timber joinery and connection types"
-					/>
-				</CardContent>
-			</Card>
+			<JoineryTypesReferenceCard />
 
 			<div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
 				<ScatterPlotCard
 					title="Stiffness vs Ductility"
 					description="Analyzing structural performance metrics"
 					pointCount={stiffnessDuctilityData.length}
-					expandableTitle="Stiffness vs Ductility"
-					chartName="Stiffness vs Ductility"
 					isLoading={isLoading || isFastenerLoading}
 				>
 					<ScatterPlotD3
@@ -201,30 +133,20 @@ function Dashboard() {
 					title="Stiffness vs Yield Force"
 					description="Stiffness-force relationship analysis"
 					pointCount={stiffnessYieldData.length}
-					expandableTitle="Stiffness vs Yield Force"
-					chartName="Stiffness vs Yield Force"
 					isLoading={isLoading || isFastenerLoading}
 				>
 					<ScatterPlotD3 {...stiffnessYieldProps} height={scatterChartHeight} />
 				</ScatterPlotCard>
 
-				<SpecimenReferenceSheet
-					specimen={selectedSpecimen}
-					open={sheetOpen}
-					onOpenChange={setSheetOpen}
-				/>
-
 				<div className="col-span-1 grid grid-cols-1 gap-3 lg:col-span-2 lg:grid-cols-2">
 					{/* Chart Options */}
 					<DashboardBoxPlotOptionsToolbar
-						className={CHART_OPTIONS_CARD_CLASSNAME}
-						containerRef={setChartOptionsCardElement}
 						selectedChartType={selectedChartType}
 						onChartTypeChange={setSelectedChartType}
 						fastenerTypes={fastenerTypes}
 						selectedFastener={selectedFastener}
 						onFastenerChange={(value) =>
-							setSelectedFastenerOverride(value || null)
+							setSelectedFastenerType(value || null)
 						}
 						isLoading={isLoading || isFastenerLoading}
 					/>
@@ -242,15 +164,8 @@ function Dashboard() {
 							isLoading={isLoading || isFastenerLoading}
 						/>
 					))}
-
-					{/* Reserve grid space for the sticky box plot options toolbar on large screens. */}
-					<div
-						className="hidden col-span-1 lg:col-span-2 lg:block"
-						style={{ height: chartOptionsSpacerHeight }}
-					/>
 				</div>
 
-				<Separator className="col-span-1 lg:col-span-2" />
 				{DONUT_CARD_CONFIGS.map((config) => (
 					<DonutCard
 						key={config.mode}
@@ -261,30 +176,13 @@ function Dashboard() {
 						isLoading={isLoading || isFastenerLoading}
 					/>
 				))}
-			</div>
 
-			{isLoadingAll && (
-				<div className="flex flex-col items-center gap-4">
-					<Item variant="outline" className="w-full overflow-hidden">
-						<ItemMedia className="shrink-0">
-							<Spinner aria-hidden="true" />
-						</ItemMedia>
-						<ItemContent className="min-w-0">
-							<ItemTitle className="truncate">
-								Loading all specimens...
-							</ItemTitle>
-						</ItemContent>
-						<ItemContent className="flex-none">
-							<span
-								className="text-sm tabular-nums whitespace-nowrap"
-								aria-live="polite"
-							>
-								{loadedCount.toLocaleString()} / {totalCount.toLocaleString()}
-							</span>
-						</ItemContent>
-					</Item>
-				</div>
-			)}
+				<SpecimenReferenceSheet
+					specimen={selectedSpecimen}
+					open={sheetOpen}
+					onOpenChange={setSheetOpen}
+				/>
+			</div>
 		</div>
 	);
 }

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type {
 	FastenerTypes,
@@ -55,7 +56,6 @@ export function useDashboardSpecimenData(pageSize: number) {
 		allSpecimens,
 		totalCount,
 		loadedCount,
-		isLoadingAll: queryResult.isPending,
 	};
 }
 
@@ -63,12 +63,14 @@ export function useDashboardDerivedData({
 	allSpecimens,
 	totalCount,
 	fastenerTypesData,
-	selectedFastenerOverride,
+	selectedFastenerType,
+	setSelectedFastenerType,
 }: {
 	allSpecimens: SpecimenPublic[];
 	totalCount: number;
 	fastenerTypesData: FastenerTypes | undefined;
-	selectedFastenerOverride: string | null;
+	selectedFastenerType: string | null;
+	setSelectedFastenerType: Dispatch<SetStateAction<string | null>>;
 }) {
 	const groupsByFastenerType = useMemo(
 		() =>
@@ -85,15 +87,27 @@ export function useDashboardDerivedData({
 	);
 
 	const selectedFastener = useMemo(() => {
-		if (
-			selectedFastenerOverride &&
-			fastenerTypes.includes(selectedFastenerOverride)
-		) {
-			return selectedFastenerOverride;
+		if (selectedFastenerType && fastenerTypes.includes(selectedFastenerType)) {
+			return selectedFastenerType;
 		}
 
 		return getDefaultFastener(fastenerTypes) ?? "";
-	}, [fastenerTypes, selectedFastenerOverride]);
+	}, [fastenerTypes, selectedFastenerType]);
+
+	useEffect(() => {
+		const nextSelectedFastener = selectedFastener || null;
+		if (nextSelectedFastener !== selectedFastenerType) {
+			setSelectedFastenerType(nextSelectedFastener);
+		}
+	}, [selectedFastener, selectedFastenerType, setSelectedFastenerType]);
+
+	const handleFastenerChange = useCallback(
+		(value: string) => {
+			const nextSelectedFastener = value || null;
+			setSelectedFastenerType(nextSelectedFastener);
+		},
+		[setSelectedFastenerType],
+	);
 
 	const selectedSpecimens = useMemo(
 		() => groupsByFastenerType[selectedFastener] || [],
@@ -127,5 +141,6 @@ export function useDashboardDerivedData({
 		stiffnessDuctilityData,
 		stiffnessYieldData,
 		selectedFastenerBadgeLabel,
+		handleFastenerChange,
 	};
 }
