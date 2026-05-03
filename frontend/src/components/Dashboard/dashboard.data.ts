@@ -1,61 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useMemo } from "react";
-import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
-import type {
-	FastenerTypes,
-	SpecimenPublic,
-	SpecimensReadSpecimensParams,
-} from "@/api/model";
+import type { FastenerTypes, SpecimenPublic } from "@/api/model";
+import { useAllSpecimens } from "@/components/Data-Table/useAllSpecimens";
 import { isNumericValue } from "@/lib/typeGuards";
 import { groupSpecimensByFastener } from "@/lib/utils";
 import { getDefaultFastener } from "./dashboard.utils";
 
-export function useDashboardSpecimenData(pageSize: number) {
-	const queryResult = useQuery({
-		queryKey: ["specimens", "dashboard", pageSize],
-		queryFn: async ({ signal }) => {
-			const allSpecimens: SpecimenPublic[] = [];
-			let totalCount = 0;
-			let skip = 0;
-
-			while (true) {
-				const params: SpecimensReadSpecimensParams = {
-					limit: pageSize,
-					skip,
-				};
-				const result = await specimensReadSpecimens(params, signal);
-				totalCount = result.count ?? totalCount;
-				allSpecimens.push(...result.data);
-
-				if (
-					result.data.length < pageSize ||
-					(totalCount > 0 && allSpecimens.length >= totalCount)
-				) {
-					break;
-				}
-
-				skip += pageSize;
-			}
-
-			return {
-				allSpecimens,
-				totalCount,
-			};
-		},
-		staleTime: 5 * 60 * 1000,
-		gcTime: 10 * 60 * 1000,
-	});
-
-	const allSpecimens = queryResult.data?.allSpecimens ?? [];
-	const totalCount = queryResult.data?.totalCount ?? 0;
-	const loadedCount = allSpecimens.length;
+export function useDashboardSpecimenData() {
+	const { specimens, ...queryResult } = useAllSpecimens();
 
 	return {
 		...queryResult,
-		allSpecimens,
-		totalCount,
-		loadedCount,
+		allSpecimens: specimens,
 	};
 }
 

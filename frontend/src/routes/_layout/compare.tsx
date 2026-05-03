@@ -1,10 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
 import { CompareSlot } from "@/components/Compare/CompareSlot";
 import { CompareStage } from "@/components/Compare/CompareStage";
+import { useAllSpecimens } from "@/components/Data-Table/useAllSpecimens";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/compare")({
@@ -22,34 +21,6 @@ type CompareSlotViewModel = {
 	specimen: SpecimenPublic | null;
 	availableSpecimens: SpecimenPublic[];
 };
-/**
- * Loads the full specimen list for the compare page by paging through the API
- * until all available specimens have been collected.
- */
-function useAllSpecimens() {
-	return useQuery({
-		queryKey: ["specimens", "compare", "all"],
-		queryFn: async () => {
-			const pageSize = 500;
-			let skip = 0;
-			let total = 0;
-			let rows: SpecimenPublic[] = [];
-
-			do {
-				const response = await specimensReadSpecimens({
-					skip,
-					limit: pageSize,
-				});
-				total = response.count;
-				rows = rows.concat(response.data);
-				skip += pageSize;
-			} while (rows.length < total);
-
-			return rows;
-		},
-		staleTime: 30_000,
-	});
-}
 
 function buildCompareSlots({
 	selectedIds,
@@ -83,7 +54,7 @@ function buildCompareSlots({
 }
 
 function ComparePage() {
-	const { data: specimens = [], isLoading, isError, error } = useAllSpecimens();
+	const { specimens, isLoading, isError, error } = useAllSpecimens();
 	const [columnCount, setColumnCount] = useState(COMPARE_SLOT_COUNT);
 	const [selectedIds, setSelectedIds] = useState<Array<string | null>>(
 		Array.from({ length: COMPARE_SLOT_COUNT }, () => null),

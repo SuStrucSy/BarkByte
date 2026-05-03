@@ -54,11 +54,11 @@ function SpecimensKitTable() {
 	const search = Route.useSearch();
 	const navigate = useNavigate({ from: Route.fullPath });
 
-	const { data, isLoading } = useAllSpecimens();
+	const { specimens, isLoading } = useAllSpecimens();
 	const { data: filterOptionsData } = useSpecimensReadSpecimenFilterOptions();
 
 	// Use the raw specimen rows directly; avoid user-profile enrichment on the client.
-	const rows = useMemo<SpecimenRow[]>(() => data?.data ?? [], [data?.data]);
+	const rows = useMemo<SpecimenRow[]>(() => specimens, [specimens]);
 
 	// Unique reference IDs used as options in command search.
 	const referenceOptions = useMemo(
@@ -282,7 +282,7 @@ function SpecimensKitTable() {
 					hasActiveSidebarFilters={hasActiveSidebarFilters}
 					onToggleControls={toggleControls}
 					onResetColumns={resetColumns}
-					specimens={data?.data}
+					specimens={specimens}
 					onSelectSpecimen={navigateToSpecimen}
 					onDownloadCsv={() => exportSpecimensToCsv(filteredRows)}
 				/>

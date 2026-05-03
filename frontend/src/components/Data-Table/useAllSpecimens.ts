@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { specimensReadSpecimens } from "@/api/endpoints/specimens/specimens";
 import type { SpecimenPublic } from "@/api/model";
 
+const EMPTY_SPECIMENS: SpecimenPublic[] = [];
+
 /**
  * Fetches every specimen by repeatedly requesting paginated batches
  * and returns one combined list with a total count.
  */
 export function useAllSpecimens() {
-	return useQuery({
+	const queryResult = useQuery({
 		queryKey: ["specimens", "all"],
 		queryFn: async () => {
 			const pageSize = 500;
@@ -32,4 +34,15 @@ export function useAllSpecimens() {
 		},
 		staleTime: 30_000,
 	});
+
+	const specimens = queryResult.data?.data ?? EMPTY_SPECIMENS;
+	const totalCount = queryResult.data?.count ?? 0;
+	const loadedCount = specimens.length;
+
+	return {
+		...queryResult,
+		specimens,
+		totalCount,
+		loadedCount,
+	};
 }

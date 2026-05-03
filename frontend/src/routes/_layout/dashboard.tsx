@@ -30,8 +30,6 @@ export const Route = createFileRoute("/_layout/dashboard")({
 });
 
 function Dashboard() {
-	const PAGE_SIZE = 1000;
-
 	const [selectedFastenerType, setSelectedFastenerType] = useState<
 		string | null
 	>(null);
@@ -49,7 +47,7 @@ function Dashboard() {
 	}, []);
 
 	const { isLoading, isError, error, allSpecimens, totalCount, loadedCount } =
-		useDashboardSpecimenData(PAGE_SIZE);
+		useDashboardSpecimenData();
 
 	const { isLoading: isFastenerLoading, data: fastenerTypesData } =
 		useFastenertypeGetFastenerTypes();
