@@ -41,9 +41,7 @@ export function ScatterPlotCard({
 		<Skeleton className="hidden h-9 w-9 rounded-full lg:block" />
 	) : (
 		<div className="hidden lg:block">
-			<ExpandableChart title={title}>
-				{() => children}
-			</ExpandableChart>
+			<ExpandableChart title={title}>{() => children}</ExpandableChart>
 		</div>
 	);
 
@@ -70,9 +68,7 @@ export function ScatterPlotCard({
 						</div>
 					</div>
 				) : (
-					<ChartErrorBoundary chartName={title}>
-						{children}
-					</ChartErrorBoundary>
+					<ChartErrorBoundary chartName={title}>{children}</ChartErrorBoundary>
 				)}
 			</CardContent>
 		</Card>

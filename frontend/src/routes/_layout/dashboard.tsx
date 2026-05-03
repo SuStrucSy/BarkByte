@@ -3,12 +3,12 @@ import { useCallback, useState } from "react";
 import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
 import type { SpecimenPublic } from "@/api/model";
 import { BoxPlotCard } from "@/components/Common/BoxPlotCard";
-import { ScatterPlotCard } from "@/components/Common/ScatterPlotCard";
 import {
 	type BoxPlotChartType,
 	DashboardBoxPlotOptionsToolbar,
 } from "@/components/Dashboard/DashboardBoxPlotOptionsToolbar";
 import { DashboardHeader } from "@/components/Dashboard/DashboardHeader";
+import { DashboardScatterPlots } from "@/components/Dashboard/DashboardScatterPlots";
 import { DonutCard } from "@/components/Dashboard/DonutCard";
 import {
 	useDashboardDerivedData,
@@ -19,9 +19,7 @@ import {
 	DONUT_CARD_CONFIGS,
 } from "@/components/Dashboard/dashboard.utils";
 import { JoineryTypesReferenceCard } from "@/components/Dashboard/JoineryTypesReferenceCard";
-import { ScatterPlotD3 } from "@/components/Dashboard/ScatterPlot";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
-import { Separator } from "@/components/ui/separator";
 import { useChartHeight } from "@/hooks/useChartHeight";
 
 export const Route = createFileRoute("/_layout/dashboard")({
@@ -72,28 +70,6 @@ function Dashboard() {
 		setSelectedFastenerType,
 	});
 
-	const stiffnessDuctilityProps = {
-		data: stiffnessDuctilityData,
-		fastenerTypesData,
-		xKey: "e_stiffness",
-		yKey: "e_ductility",
-		xLabel: "Stiffness (Ks) [KN/mm]",
-		yLabel: "Ductility",
-		title: "Stiffness vs Ductility",
-		onPointClick: handlePointClick,
-	} as const;
-
-	const stiffnessYieldProps = {
-		data: stiffnessYieldData,
-		fastenerTypesData,
-		xKey: "e_stiffness",
-		yKey: "e_yield_force",
-		xLabel: "Stiffness (Ks) [KN/mm]",
-		yLabel: "Yield Strength (Fy) [KN]",
-		title: "Stiffness vs Yield Force",
-		onPointClick: handlePointClick,
-	} as const;
-
 	// Error state
 	if (isError) {
 		return (
@@ -117,26 +93,14 @@ function Dashboard() {
 			<JoineryTypesReferenceCard />
 
 			<div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-				<ScatterPlotCard
-					title="Stiffness vs Ductility"
-					description="Analyzing structural performance metrics"
-					pointCount={stiffnessDuctilityData.length}
+				<DashboardScatterPlots
+					stiffnessDuctilityData={stiffnessDuctilityData}
+					stiffnessYieldData={stiffnessYieldData}
+					fastenerTypesData={fastenerTypesData}
+					height={scatterChartHeight}
+					onPointClick={handlePointClick}
 					isLoading={isLoading || isFastenerLoading}
-				>
-					<ScatterPlotD3
-						{...stiffnessDuctilityProps}
-						height={scatterChartHeight}
-					/>
-				</ScatterPlotCard>
-
-				<ScatterPlotCard
-					title="Stiffness vs Yield Force"
-					description="Stiffness-force relationship analysis"
-					pointCount={stiffnessYieldData.length}
-					isLoading={isLoading || isFastenerLoading}
-				>
-					<ScatterPlotD3 {...stiffnessYieldProps} height={scatterChartHeight} />
-				</ScatterPlotCard>
+				/>
 
 				<div className="col-span-1 grid grid-cols-1 gap-3 lg:col-span-2 lg:grid-cols-2">
 					{/* Chart Options */}
@@ -145,9 +109,7 @@ function Dashboard() {
 						onChartTypeChange={setSelectedChartType}
 						fastenerTypes={fastenerTypes}
 						selectedFastener={selectedFastener}
-						onFastenerChange={(value) =>
-							setSelectedFastenerType(value || null)
-						}
+						onFastenerChange={handleFastenerChange}
 						isLoading={isLoading || isFastenerLoading}
 					/>
 

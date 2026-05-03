@@ -11,7 +11,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFullLabel, type ExperimentalKey } from "@/lib/constants";
+import { type ExperimentalKey, getFullLabel } from "@/lib/constants";
 
 const BOX_PLOT_CARD_HEIGHT = 400;
 type BoxPlotChartType = "boxplot" | "violin";
