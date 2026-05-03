@@ -1,5 +1,5 @@
 import { Columns3 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { SpecimenPublic } from "@/api/model";
 import { RadarMetricsChart } from "@/components/Dashboard/RadarMetricsChart";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/empty";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
 	COMPARE_SECTION_CONFIG,
 	type CompareSectionTitle,
@@ -257,27 +258,13 @@ export function CompareStage({
 	chosenSpecimens,
 	columnCount,
 }: CompareStageProps) {
-	const [useInternalScroll, setUseInternalScroll] = useState(false);
+	const useInternalScroll = useMediaQuery("(min-width: 1280px)");
 	const hasSelectedSpecimens = chosenSpecimens.some(Boolean);
 	const compareFields = useMemo(() => getCompareFields(), []);
 	const compareSections = useMemo(
 		() => groupCompareFields(compareFields),
 		[compareFields],
 	);
-
-	useEffect(() => {
-		const desktopQuery = window.matchMedia("(min-width: 1280px)");
-		const updateScrollMode = () => {
-			setUseInternalScroll(desktopQuery.matches);
-		};
-
-		updateScrollMode();
-		desktopQuery.addEventListener("change", updateScrollMode);
-
-		return () => {
-			desktopQuery.removeEventListener("change", updateScrollMode);
-		};
-	}, []);
 
 	if (!hasSelectedSpecimens) {
 		return (

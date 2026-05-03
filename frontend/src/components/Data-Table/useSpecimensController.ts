@@ -24,6 +24,7 @@ import {
 	serializeStructuredFilterQuery,
 	slugifyFilterValue,
 } from "@/components/Data-Table/specimenTableFilters";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const WIDE_TABLE_LAYOUT_MEDIA_QUERY = "(min-width: 1280px)";
 const DEFAULT_PAGE_SIZE = 20;
@@ -106,16 +107,11 @@ export function useSpecimensController({
 	sliderDefaults,
 	replaceSearch,
 }: UseSpecimensControllerArgs) {
+	const isWideTableLayout = useMediaQuery(WIDE_TABLE_LAYOUT_MEDIA_QUERY, true);
 	const initialBrowserQuerySearchTerm = useRef(
 		getInitialQuerySearchTerm(search.q),
 	).current;
-	const [controlsOpen, setControlsOpen] = useState(() => {
-		if (typeof window === "undefined") {
-			return true;
-		}
-
-		return window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY).matches;
-	});
+	const [controlsOpen, setControlsOpen] = useState(isWideTableLayout);
 	const [searchTerm, setSearchTerm] = useState(initialBrowserQuerySearchTerm);
 	const searchTermRef = useRef(initialBrowserQuerySearchTerm);
 	const hasAppliedInitialBrowserQueryRef = useRef(false);
@@ -136,18 +132,8 @@ export function useSpecimensController({
 	);
 
 	useEffect(() => {
-		const mediaQuery = window.matchMedia(WIDE_TABLE_LAYOUT_MEDIA_QUERY);
-		const syncControlsVisibility = () => {
-			setControlsOpen(mediaQuery.matches);
-		};
-
-		syncControlsVisibility();
-		mediaQuery.addEventListener("change", syncControlsVisibility);
-
-		return () => {
-			mediaQuery.removeEventListener("change", syncControlsVisibility);
-		};
-	}, []);
+		setControlsOpen(isWideTableLayout);
+	}, [isWideTableLayout]);
 
 	const syncSearchState = useCallback(
 		(overrides: Partial<RelevantSearchState>) => {

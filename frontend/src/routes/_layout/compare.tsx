@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { SpecimenPublic } from "@/api/model";
 import { CompareSlot } from "@/components/Compare/CompareSlot";
 import { CompareStage } from "@/components/Compare/CompareStage";
 import { useAllSpecimens } from "@/components/Data-Table/useAllSpecimens";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/compare")({
@@ -55,29 +56,14 @@ function buildCompareSlots({
 
 function ComparePage() {
 	const { specimens, isLoading, isError, error } = useAllSpecimens();
-	const [columnCount, setColumnCount] = useState(COMPARE_SLOT_COUNT);
+	const isCompactCompare = useMediaQuery("(max-width: 1279px)");
+	const columnCount = isCompactCompare
+		? COMPACT_COMPARE_COLUMN_COUNT
+		: COMPARE_SLOT_COUNT;
 	const [selectedIds, setSelectedIds] = useState<Array<string | null>>(
 		Array.from({ length: COMPARE_SLOT_COUNT }, () => null),
 	);
 	const visibleSlotCount = columnCount;
-
-	useEffect(() => {
-		const compactCompareQuery = window.matchMedia("(max-width: 1279px)");
-		const updateColumnCount = () => {
-			setColumnCount(
-				compactCompareQuery.matches
-					? COMPACT_COMPARE_COLUMN_COUNT
-					: COMPARE_SLOT_COUNT,
-			);
-		};
-
-		updateColumnCount();
-		compactCompareQuery.addEventListener("change", updateColumnCount);
-
-		return () => {
-			compactCompareQuery.removeEventListener("change", updateColumnCount);
-		};
-	}, []);
 
 	const specimenById = useMemo(
 		() => new Map(specimens.map((specimen) => [specimen.id, specimen])),

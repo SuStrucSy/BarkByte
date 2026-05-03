@@ -20,7 +20,7 @@ import {
 } from "@/components/Dashboard/dashboard.utils";
 import { JoineryTypesReferenceCard } from "@/components/Dashboard/JoineryTypesReferenceCard";
 import { SpecimenReferenceSheet } from "@/components/Specimens/SpecimenReferenceSheet";
-import { useChartHeight } from "@/hooks/useChartHeight";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export const Route = createFileRoute("/_layout/dashboard")({
 	staticData: {
@@ -39,7 +39,8 @@ function Dashboard() {
 		useState<SpecimenPublic | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
 
-	const scatterChartHeight = useChartHeight(280, 500);
+	const isMobileChart = useMediaQuery("(max-width: 767px)");
+	const scatterChartHeight = isMobileChart ? 280 : 500;
 
 	const handlePointClick = useCallback((specimen: SpecimenPublic) => {
 		setSelectedSpecimen(specimen);
