@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import type { SpecimenPublic } from "@/api/model";
-import { CompareSlot } from "@/components/Compare/CompareSlot";
+import {
+	CompareSlots,
+	type CompareSlotViewModel,
+} from "@/components/Compare/CompareSlots";
 import { CompareStage } from "@/components/Compare/CompareStage";
 import { useAllSpecimens } from "@/components/Data-Table/useAllSpecimens";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_layout/compare")({
 	staticData: {
@@ -16,12 +18,6 @@ export const Route = createFileRoute("/_layout/compare")({
 
 const COMPARE_SLOT_COUNT = 3;
 const COMPACT_COMPARE_COLUMN_COUNT = 2;
-
-type CompareSlotViewModel = {
-	slotIndex: number;
-	specimen: SpecimenPublic | null;
-	availableSpecimens: SpecimenPublic[];
-};
 
 function buildCompareSlots({
 	selectedIds,
@@ -63,7 +59,6 @@ function ComparePage() {
 	const [selectedIds, setSelectedIds] = useState<Array<string | null>>(
 		Array.from({ length: COMPARE_SLOT_COUNT }, () => null),
 	);
-	const visibleSlotCount = columnCount;
 
 	const specimenById = useMemo(
 		() => new Map(specimens.map((specimen) => [specimen.id, specimen])),
@@ -73,19 +68,19 @@ function ComparePage() {
 		() =>
 			buildCompareSlots({
 				selectedIds,
-				visibleSlotCount,
+				visibleSlotCount: columnCount,
 				specimens,
 				specimenById,
 			}),
-		[selectedIds, specimenById, specimens, visibleSlotCount],
+		[columnCount, selectedIds, specimenById, specimens],
 	);
 
 	const chosenSpecimens = useMemo(
 		() =>
 			selectedIds
-				.slice(0, visibleSlotCount)
+				.slice(0, columnCount)
 				.map((id) => (id ? (specimenById.get(id) ?? null) : null)),
-		[specimenById, selectedIds, visibleSlotCount],
+		[columnCount, specimenById, selectedIds],
 	);
 
 	const setSelectedSpecimen = (slotIndex: number, specimenId: string) => {
@@ -121,28 +116,13 @@ function ComparePage() {
 	}
 
 	return (
-		<div className="flex min-h-0 flex-col gap-4 p-4 sm:px-2 md:px-4 xl:h-full xl:overflow-hidden">
-			<div
-				className={cn(
-					"grid gap-4",
-					columnCount === 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-3",
-				)}
-			>
-				{visibleSlots.map(({ slotIndex, specimen, availableSpecimens }) => {
-					return (
-						<div key={`compare-slot-${slotIndex}`} className="min-w-0">
-							<CompareSlot
-								specimen={specimen}
-								availableSpecimens={availableSpecimens}
-								onSelect={(specimenId) =>
-									setSelectedSpecimen(slotIndex, specimenId)
-								}
-								onClear={() => clearSlot(slotIndex)}
-							/>
-						</div>
-					);
-				})}
-			</div>
+		<div className="flex flex-col gap-4 min-h-0 p-4 sm:px-2 md:px-4 xl:h-full xl:overflow-hidden">
+			<CompareSlots
+				slots={visibleSlots}
+				columnCount={columnCount}
+				onSelectSpecimen={setSelectedSpecimen}
+				onClearSlot={clearSlot}
+			/>
 
 			<CompareStage
 				chosenSpecimens={chosenSpecimens}
