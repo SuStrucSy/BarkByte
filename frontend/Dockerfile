@@ -5,9 +5,6 @@ FROM base AS deps
 
 WORKDIR /app
 
-# Install globals as root
-RUN npm install -g npm@latest npm-check-updates
-
 # Chown the empty /app dir before any files land in it — instant
 RUN chown node:node /app
 
@@ -16,7 +13,7 @@ USER node
 
 # Copy package files and install as node user — no chown needed after
 COPY --chown=node:node package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 # ── build stage: compile the app ──────────────────────────────────────────────
 FROM base AS build
