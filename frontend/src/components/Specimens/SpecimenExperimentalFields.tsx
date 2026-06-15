@@ -41,6 +41,7 @@ import {
 	ComboboxValue,
 	useComboboxAnchor,
 } from "../ui/combobox";
+import { changedControlClassName } from "./changedFieldStyles";
 import { FieldHelpHover } from "./FieldHelpHover";
 import { TextField } from "./SpecimenStructuralFields";
 
@@ -58,8 +59,6 @@ const TEST_LOADING_TYPES = [
 	"Monotonic and Cyclic",
 ] as const;
 const YIELD_POINT_METHODS = ["CEN 1/6", "EEEP"] as const;
-const changedControlClassName =
-	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
 
 // ─── Helper: numeric input field ─────────────────────────────────────────────
 
@@ -96,7 +95,7 @@ function NumericField({
 						id={name}
 						type="number"
 						step="any"
-						value={field.value ?? ""}
+						value={typeof field.value === "number" ? field.value : ""}
 						onChange={(e) =>
 							// NaN when the input is cleared — treat as null so the schema
 							// sees null (optional) rather than NaN (which fails z.number()).
@@ -358,7 +357,9 @@ export function SpecimenExperimentalFields({
 										refetchQFM(); // your query refetch function
 									}
 								}}
-								itemToStringValue={(qfm) => qfm.id}
+								itemToStringValue={(qfm) =>
+									(qfm as unknown as FailureMode & { id: string }).id
+								}
 								value={values}
 							>
 								<ComboboxChips
@@ -372,7 +373,7 @@ export function SpecimenExperimentalFields({
 									<ComboboxValue>
 										{(chips) => (
 											<>
-												{chips.map((chipId) => {
+												{(chips as string[]).map((chipId) => {
 													// Lookup label by ID from your data
 													const qfm = QFMList.find((f) => f.id === chipId);
 													return (

@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { type Control, Controller } from "react-hook-form";
-import type { FastenerType } from "@/api/model";
 import {
 	Field,
 	FieldDescription,
@@ -21,53 +20,59 @@ import {
 	ComboboxValue,
 	useComboboxAnchor,
 } from "../ui/combobox";
+import { changedControlClassName } from "./changedFieldStyles";
 
-type FastenerTypeOption = FastenerType & { id: string };
+type ComboboxOption = {
+	id: string;
+	label: string;
+};
 
-type FastenerTypesFieldProps = {
+type SpecimenMultiComboboxFieldProps<TOption extends ComboboxOption> = {
 	control: Control<AddNewSpecimenFormValues>;
-	fastenerTypeList: FastenerTypeOption[];
+	name: "fastener_type_ids" | "loading_direction_ids";
+	label: string;
+	description: string;
+	emptyMessage: string;
+	options: TOption[];
 	isChanged?: boolean;
 };
 
-const changedControlClassName =
-	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
-
-export function FastenerTypesField({
+export function SpecimenMultiComboboxField<TOption extends ComboboxOption>({
 	control,
-	fastenerTypeList,
+	name,
+	label,
+	description,
+	emptyMessage,
+	options,
 	isChanged = false,
-}: FastenerTypesFieldProps) {
-	const anchorFastener = useComboboxAnchor();
-	const fastenerLabelById = useMemo(
-		() =>
-			new Map(
-				fastenerTypeList.map((fastener) => [fastener.id, fastener.label]),
-			),
-		[fastenerTypeList],
+}: SpecimenMultiComboboxFieldProps<TOption>) {
+	const anchor = useComboboxAnchor();
+	const labelById = useMemo(
+		() => new Map(options.map((option) => [option.id, option.label])),
+		[options],
 	);
 
 	return (
 		<Controller
-			name="fastener_type_ids"
+			name={name}
 			control={control}
 			render={({ field, fieldState }) => {
 				const values = Array.isArray(field.value) ? field.value : [];
 
 				return (
 					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor="fastener_type_ids">Fastener Types</FieldLabel>
+						<FieldLabel htmlFor={name}>{label}</FieldLabel>
 						<Combobox
 							multiple
-							items={fastenerTypeList}
+							items={options}
 							onValueChange={(selectedValues) => field.onChange(selectedValues)}
-							itemToStringValue={(fastener) =>
-								(fastener as unknown as FastenerTypeOption).id
+							itemToStringValue={(option) =>
+								(option as unknown as ComboboxOption).id
 							}
 							value={values}
 						>
 							<ComboboxChips
-								ref={anchorFastener}
+								ref={anchor}
 								className={cn(
 									"w-full max-w-xs",
 									isChanged && changedControlClassName,
@@ -78,7 +83,7 @@ export function FastenerTypesField({
 										<>
 											{(chips as string[]).map((chipId) => (
 												<ComboboxChip key={chipId}>
-													{fastenerLabelById.get(chipId) ?? ""}
+													{labelById.get(chipId) ?? ""}
 												</ComboboxChip>
 											))}
 											<ComboboxChipsInput />
@@ -86,20 +91,18 @@ export function FastenerTypesField({
 									)}
 								</ComboboxValue>
 							</ComboboxChips>
-							<ComboboxContent anchor={anchorFastener}>
-								<ComboboxEmpty>No fastener types found.</ComboboxEmpty>
+							<ComboboxContent anchor={anchor}>
+								<ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
 								<ComboboxList>
-									{(fastener) => (
-										<ComboboxItem key={fastener.id} value={fastener.id}>
-											{fastener.label}
+									{(option) => (
+										<ComboboxItem key={option.id} value={option.id}>
+											{option.label}
 										</ComboboxItem>
 									)}
 								</ComboboxList>
 							</ComboboxContent>
 						</Combobox>
-						<FieldDescription>
-							Select one or more fastener types
-						</FieldDescription>
+						<FieldDescription>{description}</FieldDescription>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 					</Field>
 				);

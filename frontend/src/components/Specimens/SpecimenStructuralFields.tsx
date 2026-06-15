@@ -9,14 +9,12 @@ import {
 import { Input } from "@/components/ui/input";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { changedControlClassName } from "./changedFieldStyles";
 
 interface SpecimenStructuralFormProps {
 	control: Control<AddNewSpecimenFormValues>;
 	changedFields?: Set<keyof AddNewSpecimenFormValues>;
 }
-
-const changedControlClassName =
-	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
 
 // ─── Helper: text input field ─────────────────────────────────────────────────
 

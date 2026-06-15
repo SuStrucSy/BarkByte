@@ -2,33 +2,38 @@ import { type Control, Controller } from "react-hook-form";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
-import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { changedControlClassName } from "./changedFieldStyles";
 
-type SpecimenReferenceIdFieldProps = {
+type SpecimenTextareaFieldProps = {
 	control: Control<AddNewSpecimenFormValues>;
+	name: "connection_description" | "note";
+	label: string;
+	rows: number;
 	isChanged?: boolean;
 };
 
-const changedControlClassName =
-	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
-
-export function SpecimenReferenceIdField({
+export function SpecimenTextareaField({
 	control,
+	name,
+	label,
+	rows,
 	isChanged = false,
-}: SpecimenReferenceIdFieldProps) {
+}: SpecimenTextareaFieldProps) {
 	return (
 		<Controller
-			name="specimen_reference_id"
+			name={name}
 			control={control}
 			render={({ field, fieldState }) => (
 				<Field data-invalid={fieldState.invalid}>
-					<FieldLabel htmlFor="specimen_reference_id">Reference ID</FieldLabel>
-					<Input
+					<FieldLabel htmlFor={name}>{label}</FieldLabel>
+					<Textarea
 						{...field}
-						id="specimen_reference_id"
+						id={name}
+						value={field.value ?? ""}
 						aria-invalid={fieldState.invalid}
-						autoComplete="off"
-						className={cn("w-full", isChanged && changedControlClassName)}
+						rows={rows}
+						className={cn(isChanged && changedControlClassName)}
 					/>
 					{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 				</Field>

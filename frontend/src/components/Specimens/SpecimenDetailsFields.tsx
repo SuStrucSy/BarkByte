@@ -1,28 +1,23 @@
-import { type Control, Controller } from "react-hook-form";
+import type { Control } from "react-hook-form";
 import type {
 	FastenerType,
 	JoineryType,
 	LoadingDirection,
 	SubJoineryType,
 } from "@/api/model";
-import {
-	Field,
-	FieldError,
-	FieldGroup,
-	FieldLabel,
-} from "@/components/ui/field";
+import { FieldGroup } from "@/components/ui/field";
+import { ASSEMBLY_TYPES } from "@/lib/constants";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
-import { cn } from "@/lib/utils";
-import { Checkbox } from "../ui/checkbox";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { AssemblyTypeField } from "./AssemblyTypeField";
-import { FastenerTypesField } from "./FastenerTypesField";
 import { JoineryFields } from "./JoineryFields";
-import { LoadingDirectionsField } from "./LoadingDirectionsField";
-import { PracticeField } from "./PracticeField";
-import { SpecimenReferenceIdField } from "./SpecimenReferenceIdField";
+import { SpecimenCheckboxField } from "./SpecimenCheckboxField";
+import { SpecimenMultiComboboxField } from "./SpecimenMultiComboboxField";
+import { SpecimenNumberField } from "./SpecimenNumberField";
+import { SpecimenRadioGroupField } from "./SpecimenRadioGroupField";
+import { SpecimenTextareaField } from "./SpecimenTextareaField";
+import { SpecimenTextField } from "./SpecimenTextField";
 import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
+
+const PRACTICE_OPTIONS = ["Conventional", "Research and Development"] as const;
 
 interface AddSpecimenFormProps {
 	control: Control<AddNewSpecimenFormValues>;
@@ -32,9 +27,6 @@ interface AddSpecimenFormProps {
 	initialFastenerOptions?: FastenerType[];
 	initialLoadingDirectionOptions?: LoadingDirection[];
 }
-
-const changedControlClassName =
-	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
 
 export function SpecimenDetailsFields({
 	control,
@@ -60,12 +52,18 @@ export function SpecimenDetailsFields({
 
 	return (
 		<FieldGroup>
-			<SpecimenReferenceIdField
+			<SpecimenTextField
 				control={control}
+				name="specimen_reference_id"
+				label="Reference ID"
 				isChanged={changedFields?.has("specimen_reference_id")}
 			/>
-			<AssemblyTypeField
+			<SpecimenRadioGroupField
 				control={control}
+				name="assembly_type"
+				label="Assembly Type"
+				description="Select how specimen is assembled"
+				options={ASSEMBLY_TYPES}
 				isChanged={changedFields?.has("assembly_type")}
 			/>
 			<JoineryFields
@@ -76,142 +74,66 @@ export function SpecimenDetailsFields({
 				isJoineryTypeChanged={changedFields?.has("joinery_type_id")}
 				isSubJoineryTypeChanged={changedFields?.has("sub_joinery_type_id")}
 			/>
-			<FastenerTypesField
+			<SpecimenMultiComboboxField
 				control={control}
-				fastenerTypeList={fastenerTypeList}
+				name="fastener_type_ids"
+				label="Fastener Types"
+				description="Select one or more fastener types"
+				emptyMessage="No fastener types found."
+				options={fastenerTypeList}
 				isChanged={changedFields?.has("fastener_type_ids")}
 			/>
-			<LoadingDirectionsField
+			<SpecimenMultiComboboxField
 				control={control}
-				loadingDirectionList={loadingDirectionList}
+				name="loading_direction_ids"
+				label="Loading Direction"
+				description="Select one or more loading directions"
+				emptyMessage="No loading direction found."
+				options={loadingDirectionList}
 				isChanged={changedFields?.has("loading_direction_ids")}
 			/>
 
-			<PracticeField
+			<SpecimenRadioGroupField
 				control={control}
+				name="practice"
+				label="Practice"
+				options={PRACTICE_OPTIONS}
 				isChanged={changedFields?.has("practice")}
 			/>
 
-			{/* ── Connector & Dowel ──────────────────────────────────────────── */}
-			<Controller
+			<SpecimenCheckboxField
+				control={control}
 				name="connector"
-				control={control}
-				render={({ field, fieldState }) => (
-					<Field orientation="horizontal" data-invalid={fieldState.invalid}>
-						<Checkbox
-							id="connector"
-							checked={field.value}
-							onCheckedChange={field.onChange}
-							className={cn(
-								changedFields?.has("connector") && changedControlClassName,
-							)}
-						/>
-						<FieldLabel htmlFor="connector">Has Connector</FieldLabel>
-					</Field>
-				)}
+				label="Has Connector"
+				isChanged={changedFields?.has("connector")}
 			/>
 
-			{/* ── Numeric counts ─────────────────────────────────────────────── */}
-			<Controller
+			<SpecimenNumberField
+				control={control}
 				name="fastener_numbers"
-				control={control}
-				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor="fastener_numbers">
-							Number of Fasteners
-						</FieldLabel>
-						<Input
-							id="fastener_numbers"
-							name={field.name}
-							ref={field.ref}
-							onBlur={field.onBlur}
-							type="number"
-							min={1}
-							step={1}
-							value={field.value ?? ""}
-							onChange={(e) => field.onChange(e.target.valueAsNumber)}
-							aria-invalid={fieldState.invalid}
-							className={cn(
-								"w-full",
-								changedFields?.has("fastener_numbers") &&
-									changedControlClassName,
-							)}
-						/>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</Field>
-				)}
+				label="Number of Fasteners"
+				isChanged={changedFields?.has("fastener_numbers")}
 			/>
-			<Controller
-				name="replicate_tests"
+			<SpecimenNumberField
 				control={control}
-				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor="replicate_tests">Replicate Tests</FieldLabel>
-						<Input
-							id="replicate_tests"
-							name={field.name}
-							ref={field.ref}
-							onBlur={field.onBlur}
-							type="number"
-							min={1}
-							step={1}
-							value={field.value ?? ""}
-							onChange={(e) => field.onChange(e.target.valueAsNumber)}
-							aria-invalid={fieldState.invalid}
-							className={cn(
-								"w-full",
-								changedFields?.has("replicate_tests") &&
-									changedControlClassName,
-							)}
-						/>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</Field>
-				)}
+				name="replicate_tests"
+				label="Replicate Tests"
+				isChanged={changedFields?.has("replicate_tests")}
 			/>
 
-			{/* ── Connection description & note ──────────────────────────────── */}
-			<Controller
+			<SpecimenTextareaField
+				control={control}
 				name="connection_description"
-				control={control}
-				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor="connection_description">
-							Connection Description
-						</FieldLabel>
-						<Textarea
-							{...field}
-							id="connection_description"
-							value={field.value ?? ""}
-							aria-invalid={fieldState.invalid}
-							rows={3}
-							className={cn(
-								changedFields?.has("connection_description") &&
-									changedControlClassName,
-							)}
-						/>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</Field>
-				)}
+				label="Connection Description"
+				rows={3}
+				isChanged={changedFields?.has("connection_description")}
 			/>
-			<Controller
-				name="note"
+			<SpecimenTextareaField
 				control={control}
-				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor="note">Note (optional)</FieldLabel>
-						<Textarea
-							{...field}
-							id="note"
-							value={field.value ?? ""}
-							aria-invalid={fieldState.invalid}
-							rows={2}
-							className={cn(
-								changedFields?.has("note") && changedControlClassName,
-							)}
-						/>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</Field>
-				)}
+				name="note"
+				label="Note (optional)"
+				rows={2}
+				isChanged={changedFields?.has("note")}
 			/>
 		</FieldGroup>
 	);

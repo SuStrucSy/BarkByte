@@ -8,49 +8,54 @@ import {
 	FieldSet,
 } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ASSEMBLY_TYPES } from "@/lib/constants";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
+import { changedControlClassName } from "./changedFieldStyles";
 
-type AssemblyTypeFieldProps = {
+type SpecimenRadioGroupFieldProps = {
 	control: Control<AddNewSpecimenFormValues>;
+	name: "assembly_type" | "practice";
+	label: string;
+	description?: string;
+	options: readonly string[];
 	isChanged?: boolean;
 };
 
-const changedControlClassName =
-	"border-emerald-500 text-emerald-700 focus-visible:border-emerald-600 focus-visible:ring-emerald-200/50 dark:border-emerald-700 dark:text-emerald-400";
-
-export function AssemblyTypeField({
+export function SpecimenRadioGroupField({
 	control,
+	name,
+	label,
+	description,
+	options,
 	isChanged = false,
-}: AssemblyTypeFieldProps) {
+}: SpecimenRadioGroupFieldProps) {
 	return (
 		<Controller
-			name="assembly_type"
+			name={name}
 			control={control}
 			render={({ field, fieldState }) => (
 				<FieldSet data-invalid={fieldState.invalid}>
-					<FieldLegend>Assembly Type</FieldLegend>
-					<FieldDescription>Select how specimen is assembled</FieldDescription>
+					<FieldLegend>{label}</FieldLegend>
+					{description && <FieldDescription>{description}</FieldDescription>}
 					<RadioGroup
 						name={field.name}
-						value={field.value}
+						value={field.value ?? ""}
 						onValueChange={field.onChange}
 						aria-invalid={fieldState.invalid}
 					>
-						{ASSEMBLY_TYPES.map((type) => (
+						{options.map((option) => (
 							<Field
-								key={type}
+								key={option}
 								orientation="horizontal"
 								data-invalid={fieldState.invalid}
 							>
 								<RadioGroupItem
-									value={type}
-									id={type}
+									value={option}
+									id={option}
 									aria-invalid={fieldState.invalid}
 									className={cn(isChanged && changedControlClassName)}
 								/>
-								<FieldLabel htmlFor={type}>{type}</FieldLabel>
+								<FieldLabel htmlFor={option}>{option}</FieldLabel>
 							</Field>
 						))}
 					</RadioGroup>
