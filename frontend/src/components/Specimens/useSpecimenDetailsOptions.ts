@@ -52,8 +52,7 @@ export function useSpecimenDetailsOptions({
 	const { data: subjoineryData } = useSubjoinerytypeGetSjtypesForJtype(
 		selectedJoineryTypeId,
 	);
-	const { data: fastenerData, refetch: refetchFasteners } =
-		useFastenertypeGetFastenerTypes();
+	const { data: fastenerData } = useFastenertypeGetFastenerTypes();
 	const { data: loadingDirectionData } =
 		useLoadingdirectionGetLoadingDirections();
 
@@ -75,7 +74,5 @@ export function useSpecimenDetailsOptions({
 			...initialLoadingDirectionOptions,
 			...(loadingDirectionData?.data ?? []),
 		]),
-		hasFetchedFastenerTypes: Boolean(fastenerData?.data?.length),
-		refetchFasteners,
 	};
 }

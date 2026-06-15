@@ -30,6 +30,7 @@ import {
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { AssemblyTypeField } from "./AssemblyTypeField";
+import { FastenerTypesField } from "./FastenerTypesField";
 import { JoineryFields } from "./JoineryFields";
 import { PracticeField } from "./PracticeField";
 import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
@@ -54,7 +55,6 @@ export function SpecimenDetailsFields({
 	initialFastenerOptions = [],
 	initialLoadingDirectionOptions = [],
 }: AddSpecimenFormProps) {
-	const anchorFastener = useComboboxAnchor();
 	const anchorLoading = useComboboxAnchor();
 	const {
 		selectedJoineryTypeId,
@@ -62,8 +62,6 @@ export function SpecimenDetailsFields({
 		subJoineryTypeList,
 		fastenerTypeList,
 		loadingDirectionList,
-		hasFetchedFastenerTypes,
-		refetchFasteners,
 	} = useSpecimenDetailsOptions({
 		control,
 		initialJoineryOptions,
@@ -109,78 +107,10 @@ export function SpecimenDetailsFields({
 				isJoineryTypeChanged={changedFields?.has("joinery_type_id")}
 				isSubJoineryTypeChanged={changedFields?.has("sub_joinery_type_id")}
 			/>
-			<Controller
-				name="fastener_type_ids"
+			<FastenerTypesField
 				control={control}
-				render={({ field, fieldState }) => {
-					const values = Array.isArray(field.value) ? field.value : [];
-					return (
-						<Field data-invalid={fieldState.invalid}>
-							<FieldLabel htmlFor="fastener_type_ids">
-								Fastener Types
-							</FieldLabel>
-							<Combobox
-								multiple
-								items={fastenerTypeList}
-								onValueChange={(selectedValues) =>
-									field.onChange(selectedValues)
-								}
-								onOpenChange={(isOpen) => {
-									if (isOpen && !hasFetchedFastenerTypes) {
-										// Trigger fetch when opened AND no data
-										refetchFasteners(); // your query refetch function
-									}
-								}}
-								itemToStringValue={(fastener) =>
-									(fastener as unknown as FastenerType & { id: string }).id
-								}
-								value={values}
-							>
-								<ComboboxChips
-									ref={anchorFastener}
-									className={cn(
-										"w-full max-w-xs",
-										changedFields?.has("fastener_type_ids") &&
-											changedControlClassName,
-									)}
-								>
-									<ComboboxValue>
-										{(chips) => (
-											<>
-												{(chips as string[]).map((chipId) => {
-													//  Lookup label by ID from your data
-													const fastener = fastenerTypeList.find(
-														(f) => f.id === chipId,
-													);
-													return (
-														<ComboboxChip key={chipId}>
-															{fastener?.label ?? ""}
-														</ComboboxChip>
-													);
-												})}
-												<ComboboxChipsInput />
-											</>
-										)}
-									</ComboboxValue>
-								</ComboboxChips>
-								<ComboboxContent anchor={anchorFastener}>
-									<ComboboxEmpty>No fastener types found.</ComboboxEmpty>
-									<ComboboxList>
-										{(fastener) => (
-											<ComboboxItem key={fastener.id} value={fastener.id}>
-												{fastener.label}
-											</ComboboxItem>
-										)}
-									</ComboboxList>
-								</ComboboxContent>
-							</Combobox>
-							<FieldDescription>
-								Select one or more fastener types
-							</FieldDescription>
-							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-						</Field>
-					);
-				}}
+				fastenerTypeList={fastenerTypeList}
+				isChanged={changedFields?.has("fastener_type_ids")}
 			/>
 			<Controller
 				name="loading_direction_ids"
