@@ -22,7 +22,6 @@ import {
 	FieldLegend,
 	FieldSet,
 } from "@/components/ui/field";
-import { ASSEMBLY_TYPES } from "@/lib/constants";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
@@ -48,6 +47,7 @@ import {
 	SelectValue,
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
+import { AssemblyTypeField } from "./AssemblyTypeField";
 import { FieldHelpHover } from "./FieldHelpHover";
 import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
 
@@ -126,43 +126,9 @@ export function SpecimenDetailsFields({
 					</Field>
 				)}
 			/>
-			<Controller
-				name="assembly_type"
+			<AssemblyTypeField
 				control={control}
-				render={({ field, fieldState }) => (
-					<FieldSet data-invalid={fieldState.invalid}>
-						<FieldLegend>Assembly Type</FieldLegend>
-						<FieldDescription>
-							Select how specimen is assembled
-						</FieldDescription>
-						<RadioGroup
-							name={field.name}
-							value={field.value}
-							onValueChange={field.onChange}
-							aria-invalid={fieldState.invalid}
-						>
-							{ASSEMBLY_TYPES.map((type) => (
-								<Field
-									key={type}
-									orientation="horizontal"
-									data-invalid={fieldState.invalid}
-								>
-									<RadioGroupItem
-										value={type}
-										id={type}
-										aria-invalid={fieldState.invalid}
-										className={cn(
-											changedFields?.has("assembly_type") &&
-												changedControlClassName,
-										)}
-									/>
-									<FieldLabel htmlFor={type}>{type}</FieldLabel>
-								</Field>
-							))}
-						</RadioGroup>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</FieldSet>
-				)}
+				isChanged={changedFields?.has("assembly_type")}
 			/>
 			<Controller
 				name="joinery_type_id"
