@@ -19,8 +19,6 @@ import {
 	FieldError,
 	FieldGroup,
 	FieldLabel,
-	FieldLegend,
-	FieldSet,
 } from "@/components/ui/field";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
@@ -38,7 +36,6 @@ import {
 	useComboboxAnchor,
 } from "../ui/combobox";
 import { Input } from "../ui/input";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -49,6 +46,7 @@ import {
 import { Textarea } from "../ui/textarea";
 import { AssemblyTypeField } from "./AssemblyTypeField";
 import { FieldHelpHover } from "./FieldHelpHover";
+import { PracticeField } from "./PracticeField";
 import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
 
 const JOINERY_IMAGES: Record<string, string> = {
@@ -372,43 +370,9 @@ export function SpecimenDetailsFields({
 				}}
 			/>
 
-			{/* ── Practice ──────────────────────────────────────────────────── */}
-			<Controller
-				name="practice"
+			<PracticeField
 				control={control}
-				render={({ field, fieldState }) => (
-					<FieldSet data-invalid={fieldState.invalid}>
-						<FieldLegend>Practice</FieldLegend>
-						<RadioGroup
-							name={field.name}
-							value={field.value ?? ""}
-							onValueChange={field.onChange}
-							aria-invalid={fieldState.invalid}
-						>
-							{(["Conventional", "Research and Development"] as const).map(
-								(p) => (
-									<Field
-										key={p}
-										orientation="horizontal"
-										data-invalid={fieldState.invalid}
-									>
-										<RadioGroupItem
-											value={p}
-											id={p}
-											aria-invalid={fieldState.invalid}
-											className={cn(
-												changedFields?.has("practice") &&
-													changedControlClassName,
-											)}
-										/>
-										<FieldLabel htmlFor={p}>{p}</FieldLabel>
-									</Field>
-								),
-							)}
-						</RadioGroup>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</FieldSet>
-				)}
+				isChanged={changedFields?.has("practice")}
 			/>
 
 			{/* ── Connector & Dowel ──────────────────────────────────────────── */}
