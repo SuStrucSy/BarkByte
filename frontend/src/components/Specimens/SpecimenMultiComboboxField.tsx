@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { type Control, Controller } from "react-hook-form";
 import {
 	Field,
@@ -29,11 +29,15 @@ type ComboboxOption = {
 
 type SpecimenMultiComboboxFieldProps<TOption extends ComboboxOption> = {
 	control: Control<AddNewSpecimenFormValues>;
-	name: "fastener_type_ids" | "loading_direction_ids";
+	name:
+		| "fastener_type_ids"
+		| "loading_direction_ids"
+		| "e_qualitative_failure_measure";
 	label: string;
 	description: string;
 	emptyMessage: string;
 	options: TOption[];
+	labelAddon?: ReactNode;
 	isChanged?: boolean;
 };
 
@@ -44,6 +48,7 @@ export function SpecimenMultiComboboxField<TOption extends ComboboxOption>({
 	description,
 	emptyMessage,
 	options,
+	labelAddon,
 	isChanged = false,
 }: SpecimenMultiComboboxFieldProps<TOption>) {
 	const anchor = useComboboxAnchor();
@@ -61,7 +66,10 @@ export function SpecimenMultiComboboxField<TOption extends ComboboxOption>({
 
 				return (
 					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor={name}>{label}</FieldLabel>
+						<FieldLabel htmlFor={name}>
+							{label}
+							{labelAddon}
+						</FieldLabel>
 						<Combobox
 							multiple
 							items={options}

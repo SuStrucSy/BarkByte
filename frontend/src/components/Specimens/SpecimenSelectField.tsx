@@ -24,12 +24,17 @@ type SelectOption = {
 
 type SpecimenSelectFieldProps<TOption extends SelectOption> = {
 	control: Control<AddNewSpecimenFormValues>;
-	name: "joinery_type_id" | "sub_joinery_type_id";
+	name:
+		| "joinery_type_id"
+		| "sub_joinery_type_id"
+		| "e_test_loading_type"
+		| "e_yield_point_method";
 	label: string;
 	placeholder: string;
 	options: TOption[];
 	description?: ReactNode;
 	labelAddon?: ReactNode;
+	triggerClassName?: string;
 	isChanged?: boolean;
 	contentPosition?: "item-aligned" | "popper";
 };
@@ -42,6 +47,7 @@ export function SpecimenSelectField<TOption extends SelectOption>({
 	options,
 	description,
 	labelAddon,
+	triggerClassName = "w-full",
 	isChanged = false,
 	contentPosition,
 }: SpecimenSelectFieldProps<TOption>) {
@@ -63,7 +69,10 @@ export function SpecimenSelectField<TOption extends SelectOption>({
 						<SelectTrigger
 							id={name}
 							aria-invalid={fieldState.invalid}
-							className={cn("w-full", isChanged && changedControlClassName)}
+							className={cn(
+								triggerClassName,
+								isChanged && changedControlClassName,
+							)}
 						>
 							<SelectValue placeholder={placeholder} />
 						</SelectTrigger>
