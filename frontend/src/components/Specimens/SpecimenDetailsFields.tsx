@@ -7,7 +7,6 @@ import type {
 } from "@/api/model";
 import {
 	Field,
-	FieldDescription,
 	FieldError,
 	FieldGroup,
 	FieldLabel,
@@ -15,23 +14,12 @@ import {
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "../ui/checkbox";
-import {
-	Combobox,
-	ComboboxChip,
-	ComboboxChips,
-	ComboboxChipsInput,
-	ComboboxContent,
-	ComboboxEmpty,
-	ComboboxItem,
-	ComboboxList,
-	ComboboxValue,
-	useComboboxAnchor,
-} from "../ui/combobox";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { AssemblyTypeField } from "./AssemblyTypeField";
 import { FastenerTypesField } from "./FastenerTypesField";
 import { JoineryFields } from "./JoineryFields";
+import { LoadingDirectionsField } from "./LoadingDirectionsField";
 import { PracticeField } from "./PracticeField";
 import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
 
@@ -55,7 +43,6 @@ export function SpecimenDetailsFields({
 	initialFastenerOptions = [],
 	initialLoadingDirectionOptions = [],
 }: AddSpecimenFormProps) {
-	const anchorLoading = useComboboxAnchor();
 	const {
 		selectedJoineryTypeId,
 		joineryTypeList,
@@ -112,72 +99,10 @@ export function SpecimenDetailsFields({
 				fastenerTypeList={fastenerTypeList}
 				isChanged={changedFields?.has("fastener_type_ids")}
 			/>
-			<Controller
-				name="loading_direction_ids"
+			<LoadingDirectionsField
 				control={control}
-				render={({ field, fieldState }) => {
-					const values = Array.isArray(field.value) ? field.value : [];
-					return (
-						<Field data-invalid={fieldState.invalid}>
-							<FieldLabel htmlFor="loading_direction_ids">
-								Loading Direction
-							</FieldLabel>
-							<Combobox
-								multiple
-								items={loadingDirectionList}
-								onValueChange={(selectedValues) =>
-									field.onChange(selectedValues)
-								}
-								itemToStringValue={(loading) =>
-									(loading as unknown as LoadingDirection & { id: string }).id
-								}
-								value={values}
-							>
-								<ComboboxChips
-									ref={anchorLoading}
-									className={cn(
-										"w-full max-w-xs",
-										changedFields?.has("loading_direction_ids") &&
-											changedControlClassName,
-									)}
-								>
-									<ComboboxValue>
-										{(chips) => (
-											<>
-												{(chips as string[]).map((chipId) => {
-													//  Lookup label by ID from your data
-													const loading = loadingDirectionList.find(
-														(f) => f.id === chipId,
-													);
-													return (
-														<ComboboxChip key={chipId}>
-															{loading?.label ?? ""}
-														</ComboboxChip>
-													);
-												})}
-												<ComboboxChipsInput />
-											</>
-										)}
-									</ComboboxValue>
-								</ComboboxChips>
-								<ComboboxContent anchor={anchorLoading}>
-									<ComboboxEmpty>No loading direction found.</ComboboxEmpty>
-									<ComboboxList>
-										{(loading) => (
-											<ComboboxItem key={loading.id} value={loading.id}>
-												{loading.label}
-											</ComboboxItem>
-										)}
-									</ComboboxList>
-								</ComboboxContent>
-							</Combobox>
-							<FieldDescription>
-								Select one or more loading directions
-							</FieldDescription>
-							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-						</Field>
-					);
-				}}
+				loadingDirectionList={loadingDirectionList}
+				isChanged={changedFields?.has("loading_direction_ids")}
 			/>
 
 			<PracticeField
