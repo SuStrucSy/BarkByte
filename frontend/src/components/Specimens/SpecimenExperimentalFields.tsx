@@ -43,7 +43,7 @@ import {
 } from "../ui/combobox";
 import { changedControlClassName } from "./changedFieldStyles";
 import { FieldHelpHover } from "./FieldHelpHover";
-import { TextField } from "./SpecimenStructuralFields";
+import { SpecimenTextField } from "./SpecimenTextField";
 
 interface SpecimenExperimentalFormProps {
 	control: Control<AddNewSpecimenFormValues>;
@@ -407,12 +407,12 @@ export function SpecimenExperimentalFields({
 				}}
 			/>
 
-			<TextField
+			<SpecimenTextField
 				name="e_qfm_description"
 				label="Qualitative Failure Mode Description"
 				description="Free-text description of the observed failure mode"
 				control={control}
-				changed={changedFields?.has("e_qfm_description")}
+				isChanged={changedFields?.has("e_qfm_description")}
 			/>
 		</FieldGroup>
 	);
