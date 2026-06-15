@@ -1,8 +1,4 @@
-import { type Control, Controller, useWatch } from "react-hook-form";
-import { useFastenertypeGetFastenerTypes } from "@/api/endpoints/fastenertype/fastenertype";
-import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype";
-import { useLoadingdirectionGetLoadingDirections } from "@/api/endpoints/loadingdirection/loadingdirection";
-import { useSubjoinerytypeGetSjtypesForJtype } from "@/api/endpoints/subjoinerytype/subjoinerytype";
+import { type Control, Controller } from "react-hook-form";
 import type {
 	FastenerType,
 	JoineryType,
@@ -53,6 +49,7 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { FieldHelpHover } from "./FieldHelpHover";
+import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
 
 const JOINERY_IMAGES: Record<string, string> = {
 	"butt-joint": buttJoint,
@@ -88,49 +85,21 @@ export function SpecimenDetailsFields({
 }: AddSpecimenFormProps) {
 	const anchorFastener = useComboboxAnchor();
 	const anchorLoading = useComboboxAnchor();
-	const { data: joineryData } = useJoinerytypeGetJtypes();
-	const { data: fastenerData, refetch: refetchFasteners } =
-		useFastenertypeGetFastenerTypes();
-	const { data: loadingDirectionData } =
-		useLoadingdirectionGetLoadingDirections();
-
-	const joineryTypes = useWatch({
+	const {
+		selectedJoineryTypeId,
+		joineryTypeList,
+		subJoineryTypeList,
+		fastenerTypeList,
+		loadingDirectionList,
+		hasFetchedFastenerTypes,
+		refetchFasteners,
+	} = useSpecimenDetailsOptions({
 		control,
-		name: "joinery_type_id",
+		initialJoineryOptions,
+		initialSubJoineryOptions,
+		initialFastenerOptions,
+		initialLoadingDirectionOptions,
 	});
-
-	const { data: subjoinery } =
-		useSubjoinerytypeGetSjtypesForJtype(joineryTypes);
-
-	const joineryTypeList: JoineryType[] = [
-		...initialJoineryOptions,
-		...(joineryData?.data ?? []),
-	].filter(
-		(joinery, index, list) =>
-			list.findIndex((candidate) => candidate.id === joinery.id) === index,
-	);
-	const subJoineryTypeList = [
-		...initialSubJoineryOptions,
-		...(subjoinery?.data ?? []),
-	].filter(
-		(subJoinery, index, list) =>
-			list.findIndex((candidate) => candidate.id === subJoinery.id) === index,
-	);
-	const fastenerTypeList = [
-		...initialFastenerOptions,
-		...(fastenerData?.data ?? []),
-	].filter(
-		(fastener, index, list) =>
-			list.findIndex((candidate) => candidate.id === fastener.id) === index,
-	);
-	const loadingDirectionList = [
-		...initialLoadingDirectionOptions,
-		...(loadingDirectionData?.data ?? []),
-	].filter(
-		(loadingDirection, index, list) =>
-			list.findIndex((candidate) => candidate.id === loadingDirection.id) ===
-			index,
-	);
 
 	return (
 		<FieldGroup>
@@ -200,7 +169,7 @@ export function SpecimenDetailsFields({
 				control={control}
 				render={({ field, fieldState }) => {
 					const selectedJoinery = joineryTypeList.find(
-						(j) => j.id === joineryTypes,
+						(j) => j.id === selectedJoineryTypeId,
 					);
 					const joineryImage = selectedJoinery
 						? JOINERY_IMAGES[toImageKey(selectedJoinery.label)]
@@ -288,8 +257,8 @@ export function SpecimenDetailsFields({
 							</SelectContent>
 						</Select>
 						<FieldDescription>
-							{joineryTypes
-								? `Filtered for ${joineryTypeList.find((j) => j.id === joineryTypes)?.label}`
+							{selectedJoineryTypeId
+								? `Filtered for ${joineryTypeList.find((j) => j.id === selectedJoineryTypeId)?.label}`
 								: "Select joinery type first"}
 						</FieldDescription>
 						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -313,12 +282,14 @@ export function SpecimenDetailsFields({
 									field.onChange(selectedValues)
 								}
 								onOpenChange={(isOpen) => {
-									if (isOpen && !fastenerData?.data?.length) {
+									if (isOpen && !hasFetchedFastenerTypes) {
 										// Trigger fetch when opened AND no data
 										refetchFasteners(); // your query refetch function
 									}
 								}}
-								itemToStringValue={(fastener) => fastener.id}
+								itemToStringValue={(fastener) =>
+									(fastener as unknown as FastenerType & { id: string }).id
+								}
 								value={values}
 							>
 								<ComboboxChips
@@ -332,7 +303,7 @@ export function SpecimenDetailsFields({
 									<ComboboxValue>
 										{(chips) => (
 											<>
-												{chips.map((chipId) => {
+												{(chips as string[]).map((chipId) => {
 													//  Lookup label by ID from your data
 													const fastener = fastenerTypeList.find(
 														(f) => f.id === chipId,
@@ -383,7 +354,9 @@ export function SpecimenDetailsFields({
 								onValueChange={(selectedValues) =>
 									field.onChange(selectedValues)
 								}
-								itemToStringValue={(loading) => loading.id}
+								itemToStringValue={(loading) =>
+									(loading as unknown as LoadingDirection & { id: string }).id
+								}
 								value={values}
 							>
 								<ComboboxChips
@@ -397,7 +370,7 @@ export function SpecimenDetailsFields({
 									<ComboboxValue>
 										{(chips) => (
 											<>
-												{chips.map((chipId) => {
+												{(chips as string[]).map((chipId) => {
 													//  Lookup label by ID from your data
 													const loading = loadingDirectionList.find(
 														(f) => f.id === chipId,
