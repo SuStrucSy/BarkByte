@@ -21,6 +21,7 @@ import { FastenerTypesField } from "./FastenerTypesField";
 import { JoineryFields } from "./JoineryFields";
 import { LoadingDirectionsField } from "./LoadingDirectionsField";
 import { PracticeField } from "./PracticeField";
+import { SpecimenReferenceIdField } from "./SpecimenReferenceIdField";
 import { useSpecimenDetailsOptions } from "./useSpecimenDetailsOptions";
 
 interface AddSpecimenFormProps {
@@ -59,28 +60,9 @@ export function SpecimenDetailsFields({
 
 	return (
 		<FieldGroup>
-			<Controller
-				name="specimen_reference_id"
+			<SpecimenReferenceIdField
 				control={control}
-				render={({ field, fieldState }) => (
-					<Field data-invalid={fieldState.invalid}>
-						<FieldLabel htmlFor="specimen_reference_id">
-							Reference ID
-						</FieldLabel>
-						<Input
-							{...field}
-							id="specimen_reference_id"
-							aria-invalid={fieldState.invalid}
-							autoComplete="off"
-							className={cn(
-								"w-full",
-								changedFields?.has("specimen_reference_id") &&
-									changedControlClassName,
-							)}
-						/>
-						{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-					</Field>
-				)}
+				isChanged={changedFields?.has("specimen_reference_id")}
 			/>
 			<AssemblyTypeField
 				control={control}
