@@ -41,6 +41,7 @@ import { Separator } from "../ui/separator";
 import { Spinner } from "../ui/spinner";
 import { SpecimenDetailsFields } from "./SpecimenDetailsFields";
 import { SpecimenExperimentalFields } from "./SpecimenExperimentalFields";
+import { SpecimenPendingChangesCard } from "./SpecimenPendingChangesCard";
 import { SpecimenStructuralFields } from "./SpecimenStructuralFields";
 import {
 	buildSpecimenEditDiff,
@@ -365,46 +366,16 @@ export function SpecimenEditForm({
 
 			<Separator />
 
-			<Card className={hasChanges ? "" : "border-dashed"}>
-				<CardHeader>
-					<CardTitle className="text-base">
-						{hasChanges ? "Pending Changes" : "No pending changes"}
-					</CardTitle>
-					<CardDescription>
-						{hasChanges
-							? "Review the before and after values before you submit."
-							: "Update one or more fields before submitting for review."}
-					</CardDescription>
-				</CardHeader>
-				{hasChanges ? (
-					<CardContent className="grid gap-3">
-						{changedFields.map((field) => (
-							<div
-								key={field}
-								className="grid gap-1 rounded-md border px-3 py-2"
-							>
-								<span className="text-[10px] tracking-wide text-muted-foreground uppercase">
-									{getFieldLabel(field)}
-								</span>
-								<div className="text-sm text-red-600 line-through decoration-red-400">
-									{renderChangedFieldValue(
-										field,
-										originalValues,
-										originalQfmLookup,
-									)}
-								</div>
-								<div className="text-sm text-green-700 dark:text-green-400">
-									{renderChangedFieldValue(
-										field,
-										currentValues,
-										currentQfmLookup,
-									)}
-								</div>
-							</div>
-						))}
-					</CardContent>
-				) : null}
-			</Card>
+			<SpecimenPendingChangesCard
+				changedFields={changedFields}
+				getFieldLabel={getFieldLabel}
+				renderOriginalValue={(field) =>
+					renderChangedFieldValue(field, originalValues, originalQfmLookup)
+				}
+				renderCurrentValue={(field) =>
+					renderChangedFieldValue(field, currentValues, currentQfmLookup)
+				}
+			/>
 
 			<div className="flex items-center justify-end gap-3">
 				<Button
