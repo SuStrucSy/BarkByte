@@ -11,7 +11,7 @@ type SpecimenFormStepRenderParams = {
 	hasExistingDoi: boolean;
 };
 
-type SpecimenFormStep = {
+export type SpecimenFormStep = {
 	id: string;
 	title: string;
 	description: string;
@@ -88,3 +88,15 @@ export const specimenFormSteps = [
 		render: ({ control }) => <SpecimenExperimentalFields control={control} />,
 	},
 ] as const satisfies readonly SpecimenFormStep[];
+
+export const createSpecimenSteps = specimenFormSteps;
+
+export const editSpecimenSteps = specimenFormSteps.filter(
+	(step) => step.id !== "doi",
+);
+
+export type SpecimenFormStepMode = "create" | "edit";
+
+export function getSpecimenFormSteps(mode: SpecimenFormStepMode) {
+	return mode === "create" ? createSpecimenSteps : editSpecimenSteps;
+}

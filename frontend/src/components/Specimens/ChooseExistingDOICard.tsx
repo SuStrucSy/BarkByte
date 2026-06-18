@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { UseFormSetValue } from "react-hook-form";
 import { useDoiGetDois } from "@/api/endpoints/doi/doi";
 import type { DOIPublic } from "@/api/model";
 import {
@@ -27,7 +27,7 @@ import {
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 
 type ChooseExistingDOICardProps = {
-	formToFill: UseFormReturn<AddNewSpecimenFormValues>;
+	formToFill: { setValue: UseFormSetValue<AddNewSpecimenFormValues> };
 };
 
 export function ChooseExistingDOICard({

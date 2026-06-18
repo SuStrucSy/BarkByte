@@ -202,7 +202,7 @@ export const AddNewSpecimenSchema = z.object({
 	e_yield_point_method: z.enum(["CEN 1/6", "EEEP"] as const),
 	e_date: z.string().trim().optional().nullable(),
 	e_qfm_description: z.string().trim().optional().nullable(),
-	e_qualitative_failure_measure: z.array(z.uuid()).default([]),
+	e_qualitative_failure_measure: z.array(z.uuid()),
 });
 
 export type AddNewSpecimenFormValues = z.infer<typeof AddNewSpecimenSchema>;

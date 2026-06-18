@@ -56,12 +56,14 @@ export function useSpecimenDetailsOptions({
 	const { data: loadingDirectionData } =
 		useLoadingdirectionGetLoadingDirections();
 
+	const joineryTypeList = uniqueById([
+		...initialJoineryOptions,
+		...(joineryData?.data ?? []),
+	]);
+
 	return {
 		selectedJoineryTypeId,
-		joineryTypeList: uniqueById([
-			...initialJoineryOptions,
-			...(joineryData?.data ?? []),
-		]),
+		joineryTypeList,
 		subJoineryTypeList: uniqueById([
 			...initialSubJoineryOptions,
 			...(subjoineryData?.data ?? []),

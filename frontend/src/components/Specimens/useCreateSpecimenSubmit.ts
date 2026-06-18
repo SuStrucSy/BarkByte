@@ -1,20 +1,49 @@
-import type { UseFormReturn } from "react-hook-form";
+import type { UseFormReset } from "react-hook-form";
 import { toast } from "sonner";
 import { useDoiCreateDoi } from "@/api/endpoints/doi/doi";
+import { useJoinerytypeGetJtypes } from "@/api/endpoints/joinerytype/joinerytype";
 import { useSpecimensCreateSpecimen } from "@/api/endpoints/specimens/specimens";
-import type { HTTPValidationError } from "@/api/model";
+import type {
+	HTTPValidationError,
+	JoineryType,
+	PendingSpecimenCreate,
+} from "@/api/model";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 import { handleError } from "@/lib/utils";
 
 type UseCreateSpecimenSubmitParams = {
-	form: UseFormReturn<AddNewSpecimenFormValues>;
+	form: { reset: UseFormReset<AddNewSpecimenFormValues> };
 	resetStepNavigation: () => void;
 };
+
+function buildPendingSpecimenCreatePayload(
+	values: AddNewSpecimenFormValues,
+	doiId: string,
+	joineryTypes: JoineryType[],
+): PendingSpecimenCreate {
+	const selectedJoineryType = joineryTypes.find(
+		(joineryType) => joineryType.id === values.joinery_type_id,
+	);
+
+	if (!selectedJoineryType) {
+		throw new Error("Selected joinery type was not found.");
+	}
+
+	const { authors, doi_id, link, pub_year, ref_title, ...specimenValues } =
+		values;
+
+	return {
+		...specimenValues,
+		doi_id: doiId,
+		dowel: selectedJoineryType.has_dowel,
+	};
+}
 
 export function useCreateSpecimenSubmit({
 	form,
 	resetStepNavigation,
 }: UseCreateSpecimenSubmitParams) {
+	const { data: joineryData } = useJoinerytypeGetJtypes();
 	const specimenMutation = useSpecimensCreateSpecimen({
 		mutation: {
 			onSuccess: () => {
@@ -61,14 +90,19 @@ export function useCreateSpecimenSubmit({
 				});
 			}
 
-			if (doi) {
-				await specimenMutation.mutateAsync({
-					data: { ...values, doi_id: doi.id },
-				});
-				return;
+			const doiId = doi?.id ?? values.doi_id;
+			if (!doiId) {
+				throw new Error("A DOI is required before submitting the specimen.");
 			}
 
-			await specimenMutation.mutateAsync({ data: values });
+			await specimenMutation.mutateAsync({
+				data: buildPendingSpecimenCreatePayload(
+					values,
+					doiId,
+					joineryData?.data ?? [],
+				),
+			});
+			return;
 		} catch (err) {
 			toast.error("Submission failed", {
 				description: err instanceof Error ? err.message : "Unknown error",

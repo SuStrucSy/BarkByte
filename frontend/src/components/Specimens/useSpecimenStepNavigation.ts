@@ -1,16 +1,21 @@
 import { useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
-import { specimenFormSteps } from "@/components/Specimens/specimenFormSteps";
+import type { UseFormTrigger } from "react-hook-form";
+import {
+	getSpecimenFormSteps,
+	type SpecimenFormStepMode,
+} from "@/components/Specimens/specimenFormSteps";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 
 export function useSpecimenStepNavigation(
-	form: UseFormReturn<AddNewSpecimenFormValues>,
+	form: { trigger: UseFormTrigger<AddNewSpecimenFormValues> },
+	{ mode }: { mode: SpecimenFormStepMode },
 ) {
 	const [currentStep, setCurrentStep] = useState(0);
 
-	const currentStepConfig = specimenFormSteps[currentStep];
-	const isLastStep = currentStep === specimenFormSteps.length - 1;
-	const progress = ((currentStep + 1) / specimenFormSteps.length) * 100;
+	const steps = getSpecimenFormSteps(mode);
+	const currentStepConfig = steps[currentStep];
+	const isLastStep = currentStep === steps.length - 1;
+	const progress = ((currentStep + 1) / steps.length) * 100;
 
 	const goNext = async () => {
 		const isValid = await form.trigger(currentStepConfig.fields);
@@ -37,7 +42,11 @@ export function useSpecimenStepNavigation(
 		isLastStep,
 		progress,
 		resetStepNavigation,
-		stepCount: specimenFormSteps.length,
-		steps: specimenFormSteps,
+		stepCount: steps.length,
+		steps,
 	};
 }
+
+export type SpecimenStepNavigation = ReturnType<
+	typeof useSpecimenStepNavigation
+>;
