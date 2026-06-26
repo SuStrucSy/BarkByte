@@ -62,24 +62,6 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml down --remove-o
 
 More detailed local development notes are in [development.md](./development.md).
 
-### System Architecture Diagram
-
-The System Architecture Diagram shows the deployed application structure, including the browser client, Traefik reverse proxy, frontend Docker container, backend Docker container, and PostgreSQL Docker container.
-
-In practical terms, this diagram shows how a user reaches Timverse: the browser connects to Traefik, Traefik routes frontend traffic to the static React application, API requests go to the FastAPI backend, and the backend reads from and writes to PostgreSQL.
-
-![Timverse system architecture diagram](./system_architecture_diagram.png)
-
-### Entity Relationship Diagram
-
-The Entity Relationship Diagram (ERD) gives a high-level view of the Timverse database schema, showing the main data models and how they connect across users, specimens, DOI references, pending specimen reviews, and supporting classification tables. It is useful for understanding how backend API routes map to stored data and for planning database or integration-test changes.
-
-In practical terms, this diagram explains what the database stores and how records are connected. The specimen is the central record, while DOI references, users, joinery classifications, loading directions, fastener types, failure modes, and pending reviews provide the surrounding context.
-
-![Timverse ERD diagram](./timverse_erd_diagram.png)
-
-
-
 ### Configure
 
 Update the `.env` files to customize local or production configuration.
