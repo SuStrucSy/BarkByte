@@ -35,7 +35,7 @@ type RelevantSearchState = {
 
 export type SpecimensSearchUpdate = RelevantSearchState | {};
 
-type SpecimensSearchState = {
+export type SpecimensSearchState = {
 	q: string;
 } & Partial<Record<SliderField, string | undefined>>;
 
