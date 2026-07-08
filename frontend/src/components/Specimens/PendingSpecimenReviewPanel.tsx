@@ -9,113 +9,69 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { PendingSpecimenRequesterName } from "./PendingSpecimenRequester";
 import { PendingSpecimenSubmissionBadge } from "./PendingSpecimenSubmissionBadge";
+import {
+	getPendingSpecimenStatusCopy,
+	type PendingSpecimenRequester,
+	type PendingSpecimenReviewPermissions,
+	type ReviewAction,
+	rejectSecondaryClassName,
+} from "./pendingSpecimenReviewTypes";
 import type { SpecimenStatus } from "./SpecimenStatusFilter";
 
-export const rejectSecondaryClassName =
-	"border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70";
-
 interface PendingCardActionsProps {
-	status: SpecimenStatus;
-	canReview: boolean;
-	canReject: boolean;
-	canDeletePending: boolean;
 	isBusy: boolean;
 	commentByAuthor?: string | null;
-	commentByReviewer?: string | null;
-	onStartReviewAction: (actionType: "approve" | "reject") => Promise<void>;
+	onStartReviewAction: (actionType: ReviewAction) => Promise<void>;
 	onRequestDelete: () => void;
+	permissions: PendingSpecimenReviewPermissions;
 }
 
 function PendingCardActions({
-	status,
-	canReview,
-	canReject,
-	canDeletePending,
 	isBusy,
 	commentByAuthor,
-	commentByReviewer,
 	onStartReviewAction,
 	onRequestDelete,
+	permissions,
 }: PendingCardActionsProps) {
-	if (status !== "pending") {
-		if (commentByAuthor?.trim().length || commentByReviewer?.trim().length) {
-			return (
-				<>
-					{commentByAuthor?.trim().length ? (
-						<>
-							<span>Comment by Author</span>
-							<Textarea
-								value={commentByAuthor}
-								readOnly
-								disabled
-								rows={3}
-								className="w-full text-sm"
-							/>
-						</>
-					) : null}
-					{commentByReviewer?.trim().length ? (
-						<>
-							<span>Comment by Reviewer</span>
-							<Textarea
-								value={commentByReviewer}
-								readOnly
-								disabled
-								rows={2}
-								className="w-full text-sm"
-							/>
-						</>
-					) : null}
-				</>
-			);
-		}
-		return null;
-	}
+	const authorComment = commentByAuthor?.trim().length ? (
+		<>
+			<span>Comment by Author</span>
+			<Textarea
+				value={commentByAuthor}
+				readOnly
+				disabled
+				rows={3}
+				className="w-full text-sm"
+			/>
+		</>
+	) : null;
 
-	if (!canReview && canDeletePending) {
+	if (!permissions.canReview) {
 		return (
 			<>
-				{commentByAuthor?.trim().length ? (
-					<>
-						<span>Comment by Author</span>
-						<Textarea
-							value={commentByAuthor}
-							readOnly
-							disabled
-							rows={3}
-							className="w-full text-sm"
-						/>
-					</>
+				{authorComment}
+				{permissions.canDeletePending ? (
+					<Button
+						type="button"
+						variant="destructive"
+						className="w-full min-w-28"
+						disabled={isBusy}
+						onClick={onRequestDelete}
+					>
+						Delete
+					</Button>
 				) : null}
-				<Button
-					type="button"
-					variant="destructive"
-					className="w-full min-w-28"
-					disabled={isBusy}
-					onClick={onRequestDelete}
-				>
-					Delete
-				</Button>
 			</>
 		);
 	}
 
 	return (
 		<>
-			{commentByAuthor?.trim().length ? (
-				<>
-					<span>Comment by Author</span>
-					<Textarea
-						value={commentByAuthor}
-						readOnly
-						disabled
-						rows={3}
-						className="w-full text-sm"
-					/>
-				</>
-			) : null}
+			{authorComment}
 			<div className="flex w-full gap-2">
-				{canReject ? (
+				{permissions.canReject ? (
 					<Button
 						variant="secondary"
 						type="button"
@@ -125,7 +81,7 @@ function PendingCardActions({
 					>
 						Reject
 					</Button>
-				) : canDeletePending ? (
+				) : permissions.canDeletePending ? (
 					<Button
 						type="button"
 						variant="destructive"
@@ -150,58 +106,49 @@ function PendingCardActions({
 }
 
 interface PendingSpecimenReviewPanelProps {
-	canDeletePending: boolean;
-	canReject: boolean;
-	canReview: boolean;
 	commentByAuthor?: string | null;
-	commentByReviewer?: string | null;
 	createdAt: string;
 	detailsLinks: ReactNode;
 	isBusy: boolean;
 	isNew: boolean;
 	onRequestDelete: () => void;
-	onStartReviewAction: (actionType: "approve" | "reject") => Promise<void>;
-	requestedByContent: ReactNode;
+	onStartReviewAction: (actionType: ReviewAction) => Promise<void>;
+	permissions: PendingSpecimenReviewPermissions;
+	requester: PendingSpecimenRequester;
 	staleReviewWarning?: string | null;
 	status: SpecimenStatus;
-	submissionPanelDescription: string;
-	submissionPanelTitle: string;
 }
 
 export function PendingSpecimenReviewPanel({
-	canDeletePending,
-	canReject,
-	canReview,
 	commentByAuthor,
-	commentByReviewer,
 	createdAt,
 	detailsLinks,
 	isBusy,
 	isNew,
 	onRequestDelete,
 	onStartReviewAction,
-	requestedByContent,
+	permissions,
+	requester,
 	staleReviewWarning,
 	status,
-	submissionPanelDescription,
-	submissionPanelTitle,
 }: PendingSpecimenReviewPanelProps) {
+	const { submissionDescription, submissionTitle } =
+		getPendingSpecimenStatusCopy(status);
+
 	return (
 		<div className="grid gap-4 pr-4">
 			<Card>
 				<CardHeader>
 					<div className="flex items-start justify-between gap-3">
 						<div className="space-y-1">
-							<CardTitle className="text-base">
-								{submissionPanelTitle}
-							</CardTitle>
-							<CardDescription>{submissionPanelDescription}</CardDescription>
+							<CardTitle className="text-base">{submissionTitle}</CardTitle>
+							<CardDescription>{submissionDescription}</CardDescription>
 						</div>
 					</div>
 				</CardHeader>
 				<CardContent className="grid gap-3">
 					{staleReviewWarning ? (
-						<div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+						<div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900 text-sm dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
 							<TriangleAlert className="mt-0.5 size-4 shrink-0" />
 							<span>{staleReviewWarning}</span>
 						</div>
@@ -212,20 +159,16 @@ export function PendingSpecimenReviewPanel({
 						</Button>
 						<PendingSpecimenSubmissionBadge isNew={isNew} status={status} />
 					</div>
-					<div className="text-sm text-muted-foreground">
-						Requested by {requestedByContent}
+					<div className="text-muted-foreground text-sm">
+						Requested by <PendingSpecimenRequesterName requester={requester} />
 					</div>
 					{status === "pending" ? (
 						<PendingCardActions
-							status={status}
-							canReview={canReview}
-							canReject={canReject}
-							canDeletePending={canDeletePending}
 							isBusy={isBusy}
 							commentByAuthor={commentByAuthor}
-							commentByReviewer={commentByReviewer}
 							onStartReviewAction={onStartReviewAction}
 							onRequestDelete={onRequestDelete}
+							permissions={permissions}
 						/>
 					) : commentByAuthor?.trim().length ? (
 						<div className="grid gap-2">

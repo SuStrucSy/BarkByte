@@ -158,8 +158,10 @@ export function buildPendingSpecimenCards({
 				specimen: spec,
 				changedData: changed,
 				specimenId: pendingSpecimen.specimen_id ?? null,
-				requestedBy,
-				requestedByEmail,
+				requester: {
+					email: requestedByEmail,
+					name: requestedBy,
+				},
 				isBusy:
 					approvePendingId === pendingSpecimen.id ||
 					rejectPendingId === pendingSpecimen.id ||
@@ -174,9 +176,11 @@ export function buildPendingSpecimenCards({
 				onDelete: actions.onDelete,
 				isNew: pendingSpecimen.specimen_id === null,
 				status,
-				canReview,
-				canReject,
-				canDeletePending,
+				permissions: {
+					canDeletePending,
+					canReject,
+					canReview,
+				},
 			},
 		};
 	});
