@@ -12,7 +12,7 @@ import type {
 } from "./backboneChart.types";
 
 // Renders the specimen backbone chart from a ready chart model.
-type BackboneChartProps = {
+type ForceDisplacementBackboneChartProps = {
 	model: BackboneChartReadyModel | BackboneChartEmptyModel;
 	className?: string;
 };
@@ -183,7 +183,10 @@ function BackboneTooltipContent({
 	);
 }
 
-export function BackboneChart({ model, className }: BackboneChartProps) {
+export function ForceDisplacementBackboneChart({
+	model,
+	className,
+}: ForceDisplacementBackboneChartProps) {
 	if (model.status === "empty") {
 		return (
 			<div

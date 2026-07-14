@@ -3,7 +3,7 @@ import { LabelValue } from "@/components/Common/LabelValue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getSpecimenDisplayLabel } from "@/lib/utils";
-import { BackboneChart } from "./BackboneChart";
+import { ForceDisplacementBackboneChart } from "./ForceDisplacementBackboneChart";
 import { buildSpecimenBackboneModel } from "./buildSpecimenBackboneModel";
 import { SpecimenFailureModeLinks } from "./SpecimenFailureModeLinks";
 import { SpecimenHeader } from "./SpecimenHeader";
@@ -76,7 +76,7 @@ export function Specimen({
 										<h3 className="text-xl font-semibold tracking-tight text-foreground">
 											Quantitative Mechanical Measures
 										</h3>
-										<BackboneChart model={backboneModel} />
+										<ForceDisplacementBackboneChart model={backboneModel} />
 									</div>
 								</div>
 							</CardContent>
