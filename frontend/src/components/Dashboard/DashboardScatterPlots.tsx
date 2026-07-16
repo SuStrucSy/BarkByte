@@ -49,7 +49,13 @@ export function DashboardScatterPlots({
 				pointCount={stiffnessDuctilityData.length}
 				isLoading={isLoading}
 			>
-				<ScatterPlotD3 {...stiffnessDuctilityProps} height={height} />
+				{({ isExpanded }) => (
+					<ScatterPlotD3
+						{...stiffnessDuctilityProps}
+						height={height}
+						isExpanded={isExpanded}
+					/>
+				)}
 			</ScatterPlotCard>
 
 			<ScatterPlotCard
@@ -58,7 +64,13 @@ export function DashboardScatterPlots({
 				pointCount={stiffnessYieldData.length}
 				isLoading={isLoading}
 			>
-				<ScatterPlotD3 {...stiffnessYieldProps} height={height} />
+				{({ isExpanded }) => (
+					<ScatterPlotD3
+						{...stiffnessYieldProps}
+						height={height}
+						isExpanded={isExpanded}
+					/>
+				)}
 			</ScatterPlotCard>
 		</>
 	);

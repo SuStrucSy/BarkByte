@@ -16,7 +16,7 @@ type ScatterPlotCardProps = {
 	description: string;
 	pointCount: number;
 	isLoading?: boolean;
-	children: ReactNode;
+	children: ({ isExpanded }: { isExpanded: boolean }) => ReactNode;
 };
 
 export function ScatterPlotCard({
@@ -41,7 +41,9 @@ export function ScatterPlotCard({
 		<Skeleton className="hidden h-9 w-9 rounded-full lg:block" />
 	) : (
 		<div className="hidden lg:block">
-			<ExpandableChart title={title}>{() => children}</ExpandableChart>
+			<ExpandableChart title={title}>
+				{() => children({ isExpanded: true })}
+			</ExpandableChart>
 		</div>
 	);
 
@@ -68,7 +70,9 @@ export function ScatterPlotCard({
 						</div>
 					</div>
 				) : (
-					<ChartErrorBoundary chartName={title}>{children}</ChartErrorBoundary>
+					<ChartErrorBoundary chartName={title}>
+						{children({ isExpanded: false })}
+					</ChartErrorBoundary>
 				)}
 			</CardContent>
 		</Card>
