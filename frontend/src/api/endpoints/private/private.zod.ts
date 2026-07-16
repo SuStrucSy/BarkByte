@@ -10,8 +10,19 @@ import * as zod from "zod";
  * Get all users.
  * @summary Get All Users
  */
+export const privateGetAllUsersResponsePendingEmailOneMax = 255;
+
 export const PrivateGetAllUsersResponseItem = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(privateGetAllUsersResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -34,8 +45,19 @@ export const PrivateCreateUserBody = zod.object({
 	is_verified: zod.boolean().default(privateCreateUserBodyIsVerifiedDefault),
 });
 
+export const privateCreateUserResponsePendingEmailOneMax = 255;
+
 export const PrivateCreateUserResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(privateCreateUserResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),

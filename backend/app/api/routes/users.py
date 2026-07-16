@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +12,8 @@ from app.core.security import get_password_hash, verify_password
 from app.crud import user as user_crud
 from app.models.user import User
 from app.schemas.user import (
+    EmailChangeRequest,
+    EmailChangeVerify,
     Message,
     NewAccount,
     UpdatePassword,
@@ -22,15 +25,113 @@ from app.schemas.user import (
     UserUpdateMe,
 )
 from app.utils import (
+    generate_email_change_email,
+    generate_email_change_token,
     generate_email_verification_token,
     generate_new_account_email,
     generate_password_reset_token,
     generate_signup_email,
     send_email,
+    verify_email_change_token,
     verify_token,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+def _ensure_email_available(
+    *, session: SessionDep, email: str, exclude_user_id: uuid.UUID
+) -> None:
+    if user_crud.is_email_taken(
+        session=session, email=email, exclude_user_id=exclude_user_id
+    ) or user_crud.is_pending_email_taken(
+        session=session, email=email, exclude_user_id=exclude_user_id
+    ):
+        raise HTTPException(status_code=409, detail="User with this email already exists")
+
+
+def _request_email_change(
+    *,
+    session: SessionDep,
+    user: User,
+    new_email: str,
+    requested_by_admin: bool,
+) -> Message:
+    if new_email == user.email:
+        raise HTTPException(
+            status_code=400, detail="New email cannot match the current email"
+        )
+
+    _ensure_email_available(session=session, email=new_email, exclude_user_id=user.id)
+
+    user.pending_email = new_email
+    user.pending_email_requested_at = datetime.now(timezone.utc)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    if settings.emails_enabled:
+        token = generate_email_change_token(
+            user_id=user.id, old_email=user.email, new_email=new_email
+        )
+        email_data = generate_email_change_email(
+            email_to=new_email,
+            current_email=user.email,
+            token=token,
+            requested_by_admin=requested_by_admin,
+        )
+        send_email(
+            email_to=new_email,
+            subject=email_data.subject,
+            html_content=email_data.html_content,
+        )
+
+    return Message(message="Please check the new email address to confirm this change.")
+
+
+def _verify_email_change(
+    *, session: SessionDep, body: EmailChangeVerify, current_user: CurrentUser
+) -> Message:
+    try:
+        token_data = verify_email_change_token(body.token)
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=410,
+            detail="Email change link has expired. Please request a new one.",
+        )
+
+    if not token_data:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    if token_data["user_id"] != str(current_user.id):
+        raise HTTPException(status_code=403, detail="This token is not for this account")
+
+    if current_user.email != token_data["old_email"]:
+        raise HTTPException(status_code=400, detail="This email change is no longer valid")
+
+    new_email = token_data["new_email"]
+    if current_user.pending_email != new_email:
+        raise HTTPException(status_code=400, detail="This email change is no longer valid")
+
+    _ensure_email_available(
+        session=session, email=new_email, exclude_user_id=current_user.id
+    )
+
+    current_user.email = new_email
+    current_user.pending_email = None
+    current_user.pending_email_requested_at = None
+    session.add(current_user)
+    session.commit()
+
+    return Message(message="Email address updated successfully.")
+
+
+def _cancel_email_change(*, session: SessionDep, user: User) -> Message:
+    user.pending_email = None
+    user.pending_email_requested_at = None
+    session.add(user)
+    session.commit()
+    return Message(message="Pending email change cancelled.")
 
 # ------------ Current user endpoints ------------
 
@@ -50,15 +151,44 @@ def update_user_me(
     """
     Update own user.
     """
-    if user_in.email:
-        if user_crud.is_email_taken(
-            session=session, email=user_in.email, exclude_user_id=current_user.id
-        ):
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
-            )
-
     return user_crud.update_user(session=session, db_user=current_user, user_in=user_in)
+
+
+@router.post("/me/email-change", response_model=Message)
+def request_email_change_me(
+    *, session: SessionDep, body: EmailChangeRequest, current_user: CurrentUser
+) -> Message:
+    """
+    Request an email change for the current user.
+    """
+    return _request_email_change(
+        session=session,
+        user=current_user,
+        new_email=str(body.new_email),
+        requested_by_admin=False,
+    )
+
+
+@router.post("/me/email-change/verify", response_model=Message)
+def verify_email_change_me(
+    *, session: SessionDep, body: EmailChangeVerify, current_user: CurrentUser
+) -> Message:
+    """
+    Verify the pending email change for the current user.
+    """
+    return _verify_email_change(
+        session=session, body=body, current_user=current_user
+    )
+
+
+@router.delete("/me/email-change", response_model=Message)
+def cancel_email_change_me(
+    *, session: SessionDep, current_user: CurrentUser
+) -> Message:
+    """
+    Cancel the current user's pending email change.
+    """
+    return _cancel_email_change(session=session, user=current_user)
 
 
 @router.patch("/me/password", response_model=Message)
@@ -181,17 +311,79 @@ def update_user(
         )
 
     if user_in.email:
-        if user_crud.is_email_taken(
-            session=session,
-            email=user_in.email,
-            exclude_user_id=db_user.id,
-        ):
+        if user_in.email != db_user.email:
             raise HTTPException(
-                status_code=409,
-                detail="User with this email already exists",
+                status_code=400,
+                detail="Use the email-change endpoint to update a user's email.",
             )
 
     return user_crud.update_user(session=session, db_user=db_user, user_in=user_in)
+
+
+@router.post(
+    "/{user_id}/email-change",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=Message,
+)
+def request_email_change_for_user(
+    *, session: SessionDep, user_id: uuid.UUID, body: EmailChangeRequest
+) -> Message:
+    """
+    Request an email change for a user as an admin.
+    """
+    db_user = user_crud.get_user(session=session, user_id=user_id)
+    if not db_user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this id does not exist in the system",
+        )
+
+    return _request_email_change(
+        session=session,
+        user=db_user,
+        new_email=str(body.new_email),
+        requested_by_admin=True,
+    )
+
+
+@router.post("/{user_id}/email-change/verify", response_model=Message)
+def verify_email_change_for_user(
+    *,
+    session: SessionDep,
+    user_id: uuid.UUID,
+    body: EmailChangeVerify,
+    current_user: CurrentUser,
+) -> Message:
+    """
+    Verify a user's pending email change.
+    """
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="This token is not for this account")
+
+    return _verify_email_change(
+        session=session, body=body, current_user=current_user
+    )
+
+
+@router.delete(
+    "/{user_id}/email-change",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=Message,
+)
+def cancel_email_change_for_user(
+    *, session: SessionDep, user_id: uuid.UUID
+) -> Message:
+    """
+    Cancel a user's pending email change as an admin.
+    """
+    db_user = user_crud.get_user(session=session, user_id=user_id)
+    if not db_user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this id does not exist in the system",
+        )
+
+    return _cancel_email_change(session=session, user=db_user)
 
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])

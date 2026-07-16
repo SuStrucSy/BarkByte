@@ -4,7 +4,7 @@ import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useUsersUpdateUserMe } from "@/api/endpoints/users/users";
-import type { UserPublic, UserUpdateMe } from "@/api/model";
+import type { UserUpdateMe } from "@/api/model";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { handleError } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -22,12 +22,11 @@ const UserInformation = () => {
 	const queryClient = useQueryClient();
 	const [editMode, setEditMode] = useState(false);
 	const { data: currentUser } = useCurrentUser();
-	const form = useForm<UserPublic>({
+	const form = useForm<UserUpdateMe>({
 		mode: "onBlur",
 		criteriaMode: "all",
 		defaultValues: {
 			full_name: currentUser?.full_name,
-			email: currentUser?.email,
 		},
 	});
 
@@ -39,6 +38,7 @@ const UserInformation = () => {
 		mutation: {
 			onSuccess: () => {
 				toast.success("User updated successfully.");
+				setEditMode(false);
 			},
 			onError: (err) => {
 				handleError(err);
@@ -86,38 +86,12 @@ const UserInformation = () => {
 								);
 							}}
 						/>
-						<FormField
-							control={form.control}
-							name="email"
-							render={({ field }) => {
-								if (editMode) {
-									return (
-										<FormItem>
-											<FormLabel>Email</FormLabel>
-											<FormControl>
-												<Input type="email" placeholder="shadcn" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									);
-								}
-								return (
-									<span className="max-w-sm truncate py-2 font-size-md">
-										{currentUser?.email}
-									</span>
-								);
-							}}
-						/>
 					</div>
 					<div className="flex mt-4 gap-3">
 						<Button
-							onClick={toggleEditMode}
-							type={editMode ? "button" : "submit"}
-							disabled={
-								editMode
-									? !form.formState.isDirty || !form.getValues("email")
-									: false
-							}
+							onClick={editMode ? undefined : toggleEditMode}
+							type={editMode ? "submit" : "button"}
+							disabled={editMode ? !form.formState.isDirty : false}
 						>
 							{editMode && form.formState.isSubmitting && (
 								<Loader2 className="animate-spin" />

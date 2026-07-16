@@ -5,7 +5,6 @@
  * OpenAPI spec version: 1.2.0
  */
 
-export interface UserUpdateMe {
-	is_active?: boolean | null;
-	full_name?: string | null;
+export interface EmailChangeVerify {
+	token: string;
 }

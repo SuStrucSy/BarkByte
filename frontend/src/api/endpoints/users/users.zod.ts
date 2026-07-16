@@ -10,8 +10,19 @@ import * as zod from "zod";
  * Get current user.
  * @summary Read User Me
  */
+export const usersReadUserMeResponsePendingEmailOneMax = 255;
+
 export const UsersReadUserMeResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(usersReadUserMeResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -32,24 +43,64 @@ export const UsersDeleteUserMeResponse = zod.object({
  */
 export const usersUpdateUserMeBodyFullNameOneMax = 255;
 
-export const usersUpdateUserMeBodyEmailOneMax = 255;
-
 export const UsersUpdateUserMeBody = zod.object({
 	is_active: zod.union([zod.boolean(), zod.null()]).optional(),
 	full_name: zod
 		.union([zod.string().max(usersUpdateUserMeBodyFullNameOneMax), zod.null()])
 		.optional(),
-	email: zod
-		.union([zod.email().max(usersUpdateUserMeBodyEmailOneMax), zod.null()])
-		.optional(),
 });
+
+export const usersUpdateUserMeResponsePendingEmailOneMax = 255;
 
 export const UsersUpdateUserMeResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(usersUpdateUserMeResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
 	id: zod.uuid(),
+});
+
+/**
+ * Request an email change for the current user.
+ * @summary Request Email Change Me
+ */
+export const usersRequestEmailChangeMeBodyNewEmailMax = 255;
+
+export const UsersRequestEmailChangeMeBody = zod.object({
+	new_email: zod.email().max(usersRequestEmailChangeMeBodyNewEmailMax),
+});
+
+export const UsersRequestEmailChangeMeResponse = zod.object({
+	message: zod.string(),
+});
+
+/**
+ * Cancel the current user's pending email change.
+ * @summary Cancel Email Change Me
+ */
+export const UsersCancelEmailChangeMeResponse = zod.object({
+	message: zod.string(),
+});
+
+/**
+ * Verify the pending email change for the current user.
+ * @summary Verify Email Change Me
+ */
+export const UsersVerifyEmailChangeMeBody = zod.object({
+	token: zod.string(),
+});
+
+export const UsersVerifyEmailChangeMeResponse = zod.object({
+	message: zod.string(),
 });
 
 /**
@@ -89,10 +140,21 @@ export const UsersReadUsersQueryParams = zod.object({
 	limit: zod.number().default(usersReadUsersQueryLimitDefault),
 });
 
+export const usersReadUsersResponseDataItemPendingEmailOneMax = 255;
+
 export const UsersReadUsersResponse = zod.object({
 	data: zod.array(
 		zod.object({
 			email: zod.email(),
+			pending_email: zod
+				.union([
+					zod.email().max(usersReadUsersResponseDataItemPendingEmailOneMax),
+					zod.null(),
+				])
+				.optional(),
+			pending_email_requested_at: zod
+				.union([zod.iso.datetime({}), zod.null()])
+				.optional(),
 			is_active: zod.boolean(),
 			is_superuser: zod.boolean(),
 			full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -106,11 +168,19 @@ export const UsersReadUsersResponse = zod.object({
  * Create new user.
  * @summary Create User
  */
+export const usersCreateUserBodyPendingEmailOneMax = 255;
+
 export const usersCreateUserBodyPasswordMin = 8;
 export const usersCreateUserBodyPasswordMax = 64;
 
 export const UsersCreateUserBody = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([zod.email().max(usersCreateUserBodyPendingEmailOneMax), zod.null()])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -120,8 +190,19 @@ export const UsersCreateUserBody = zod.object({
 		.max(usersCreateUserBodyPasswordMax),
 });
 
+export const usersCreateUserResponsePendingEmailOneMax = 255;
+
 export const UsersCreateUserResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(usersCreateUserResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -136,8 +217,19 @@ export const UsersReadUserByIdParams = zod.object({
 	user_id: zod.uuid(),
 });
 
+export const usersReadUserByIdResponsePendingEmailOneMax = 255;
+
 export const UsersReadUserByIdResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(usersReadUserByIdResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -163,8 +255,19 @@ export const UsersUpdateUserBody = zod.object({
 		.optional(),
 });
 
+export const usersUpdateUserResponsePendingEmailOneMax = 255;
+
 export const UsersUpdateUserResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(usersUpdateUserResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),
@@ -180,6 +283,52 @@ export const UsersDeleteUserParams = zod.object({
 });
 
 export const UsersDeleteUserResponse = zod.object({
+	message: zod.string(),
+});
+
+/**
+ * Request an email change for a user as an admin.
+ * @summary Request Email Change For User
+ */
+export const UsersRequestEmailChangeForUserParams = zod.object({
+	user_id: zod.uuid(),
+});
+
+export const usersRequestEmailChangeForUserBodyNewEmailMax = 255;
+
+export const UsersRequestEmailChangeForUserBody = zod.object({
+	new_email: zod.email().max(usersRequestEmailChangeForUserBodyNewEmailMax),
+});
+
+export const UsersRequestEmailChangeForUserResponse = zod.object({
+	message: zod.string(),
+});
+
+/**
+ * Cancel a user's pending email change as an admin.
+ * @summary Cancel Email Change For User
+ */
+export const UsersCancelEmailChangeForUserParams = zod.object({
+	user_id: zod.uuid(),
+});
+
+export const UsersCancelEmailChangeForUserResponse = zod.object({
+	message: zod.string(),
+});
+
+/**
+ * Verify a user's pending email change.
+ * @summary Verify Email Change For User
+ */
+export const UsersVerifyEmailChangeForUserParams = zod.object({
+	user_id: zod.uuid(),
+});
+
+export const UsersVerifyEmailChangeForUserBody = zod.object({
+	token: zod.string(),
+});
+
+export const UsersVerifyEmailChangeForUserResponse = zod.object({
 	message: zod.string(),
 });
 

@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import NotLoggedIn from "@/components/Common/NotLoggedIn";
 import ChangePassword from "@/components/UserSettings/ChangePassword";
 import DeleteAccount from "@/components/UserSettings/DeleteAccount";
+import EmailSettings from "@/components/UserSettings/EmailSettings";
 import UserInformation from "@/components/UserSettings/UserInformation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const tabsConfig = [
 	{ value: "my-profile", title: "My profile", component: UserInformation },
+	{ value: "email", title: "Email", component: EmailSettings },
 	{ value: "password", title: "Password", component: ChangePassword },
 	{ value: "danger-zone", title: "Danger zone", component: DeleteAccount },
 ];
@@ -21,8 +23,13 @@ export const Route = createFileRoute("/_layout/settings")({
 
 function UserSettings() {
 	const { data: currentUser } = useCurrentUser();
+	const defaultTab =
+		typeof window !== "undefined" &&
+		new URLSearchParams(window.location.search).has("emailChangeToken")
+			? "email"
+			: "my-profile";
 	const finalTabs = currentUser?.is_superuser
-		? tabsConfig.slice(0, 2)
+		? tabsConfig.slice(0, 3)
 		: tabsConfig;
 
 	if (!currentUser) {
@@ -33,7 +40,7 @@ function UserSettings() {
 		<div className="flex max-w-full flex-col gap-6 px-2 sm:px-2 md:px-4">
 			<h1 className="text-3xl ">User Settings</h1>
 
-			<Tabs defaultValue="my-profile">
+			<Tabs defaultValue={defaultTab}>
 				<TabsList>
 					{finalTabs.map((tab) => (
 						<TabsTrigger key={tab.value} value={tab.value}>

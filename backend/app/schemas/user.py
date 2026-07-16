@@ -25,7 +25,14 @@ class UserUpdate(SQLModel):
 class UserUpdateMe(SQLModel):
     is_active: bool | None = None
     full_name: str | None = Field(default=None, max_length=255)
-    email: EmailStr | None = Field(default=None, max_length=255)
+
+
+class EmailChangeRequest(SQLModel):
+    new_email: EmailStr = Field(max_length=255)
+
+
+class EmailChangeVerify(SQLModel):
+    token: str
 
 class UpdatePassword(SQLModel):
     current_password: str = Field(min_length=8, max_length=64)

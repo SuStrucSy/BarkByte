@@ -22,6 +22,8 @@ import type {
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import type {
+	EmailChangeRequest,
+	EmailChangeVerify,
 	HTTPValidationError,
 	Message,
 	NewAccount,
@@ -340,6 +342,262 @@ export const useUsersUpdateUserMe = <
 	TContext
 > => {
 	return useMutation(getUsersUpdateUserMeMutationOptions(options), queryClient);
+};
+/**
+ * Request an email change for the current user.
+ * @summary Request Email Change Me
+ */
+export const usersRequestEmailChangeMe = (
+	emailChangeRequest: EmailChangeRequest,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/me/email-change`,
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		data: emailChangeRequest,
+		signal,
+	});
+};
+
+export const getUsersRequestEmailChangeMeMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersRequestEmailChangeMe>>,
+		TError,
+		{ data: EmailChangeRequest },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersRequestEmailChangeMe>>,
+	TError,
+	{ data: EmailChangeRequest },
+	TContext
+> => {
+	const mutationKey = ["usersRequestEmailChangeMe"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersRequestEmailChangeMe>>,
+		{ data: EmailChangeRequest }
+	> = (props) => {
+		const { data } = props ?? {};
+
+		return usersRequestEmailChangeMe(data);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersRequestEmailChangeMeMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersRequestEmailChangeMe>>
+>;
+export type UsersRequestEmailChangeMeMutationBody = EmailChangeRequest;
+export type UsersRequestEmailChangeMeMutationError =
+	ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Request Email Change Me
+ */
+export const useUsersRequestEmailChangeMe = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersRequestEmailChangeMe>>,
+			TError,
+			{ data: EmailChangeRequest },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersRequestEmailChangeMe>>,
+	TError,
+	{ data: EmailChangeRequest },
+	TContext
+> => {
+	return useMutation(
+		getUsersRequestEmailChangeMeMutationOptions(options),
+		queryClient,
+	);
+};
+/**
+ * Cancel the current user's pending email change.
+ * @summary Cancel Email Change Me
+ */
+export const usersCancelEmailChangeMe = (signal?: AbortSignal) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/me/email-change`,
+		method: "DELETE",
+		signal,
+	});
+};
+
+export const getUsersCancelEmailChangeMeMutationOptions = <
+	TError = ErrorType<unknown>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersCancelEmailChangeMe>>,
+		TError,
+		void,
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersCancelEmailChangeMe>>,
+	TError,
+	void,
+	TContext
+> => {
+	const mutationKey = ["usersCancelEmailChangeMe"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersCancelEmailChangeMe>>,
+		void
+	> = () => {
+		return usersCancelEmailChangeMe();
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersCancelEmailChangeMeMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersCancelEmailChangeMe>>
+>;
+
+export type UsersCancelEmailChangeMeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Cancel Email Change Me
+ */
+export const useUsersCancelEmailChangeMe = <
+	TError = ErrorType<unknown>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersCancelEmailChangeMe>>,
+			TError,
+			void,
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersCancelEmailChangeMe>>,
+	TError,
+	void,
+	TContext
+> => {
+	return useMutation(
+		getUsersCancelEmailChangeMeMutationOptions(options),
+		queryClient,
+	);
+};
+/**
+ * Verify the pending email change for the current user.
+ * @summary Verify Email Change Me
+ */
+export const usersVerifyEmailChangeMe = (
+	emailChangeVerify: EmailChangeVerify,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/me/email-change/verify`,
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		data: emailChangeVerify,
+		signal,
+	});
+};
+
+export const getUsersVerifyEmailChangeMeMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersVerifyEmailChangeMe>>,
+		TError,
+		{ data: EmailChangeVerify },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersVerifyEmailChangeMe>>,
+	TError,
+	{ data: EmailChangeVerify },
+	TContext
+> => {
+	const mutationKey = ["usersVerifyEmailChangeMe"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersVerifyEmailChangeMe>>,
+		{ data: EmailChangeVerify }
+	> = (props) => {
+		const { data } = props ?? {};
+
+		return usersVerifyEmailChangeMe(data);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersVerifyEmailChangeMeMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersVerifyEmailChangeMe>>
+>;
+export type UsersVerifyEmailChangeMeMutationBody = EmailChangeVerify;
+export type UsersVerifyEmailChangeMeMutationError =
+	ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Verify Email Change Me
+ */
+export const useUsersVerifyEmailChangeMe = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersVerifyEmailChangeMe>>,
+			TError,
+			{ data: EmailChangeVerify },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersVerifyEmailChangeMe>>,
+	TError,
+	{ data: EmailChangeVerify },
+	TContext
+> => {
+	return useMutation(
+		getUsersVerifyEmailChangeMeMutationOptions(options),
+		queryClient,
+	);
 };
 /**
  * Update own password.
@@ -971,6 +1229,270 @@ export const useUsersDeleteUser = <
 	TContext
 > => {
 	return useMutation(getUsersDeleteUserMutationOptions(options), queryClient);
+};
+/**
+ * Request an email change for a user as an admin.
+ * @summary Request Email Change For User
+ */
+export const usersRequestEmailChangeForUser = (
+	userId: string,
+	emailChangeRequest: EmailChangeRequest,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/${userId}/email-change`,
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		data: emailChangeRequest,
+		signal,
+	});
+};
+
+export const getUsersRequestEmailChangeForUserMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersRequestEmailChangeForUser>>,
+		TError,
+		{ userId: string; data: EmailChangeRequest },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersRequestEmailChangeForUser>>,
+	TError,
+	{ userId: string; data: EmailChangeRequest },
+	TContext
+> => {
+	const mutationKey = ["usersRequestEmailChangeForUser"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersRequestEmailChangeForUser>>,
+		{ userId: string; data: EmailChangeRequest }
+	> = (props) => {
+		const { userId, data } = props ?? {};
+
+		return usersRequestEmailChangeForUser(userId, data);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersRequestEmailChangeForUserMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersRequestEmailChangeForUser>>
+>;
+export type UsersRequestEmailChangeForUserMutationBody = EmailChangeRequest;
+export type UsersRequestEmailChangeForUserMutationError =
+	ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Request Email Change For User
+ */
+export const useUsersRequestEmailChangeForUser = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersRequestEmailChangeForUser>>,
+			TError,
+			{ userId: string; data: EmailChangeRequest },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersRequestEmailChangeForUser>>,
+	TError,
+	{ userId: string; data: EmailChangeRequest },
+	TContext
+> => {
+	return useMutation(
+		getUsersRequestEmailChangeForUserMutationOptions(options),
+		queryClient,
+	);
+};
+/**
+ * Cancel a user's pending email change as an admin.
+ * @summary Cancel Email Change For User
+ */
+export const usersCancelEmailChangeForUser = (
+	userId: string,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/${userId}/email-change`,
+		method: "DELETE",
+		signal,
+	});
+};
+
+export const getUsersCancelEmailChangeForUserMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersCancelEmailChangeForUser>>,
+		TError,
+		{ userId: string },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersCancelEmailChangeForUser>>,
+	TError,
+	{ userId: string },
+	TContext
+> => {
+	const mutationKey = ["usersCancelEmailChangeForUser"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersCancelEmailChangeForUser>>,
+		{ userId: string }
+	> = (props) => {
+		const { userId } = props ?? {};
+
+		return usersCancelEmailChangeForUser(userId);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersCancelEmailChangeForUserMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersCancelEmailChangeForUser>>
+>;
+
+export type UsersCancelEmailChangeForUserMutationError =
+	ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Cancel Email Change For User
+ */
+export const useUsersCancelEmailChangeForUser = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersCancelEmailChangeForUser>>,
+			TError,
+			{ userId: string },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersCancelEmailChangeForUser>>,
+	TError,
+	{ userId: string },
+	TContext
+> => {
+	return useMutation(
+		getUsersCancelEmailChangeForUserMutationOptions(options),
+		queryClient,
+	);
+};
+/**
+ * Verify a user's pending email change.
+ * @summary Verify Email Change For User
+ */
+export const usersVerifyEmailChangeForUser = (
+	userId: string,
+	emailChangeVerify: EmailChangeVerify,
+	signal?: AbortSignal,
+) => {
+	return customInstance<Message>({
+		url: `/api/v1/users/${userId}/email-change/verify`,
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		data: emailChangeVerify,
+		signal,
+	});
+};
+
+export const getUsersVerifyEmailChangeForUserMutationOptions = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(options?: {
+	mutation?: UseMutationOptions<
+		Awaited<ReturnType<typeof usersVerifyEmailChangeForUser>>,
+		TError,
+		{ userId: string; data: EmailChangeVerify },
+		TContext
+	>;
+}): UseMutationOptions<
+	Awaited<ReturnType<typeof usersVerifyEmailChangeForUser>>,
+	TError,
+	{ userId: string; data: EmailChangeVerify },
+	TContext
+> => {
+	const mutationKey = ["usersVerifyEmailChangeForUser"];
+	const { mutation: mutationOptions } = options
+		? options.mutation &&
+			"mutationKey" in options.mutation &&
+			options.mutation.mutationKey
+			? options
+			: { ...options, mutation: { ...options.mutation, mutationKey } }
+		: { mutation: { mutationKey } };
+
+	const mutationFn: MutationFunction<
+		Awaited<ReturnType<typeof usersVerifyEmailChangeForUser>>,
+		{ userId: string; data: EmailChangeVerify }
+	> = (props) => {
+		const { userId, data } = props ?? {};
+
+		return usersVerifyEmailChangeForUser(userId, data);
+	};
+
+	return { mutationFn, ...mutationOptions };
+};
+
+export type UsersVerifyEmailChangeForUserMutationResult = NonNullable<
+	Awaited<ReturnType<typeof usersVerifyEmailChangeForUser>>
+>;
+export type UsersVerifyEmailChangeForUserMutationBody = EmailChangeVerify;
+export type UsersVerifyEmailChangeForUserMutationError =
+	ErrorType<HTTPValidationError>;
+
+/**
+ * @summary Verify Email Change For User
+ */
+export const useUsersVerifyEmailChangeForUser = <
+	TError = ErrorType<HTTPValidationError>,
+	TContext = unknown,
+>(
+	options?: {
+		mutation?: UseMutationOptions<
+			Awaited<ReturnType<typeof usersVerifyEmailChangeForUser>>,
+			TError,
+			{ userId: string; data: EmailChangeVerify },
+			TContext
+		>;
+	},
+	queryClient?: QueryClient,
+): UseMutationResult<
+	Awaited<ReturnType<typeof usersVerifyEmailChangeForUser>>,
+	TError,
+	{ userId: string; data: EmailChangeVerify },
+	TContext
+> => {
+	return useMutation(
+		getUsersVerifyEmailChangeForUserMutationOptions(options),
+		queryClient,
+	);
 };
 /**
  * Create new user without the need to be logged in.

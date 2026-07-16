@@ -192,6 +192,77 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
       security:
         - OAuth2PasswordBearer: []
+  /api/v1/users/me/email-change:
+    post:
+      tags:
+        - users
+      summary: Request Email Change Me
+      description: Request an email change for the current user.
+      operationId: users-request_email_change_me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChangeRequest"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+      security:
+        - OAuth2PasswordBearer: []
+    delete:
+      tags:
+        - users
+      summary: Cancel Email Change Me
+      description: Cancel the current user's pending email change.
+      operationId: users-cancel_email_change_me
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+      security:
+        - OAuth2PasswordBearer: []
+  /api/v1/users/me/email-change/verify:
+    post:
+      tags:
+        - users
+      summary: Verify Email Change Me
+      description: Verify the pending email change for the current user.
+      operationId: users-verify_email_change_me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChangeVerify"
+        required: true
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+      security:
+        - OAuth2PasswordBearer: []
   /api/v1/users/me/password:
     patch:
       tags:
@@ -365,6 +436,107 @@ paths:
             type: string
             format: uuid
             title: User Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/{user_id}/email-change:
+    post:
+      tags:
+        - users
+      summary: Request Email Change For User
+      description: Request an email change for a user as an admin.
+      operationId: users-request_email_change_for_user
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChangeRequest"
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+        - users
+      summary: Cancel Email Change For User
+      description: Cancel a user's pending email change as an admin.
+      operationId: users-cancel_email_change_for_user
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: User Id
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+  /api/v1/users/{user_id}/email-change/verify:
+    post:
+      tags:
+        - users
+      summary: Verify Email Change For User
+      description: Verify a user's pending email change.
+      operationId: users-verify_email_change_for_user
+      security:
+        - OAuth2PasswordBearer: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailChangeVerify"
       responses:
         "200":
           description: Successful Response
@@ -1903,6 +2075,26 @@ components:
         - data
         - count
       title: DOIsPublic
+    EmailChangeRequest:
+      properties:
+        new_email:
+          type: string
+          maxLength: 255
+          format: email
+          title: New Email
+      type: object
+      required:
+        - new_email
+      title: EmailChangeRequest
+    EmailChangeVerify:
+      properties:
+        token:
+          type: string
+          title: Token
+      type: object
+      required:
+        - token
+      title: EmailChangeVerify
     FailureMode:
       properties:
         id:
@@ -2906,6 +3098,19 @@ components:
           type: string
           format: email
           title: Email
+        pending_email:
+          anyOf:
+            - type: string
+              maxLength: 255
+              format: email
+            - type: "null"
+          title: Pending Email
+        pending_email_requested_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          title: Pending Email Requested At
         is_active:
           type: boolean
           title: Is Active
@@ -2935,6 +3140,19 @@ components:
           type: string
           format: email
           title: Email
+        pending_email:
+          anyOf:
+            - type: string
+              maxLength: 255
+              format: email
+            - type: "null"
+          title: Pending Email
+        pending_email_requested_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          title: Pending Email Requested At
         is_active:
           type: boolean
           title: Is Active
@@ -3019,13 +3237,6 @@ components:
               maxLength: 255
             - type: "null"
           title: Full Name
-        email:
-          anyOf:
-            - type: string
-              maxLength: 255
-              format: email
-            - type: "null"
-          title: Email
       type: object
       title: UserUpdateMe
     UsersPublic:
