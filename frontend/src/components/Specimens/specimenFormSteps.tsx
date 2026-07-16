@@ -6,20 +6,20 @@ import { SpecimenExperimentalFields } from "@/components/Specimens/SpecimenExper
 import { SpecimenStructuralFields } from "@/components/Specimens/SpecimenStructuralFields";
 import type { AddNewSpecimenFormValues } from "@/lib/schemas";
 
-type SpecimenCreateStepRenderParams = {
+type SpecimenFormStepRenderParams = {
 	control: Control<AddNewSpecimenFormValues>;
 	hasExistingDoi: boolean;
 };
 
-type SpecimenCreateStep = {
+export type SpecimenFormStep = {
 	id: string;
 	title: string;
 	description: string;
 	fields: readonly FieldPath<AddNewSpecimenFormValues>[];
-	render: (params: SpecimenCreateStepRenderParams) => ReactNode;
+	render: (params: SpecimenFormStepRenderParams) => ReactNode;
 };
 
-export const specimenCreateSteps = [
+export const specimenFormSteps = [
 	{
 		id: "doi",
 		title: "DOI Details",
@@ -87,4 +87,16 @@ export const specimenCreateSteps = [
 		],
 		render: ({ control }) => <SpecimenExperimentalFields control={control} />,
 	},
-] as const satisfies readonly SpecimenCreateStep[];
+] as const satisfies readonly SpecimenFormStep[];
+
+export const createSpecimenSteps = specimenFormSteps;
+
+export const editSpecimenSteps = specimenFormSteps.filter(
+	(step) => step.id !== "doi",
+);
+
+export type SpecimenFormStepMode = "create" | "edit";
+
+export function getSpecimenFormSteps(mode: SpecimenFormStepMode) {
+	return mode === "create" ? createSpecimenSteps : editSpecimenSteps;
+}

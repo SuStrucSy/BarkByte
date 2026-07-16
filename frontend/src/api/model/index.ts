@@ -13,6 +13,8 @@ export * from "./dOIPublic";
 export * from "./dOIsPublic";
 export * from "./doi";
 export * from "./doiGetDoisParams";
+export * from "./emailChangeRequest";
+export * from "./emailChangeVerify";
 export * from "./failureMode";
 export * from "./failureModeCreate";
 export * from "./failureModes";

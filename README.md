@@ -11,6 +11,11 @@ This work is licensed under a
 [cc-by-nc-image]: https://licensebuttons.net/l/by-nc/4.0/88x31.png
 [cc-by-nc-shield]: https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg
 
+## Overview
+
+Timverse is a web application for collecting, reviewing, searching, comparing, and visualizing experimental timber connection specimen data. It gives researchers and engineering groups a shared place to manage curated test records instead of spreading them across spreadsheets, CSV files, and local databases.
+
+The application has three main parts: a React frontend for users, a FastAPI backend for the API and review workflow, and a PostgreSQL database for durable structured storage.
 
 ## Technology Stack and Features
 
@@ -21,7 +26,7 @@ This work is licensed under a
 - 🚀 [React](https://react.dev) for the frontend.
   - 💃 Using TypeScript, hooks, [Vite](https://vitejs.dev), and other parts of a modern frontend stack.
   - 🎨 [Tailwind CSS](https://tailwindcss.com) and [shadcn/ui](https://ui.shadcn.com) for the frontend components.
-  - 🤖 An automatically generated frontend client.
+  - 🤖 Auto-generated TypeScript API client for calling the FastAPI backend from its OpenAPI schema.
   - 🦇 Dark mode support.
 - 🐋 [Docker Compose](https://www.docker.com) for development and production.
 - 🔒 Secure password hashing by default.
@@ -32,9 +37,34 @@ This work is licensed under a
 - 🚢 Deployment instructions using Docker Compose, including how to set up a frontend Traefik proxy to handle automatic HTTPS certificates.
 - 🏭 CI (continuous integration) and CD (continuous deployment) based on GitHub Actions.
 
+## Run Locally
+
+The quickest way to start the full local stack is:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml up --build --watch
+```
+
+This starts the frontend, backend, PostgreSQL database, Traefik, Adminer, and Mailcatcher with Docker Compose. When the stack is ready, open:
+
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API docs: http://localhost:8000/docs
+- Adminer: http://localhost:8080
+- Traefik dashboard: http://localhost:8090
+- Mailcatcher: http://localhost:1080
+
+To stop the local stack, run:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml down --remove-orphans
+```
+
+More detailed local development notes are in [development.md](./development.md).
+
 ### Configure
 
-You can then update configs in the `.env` files to customize your configurations.
+Update the `.env` files to customize local or production configuration.
 
 Before deploying it, make sure you change at least the values for:
 
@@ -84,4 +114,4 @@ Check the file [CHANGELOG.md](./CHANGELOG.md).
 
 ## License
 
-The Full Stack Timverse portal is licensed under the terms of the Creative Commons Attribution-NonCommercial 4.0 International [License](./LICENESE)
+The Full Stack Timverse portal is licensed under the terms of the Creative Commons Attribution-NonCommercial 4.0 International [License](./LICENSE)

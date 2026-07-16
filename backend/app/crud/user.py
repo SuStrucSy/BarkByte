@@ -46,6 +46,17 @@ def is_email_taken(
     existing = get_user_by_email(session=session, email=email)
     return bool(existing and existing.id != exclude_user_id)
 
+
+def is_pending_email_taken(
+    *,
+    session: Session,
+    email: str,
+    exclude_user_id: Optional[uuid.UUID] = None,
+) -> bool:
+    statement = select(User).where(User.pending_email == email)
+    existing = session.exec(statement).first()
+    return bool(existing and existing.id != exclude_user_id)
+
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     user = User.model_validate(
         user_create,

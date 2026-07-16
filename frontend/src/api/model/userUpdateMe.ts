@@ -8,5 +8,4 @@
 export interface UserUpdateMe {
 	is_active?: boolean | null;
 	full_name?: string | null;
-	email?: string | null;
 }

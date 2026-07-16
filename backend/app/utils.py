@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import emails
 import jwt
@@ -48,6 +49,27 @@ def generate_email_verification_token(email: str) -> str:
     return generate_token(email=email, token_type="email_verification")
 
 
+def generate_email_change_token(
+    *, user_id: UUID, old_email: str, new_email: str
+) -> str:
+    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
+    now = datetime.now(timezone.utc)
+    expires = now + delta
+
+    return jwt.encode(
+        {
+            "sub": str(user_id),
+            "type": "email_change",
+            "old_email": old_email,
+            "new_email": new_email,
+            "nbf": now,
+            "exp": expires.timestamp(),
+        },
+        settings.SECRET_KEY,
+        algorithm=security.ALGORITHM,
+    )
+
+
 def verify_token(token: str, expected_type: str) -> str | None:
     try:
         decoded = jwt.decode(
@@ -63,6 +85,28 @@ def verify_token(token: str, expected_type: str) -> str | None:
     except ExpiredSignatureError:
         raise  # let callers handle this case explicitly
     except InvalidTokenError:
+        return None
+
+
+def verify_email_change_token(token: str) -> dict[str, str] | None:
+    try:
+        decoded = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[security.ALGORITHM],
+        )
+
+        if decoded.get("type") != "email_change":
+            return None
+
+        return {
+            "user_id": str(decoded["sub"]),
+            "old_email": str(decoded["old_email"]),
+            "new_email": str(decoded["new_email"]),
+        }
+    except ExpiredSignatureError:
+        raise
+    except (InvalidTokenError, KeyError):
         return None
 
 
@@ -99,7 +143,37 @@ def generate_signup_email(email_to: str, email: str, token: str) -> EmailData:
             "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
             "link": link,
             "button_text": "Verify Email",
+            "message": (
+                f"Thanks for signing up for {project_name}. "
+                "Please verify your email to activate your account."
+            ),
             "logo_url": f"{settings.FRONTEND_HOST}/logo.png",
+        },
+    )
+    return EmailData(html_content=html_content, subject=subject)
+
+
+def generate_email_change_email(
+    *, email_to: str, current_email: str, token: str, requested_by_admin: bool
+) -> EmailData:
+    project_name = settings.PROJECT_NAME
+    subject = f"{project_name} - Verify your new email address"
+    link = f"{settings.FRONTEND_HOST}/settings?emailChangeToken={token}"
+    requester = "An administrator" if requested_by_admin else "You"
+    html_content = render_email_template(
+        template_name="verify_email.html",
+        context={
+            "project_name": settings.PROJECT_NAME,
+            "username": current_email,
+            "email": email_to,
+            "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
+            "link": link,
+            "button_text": "Verify Email Change",
+            "logo_url": f"{settings.FRONTEND_HOST}/logo.png",
+            "message": (
+                f"{requester} requested to change the account email from "
+                f"{current_email} to {email_to}."
+            ),
         },
     )
     return EmailData(html_content=html_content, subject=subject)

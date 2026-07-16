@@ -66,7 +66,6 @@ export function CompareFieldRows({
 					specimens={specimens}
 					columnCount={columnCount}
 				/>
-				
 			))}
 		</div>
 	);

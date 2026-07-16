@@ -7,6 +7,8 @@
 
 export interface UserCreate {
 	email: string;
+	pending_email?: string | null;
+	pending_email_requested_at?: string | null;
 	is_active: boolean;
 	is_superuser: boolean;
 	full_name?: string | null;

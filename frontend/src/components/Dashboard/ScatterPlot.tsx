@@ -19,6 +19,7 @@ interface ScatterPlotD3Props {
 	xLabel: string;
 	yLabel: string;
 	height?: number;
+	isExpanded?: boolean;
 	title?: string;
 	onPointClick?: (specimen: SpecimenPublic) => void;
 }
@@ -182,6 +183,7 @@ export function ScatterPlotD3({
 	xLabel,
 	yLabel,
 	height,
+	isExpanded = false,
 	onPointClick,
 }: ScatterPlotD3Props) {
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -195,6 +197,7 @@ export function ScatterPlotD3({
 	const [zoomMode, setZoomMode] = useState(false);
 	const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
 	const tooltipRef = useRef<HTMLButtonElement | null>(null);
+	const chartHeight = isExpanded ? undefined : height;
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -541,7 +544,7 @@ export function ScatterPlotD3({
 		return (
 			<div
 				className="flex items-center justify-center text-muted-foreground"
-				style={height ? { height: `${height}px` } : undefined}
+				style={chartHeight ? { height: `${chartHeight}px` } : undefined}
 			>
 				No data available
 			</div>
@@ -550,7 +553,7 @@ export function ScatterPlotD3({
 
 	return (
 		<div
-			className={`w-full flex flex-col gap-1.5 sm:gap-2 ${!height ? "h-full" : ""}`}
+			className={`w-full flex flex-col gap-1.5 sm:gap-2 ${!chartHeight ? "h-full" : ""}`}
 		>
 			<div className="flex items-center justify-between gap-2 flex-shrink-0">
 				<div className="min-w-0 text-xs text-muted-foreground whitespace-nowrap">
@@ -589,8 +592,8 @@ export function ScatterPlotD3({
 
 			<div
 				ref={containerRef}
-				className={`relative w-full ${!height ? "flex-1 min-h-0" : ""}`}
-				style={height ? { height: `${height}px` } : undefined}
+				className={`relative w-full ${!chartHeight ? "flex-1 min-h-0" : ""}`}
+				style={chartHeight ? { height: `${chartHeight}px` } : undefined}
 				role="img"
 				aria-label={`Scatter plot of ${yLabel} vs ${xLabel}`}
 			>

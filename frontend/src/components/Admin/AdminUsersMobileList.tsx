@@ -56,6 +56,11 @@ export function AdminUsersMobileList({
 								Email
 							</p>
 							<p className="break-all">{user.email}</p>
+							{user.pending_email ? (
+								<p className="break-all text-xs text-muted-foreground">
+									Pending: {user.pending_email}
+								</p>
+							) : null}
 						</div>
 						<div className="grid gap-3 sm:grid-cols-2">
 							<div className="space-y-1">

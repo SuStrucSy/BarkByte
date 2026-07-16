@@ -23,8 +23,19 @@ export const LoginLoginAccessTokenResponse = zod.object({
  * Test access token
  * @summary Test Token
  */
+export const loginTestTokenResponsePendingEmailOneMax = 255;
+
 export const LoginTestTokenResponse = zod.object({
 	email: zod.email(),
+	pending_email: zod
+		.union([
+			zod.email().max(loginTestTokenResponsePendingEmailOneMax),
+			zod.null(),
+		])
+		.optional(),
+	pending_email_requested_at: zod
+		.union([zod.iso.datetime({}), zod.null()])
+		.optional(),
 	is_active: zod.boolean(),
 	is_superuser: zod.boolean(),
 	full_name: zod.union([zod.string(), zod.null()]).optional(),

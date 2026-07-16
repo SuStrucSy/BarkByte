@@ -10,6 +10,8 @@ from app.enums import AssemblyType, Practice, TestLoadingType, YieldPointMethod
 # Shared properties
 class UserBase(SQLModel):
     email: EmailStr
+    pending_email: EmailStr | None = Field(default=None, max_length=255)
+    pending_email_requested_at: datetime | None = None
     is_active: bool
     is_superuser: bool
     full_name: str | None = None

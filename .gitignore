@@ -22,5 +22,6 @@ docker-compose.traefik.yml
 docker-compose.local.yml
 docker-compose.dev.yml
 
+# Local personal Docker helper scripts
 docker-down.sh
 docker-up.sh

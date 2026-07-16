@@ -68,7 +68,16 @@ export function AdminUsersDesktopTable({
 										) : null}
 									</div>
 								</TableCell>
-								<TableCell>{user.email}</TableCell>
+								<TableCell>
+									<div className="grid gap-1">
+										<span>{user.email}</span>
+										{user.pending_email ? (
+											<span className="text-xs text-muted-foreground">
+												Pending: {user.pending_email}
+											</span>
+										) : null}
+									</div>
+								</TableCell>
 								<TableCell>
 									<Badge>{getUserRoleLabel(user)}</Badge>
 								</TableCell>

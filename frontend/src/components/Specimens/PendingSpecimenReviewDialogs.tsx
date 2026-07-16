@@ -8,12 +8,16 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { PendingSpecimenSubmissionBadge } from "./PendingSpecimenSubmissionBadge";
+import {
+	PendingSpecimenAuthorComment,
+	PendingSpecimenMeta,
+} from "./PendingSpecimenReviewShared";
+import {
+	getPendingSpecimenStatusCopy,
+	type ReviewAction,
+} from "./pendingSpecimenReviewTypes";
 import type { SpecimenStatus } from "./SpecimenStatusFilter";
-
-type ReviewAction = "approve" | "reject";
 
 interface PendingSpecimenReviewDialogProps {
 	comment: string;
@@ -27,8 +31,6 @@ interface PendingSpecimenReviewDialogProps {
 	onReject: () => void;
 	setComment: (value: string) => void;
 	status: SpecimenStatus;
-	submissionPanelDescription: string;
-	submissionPanelTitle: string;
 }
 
 export function PendingSpecimenReviewDialog({
@@ -43,9 +45,9 @@ export function PendingSpecimenReviewDialog({
 	onReject,
 	setComment,
 	status,
-	submissionPanelDescription,
-	submissionPanelTitle,
 }: PendingSpecimenReviewDialogProps) {
+	const { submissionDescription, submissionTitle } =
+		getPendingSpecimenStatusCopy(status);
 	const dialogTitle =
 		dialogAction === "approve"
 			? "Approve pending specimen?"
@@ -59,30 +61,18 @@ export function PendingSpecimenReviewDialog({
 		<AlertDialog open={dialogAction !== null} onOpenChange={onOpenChange}>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle>{submissionPanelTitle}</AlertDialogTitle>
+					<AlertDialogTitle>{submissionTitle}</AlertDialogTitle>
 					<AlertDialogDescription>
-						{submissionPanelDescription}
+						{submissionDescription}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<div className="grid gap-4">
-					<div className="flex flex-wrap items-center gap-2">
-						<Button variant="link" className="px-0">
-							{createdAt}
-						</Button>
-						<PendingSpecimenSubmissionBadge isNew={isNew} status={status} />
-					</div>
-					{commentByAuthor?.trim().length ? (
-						<div className="grid gap-2">
-							<span>Comment by Author</span>
-							<Textarea
-								value={commentByAuthor}
-								readOnly
-								disabled
-								rows={3}
-								className="w-full text-sm"
-							/>
-						</div>
-					) : null}
+					<PendingSpecimenMeta
+						createdAt={createdAt}
+						isNew={isNew}
+						status={status}
+					/>
+					<PendingSpecimenAuthorComment commentByAuthor={commentByAuthor} />
 					<div className="grid gap-2">
 						<span>{dialogTitle}</span>
 						<Textarea

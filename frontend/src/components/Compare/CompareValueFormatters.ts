@@ -103,7 +103,6 @@ export function formatInlineCompareValue(
 		return { text: value ? "has dowel" : "has no dowel", isMissing: false };
 	}
 
-
 	// 🚨🚨🚨🚨 todo: we don't care about moisture percentage anymore, should it be removed?
 	if (key === "moisture_percentage") {
 		if (typeof value !== "string") {

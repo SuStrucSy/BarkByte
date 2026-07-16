@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserPenIcon } from "lucide-react";
 
 import { type ReactNode, useState } from "react";
@@ -6,9 +6,10 @@ import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
 	getUsersReadUsersQueryKey,
-	useUsersUpdateUser,
+	usersRequestEmailChangeForUser,
+	usersUpdateUser,
 } from "@/api/endpoints/users/users";
-import type { HTTPValidationError, UserPublic, UserUpdate } from "@/api/model";
+import type { UserPublic, UserUpdate } from "@/api/model";
 import { handleError } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -68,33 +69,45 @@ const EditUser = ({ user, disabled, trigger }: EditUserProps) => {
 	const isSuperuserValue = form.watch("is_superuser") ?? false;
 	const isActiveValue = form.watch("is_active") ?? false;
 
-	const mutation = useUsersUpdateUser({
-		mutation: {
-			onSuccess: (updatedUser) => {
-				toast.success("User updated successfully.");
-				form.reset(getFormValues(updatedUser));
-				setIsOpen(false);
-			},
-			onError: (err: undefined | HTTPValidationError) => {
-				handleError(err);
-			},
-			onSettled: () => {
-				queryClient.invalidateQueries({
-					queryKey: getUsersReadUsersQueryKey(),
+	const mutation = useMutation({
+		mutationFn: async (data: UserUpdateForm) => {
+			const payload: UserUpdate = {
+				full_name: data.full_name,
+				is_active: data.is_active,
+				is_superuser: data.is_superuser,
+			};
+			const updatedUser = await usersUpdateUser(user.id, payload);
+
+			if (data.email && data.email !== user.email) {
+				await usersRequestEmailChangeForUser(user.id, {
+					new_email: data.email,
 				});
-			},
+			}
+
+			return updatedUser;
+		},
+		onSuccess: (updatedUser, data) => {
+			const emailChanged = Boolean(data.email && data.email !== user.email);
+			toast.success(
+				emailChanged
+					? "User updated. Verification email sent to the new address."
+					: "User updated successfully.",
+			);
+			form.reset(getFormValues(updatedUser));
+			setIsOpen(false);
+		},
+		onError: (err) => {
+			handleError(err);
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({
+				queryKey: getUsersReadUsersQueryKey(),
+			});
 		},
 	});
 
 	const onSubmit: SubmitHandler<UserUpdateForm> = async (data) => {
-		const payload: UserUpdate = {
-			email: data.email,
-			full_name: data.full_name,
-			is_active: data.is_active,
-			is_superuser: data.is_superuser,
-		};
-
-		mutation.mutate({ data: payload, userId: user.id });
+		mutation.mutate(data);
 	};
 
 	return (
