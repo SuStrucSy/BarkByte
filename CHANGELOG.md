@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.4.0](https://github.com/SuStrucSy/BarkByte/compare/v2.3.5...v2.4.0) (2026-07-16)
+
+
+### Features
+
+* require verification for email changes ([6be10e2](https://github.com/SuStrucSy/BarkByte/commit/6be10e233e965dca1c5a74f5e64a8df91adcf601))
+
+
+### Bug Fixes
+
+* Extract assembly type field component ([a5830a4](https://github.com/SuStrucSy/BarkByte/commit/a5830a4739ab21ae336424d7589070a6877a5f1e))
+* extract joinery fields from specimen details ([d6e6f12](https://github.com/SuStrucSy/BarkByte/commit/d6e6f12bef36c0f4eee5694036acb9d396511e6e))
+* extract loading directions field ([d982d0b](https://github.com/SuStrucSy/BarkByte/commit/d982d0bfeb68f2858faf844cfff8a8ff5f7d6c01))
+* Extract practice field component ([0614c90](https://github.com/SuStrucSy/BarkByte/commit/0614c90f6cc791ce7ee43c537f546d9647a3fd5b))
+* Extract specimen details option loading into hook ([55462d0](https://github.com/SuStrucSy/BarkByte/commit/55462d008fbd65c6c7c25049c758f277c31f8495))
+* extract specimen reference id field ([74a0b20](https://github.com/SuStrucSy/BarkByte/commit/74a0b203841dae886ffd4db543906424cbf31560))
+* let expanded scatterplots fill modal height ([0d4de8a](https://github.com/SuStrucSy/BarkByte/commit/0d4de8a013760c1f05662bf25316726291b65c18))
+* load fastener types consistently in specimen details ([00ed6ed](https://github.com/SuStrucSy/BarkByte/commit/00ed6edecea3e42446e309d797647b3245430a8c))
+* protection from potential vulnerability ([fc650ff](https://github.com/SuStrucSy/BarkByte/commit/fc650ffe19a62bca1c608423ba26c8536880f810))
+
 ## [2.3.5](https://github.com/SuStrucSy/BarkByte/compare/v2.3.4...v2.3.5) (2026-04-28)
 
 
