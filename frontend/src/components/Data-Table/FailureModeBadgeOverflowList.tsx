@@ -154,7 +154,7 @@ export function FailureModeBadgeOverflowList({
 						>
 							<PopoverHeader className="mb-2">
 								<PopoverTitle className="text-xs font-medium text-muted-foreground">
-									Hidden failure modes
+									More failure modes
 								</PopoverTitle>
 							</PopoverHeader>
 							<div className="flex flex-wrap gap-1.5">
