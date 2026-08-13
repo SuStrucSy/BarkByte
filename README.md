@@ -17,6 +17,8 @@ Timverse is a web application for collecting, reviewing, searching, comparing, a
 
 The application has three main parts: a React frontend for users, a FastAPI backend for the API and review workflow, and a PostgreSQL database for durable structured storage.
 
+The software is publicly presented as Timverse, while BarkByte is the internal name retained for this source-code repository.
+
 ## Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
