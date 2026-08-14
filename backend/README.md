@@ -9,7 +9,7 @@ It uses FastAPI, SQLModel, PostgreSQL, Alembic, Pydantic, JWT authentication, an
 For most development, start the full stack from the project root so the backend has PostgreSQL and the frontend available:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.local.yml up --build --watch
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 The backend runs at:
@@ -81,7 +81,7 @@ Configuration is read from environment variables. Important values include:
 - `POSTGRES_PASSWORD`
 - SMTP/email settings for account emails
 
-See the root [README.md](../README.md) and [development.md](../development.md) for local setup details.
+See the root [README.md](../README.md) for the project overview and [development.md](../development.md) for Docker, non-Docker, and individual-service workflows.
 
 ## Data Model
 

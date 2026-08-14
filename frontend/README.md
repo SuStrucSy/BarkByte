@@ -19,7 +19,7 @@ The app runs at:
 http://localhost:5173
 ```
 
-For the full local stack, including the backend and database, use the Docker Compose instructions in the root [README.md](../README.md) or [development.md](../development.md).
+For the full local stack, including the backend and database, use the instructions in the root [README.md](../README.md) or [development.md](../development.md).
 
 ## Environment
 
