@@ -1,15 +1,33 @@
 # Timverse
 
-Shield: [![CC BY-NC 4.0][cc-by-nc-shield]][cc-by-nc]
+[![GPL-3.0][gpl-3-shield]][gpl-3]
+[![Python 3.10+][python-shield]][python]
+[![FastAPI][fastapi-shield]][fastapi]
+[![React][react-shield]][react]
+[![TypeScript][typescript-shield]][typescript]
+[![PostgreSQL][postgres-shield]][postgres]
+[![Docker Compose][docker-shield]][docker]
+[![GitHub Actions][actions-shield]][actions]
 
 This work is licensed under a
-[Creative Commons Attribution-NonCommercial 4.0 International License][cc-by-nc] - CC BY-NC 4.0.
+[GNU General Public License v3.0][gpl-3].
 
-[![CC BY-NC 4.0][cc-by-nc-image]][cc-by-nc]
-
-[cc-by-nc]: https://creativecommons.org/licenses/by-nc/4.0/
-[cc-by-nc-image]: https://licensebuttons.net/l/by-nc/4.0/88x31.png
-[cc-by-nc-shield]: https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg
+[gpl-3]: https://www.gnu.org/licenses/gpl-3.0.en.html
+[gpl-3-shield]: https://img.shields.io/badge/License-GPLv3-blue.svg
+[python]: https://www.python.org/
+[python-shield]: https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white
+[fastapi]: https://fastapi.tiangolo.com/
+[fastapi-shield]: https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white
+[react]: https://react.dev/
+[react-shield]: https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=111111
+[typescript]: https://www.typescriptlang.org/
+[typescript-shield]: https://img.shields.io/badge/TypeScript-Frontend-3178C6?logo=typescript&logoColor=white
+[postgres]: https://www.postgresql.org/
+[postgres-shield]: https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white
+[docker]: https://docs.docker.com/compose/
+[docker-shield]: https://img.shields.io/badge/Docker%20Compose-Dev%20%26%20Deploy-2496ED?logo=docker&logoColor=white
+[actions]: https://github.com/features/actions
+[actions-shield]: https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white
 
 ## Overview
 
@@ -61,4 +79,4 @@ An active production deployment is currently available at [timverse.ca](https://
 
 ## License
 
-The Timverse portal is licensed under the terms of the Creative Commons Attribution-NonCommercial 4.0 International [License](./LICENSE).
+The Timverse portal is licensed under the terms of the GNU General Public License v3.0 [License](./LICENSE).
