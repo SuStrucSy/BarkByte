@@ -992,19 +992,6 @@ crontab -e
 0 2 * * * /home/ubuntu/backup-db.sh >> /mnt/data/backups/backup.log 2>&1
 ```
 
-### Off-Server Storage (Recommended)
-
-```bash
-sudo apt install awscli -y
-aws configure --profile alliance
-# Enter your Alliance object storage credentials when prompted
-
-# Sync backups to your bucket
-aws s3 sync /mnt/data/backups/ s3://your-bucket/db-backups/ --profile alliance
-```
-
-Add the `aws s3 sync` line to the end of `backup-db.sh` once configured.
-
 ### Restoring from a Backup
 
 ```bash
@@ -1023,7 +1010,6 @@ gunzip < /mnt/data/backups/backup_20240101_020000.sql.gz \
 | Location | Retention |
 |---|---|
 | Data volume (`/mnt/data/backups`) | 7 days (auto-deleted by script) |
-| Object storage | 30 days (configure lifecycle rules in your bucket) |
 | Pre-deploy snapshots | Last 5, auto-pruned by the deploy workflow |
 
 ### GHCR Image Retention

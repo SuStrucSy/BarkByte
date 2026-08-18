@@ -1,207 +1,610 @@
-# FastAPI Project - Development
+# Running and Development
 
-## Docker Compose
+This page explains how to run the Timverse application locally on your own computer.
 
-- Start the local stack with Docker Compose:
+Docker is an application that runs the app and its supporting services in isolated [containers](https://en.wikipedia.org/wiki/Containerization_(computing)), so you do not have to manually install and configure everything yourself. This is recommended because it starts the frontend, backend, database, and helper tools together.
 
-```bash
-docker compose watch
-```
+- [Running Locally With Docker](#running-locally-with-docker)
 
-- Now you can open your browser and interact with these URLs:
+Some people may prefer not to use Docker because they want to install and control each tool directly on their computer.
 
-Frontend, built with Docker, with routes handled based on the path: http://localhost:5173
+- [Running Locally Without Docker](#running-locally-without-docker)
 
-Backend, JSON based web API based on OpenAPI: http://localhost:8000
+Some people may only need to run part of the app when they are working on the frontend, working on the backend, or troubleshooting one service.
 
-Automatic interactive documentation with Swagger UI (from the OpenAPI backend): http://localhost:8000/docs
+- [Running Individual Services](#running-individual-services)
 
-Adminer, database web administration: http://localhost:8080
+Other useful sections:
 
-Traefik UI, to see how the routes are being handled by the proxy: http://localhost:8090
+- [Common Local Problems](#common-local-problems)
+- [Development Tooling](#development-tooling)
 
-**Note**: The first time you start your stack, it might take a minute for it to be ready. While the backend waits for the database to be ready and configures everything. You can check the logs to monitor it.
+## Running Locally With Docker
 
-To check the logs, run (in another terminal):
+The easiest way to try Timverse is to visit the live application at [https://timverse.ca](https://timverse.ca). When you need a local copy for development, Docker is the recommended way to run it on your own computer because it starts the frontend, backend, PostgreSQL database, Mailcatcher, Adminer, and Traefik together.
 
-```bash
-docker compose logs
-```
+- [0. Prerequisites](#0-prerequisites)
+- [1. Open or Clone the Repository](#1-open-or-clone-the-repository)
+- [2. Create the `.env` File](#2-create-the-env-file)
+- [3. Start the Application](#3-start-the-application)
+- [4. Open Local URLs](#4-open-local-urls)
+- [5. Verify That It Is Running](#5-verify-that-it-is-running)
+- [6. Stop the Application](#6-stop-the-application)
 
-To check the logs of a specific service, add the name of the service, e.g.:
+### 0. Prerequisites
 
-```bash
-docker compose logs backend
-```
+Before you start, make sure these two applications are installed on your computer:
 
-## Local Development
+1. Git ([macOS](https://github.com/UofT-DSI/onboarding/blob/main/environment_setup/os_guides/tech_onboarding_mac.md#git), [Linux](https://github.com/UofT-DSI/onboarding/blob/main/environment_setup/os_guides/tech_onboarding_linux.md#git), [Windows](https://github.com/UofT-DSI/onboarding/blob/main/environment_setup/os_guides/tech_onboarding_windows.md#git))
+2. [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-The Docker Compose files are configured so that each of the services is available in a different port in `localhost`.
+Git lets you download the project. Docker Desktop lets your computer run the app in containers.
 
-For the backend and frontend, they use the same port that would be used by their local development server, so, the backend is at `http://localhost:8000` and the frontend at `http://localhost:5173`.
+After installing Docker Desktop, open it and wait until it says Docker is running.
 
-This way, you could turn off a Docker Compose service and start its local development service, and everything would keep working, because it all uses the same ports.
-
-For example, you can stop that `frontend` service in the Docker Compose, in another terminal, run:
-
-```bash
-docker compose stop frontend
-```
-
-And then start the local frontend development server:
+To check that Docker is ready, open a terminal and run:
 
 ```bash
-cd frontend
-npm run dev
+docker --version
+docker compose version
 ```
 
-Or you could stop the `backend` Docker Compose service:
+Both commands should print version numbers. If either command fails, open Docker Desktop, wait until it is running, then close and reopen your terminal and try again. If it still fails, reinstall or update Docker Desktop before continuing.
+
+### 1. Open or Clone the Repository
+
+Open a terminal and go to the folder where you keep projects. For example:
 
 ```bash
-docker compose stop backend
+cd ~/Documents
 ```
 
-And then you can run the local development server for the backend:
+Download the project if you do not already have it:
+
+```bash
+git clone https://github.com/SuStrucSy/BarkByte.git
+```
+
+If you already downloaded the project another way, skip this command.
+
+Go into the project folder:
+
+```bash
+cd BarkByte
+```
+
+All commands below should be run from this project root folder unless a step explicitly says otherwise. You are in the right place if you can see `README.md`, `docker-compose.dev.yml`, `backend`, and `frontend`.
+
+### 2. Create the `.env` File
+
+The app needs a settings file named `.env` in the project root.
+
+If `.env` already exists, leave it in place.
+
+If `.env` does not exist, create it by copying the example file:
+
+```bash
+cp .env.example .env
+```
+
+For running locally with Docker, the example values are enough to start the app.
+
+The `.env` file is for local settings such as database names, passwords, frontend URLs, and email settings. Do not commit real production secrets to the repository, and do not reuse local example secrets for production.
+
+### 3. Start the Application
+
+From the project root, run this command:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+The first run can take several minutes because Docker has to download and build everything the app needs.
+
+Leave this terminal open while you use the application. It shows status messages for the frontend, backend, database, and helper services.
+
+To check logs in another terminal, run:
+
+```bash
+docker compose -f docker-compose.dev.yml logs
+```
+
+To check logs for one service, add the service name:
+
+```bash
+docker compose -f docker-compose.dev.yml logs backend
+```
+
+### 4. Open Local URLs
+
+These links only work after Step 3 has started successfully. If Docker is still downloading, building, starting services, or showing errors, wait for it to finish or fix the error before opening these links.
+
+Open these URLs in your browser:
+
+> ⚠️ URLs containing `localhost` only work on the computer running the application. Do not send a `localhost` link to someone else and expect it to work for them.
+
+- Frontend application: http://localhost:5173
+- Backend API: http://localhost:8000
+- Backend API docs: http://localhost:8000/docs
+- Adminer database UI: http://localhost:8081
+- Traefik dashboard: http://localhost:8090
+- Mailcatcher email inbox: http://localhost:1080
+
+### 5. Verify That It Is Running
+
+Check the frontend:
+
+1. Open http://localhost:5173.
+2. Confirm that the Timverse page loads in the browser.
+
+Check the backend:
+
+1. Open http://localhost:8000/docs.
+2. Confirm that the Swagger API documentation page loads.
+
+Check Docker:
+
+```bash
+docker compose -f docker-compose.dev.yml ps
+```
+
+The main services should be running. The `prestart` service may show as exited because it only runs setup tasks, such as database migrations and seed data, and then stops.
+
+### 6. Stop the Application
+
+In the terminal where Docker is running, press:
+
+```text
+Control+C
+```
+
+Then run:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+This stops the app but keeps the local database data.
+
+If you want to delete the local database and start from an empty database next time, run:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
+```
+
+> ⚠️ `down -v` deletes Docker volumes for this compose file, including local database data.
+
+## Running Locally Without Docker
+
+Use this workflow if you want to run the backend, frontend, and database directly on your computer without Docker. This gives you more control over each tool, but it also means you are responsible for installing, starting, and troubleshooting each tool yourself.
+
+- [0. Prerequisites](#0-prerequisites-1)
+- [1. Open the Project Root](#1-open-the-project-root)
+- [2. Create the `.env` File](#2-create-the-env-file-1)
+- [3. Start PostgreSQL](#3-start-postgresql)
+- [4. Install and Start the Backend](#4-install-and-start-the-backend)
+- [5. Install and Start the Frontend](#5-install-and-start-the-frontend)
+- [6. Open Local URLs](#6-open-local-urls)
+- [7. Stop the Application](#7-stop-the-application)
+- [Notes for Non-Docker Setup](#notes-for-non-docker-setup)
+
+### 0. Prerequisites
+
+Before you start, make sure these applications are installed on your computer:
+
+1. Git ([macOS](https://github.com/UofT-DSI/onboarding/blob/main/environment_setup/os_guides/tech_onboarding_mac.md#git), [Linux](https://github.com/UofT-DSI/onboarding/blob/main/environment_setup/os_guides/tech_onboarding_linux.md#git), [Windows](https://github.com/UofT-DSI/onboarding/blob/main/environment_setup/os_guides/tech_onboarding_windows.md#git))
+2. [Node.js](https://nodejs.org/) for the frontend
+3. [uv](https://docs.astral.sh/uv/) for the Python interpreter and dependency management
+4. [PostgreSQL](https://www.postgresql.org/download/) for the database
+
+Git lets you download the project. Node.js lets your computer run the frontend. `uv` manages the Python environment for the backend. PostgreSQL stores the app data.
+
+To check that the tools are ready, open a terminal and run:
+
+```bash
+git --version
+node --version
+npm --version
+uv --version
+psql --version
+```
+
+Each command should print a version number. If any command fails, install or fix that tool before continuing.
+
+### 1. Open or Clone the Repository
+
+Open a terminal and go to the folder where you keep projects. For example:
+
+```bash
+cd ~/Documents
+```
+
+Download the project if you do not already have it:
+
+```bash
+git clone https://github.com/SuStrucSy/BarkByte.git
+```
+
+If you already downloaded the project another way, skip this command.
+
+Go into the project folder:
+
+```bash
+cd BarkByte
+```
+
+All commands below should be run from this project root folder unless a step explicitly says otherwise. You are in the right place if you can see `README.md`, `docker-compose.dev.yml`, `backend`, and `frontend`.
+
+### 2. Create the `.env` File
+
+The app needs a settings file named `.env` in the project root.
+
+If `.env` already exists, leave it in place.
+
+If `.env` does not exist, create it by copying the example file:
+
+```bash
+cp .env.example .env
+```
+
+For running locally without Docker, open `.env` in a text editor and make sure these values match your local PostgreSQL setup:
+
+```dotenv
+POSTGRES_SERVER=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=app
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=changethis
+FRONTEND_HOST=http://localhost:5173
+```
+
+For non-Docker local development, `POSTGRES_SERVER=localhost` means the backend will connect to PostgreSQL running on your own computer.
+
+The `.env` file is for local settings such as database names, passwords, frontend URLs, and email settings. Do not commit real production secrets to the repository, and do not reuse local example secrets for production.
+
+### 3. Start PostgreSQL
+
+Start PostgreSQL using the app or service manager installed with PostgreSQL.
+
+To check that PostgreSQL is running, use:
+
+```bash
+pg_isready -h localhost -p 5432
+```
+
+Create the local database if it does not already exist:
+
+```bash
+createdb -h localhost -U postgres app
+```
+
+If your PostgreSQL admin user is not named `postgres`, replace `postgres` with the user from your PostgreSQL installation and update `POSTGRES_USER` in `.env` to match.
+
+If the database already exists, `createdb` may print an error saying it already exists. That is okay.
+
+### 4. Install and Start the Backend
+
+Open a terminal from the project root and go into the backend folder:
 
 ```bash
 cd backend
-fastapi dev app/main.py
 ```
 
-## Docker Compose in `localhost.tiangolo.com`
-
-When you start the Docker Compose stack, it uses `localhost` by default, with different ports for each service (backend, frontend, adminer, etc).
-
-When you deploy it to production (or staging), it will deploy each service in a different subdomain, like `api.example.com` for the backend and `dashboard.example.com` for the frontend.
-
-In the guide about [deployment](deployment.md) you can read about Traefik, the configured proxy. That's the component in charge of transmitting traffic to each service based on the subdomain.
-
-If you want to test that it's all working locally, you can edit the local `.env` file, and change:
-
-```dotenv
-DOMAIN=localhost.tiangolo.com
-```
-
-That will be used by the Docker Compose files to configure the base domain for the services.
-
-Traefik will use this to transmit traffic at `api.localhost.tiangolo.com` to the backend, and traffic at `dashboard.localhost.tiangolo.com` to the frontend.
-
-The domain `localhost.tiangolo.com` is a special domain that is configured (with all its subdomains) to point to `127.0.0.1`. This way you can use that for your local development.
-
-After you update it, run again:
+Install the backend dependencies:
 
 ```bash
-docker compose watch
+uv sync
 ```
 
-When deploying, for example in production, the main Traefik is configured outside of the Docker Compose files. For local development, there's an included Traefik in `docker-compose.override.yml`, just to let you test that the domains work as expected, for example with `api.localhost.tiangolo.com` and `dashboard.localhost.tiangolo.com`.
-
-## Docker Compose files and env vars
-
-There is a main `docker-compose.yml` file with all the configurations that apply to the whole stack, it is used automatically by `docker compose`.
-
-And there's also a `docker-compose.override.yml` with overrides for development, for example to mount the source code as a volume. It is used automatically by `docker compose` to apply overrides on top of `docker-compose.yml`.
-
-These Docker Compose files use the `.env` file containing configurations to be injected as environment variables in the containers.
-
-They also use some additional configurations taken from environment variables set in the scripts before calling the `docker compose` command.
-
-After changing variables, make sure you restart the stack:
+Load the root `.env` settings into this terminal:
 
 ```bash
-docker compose watch
+set -a
+source ../.env
+set +a
 ```
 
-## The .env file
-
-The `.env` file is the one that contains all your configurations, generated keys and passwords, etc.
-
-Depending on your workflow, you could want to exclude it from Git, for example if your project is public. In that case, you would have to make sure to set up a way for your CI tools to obtain it while building or deploying your project.
-
-One way to do it could be to add each environment variable to your CI/CD system, and updating the `docker-compose.yml` file to read that specific env var instead of reading the `.env` file.
-
-## Pre-commits and code linting
-
-we are using a tool called [pre-commit](https://pre-commit.com/) for code linting and formatting.
-
-When you install it, it runs right before making a commit in git. This way it ensures that the code is consistent and formatted even before it is committed.
-
-You can find a file `.pre-commit-config.yaml` with configurations at the root of the project.
-
-#### Install pre-commit to run automatically
-
-`pre-commit` is already part of the dependencies of the project, but you could also install it globally if you prefer to, following [the official pre-commit docs](https://pre-commit.com/).
-
-After having the `pre-commit` tool installed and available, you need to "install" it in the local repository, so that it runs automatically before each commit.
-
-Using `uv`, you could do it with:
+Run database migrations:
 
 ```bash
-❯ uv run pre-commit install
-pre-commit installed at .git/hooks/pre-commit
+uv run alembic upgrade head
 ```
 
-Now whenever you try to commit, e.g. with:
+Create the initial admin user and initial data:
 
 ```bash
-git commit
+uv run python app/initial_data.py
 ```
 
-...pre-commit will run and check and format the code you are about to commit, and will ask you to add that code (stage it) with git again before committing.
-
-Then you can `git add` the modified/fixed files again and now you can commit.
-
-#### Running pre-commit hooks manually
-
-you can also run `pre-commit` manually on all the files, you can do it using `uv` with:
+Start the backend:
 
 ```bash
-❯ uv run pre-commit run --all-files
-check for added large files..............................................Passed
-check toml...............................................................Passed
-check yaml...............................................................Passed
-ruff.....................................................................Passed
-ruff-format..............................................................Passed
-eslint...................................................................Passed
-prettier.................................................................Passed
+uv run fastapi dev app/main.py
 ```
 
-## URLs
+Leave this terminal open. The backend keeps running in this terminal.
 
-The production or staging URLs would use these same paths, but with your own domain.
+### 5. Install and Start the Frontend
 
-### Development URLs
+Open a second terminal from the project root and go into the frontend folder:
 
-Development URLs, for local development.
+```bash
+cd frontend
+```
 
-Frontend: http://localhost:5173
+Install the frontend dependencies:
 
-Backend: http://localhost:8000
+```bash
+npm install
+```
 
-Automatic Interactive Docs (Swagger UI): http://localhost:8000/docs
+Create a frontend local environment file so the frontend knows where the backend is running:
 
-Automatic Alternative Docs (ReDoc): http://localhost:8000/redoc
+```bash
+printf "VITE_API_URL=http://localhost:8000\n" > .env.local
+```
 
-Adminer: http://localhost:8080
+Start the frontend:
 
-Traefik UI: http://localhost:8090
+```bash
+npm run dev
+```
 
-MailCatcher: http://localhost:1080
+Leave this second terminal open. The frontend keeps running in this terminal.
 
-### Development URLs with `localhost.tiangolo.com` Configured
+### 6. Open Local URLs
 
-Development URLs, for local development.
+Open these URLs in your browser:
 
-Frontend: http://dashboard.localhost.tiangolo.com
+> ⚠️ URLs containing `localhost` only work on the computer running the application. Do not send a `localhost` link to someone else and expect it to work for them.
 
-Backend: http://api.localhost.tiangolo.com
+- Frontend application: http://localhost:5173
+- Backend API: http://localhost:8000
+- Backend API docs: http://localhost:8000/docs
 
-Automatic Interactive Docs (Swagger UI): http://api.localhost.tiangolo.com/docs
+### 7. Stop the Application
 
-Automatic Alternative Docs (ReDoc): http://api.localhost.tiangolo.com/redoc
+To stop the frontend, go to the frontend terminal and press:
 
-Adminer: http://localhost.tiangolo.com:8080
+```text
+Control+C
+```
 
-Traefik UI: http://localhost.tiangolo.com:8090
+To stop the backend, go to the backend terminal and press:
 
-MailCatcher: http://localhost.tiangolo.com:1080
+```text
+Control+C
+```
+
+PostgreSQL keeps running until you stop it using the PostgreSQL app or service manager installed on your computer.
+
+### Notes for Non-Docker Setup
+
+Mailcatcher is not included in the non-Docker setup. Email-related features need real SMTP settings in `.env`, or a separately installed local mail testing tool.
+
+If the backend cannot connect to the database, check these three things:
+
+1. PostgreSQL is running.
+2. The database named in `POSTGRES_DB` exists.
+3. `POSTGRES_USER` and `POSTGRES_PASSWORD` in `.env` match your local PostgreSQL credentials.
+
+## Running Individual Services
+
+Use this workflow when you only want to run part of the app. This is useful when you are working on one side of the project, such as only the frontend or only the backend, or when you are troubleshooting one service.
+
+For most users, the full Docker setup is easier:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+- [Frontend Only With Docker](#frontend-only-with-docker)
+- [Backend and Database With Docker](#backend-and-database-with-docker)
+- [Frontend Directly on Your Computer](#frontend-directly-on-your-computer)
+- [Backend Directly on Your Computer](#backend-directly-on-your-computer)
+
+### Frontend Only With Docker
+
+Use this when you want Docker to run only the frontend container.
+
+From the project root, run:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build frontend
+```
+
+This starts the frontend development server, but it does not start the backend or database. API calls will fail unless a backend is already running at the URL configured by `VITE_API_URL`.
+
+Open the frontend in your browser:
+
+> ⚠️ URLs containing `localhost` only work on the computer running the application. Do not send a `localhost` link to someone else and expect it to work for them.
+
+- Frontend application: http://localhost:5173
+
+### Backend and Database With Docker
+
+Use this when you want Docker to run the database and backend, but not the frontend.
+
+From the project root, run:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build db prestart backend
+```
+
+This starts PostgreSQL, runs database setup through `prestart`, and starts the backend.
+
+Open the backend API docs in your browser:
+
+> ⚠️ URLs containing `localhost` only work on the computer running the application. Do not send a `localhost` link to someone else and expect it to work for them.
+
+- Backend API docs: http://localhost:8000/docs
+- Backend API: http://localhost:8000
+
+### Frontend Directly on Your Computer
+
+Use this if the backend is already running and you want to run the frontend directly on your computer.
+
+Open a terminal from the project root and go into the frontend folder:
+
+```bash
+cd frontend
+```
+
+Install frontend dependencies:
+
+```bash
+npm install
+```
+
+Create the frontend local environment file:
+
+```bash
+printf "VITE_API_URL=http://localhost:8000\n" > .env.local
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+Leave this terminal open while you use the frontend.
+
+Open the frontend in your browser:
+
+> ⚠️ URLs containing `localhost` only work on the computer running the application. Do not send a `localhost` link to someone else and expect it to work for them.
+
+- Frontend application: http://localhost:5173
+
+### Backend Directly on Your Computer
+
+Use this if PostgreSQL is already running and `.env` contains local database settings.
+
+Open a terminal from the project root and go into the backend folder:
+
+```bash
+cd backend
+```
+
+Install backend dependencies:
+
+```bash
+uv sync
+```
+
+Load the root `.env` settings into this terminal:
+
+```bash
+set -a
+source ../.env
+set +a
+```
+
+Run database migrations:
+
+```bash
+uv run alembic upgrade head
+```
+
+Start the backend:
+
+```bash
+uv run fastapi dev app/main.py
+```
+
+Leave this terminal open while you use the backend.
+
+Open the backend API docs in your browser:
+
+> ⚠️ URLs containing `localhost` only work on the computer running the application. Do not send a `localhost` link to someone else and expect it to work for them.
+
+- Backend API docs: http://localhost:8000/docs
+- Backend API: http://localhost:8000
+
+## Common Local Problems
+
+### Port Already in Use
+
+If Docker says the port is already in use, another program is using one of the required ports. Stop the other program or change the port mapping in `docker-compose.dev.yml`.
+
+Common ports used by this project:
+
+- `5173`: frontend
+- `8000`: backend
+- `5432`: PostgreSQL
+- `8081`: Adminer
+- `8090`: Traefik dashboard
+- `1080`: Mailcatcher web UI
+- `1025`: Mailcatcher SMTP
+
+### Frontend Cannot Reach Backend
+
+Check that the backend is running and that the frontend is using a local API URL such as:
+
+```text
+http://localhost:8000
+```
+
+### Backend Cannot Connect to PostgreSQL
+
+If the backend cannot connect to PostgreSQL inside Docker, confirm that `docker-compose.dev.yml` sets `POSTGRES_SERVER: db` for backend services.
+
+If the backend is running directly on your computer, confirm that PostgreSQL is running locally and that `.env` has the correct `POSTGRES_*` values.
+
+### Frontend Dependency Issues
+
+If frontend dependencies behave strangely in Docker, rebuild the frontend container:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build frontend
+```
+
+### Resetting the Local Database
+
+If the database gets into a bad local state and you do not need the local data, reset it:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.dev.yml up --build
+```
+
+> ⚠️ `down -v` deletes Docker volumes for this compose file, including local database data.
+
+## Development Tooling
+
+### Pre-Commit and Code Linting
+
+The backend dependencies include [pre-commit](https://pre-commit.com/) for code linting and formatting.
+
+Install pre-commit hooks from the backend directory:
+
+```bash
+cd backend
+uv run pre-commit install
+```
+
+Run all pre-commit hooks manually:
+
+```bash
+cd backend
+uv run pre-commit run --all-files
+```
+
+### Regenerating the Frontend API Client
+
+The frontend API client is generated from the backend OpenAPI schema.
+
+If the backend API changes, start the backend and run:
+
+```bash
+cd frontend
+curl http://localhost:8000/api/v1/openapi.json -o openapi.json
+npx --yes @redocly/cli bundle openapi.json --output openapi.yaml
+npm run generate-client
+rm openapi.json
+```
+
+This updates generated files in:
+
+- `frontend/src/api/endpoints`
+- `frontend/src/api/model`
