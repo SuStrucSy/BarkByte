@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.1](https://github.com/SuStrucSy/BarkByte/compare/v2.4.0...v2.4.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* recover from stale auth tokens ([90c6f75](https://github.com/SuStrucSy/BarkByte/commit/90c6f753720747d8920af6019aef6aecff1ecd4a))
+* recover from stale auth tokens ([5ecffc0](https://github.com/SuStrucSy/BarkByte/commit/5ecffc0b80fe5ebe1775b4bb46eaa1a615ed7fad))
+
 ## [2.4.0](https://github.com/SuStrucSy/BarkByte/compare/v2.3.5...v2.4.0) (2026-07-16)
 
 
