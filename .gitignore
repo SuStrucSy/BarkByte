@@ -25,3 +25,5 @@ docker-compose.dev.yml
 # Local personal Docker helper scripts
 docker-down.sh
 docker-up.sh
+
+*.sql.gz
