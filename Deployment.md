@@ -992,6 +992,44 @@ crontab -e
 0 2 * * * /home/ubuntu/backup-db.sh >> /mnt/data/backups/backup.log 2>&1
 ```
 
+### Copying a Backup Off the Server
+
+Backups on the server are lost if the VM or its volumes are. Before a migration or any risky change, copy the latest one to your machine. Run these from your local machine, not the server.
+
+`backup-db.sh` writes to `~/backups`; pre-deploy snapshots are in `/mnt/data/backups`. List both to find the latest:
+
+```bash
+ssh -i your-key.pem ubuntu@<floating-ip> 'ls -lht ~/backups /mnt/data/backups'
+```
+
+Copy it down:
+
+```bash
+scp -i your-key.pem ubuntu@<floating-ip>:~/backups/backup_20240101_020000.sql.gz .
+```
+
+Check the copy matches the original (the two hashes should be identical):
+
+```bash
+ssh -i your-key.pem ubuntu@<floating-ip> 'sha256sum ~/backups/backup_20240101_020000.sql.gz'
+sha256sum backup_20240101_020000.sql.gz
+```
+
+Check the dump is complete:
+
+```bash
+gunzip -t backup_20240101_020000.sql.gz && echo OK
+gunzip -c backup_20240101_020000.sql.gz | grep 'dump complete'
+
+# Rows per table
+gunzip -c backup_20240101_020000.sql.gz | awk '
+  /^COPY public\./ {t=$2; n=0; next}
+  /^\\\.$/        {if (t) print n, t; t=""; next}
+  t               {n++}'
+```
+
+> The dump contains user accounts, including password hashes. Keep copies on encrypted, managed storage only (not SharePoint, email or personal cloud drives), and delete them once they're no longer needed.
+
 ### Restoring from a Backup
 
 ```bash
